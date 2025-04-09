@@ -14,6 +14,7 @@ from chonkie.types import (
     RecursiveLevel,
     RecursiveRules,
 )
+from chonkie.utils import Hubbie
 
 
 class RecursiveChunker(BaseChunker):
@@ -72,6 +73,28 @@ class RecursiveChunker(BaseChunker):
         self.rules = rules
         self.sep = "✄"
         self._CHARS_PER_TOKEN = 6.5
+
+    @classmethod
+    def from_recipe(cls, 
+                    recipe_name: str = 'default', 
+                    lang: Optional[str] = 'en',
+                    chunk_size: int = 512,
+                    min_characters_per_chunk: int = 24,
+                    return_type: Literal["texts", "chunks"] = "chunks",
+                    ) -> "RecursiveChunker":
+        """Create a RecursiveChunker object from a recipe."""
+        hub = Hubbie()
+        recipe = hub.get_recipe(recipe_name, lang)
+        if recipe is not None:
+            return cls(
+                tokenizer_or_token_counter=recipe["tokenizer"],
+                rules=RecursiveRules.from_recipe(recipe_name, lang),
+                chunk_size=chunk_size,
+                min_characters_per_chunk=min_characters_per_chunk,
+                return_type=return_type,
+            )
+        else:
+            raise ValueError(f"Tried getting recipe `{recipe_name}_{lang}.json` but it is not available.")
 
     @lru_cache(maxsize=4096)
     def _estimate_token_count(self, text: str) -> int:
