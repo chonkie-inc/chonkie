@@ -6,7 +6,13 @@ from typing import Dict, Optional
 
 
 class Hubbie: 
-    """Hubbie is a Huggingface hub manager for Chonkie."""
+    """Hubbie is a Huggingface hub manager for Chonkie.
+    
+    Methods:
+        get_recipe(recipe_name: str, lang: Optional[str] = 'en') -> Optional[Dict]:
+            Get a recipe from the hub.
+            
+    """
 
     def __init__(self) -> None:
         """Initialize Hubbie."""
