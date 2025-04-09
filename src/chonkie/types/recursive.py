@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import Dict, Iterator, List, Literal, Optional, Union
 
 from chonkie.types.base import Chunk
+from chonkie.utils import Hubbie
 
 
 @dataclass
@@ -61,6 +62,16 @@ class RecursiveLevel:
         """Create RecursiveLevel object from a dictionary."""
         return cls(**data)
 
+    @classmethod
+    def from_recipe(cls, recipe_name: str, lang: Optional[str] = 'en') -> "RecursiveLevel":
+        """Create RecursiveLevel object from a recipe."""
+        hub = Hubbie()
+        recipe = hub.get_recipe(recipe_name, lang)
+        # If the recipe is not None, we can get the `recursive_rules` key
+        if recipe is not None:
+            return cls.from_dict({"delimiters": recipe["recipe"]["delimiters"], "include_delim": recipe["recipe"]["include_delim"]})
+        else:
+            raise ValueError(f"Tried getting recipe `{recipe_name}_{lang}.json` but it is not available.")
 
 @dataclass
 class RecursiveRules:
@@ -166,6 +177,18 @@ class RecursiveRules:
                 "Levels must be a RecursiveLevel object or a list of RecursiveLevel objects."
             )
         return result
+
+    @classmethod
+    def from_recipe(cls, recipe_name: str, lang: Optional[str] = 'en') -> "RecursiveRules":
+        """Create a RecursiveRules object from a recipe."""
+        # Create a hubbie instance
+        hub = Hubbie()
+        recipe = hub.get_recipe(recipe_name, lang) 
+        # If the recipe is not None, we can get the `recursive_rules` key
+        if recipe is not None:
+            return cls.from_dict(recipe["recipe"]["recursive_rules"])
+        else:
+            raise ValueError(f"Tried getting recipe `{recipe_name}_{lang}.json` but it is not available.")
 
 
 @dataclass
