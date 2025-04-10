@@ -97,3 +97,26 @@ def test_recursive_chunk_serialization() -> None:
     reconstructed = RecursiveChunk.from_dict(chunk_dict)
     assert reconstructed.level == 1
     assert reconstructed.text == chunk.text
+
+def test_recursive_level_from_recipe() -> None:
+    """Test RecursiveLevel from recipe."""
+    level = RecursiveLevel.from_recipe("default", lang="en")
+    assert isinstance(level, RecursiveLevel)
+    assert level.delimiters == ['.', '!', '?', '\n']
+    assert not level.whitespace
+    assert level.include_delim == "prev"
+
+def test_recursive_rules_from_recipe() -> None:
+    """Test RecursiveRules from recipe."""
+    rules = RecursiveRules.from_recipe("default", lang="en")
+    assert isinstance(rules, RecursiveRules)
+    assert len(rules.levels) == 5
+    assert all(isinstance(level, RecursiveLevel) for level in rules.levels)
+
+def test_recursive_rules_from_recipe_nonexistent() -> None:
+    """Test RecursiveRules from recipe with nonexistent recipe."""
+    with pytest.raises(ValueError):
+        RecursiveRules.from_recipe("invalid", lang="en")
+
+    with pytest.raises(ValueError):
+        RecursiveRules.from_recipe("default", lang="invalid")

@@ -415,3 +415,54 @@ def test_recursive_chunker_min_characters_per_chunk(sample_text: str) -> None:
     chunks = chunker.chunk(sample_text)
     assert len(chunks) == 1
     assert chunks[0].text == "Hello!"
+
+def test_recursive_chunker_from_recipe_default() -> None:
+    """Test that RecursiveChunker.from_recipe works with default parameters."""
+    chunker = RecursiveChunker.from_recipe()
+
+    assert chunker is not None
+    assert chunker.rules is not None and isinstance(chunker.rules, RecursiveRules)
+    assert chunker.chunk_size == 512
+    assert chunker.min_characters_per_chunk == 24
+    assert chunker.return_type == "chunks"
+
+def test_recursive_chunker_from_recipe_custom_params() -> None:
+    """Test that RecursiveChunker.from_recipe works with custom parameters."""
+    chunker = RecursiveChunker.from_recipe(
+        name="default",
+        lang="en",
+        chunk_size=256,
+        min_characters_per_chunk=32,
+        return_type="texts"
+    )
+
+    assert chunker is not None
+    assert chunker.rules is not None and isinstance(chunker.rules, RecursiveRules)
+    assert chunker.chunk_size == 256
+    assert chunker.min_characters_per_chunk == 32
+    assert chunker.return_type == "texts"
+
+def test_recursive_chunker_from_recipe_custom_lang() -> None:
+    """Test that RecursiveChunker.from_recipe works with custom language."""
+    chunker = RecursiveChunker.from_recipe(
+        name="default",
+        lang="en",
+        tokenizer_or_token_counter="character",
+        chunk_size=256,
+        min_characters_per_chunk=32,
+        return_type="texts"
+    )
+    
+    assert chunker is not None
+    assert chunker.rules is not None and isinstance(chunker.rules, RecursiveRules)
+    assert chunker.chunk_size == 256
+    assert chunker.min_characters_per_chunk == 32
+    assert chunker.return_type == "texts"
+
+def test_recursive_chunker_from_recipe_nonexistent() -> None:
+    """Test that RecursiveChunker.from_recipe raises an error for nonexistent recipes."""
+    with pytest.raises(ValueError):
+        RecursiveChunker.from_recipe(name="invalid")
+
+    with pytest.raises(ValueError):
+        RecursiveChunker.from_recipe(name="default", lang="invalid")
