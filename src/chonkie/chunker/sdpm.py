@@ -4,11 +4,12 @@ This chunker uses the Semantic Double-Pass Merging algorithm to chunk text.
 
 """
 
-from typing import List, Literal, Optional, Union
+from typing import Any, Dict, List, Literal, Optional, Union
 
 from chonkie.chunker.semantic import SemanticChunker
 from chonkie.embeddings import BaseEmbeddings
 from chonkie.types import SemanticChunk, Sentence
+from chonkie.utils import Hubbie
 
 
 class SDPMChunker(SemanticChunker):
@@ -49,7 +50,7 @@ class SDPMChunker(SemanticChunker):
         include_delim: Optional[Literal["prev", "next"]] = "prev",
         skip_window: int = 1,
         return_type: Literal["chunks", "texts"] = "chunks",
-        **kwargs,
+        **kwargs: Dict[str, Any],
     ) -> None:  # type: ignore
         """Initialize the SDPMChunker.
 
@@ -90,6 +91,70 @@ class SDPMChunker(SemanticChunker):
 
         # Disable the multiprocessing flag for this class
         self._use_multiprocessing = False
+
+    
+    @classmethod
+    def from_recipe(cls,
+                    name: str = "default", 
+                    lang: Optional[str] = "en", 
+                    path: Optional[str] = None, 
+                    embedding_model: Union[str, BaseEmbeddings] = "minishlab/potion-base-8M",
+                    mode: str = "window",
+                    threshold: Union[str, float, int] = "auto",
+                    chunk_size: int = 512,
+                    similarity_window: int = 1,
+                    min_sentences: int = 1,
+                    min_chunk_size: int = 2,
+                    min_characters_per_sentence: int = 12,
+                    threshold_step: float = 0.01,
+                    skip_window: int = 1,
+                    return_type: Literal["chunks", "texts"] = "chunks",
+                    **kwargs: Dict[str, Any]) -> "SDPMChunker":  # type: ignore
+        """Create a SDPMChunker from a recipe.
+
+        Args:
+            name: The name of the recipe to use.
+            lang: The language that the recipe should support.
+            path: The path to the recipe to use.
+            embedding_model: The embedding model to use.
+            mode: The mode to use.
+            threshold: The threshold to use.
+            chunk_size: The chunk size to use.
+            similarity_window: The similarity window to use.
+            min_sentences: The minimum number of sentences to use.
+            min_chunk_size: The minimum chunk size to use.
+            min_characters_per_sentence: The minimum number of characters per sentence to use.
+            threshold_step: The threshold step to use.
+            skip_window: The skip window to use.
+            return_type: The return type to use.
+            **kwargs: Additional keyword arguments.
+
+        Returns:
+            SDPMChunker: The created SDPMChunker.
+
+        Raises:
+            ValueError: If the recipe is invalid or if the recipe is not found.
+
+        """
+        # Create a hubbie instance
+        hub = Hubbie()
+        recipe = hub.get_recipe(name, lang, path)
+        return cls(
+            embedding_model=embedding_model,
+            mode=mode,
+            threshold=threshold,
+            chunk_size=chunk_size,
+            similarity_window=similarity_window,
+            min_sentences=min_sentences,
+            min_chunk_size=min_chunk_size,
+            min_characters_per_sentence=min_characters_per_sentence,
+            threshold_step=threshold_step,
+            delim=recipe["recipe"]["delimiters"],
+            include_delim=recipe["recipe"]["include_delim"],
+            skip_window=skip_window,
+            return_type=return_type,
+            **kwargs,
+        )
 
     def _merge_sentence_groups(self, sentence_groups: List[List[str]]) -> List[str]:
         """Merge sentence groups into a single sentence.
@@ -183,7 +248,7 @@ class SDPMChunker(SemanticChunker):
 
         return chunks
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Return a string representation of the SDPMChunker object."""
         return (
             f"SDPMChunker(model={self.embedding_model}, "

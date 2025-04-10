@@ -72,7 +72,44 @@ class LateChunker(RecursiveChunker):
 
         # Disable multiprocessing for this chunker
         self._use_multiprocessing = False
+    
+    @classmethod
+    def from_recipe(cls, 
+                    name: str = "default", 
+                    lang: Optional[str] = "en", 
+                    path: Optional[str] = None, 
+                    embedding_model: Union[str, BaseEmbeddings] = "sentence-transformers/all-MiniLM-L6-v2",
+                    chunk_size: int = 512,
+                    rules: RecursiveRules = RecursiveRules(),
+                    **kwargs: Any) -> "LateChunker":
+        """Create a LateChunker from a recipe.
 
+        Args:
+            name: The name of the recipe to use.
+            lang: The language that the recipe should support.
+            path: The path to the recipe to use.
+            embedding_model: The embedding model to use.
+            chunk_size: The chunk size to use.
+            rules: The rules to use for chunking.
+            **kwargs: Additional keyword arguments.
+
+        Returns:
+            LateChunker: The created LateChunker.   
+
+        Raises:
+            ValueError: If the recipe is invalid or if the recipe is not found.
+
+        """
+        # Create a hubbie instance
+        rules = RecursiveRules.from_recipe(name, lang, path)
+        return cls(
+            embedding_model=embedding_model,
+            chunk_size=chunk_size,
+            rules=rules,
+            min_characters_per_chunk=min_characters_per_chunk,
+            **kwargs
+        )   
+    
     def _get_late_embeddings(
         self, token_embeddings: "np.ndarray", token_counts: List[int]
     ) -> List["np.ndarray"]:

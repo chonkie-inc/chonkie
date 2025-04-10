@@ -13,6 +13,7 @@ from typing import Any, Callable, List, Literal, Optional, Sequence, Union
 
 from chonkie.types.base import Chunk
 from chonkie.types.sentence import Sentence, SentenceChunk
+from chonkie.utils import Hubbie
 
 from .base import BaseChunker
 
@@ -96,6 +97,58 @@ class SentenceChunker(BaseChunker):
         self.include_delim = include_delim
         self.sep = "✄"
         self.return_type = return_type
+    
+    @classmethod
+    def from_recipe(cls, 
+        name: Optional[str] = "default", 
+        lang: Optional[str] = "en", 
+        path: Optional[str] = None, 
+        tokenizer_or_token_counter: Union[str, Callable, Any] = "gpt2",
+        chunk_size: int = 512,
+        chunk_overlap: int = 0,
+        min_sentences_per_chunk: int = 1,
+        min_characters_per_sentence: int = 12,
+        approximate: bool = False,
+        return_type: Literal["chunks", "texts"] = "chunks",
+        ) -> "SentenceChunker":
+        """Create a SentenceChunker from a recipe.
+
+        Takes the `delim` and `include_delim` from the recipe and passes the rest of the parameters to the constructor.
+
+        The recipes are registered in the [Chonkie Recipe Store](https://huggingface.co/datasets/chonkie-ai/recipes). If the recipe is not there, you can create your own recipe and share it with the community!
+        
+        Args:
+            name: The name of the recipe to use.
+            lang: The language that the recipe should support. 
+            path: The path to the recipe to use.
+            tokenizer_or_token_counter: The tokenizer or token counter to use.
+            chunk_size: The chunk size to use.
+            chunk_overlap: The chunk overlap to use.
+            min_sentences_per_chunk: The minimum number of sentences per chunk to use.
+            min_characters_per_sentence: The minimum number of characters per sentence to use.
+            approximate: Whether to use approximate token counting.
+            return_type: Whether to return chunks or texts.
+            
+        Returns:
+            SentenceChunker: The created SentenceChunker.
+
+        Raises:
+            ValueError: If the recipe is invalid.
+
+        """
+        # Create a hubbie instance
+        hub = Hubbie()
+        recipe = hub.get_recipe(name, lang, path)
+        return cls(
+            tokenizer_or_token_counter=tokenizer_or_token_counter,
+            chunk_size=chunk_size,
+            chunk_overlap=chunk_overlap,
+            min_sentences_per_chunk=min_sentences_per_chunk,
+            min_characters_per_sentence=min_characters_per_sentence,
+            delim=recipe["recipe"]["delimiters"],
+            include_delim=recipe["recipe"]["include_delim"],
+            return_type=return_type,
+        )
 
 
     def _split_text(self, text: str) -> List[str]:

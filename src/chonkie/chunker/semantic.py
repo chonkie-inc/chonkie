@@ -2,11 +2,12 @@
 
 import importlib.util as importutil
 import warnings
-from typing import TYPE_CHECKING, List, Literal, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Literal, Optional, Union
 
 from chonkie.chunker.base import BaseChunker
 from chonkie.embeddings.base import BaseEmbeddings
 from chonkie.types.semantic import SemanticChunk, SemanticSentence, Sentence
+from chonkie.utils import Hubbie
 
 if TYPE_CHECKING:
     import numpy as np
@@ -48,7 +49,7 @@ class SemanticChunker(BaseChunker):
         delim: Union[str, List[str]] = [".", "!", "?", "\n"],
         include_delim: Union[Literal["prev", "next"], None] = "prev",
         return_type: Literal["chunks", "texts"] = "chunks",
-        **kwargs,
+        **kwargs: Dict[str, Any],
     ) -> None:  # type: ignore
         """Initialize the SemanticChunker.
 
@@ -149,6 +150,67 @@ class SemanticChunker(BaseChunker):
 
         # Remove the multiprocessing flag from the base class
         self._use_multiprocessing = False
+
+    @classmethod
+    def from_recipe(cls, 
+                    name: str = "default", 
+                    lang: Optional[str] = "en", 
+                    path: Optional[str] = None, 
+                    embedding_model: Union[str, BaseEmbeddings] = "minishlab/potion-base-8M",
+                    mode: str = "window",
+                    threshold: Union[str, float, int] = "auto",
+                    chunk_size: int = 512,
+                    similarity_window: int = 1,
+                    min_sentences: int = 1,
+                    min_chunk_size: int = 2,
+                    min_characters_per_sentence: int = 12,
+                    threshold_step: float = 0.01,
+                    return_type: Literal["chunks", "texts"] = "chunks",
+                    **kwargs: Dict[str, Any]    
+                    ) -> "SemanticChunker":
+        """Create a SemanticChunker from a recipe.
+
+        Args:
+            name: The name of the recipe to use.
+            lang: The language that the recipe should support.
+            path: The path to the recipe to use.
+            embedding_model: The embedding model to use.
+            mode: The mode to use for grouping sentences.
+            threshold: The threshold to use for semantic similarity.
+            chunk_size: The maximum tokens allowed per chunk.
+            similarity_window: The number of sentences to consider for similarity threshold calculation.
+            min_sentences: The minimum number of sentences per chunk.
+            min_chunk_size: The minimum number of tokens per chunk.
+            min_characters_per_sentence: The minimum number of characters per sentence.
+            threshold_step: The step size for similarity threshold calculation.
+            return_type: Whether to return chunks or texts.
+            **kwargs: Additional keyword arguments.
+
+        Returns:
+            SemanticChunker: The created SemanticChunker.
+
+        Raises:
+            ValueError: If the recipe is invalid.
+
+        """
+        # Create a hubbie instance
+        hub = Hubbie()
+        recipe = hub.get_recipe(name, lang, path)
+        return cls(
+            embedding_model=embedding_model,
+            mode=mode,
+            threshold=threshold,
+            chunk_size=chunk_size,
+            similarity_window=similarity_window,
+            min_sentences=min_sentences,
+            min_chunk_size=min_chunk_size,
+            min_characters_per_sentence=min_characters_per_sentence,
+            threshold_step=threshold_step,
+            delim=recipe["recipe"]["delimiters"],
+            include_delim=recipe["recipe"]["include_delim"],
+            return_type=return_type,
+            **kwargs,
+        ) 
 
     def _split_sentences(
         self,

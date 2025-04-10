@@ -76,25 +76,43 @@ class RecursiveChunker(BaseChunker):
 
     @classmethod
     def from_recipe(cls, 
-                    recipe_name: str = 'default', 
+                    name: Optional[str] = 'default', 
                     lang: Optional[str] = 'en',
+                    path: Optional[str] = None,
+                    tokenizer_or_token_counter: Union[str, Callable, Any] = "gpt2",
                     chunk_size: int = 512,
                     min_characters_per_chunk: int = 24,
                     return_type: Literal["texts", "chunks"] = "chunks",
                     ) -> "RecursiveChunker":
-        """Create a RecursiveChunker object from a recipe."""
-        hub = Hubbie()
-        recipe = hub.get_recipe(recipe_name, lang)
-        if recipe is not None:
-            return cls(
-                tokenizer_or_token_counter=recipe["tokenizer"],
-                rules=RecursiveRules.from_recipe(recipe_name, lang),
-                chunk_size=chunk_size,
-                min_characters_per_chunk=min_characters_per_chunk,
-                return_type=return_type,
-            )
-        else:
-            raise ValueError(f"Tried getting recipe `{recipe_name}_{lang}.json` but it is not available.")
+        """Create a RecursiveChunker object from a recipe.
+
+        The recipes are registered in the [Chonkie Recipe Store](https://huggingface.co/datasets/chonkie-ai/recipes). If the recipe is not there, you can create your own recipe and share it with the community!
+        
+        Args:
+            name (Optional[str]): The name of the recipe.
+            lang (Optional[str]): The language that the recursive chunker should support.
+            path (Optional[str]): The path to the recipe.
+            tokenizer_or_token_counter (Union[str, Callable, Any]): The tokenizer or token counter to use.
+            chunk_size (int): The chunk size.
+            min_characters_per_chunk (int): The minimum number of characters per chunk.
+            return_type (Literal["texts", "chunks"]): The type of return value.
+
+        Returns:
+            RecursiveChunker: The RecursiveChunker object.
+
+        Raises:
+            ValueError: If the recipe is not found.
+
+        """
+        # Create a recursive rules object
+        rules = RecursiveRules.from_recipe(name, lang, path)
+        return cls(
+            tokenizer_or_token_counter=tokenizer_or_token_counter,
+            rules=rules,
+            chunk_size=chunk_size,
+            min_characters_per_chunk=min_characters_per_chunk,
+            return_type=return_type,
+        )
 
     @lru_cache(maxsize=4096)
     def _estimate_token_count(self, text: str) -> int:
