@@ -49,6 +49,7 @@ Homepage = "https://github.com/chonkie-inc/chonkie"
 Documentation = "https://docs.chonkie.ai"
 
 [project.optional-dependencies]
+hub = ["huggingface-hub>=0.24.0", "jsonschema>=4.23.0"]
 model2vec = ["model2vec>=0.3.0", "numpy>=2.0.0, <3.0"]
 st = ["sentence-transformers>=3.0.0", "numpy>=2.0.0, <3.0", "accelerate>=1.6.0"]
 openai = ["tiktoken>=0.5.0", "openai>=1.0.0", "numpy>=2.0.0, <3.0"]
@@ -62,6 +63,8 @@ all = [
     "model2vec>=0.3.0",
     "cohere>=5.13.0",
     "accelerate>=1.6.0",
+    "huggingface-hub>=0.24.0",
+    "jsonschema>=4.23.0",
 ]
 dev = [
     "tiktoken>=0.5.0",
