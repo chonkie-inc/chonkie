@@ -3,14 +3,14 @@
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Dict, Optional
 
-from .base import Chunk
+from .recursive import RecursiveChunk
 
 if TYPE_CHECKING:
     import numpy as np
 
 
 @dataclass
-class LateChunk(Chunk):
+class LateChunk(RecursiveChunk):
     """Class to represent the late chunk.
 
     Attributes:

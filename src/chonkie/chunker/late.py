@@ -1,7 +1,7 @@
 """Module containing the LateChunker class."""
 
 import importlib.util as importutil
-from typing import Any, List, Union
+from typing import Any, List, Optional, Union
 
 # Get all the Chonkie imports
 from chonkie.chunker.recursive import RecursiveChunker
@@ -75,12 +75,12 @@ class LateChunker(RecursiveChunker):
     
     @classmethod
     def from_recipe(cls, 
-                    name: str = "default", 
+                    name: Optional[str] = "default", 
                     lang: Optional[str] = "en", 
                     path: Optional[str] = None, 
                     embedding_model: Union[str, BaseEmbeddings] = "sentence-transformers/all-MiniLM-L6-v2",
                     chunk_size: int = 512,
-                    rules: RecursiveRules = RecursiveRules(),
+                    min_characters_per_chunk: int = 24,
                     **kwargs: Any) -> "LateChunker":
         """Create a LateChunker from a recipe.
 
