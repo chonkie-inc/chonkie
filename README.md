@@ -24,7 +24,7 @@ Tired of making your gazillionth chunker? Sick of the overhead of large librarie
 **⚡ Fast**: CHONK at the speed of light! zooooom </br>
 **🪶 Light-weight**: No bloat, just CHONK </br>
 **🌏 Wide support**: CHONK with your favorite tokenizer, embedding model and APIs! </br>
-**💬 ️Multilingual**: Supports English and Hindi CHONKS! (more coming 🔜) </br>
+**💬 ️Multilingual**: Out-of-the-box support for 5+ language CHONKS (more coming 🔜) </br>
 **☁️ Cloud-Ready**: CHONK locally or in the [Chonkie Cloud](https://cloud.chonkie.ai) </br>
 **🦛 Cute CHONK mascot**: psst it's a pygmy hippo btw </br>
 **❤️ [Moto Moto](#acknowledgements)'s favorite python library** </br>
