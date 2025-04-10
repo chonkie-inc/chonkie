@@ -278,6 +278,55 @@ def test_sentence_chunker_min_characters_per_sentence(tokenizer: Tokenizer, samp
     assert len(chunks) == 1
     assert chunks[0].text == "Hello!"
 
+def test_sentence_chunker_from_recipe_default() -> None:
+    """Test that SentenceChunker.from_recipe works with default parameters."""
+    chunker = SentenceChunker.from_recipe()
+
+    assert chunker is not None
+    assert chunker.delim == [".", "!", "?", "\n"]
+    assert chunker.include_delim == "prev"
+
+def test_sentence_chunker_from_recipe_custom_params() -> None:
+    """Test that SentenceChunker.from_recipe works with custom parameters."""
+    chunker = SentenceChunker.from_recipe(
+        name="default",
+        lang="en",
+        chunk_size=256,
+        min_characters_per_sentence=32,
+        return_type="texts"
+    )
+
+    assert chunker is not None
+    assert chunker.chunk_size == 256
+    assert chunker.min_characters_per_sentence == 32
+    assert chunker.return_type == "texts"
+    assert chunker.delim == [".", "!", "?", "\n"]
+    assert chunker.include_delim == "prev"
+
+def test_sentence_chunker_from_recipe_custom_lang() -> None:
+    """Test that SentenceChunker.from_recipe works with custom language."""
+    chunker = SentenceChunker.from_recipe(
+        name="default",
+        lang="hi",
+        chunk_size=512,
+        min_characters_per_sentence=12,
+        return_type="chunks",
+    )
+
+    assert chunker is not None
+    assert chunker.chunk_size == 512
+    assert chunker.min_characters_per_sentence == 12
+    assert chunker.return_type == "chunks"
+    assert chunker.delim is not None
+    assert chunker.include_delim is not None
+
+def test_sentence_chunker_from_recipe_nonexistent() -> None:
+    """Test that SentenceChunker.from_recipe raises an error if the recipe does not exist."""
+    with pytest.raises(ValueError):
+        SentenceChunker.from_recipe(name="invalid")
+    
+    with pytest.raises(ValueError):
+        SentenceChunker.from_recipe(name="default", lang="invalid")
 
 if __name__ == "__main__":
     pytest.main()
