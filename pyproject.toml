@@ -67,7 +67,6 @@ all = [
     "jsonschema>=4.23.0",
 ]
 dev = [
-    "tiktoken>=0.5.0",
     "datasets>=1.14.0",
     "transformers>=4.0.0",
     "pytest>=6.2.0",
