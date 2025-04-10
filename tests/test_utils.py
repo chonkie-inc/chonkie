@@ -39,7 +39,7 @@ def test_hubbie_get_recipe_hub(hubbie: Hubbie) -> None:
 
 def test_hubbie_get_recipe_path(hubbie: Hubbie) -> None:
     """Test the Hubbie.get_recipe method with a path."""
-    recipe = hubbie.get_recipe(path="tests/data/recipe.json")
+    recipe = hubbie.get_recipe(path="tests/samples/recipe.json")
     assert recipe is not None
     assert isinstance(recipe, dict)
     assert "recipe" in recipe
@@ -50,7 +50,7 @@ def test_hubbie_get_recipe_invalid(hubbie: Hubbie) -> None:
     """Test the Hubbie.get_recipe method with an invalid recipe."""
     # Check for the case where path is provided
     with pytest.raises(ValueError):
-        hubbie.get_recipe(path="tests/data/invalid_recipe.json")
+        hubbie.get_recipe(path="tests/samples/invalid_recipe.json")
 
     # Check for the case where name and lang are provided
     with pytest.raises(ValueError):
@@ -58,7 +58,7 @@ def test_hubbie_get_recipe_invalid(hubbie: Hubbie) -> None:
 
     # Check for the case where path is None
     with pytest.raises(ValueError):
-        hubbie.get_recipe(name="invalid", lang="en", path="tests/data/invalid_recipe.json")
+        hubbie.get_recipe(name="invalid", lang="en", path="tests/samples/invalid_recipe.json")
     
     # Check for the case where lang is None
     with pytest.raises(ValueError):
@@ -70,7 +70,7 @@ def test_hubbie_get_recipe_invalid(hubbie: Hubbie) -> None:
 
 def test_hubbie_validate_recipe(hubbie: Hubbie) -> None:
     """Test the Hubbie.validate_recipe method."""
-    recipe = hubbie.get_recipe(path="tests/data/recipe.json")
+    recipe = hubbie.get_recipe(path="tests/samples/recipe.json")
     assert recipe is not None
     assert hubbie._validate_recipe(recipe) is True
 
