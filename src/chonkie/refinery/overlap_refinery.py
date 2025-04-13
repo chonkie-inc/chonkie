@@ -40,6 +40,8 @@ class OverlapRefinery:
         self.chunk_size = chunk_size
         self.tokenizer = tokenizer
 
+        if self.context_size < 0:
+            raise ValueError("context_size must be a non-negative integer.")
         if self.context_size >= chunk_size:
             raise ValueError("context_size must be less than chunk_size.")
         if chunk_size is None or chunk_size <= 0:
@@ -81,7 +83,7 @@ class OverlapRefinery:
                 if self.merge:
                     chunk.text = context_text + chunk.text
                     chunk.start_index = context_start
-                    chunk.token_count = len(self.tokenizer.encode(chunk.text))
+                    chunk.token_count += len(self.tokenizer.encode(context_text))
                 else:
                     setattr(chunk, "context", context_text)
             elif self.method == "suffix":
@@ -89,7 +91,7 @@ class OverlapRefinery:
                 if self.merge:
                     chunk.text = chunk.text + context_text
                     chunk.end_index = context_end
-                    chunk.token_count = len(self.tokenizer.encode(chunk.text))
+                    chunk.token_count += len(self.tokenizer.encode(context_text))
                 else:
                     setattr(chunk, "context", context_text)
 
