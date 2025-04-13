@@ -9,6 +9,8 @@ The tests verify:
 - Similarity calculation
 """
 
+from typing import Callable
+
 import numpy as np
 import pytest
 
@@ -32,6 +34,10 @@ class CustomEmbeddings(BaseEmbeddings):
         """Count the number of tokens in a text string."""
         # Very naive token counting—split by whitespace
         return len(text.split())
+
+    def get_tokenizer_or_token_counter(self) -> Callable[[str], int]:
+        """Return the tokenizer or token counter."""
+        return self.count_tokens
 
     def similarity(self, u: "np.ndarray", v: "np.ndarray") -> float:
         """Calculate the cosine similarity between two vectors."""

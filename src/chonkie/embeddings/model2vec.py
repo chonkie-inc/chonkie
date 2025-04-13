@@ -6,8 +6,14 @@ from typing import TYPE_CHECKING, List, Union
 from chonkie.embeddings.base import BaseEmbeddings
 
 if TYPE_CHECKING:
-    import numpy as np
-    from model2vec import StaticModel
+    try:
+        import numpy as np
+        from model2vec import StaticModel
+        from tokenizers import Tokenizer
+    except ImportError:
+        np = Any  # type: ignore
+        StaticModel = Any  # type: ignore
+        Tokenizer = Any  # type: ignore
 
 
 class Model2VecEmbeddings(BaseEmbeddings):
@@ -51,28 +57,19 @@ class Model2VecEmbeddings(BaseEmbeddings):
 
     def embed(self, text: str) -> "np.ndarray":
         """Embed a single text using the model2vec model."""
-        return self.model.encode(text, convert_to_numpy=True)
+        return self.model.encode(text, convert_to_numpy=True)  # type: ignore
 
     def embed_batch(self, texts: List[str]) -> List["np.ndarray"]:
         """Embed multiple texts using the model2vec model."""
-        return self.model.encode(texts, convert_to_numpy=True)
+        return self.model.encode(texts, convert_to_numpy=True)  # type: ignore
 
-    def count_tokens(self, text: str) -> int:
-        """Count tokens in text using the model's tokenizer."""
-        return len(self.model.tokenizer.encode(text))
-
-    def count_tokens_batch(self, texts: List[str]) -> List[int]:
-        """Count tokens in multiple texts using the model's tokenizer."""
-        encodings = self.model.tokenizer.encode_batch(texts)
-        return [len(enc) for enc in encodings]
-
-    def similarity(self, u: "np.ndarray", v: "np.ndarray") -> "np.float32":
+    def similarity(self, u: "np.ndarray", v: "np.ndarray") -> "np.float32":  # type: ignore
         """Compute cosine similarity of two embeddings."""
         return np.divide(
             np.dot(u, v), np.linalg.norm(u) * np.linalg.norm(v), dtype=np.float32
         )
 
-    def get_tokenizer_or_token_counter(self):
+    def get_tokenizer_or_token_counter(self) -> "Tokenizer":
         """Get the tokenizer or token counter for the model."""
         return self.model.tokenizer
 

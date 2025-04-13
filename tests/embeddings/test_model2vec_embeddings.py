@@ -55,18 +55,6 @@ def test_embed_single_text(
     assert isinstance(embedding, np.ndarray)
     assert embedding.shape == (embedding_model.dimension,)
 
-
-def test_count_tokens_batch_texts(
-    embedding_model: Model2VecEmbeddings, sample_texts: List[str]
-) -> None:
-    """Test that the count_tokens_batch method returns a list of token counts."""
-    token_counts = embedding_model.count_tokens_batch(sample_texts)
-    assert isinstance(token_counts, list)
-    assert len(token_counts) == len(sample_texts)
-    assert all(isinstance(count, int) for count in token_counts)
-    assert all(count > 0 for count in token_counts)
-
-
 def test_similarity(
     embedding_model: Model2VecEmbeddings, sample_texts: List[str]
 ) -> None:

@@ -63,34 +63,6 @@ class BaseEmbeddings(ABC):
         """
         return [self.embed(text) for text in texts]
 
-    @abstractmethod
-    def count_tokens(self, text: str) -> int:
-        """Count the number of tokens in a text string.
-
-        This method should be implemented for embeddings models that require tokenization
-        before embedding.
-
-        Args:
-            text (str): Text string to count tokens for
-
-        Returns:
-            int: Number of tokens in the text string
-
-        """
-        raise NotImplementedError
-
-    def count_tokens_batch(self, texts: List[str]) -> List[int]:
-        """Count the number of tokens in a list of text strings.
-
-        Args:
-            texts (List[str]): List of text strings to count tokens for
-
-        Returns:
-            List[int]: List of token counts for each text in the list
-
-        """
-        return [self.count_tokens(text) for text in texts]
-
     @classmethod
     def _import_dependencies(cls) -> None:
         """Lazy import dependencies for the embeddings implementation.
@@ -152,6 +124,7 @@ class BaseEmbeddings(ABC):
         """
         return importutil.find_spec("numpy") is not None
 
+    @abstractmethod
     def get_tokenizer_or_token_counter(self) -> Union[Any, Callable[[str], int]]:
         """Return the tokenizer or token counter object.
 
@@ -169,7 +142,7 @@ class BaseEmbeddings(ABC):
             token_counter = embeddings.get_tokenizer_or_token_counter()
 
         """
-        return self.count_tokens
+        raise NotImplementedError
 
     def __repr__(self):
         """Representation of the BaseEmbeddings instance."""
