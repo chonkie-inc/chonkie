@@ -74,12 +74,10 @@ class SemanticChunk(SentenceChunk):
         return result
 
     @classmethod
-    def from_dict(cls, data: dict):
+    def from_dict(cls, data: dict) -> "SemanticChunk":
         """Create a SemanticChunk object from a dictionary."""
         sentences_dict = data.pop("sentences")
-        sentences = [
-            SemanticSentence.from_dict(sentence) for sentence in sentences_dict
-        ]
+        sentences = [SemanticSentence.from_dict(sentence) for sentence in sentences_dict]
         return cls(**data, sentences=sentences)
 
     def __repr__(self) -> str:

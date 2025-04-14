@@ -1,4 +1,4 @@
-"""Utility functions for Chonkie."""
+"""Module for managing access to the Chonkie hub."""
 
 import importlib.util as importutil
 import json

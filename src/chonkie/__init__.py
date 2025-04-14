@@ -30,9 +30,13 @@ from .types import (
     Sentence,
     SentenceChunk,
 )
+from .utils import (
+    Hubbie,
+    Visualizer,
+)
 
 # This hippo grows with every release 🦛✨~
-__version__ = "1.0.3a1"
+__version__ = "1.0.3"
 __name__ = "chonkie"
 __author__ = "🦛 Chonkie Inc"
 
@@ -83,4 +87,11 @@ __all__ += [
     "OpenAIEmbeddings",
     "CohereEmbeddings",
     "AutoEmbeddings",
+]
+
+
+# Add all utils classes to __all__
+__all__ += [
+    "Hubbie",
+    "Visualizer",
 ]
