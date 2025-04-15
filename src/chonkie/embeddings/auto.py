@@ -27,6 +27,9 @@ class AutoEmbeddings:
 
          # Get Cohere embeddings
         embeddings = AutoEmbeddings.get_embeddings("cohere://embed-english-light-v3.0", api_key="...")
+        
+        # Get Ollama embeddings
+        embeddings = AutoEmbeddings.get_embeddings("ollama://all-minilm")
 
     """
 
@@ -59,6 +62,9 @@ class AutoEmbeddings:
             # Get Cohere embeddings
             embeddings = AutoEmbeddings.get_embeddings("cohere://embed-english-light-v3.0", api_key="...")
 
+            # Get Ollama embeddings
+            embeddings = AutoEmbeddings.get_embeddings("ollama://all-minilm")
+
         """
         # Load embeddings instance if already provided
         if isinstance(model, BaseEmbeddings):
@@ -85,9 +91,14 @@ class AutoEmbeddings:
                 try:
                     return SentenceTransformerEmbeddings(model, **kwargs)
                 except Exception as e:
-                    raise ValueError(
-                        f"Failed to load embeddings via SentenceTransformerEmbeddings: {e}"
-                    )
+                    # try with ollama - as any gguf model can be loaded through ollama
+                    from .ollama import OllamaEmbeddings
+                    try:
+                        return OllamaEmbeddings(model, **kwargs)
+                    except Exception as e:
+                        raise ValueError(
+                            f"Failed to load embeddings via SentenceTransformerEmbeddings & Ollama: {e}"
+                        )
         else:
             # get the wrapped embeddings instance
             try:

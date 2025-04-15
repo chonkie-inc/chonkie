@@ -16,6 +16,7 @@ from .embeddings import (
     Model2VecEmbeddings,
     OpenAIEmbeddings,
     SentenceTransformerEmbeddings,
+    OllamaEmbeddings
 )
 from .tokenizer import CharacterTokenizer, Tokenizer, WordTokenizer
 from .types import (
@@ -86,6 +87,7 @@ __all__ += [
     "SentenceTransformerEmbeddings",
     "OpenAIEmbeddings",
     "CohereEmbeddings",
+    "OllamaEmbeddings",
     "AutoEmbeddings",
 ]
 

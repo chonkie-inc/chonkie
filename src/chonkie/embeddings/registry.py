@@ -9,6 +9,7 @@ from .cohere import CohereEmbeddings
 from .model2vec import Model2VecEmbeddings
 from .openai import OpenAIEmbeddings
 from .sentence_transformer import SentenceTransformerEmbeddings
+from .ollama import OllamaEmbeddings
 
 
 @dataclass
@@ -172,3 +173,13 @@ EmbeddingsRegistry.register("embed-multilingual-light-v3.0", CohereEmbeddings)
 EmbeddingsRegistry.register("embed-english-v2.0", CohereEmbeddings)
 EmbeddingsRegistry.register("embed-english-light-v2.0", CohereEmbeddings)
 EmbeddingsRegistry.register("embed-multilingual-v2.0", CohereEmbeddings)
+
+# Register Ollama embeddings
+EmbeddingsRegistry.register(
+    "ollama",
+    OllamaEmbeddings,
+    pattern=r"^ollama|^snowflake-arctic-embed|^bge-|^granite-embedding"
+)
+EmbeddingsRegistry.register("nomic-embed-text", OllamaEmbeddings)
+EmbeddingsRegistry.register("mxbai-embed-large", OllamaEmbeddings)
+EmbeddingsRegistry.register("paraphrase-multilingual", OllamaEmbeddings)

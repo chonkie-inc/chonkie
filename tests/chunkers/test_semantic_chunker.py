@@ -10,6 +10,7 @@ from chonkie.embeddings import (
     BaseEmbeddings,
     CohereEmbeddings,
     Model2VecEmbeddings,
+    OllamaEmbeddings,
     OpenAIEmbeddings,
 )
 from chonkie.types.base import Chunk
@@ -63,6 +64,18 @@ def cohere_embedding_model() -> BaseEmbeddings:
     """
     api_key = os.environ.get("COHERE_API_KEY")
     return CohereEmbeddings(model="embed-english-light-v3.0", api_key=api_key)
+
+
+@pytest.fixture
+def ollama_embedding_model():
+    """Fixture that returns an Ollama embedding model for testing.
+    
+    Returns:
+        OllamaEmbeddings: An Ollama model initialized with 'all-minilm'
+            running at endpoint defined at OLLAMA_ENDPOINT
+
+    """
+    return OllamaEmbeddings(model="all-minilm")
 
 
 @pytest.fixture
@@ -156,6 +169,27 @@ def test_semantic_chunker_initialization_cohere(cohere_embedding_model: BaseEmbe
     """Test that the SemanticChunker can be initialized with required parameters."""
     chunker = SemanticChunker(
         embedding_model=cohere_embedding_model,
+        chunk_size=512,
+        threshold=0.5,
+    )
+
+    assert chunker is not None
+    assert chunker.chunk_size == 512
+    assert chunker.threshold == 0.5
+    assert chunker.mode == "window"
+    assert chunker.similarity_window == 1
+    assert chunker.min_sentences == 1
+    assert chunker.min_chunk_size == 2
+
+
+@pytest.mark.skipif(
+    "OLLAMA_ENDPOINT" not in os.environ,
+    reason="Skipping test because OLLAMA_ENDPOINT is not defined",
+)
+def test_semantic_chunker_initialization_ollama(ollama_embedding_model):
+    """Test that the SemanticChunker can be initialized with Ollama model."""
+    chunker = SemanticChunker(
+        embedding_model=ollama_embedding_model,
         chunk_size=512,
         threshold=0.5,
     )
