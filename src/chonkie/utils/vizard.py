@@ -25,7 +25,7 @@ PASTEL_THEME = [
 
 
 # Add all the HTML template content here
-# TODO: Make this prettier in the future — I'm not a fan of the current design
+# COMPLETED: Make this prettier in the future — I'm not a fan of the current design
 # But to keep it simple and minimal, I'm keeping it like this for now
 HTML_TEMPLATE = """
 <!DOCTYPE html>
@@ -36,15 +36,70 @@ HTML_TEMPLATE = """
     <title>{title}</title>
     {favicon_link_tag}
     <style>
-        body {{ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"; line-height: 1.6; padding: 0; margin: 0; background-color: #f0f2f5; color: #333; display: flex; flex-direction: column; min-height: 100vh; }}
-        .content-box {{ max-width: 900px; width: 100%; margin: 30px auto; padding: 30px 20px 20px 20px; background-color: #fff; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); box-sizing: border-box; }}
-        .text-display {{ white-space: pre-wrap; word-wrap: break-word; font-family: "Consolas", "Monaco", "Courier New", monospace; font-size: 0.95em; padding: 0; }}
+        body {{
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+            line-height: 1.6;
+            padding: 0;
+            margin: 0;
+            background-image: linear-gradient(to right, #fef9c3, #ffedd5);
+            color: #1a1a1a;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }}
+        .header{{
+            text-align: center;
+            background-image: linear-gradient(to right, #fef9c3, #ffedd5);
+            padding: 20px 0;
+        }}
+        .content-box {{
+            font-family: monospace;
+            background-color: #fff7ed;
+            color: #7c2d12;
+            border-radius: 0.75rem;
+            border: 4px dashed #fb923c;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+            max-width: 900px;
+            width: 100%;
+            margin: 30px auto;
+            box-sizing: border-box;
+            padding: 0.5rem 1rem;
+        }}
+        h1 {{
+            font-size: 1.8em;
+            color: #7c2d12;
+        }}
+
+        .text-display {{
+            word-wrap: break-word;
+            font-family: monospace;
+            font-size: 1rem;
+            line-height: 1.5;
+            padding: 1rem;
+            text-align: left;
+        }}
         .text-display span[style*="background-color"] {{ border-radius: 3px; padding: 0.1em 0; cursor: help; }}
-        .text-display br {{ display: block; content: ""; margin-top: 0.6em; }}
-        footer {{ text-align: center; margin-top: auto; padding: 15px 0; font-size: 0.8em; color: #888; border-top: 1px solid #eee; background-color: #f0f2f5; width: 100%; }}
-        footer a {{ color: #666; text-decoration: none; }}
-        footer a:hover {{ text-decoration: underline; }}
-        footer .heart {{ color: #d63384; display: inline-block; }}
+        footer {{
+            text-align: center;
+            margin-top: auto;
+            padding: 15px 0;
+            font-size: 0.85em;
+            color: #7c2d12;
+            background-image: linear-gradient(to right, #fef9c3, #ffedd5);
+            border-top: 2px solid #fb923c;
+            width: 100%;
+        }}
+        footer a {{
+            color: #d97706;
+            text-decoration: none;
+        }}
+        footer a:hover {{
+            text-decoration: underline;
+        }}
+        footer .heart {{
+            color: #d63384;
+            display: inline-block;
+        }}
     </style>
 </head>
 <body>
@@ -55,8 +110,11 @@ HTML_TEMPLATE = """
 """
 
 MAIN_TEMPLATE = """
+<div class="header"><h1>{title}</h1></div>
 <div class="content-box">
-    <div class="text-display">{html_parts}</div>
+    <div class="text-display">
+        {html_parts}
+    </div>
 </div>
 """
 
@@ -154,7 +212,23 @@ class Visualizer:
         if full_text is None:
             try:
                 # Reconstruct the full text from the chunks
-                full_text = "".join([chunk.text for chunk in chunks])
+                sorted_chunks = sorted(chunks, key=lambda x: x.start_index) # To ensure that the full text will be correct 
+                text_parts = []
+                prev_end = 0
+                
+                for chunk in sorted_chunks:
+                    # If there's overlap, append only the non-overlapping part
+                    if chunk.start_index < prev_end:
+                        offset = prev_end - chunk.start_index
+                        text_parts.append(chunk.text[offset:])
+                    else:
+                        # No overlap or gap, append the entire chunk text
+                        text_parts.append(chunk.text)
+                    
+                    # Update the previous end position
+                    prev_end = max(prev_end, chunk.end_index)
+                
+                full_text = "".join(text_parts)
             except AttributeError:
                 raise ValueError("Error: Chunks must have 'text', 'start_index', and 'end_index' attributes for automatic text reconstruction.")
             except Exception as e:
@@ -317,7 +391,7 @@ class Visualizer:
 
         # Footer and Main Content (remain the same)
         footer_content = FOOTER_TEMPLATE
-        main_content = MAIN_TEMPLATE.format(html_parts="".join(html_parts))
+        main_content = MAIN_TEMPLATE.format(html_parts="".join(html_parts),title=html.escape(title))
 
         # Assemble HTML, including the favicon tag
         html_content = HTML_TEMPLATE.format(
