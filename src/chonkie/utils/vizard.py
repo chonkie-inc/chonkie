@@ -286,7 +286,24 @@ class Visualizer:
         # If the full text is not provided, we'll try to reconstruct it (assuming the chunks are reconstructable)
         if full_text is None:
             try:
-                 full_text = "".join([chunk.text for chunk in chunks])
+                 # Reconstruct the full text from the chunks
+                sorted_chunks = sorted(chunks, key=lambda x: x.start_index) # To ensure that the full text will be correct 
+                text_parts = []
+                prev_end = 0
+                
+                for chunk in sorted_chunks:
+                    # If there's overlap, append only the non-overlapping part
+                    if chunk.start_index < prev_end:
+                        offset = prev_end - chunk.start_index
+                        text_parts.append(chunk.text[offset:])
+                    else:
+                        # No overlap or gap, append the entire chunk text
+                        text_parts.append(chunk.text)
+                    
+                    # Update the previous end position
+                    prev_end = max(prev_end, chunk.end_index)
+                
+                full_text = "".join(text_parts)
             except AttributeError: 
                 raise AttributeError("Error: Chunks must have 'text', 'start_index', and 'end_index' attributes for automatic text reconstruction. HTML not saved.")
             except Exception as e: 
