@@ -17,6 +17,7 @@ from .embeddings import (
     Model2VecEmbeddings,
     OpenAIEmbeddings,
     SentenceTransformerEmbeddings,
+    InfinityEmbeddings,
 )
 from .refinery import (
     BaseRefinery,
@@ -96,6 +97,7 @@ __all__ += [
     "CohereEmbeddings",
     "AutoEmbeddings",
     "JinaEmbeddings",
+    "InfinityEmbeddings"
 ]
 
 # Add all refinery classes to __all__
