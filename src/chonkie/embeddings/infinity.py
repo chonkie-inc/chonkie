@@ -4,8 +4,10 @@ import importlib.util as importutil
 import aiohttp
 import requests
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Tuple
-import numpy as np
 from .base import BaseEmbeddings
+
+if TYPE_CHECKING:
+    import numpy as np
 
 
 class InfinityEmbeddings(BaseEmbeddings):
@@ -28,11 +30,17 @@ class InfinityEmbeddings(BaseEmbeddings):
         infinity_api_url: str = "https://infinity.modal.michaelfeil.eu", # default url can be http://localhost:7997
     ):
         """
+        Initialize the InfinityEmbeddings.
+
         Args:
-            model: Model identifier.
-            batch_size: Max texts per request.
-            timeout: Timeout in seconds for API requests
-            infinity_api_url: Base URL of Infinity API.
+            model: Name of the embedding model to use (must be in AVAILABLE_MODELS).
+            batch_size: Maximum number of texts sent in a single request (max 32).
+            timeout: HTTP request timeout, in seconds.
+            infinity_api_url: Base URL for the Infinity API endpoint.
+
+        Raises:
+            ValueError: If the model is unsupported or the URL is invalid.
+            ImportError: If numpy is not installed.
         """
         super().__init__()
         self._import_dependencies()
@@ -46,7 +54,7 @@ class InfinityEmbeddings(BaseEmbeddings):
         self.model: str = model
         self.timeout: float = timeout
         self._dimension: int = self.AVAILABLE_MODELS[model]
-        self._batch_size: int = min(batch_size,32)
+        self._batch_size: int = min(batch_size,32) # batch size assumed to max 32
         self.infinity_api_url: str = infinity_api_url.rstrip("/")
         self._session = requests.Session()
 
@@ -89,22 +97,24 @@ class InfinityEmbeddings(BaseEmbeddings):
             "timeout": self.timeout,
         }
 
-    def _sync_request(self, batch_texts: List[str]) -> List[List[float]]:
+    def _sync_request(self, batch_texts: List[str]) -> List["np.ndarray"]:
         """Send a synchronous request to embed a batch of texts."""
         if not batch_texts:
             return []
         kwargs = self._request_kwargs(batch_texts)
+        
         response = self._session.post(**kwargs)
         if response.status_code != 200:
             raise RuntimeError(
                 f"Infinity API error {response.status_code}: {response.text}"
             )
         data = response.json().get("data", [])
-        return [item.get("embedding", []) for item in data]
+        return [np.array(item.get("embedding", []), dtype=np.float32) for item in data]
+
 
     async def _async_request(
         self, session: aiohttp.ClientSession, batch_texts: List[str]
-    ) -> List[List[float]]:
+    ) -> List["np.ndarray"]:
         """Send an asynchronous request to embed a batch of texts."""
         if not batch_texts:
             return []
@@ -117,9 +127,10 @@ class InfinityEmbeddings(BaseEmbeddings):
                 )
             payload = await response.json()
             data = payload.get("data", [])
-            return [item.get("embedding", []) for item in data]
+            return [np.array(item.get("embedding", []), dtype=np.float32) for item in data]
 
-    def embed_batch(self, texts: List[str]) -> List[List[float]]:
+
+    def embed_batch(self, texts: List[str]) -> List["np.ndarray"]:
         """Synchronous batch embedding."""
         if not texts:
             return []
@@ -135,14 +146,14 @@ class InfinityEmbeddings(BaseEmbeddings):
             results = [emb for chunk in chunks for emb in chunk]
         return restore(results)
 
-    def embed(self, text: str) -> List[float]:
+    def embed(self, text: str) -> "np.ndarray":
         """Embed a single text string synchronously."""
         if not isinstance(text, str):
             raise TypeError("Input text must be a string.")
         embeddings = self.embed_batch([text])
-        return embeddings[0] if embeddings else []
+        return np.array(embeddings[0] if embeddings else [], dtype=np.float32)
 
-    async def aembed_batch(self, texts: List[str]) -> List[List[float]]:
+    async def aembed_batch(self, texts: List[str]) -> List["np.ndarray"]:
         """Asynchronous batch embedding."""
         if not texts:
             return []
@@ -150,22 +161,23 @@ class InfinityEmbeddings(BaseEmbeddings):
         conn = aiohttp.TCPConnector(limit=32)
         async with aiohttp.ClientSession(connector=conn, trust_env=True) as session:
             tasks = [self._async_request(session, b) for b in batches]
-            chunks = await asyncio.gather(*tasks)
-        results = [emb for chunk in chunks for emb in chunk]
-        return restore(results)
+            chunks: List[List[np.ndarray]] = await asyncio.gather(*tasks)
+        flat: List[np.ndarray] = [emb for chunk in chunks for emb in chunk]
+        return restore(flat)
 
-    async def aembed(self, text: str) -> List[float]:
+    async def aembed(self, text: str) -> "np.ndarray":
         """Embed a single text string asynchronously."""
         if not isinstance(text, str):
             raise TypeError("Input text must be a string.")
         embeddings = await self.aembed_batch([text])
-        return embeddings[0] if embeddings else []
+        return np.array(embeddings[0] if embeddings else [], dtype=np.float32)
 
 
     @classmethod
     def _import_dependencies(cls) -> None:
         """Lazily import the numpy package."""
         if cls.is_available():
+            global np
             import numpy as np
         else:
             raise ImportError(
@@ -184,8 +196,9 @@ class InfinityEmbeddings(BaseEmbeddings):
 
     @classmethod
     def is_available(cls) -> bool:
-        """Check if the infinity_emb package is installed."""
+        """Check if numpy is installed, required for embeddings."""
         return importutil.find_spec("numpy") is not None
 
     def __repr__(self) -> str:
+        """String representation of the InfinityEmbeddings instance."""
         return f"InfinityEmbeddings(model={self.model!r})"
