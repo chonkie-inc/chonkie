@@ -1,6 +1,6 @@
 name: Python Automated Testing
 
-on: [push]
+on: [push, pull_request]
 
 jobs:
   test:
@@ -27,7 +27,7 @@ jobs:
       - name: Lint with Ruff
         run: ruff check --fix
         continue-on-error: true
-      
+
       - name: Cache Hugging Face models
         uses: actions/cache@v4
         with:

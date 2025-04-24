@@ -1,6 +1,7 @@
 """Module for chunkers."""
 
 from .base import BaseChunker
+from .code import CodeChunker
 from .late import LateChunker
 from .recursive import RecursiveChunker
 from .sdpm import SDPMChunker
@@ -16,4 +17,5 @@ __all__ = [
     "SemanticChunker",
     "SDPMChunker",
     "LateChunker",
+    "CodeChunker",
 ]

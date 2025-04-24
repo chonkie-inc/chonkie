@@ -1,7 +1,7 @@
 """Test the CodeChunker class."""
 import pytest
 
-from chonkie.chunker.code import CodeChunker
+from chonkie import CodeChunker
 from chonkie.types.code import CodeChunk
 
 
