@@ -1,6 +1,9 @@
 name: Python Automated Testing
 
-on: [push, pull_request]
+on:
+  pull_request:
+    branches:
+      - main
 
 jobs:
   test:
@@ -40,6 +43,12 @@ jobs:
         run: |
           source .venv/bin/activate
           python -m pytest -n auto -vv --cov=chonkie --cov-branch --cov-report=xml --cov-report=term-missing --junitxml=junit.xml
+        env: 
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          CHONKIE_API_KEY: ${{ secrets.CHONKIE_API_KEY }}
+          COHERE_API_KEY: ${{ secrets.COHERE_API_KEY }}
+          JINA_API_KEY: ${{ secrets.JINA_API_KEY }}
 
       - name: Upload coverage report to Codecov
         uses: codecov/codecov-action@v5

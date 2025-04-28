@@ -46,7 +46,7 @@ class SDPMChunker(SemanticChunker):
         min_chunk_size: int = 2,
         min_characters_per_sentence: int = 12,
         threshold_step: float = 0.01,
-        delim: Union[str, List[str]] = [".", "!", "?", "\n"],
+        delim: Union[str, List[str]] = [". ", "! ", "? ", "\n"],
         include_delim: Optional[Literal["prev", "next"]] = "prev",
         skip_window: int = 1,
         return_type: Literal["chunks", "texts"] = "chunks",

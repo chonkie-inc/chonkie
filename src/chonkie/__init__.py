@@ -4,10 +4,12 @@ from .chunker import (
     BaseChunker,
     CodeChunker,
     LateChunker,
+    NeuralChunker,
     RecursiveChunker,
     SDPMChunker,
     SemanticChunker,
     SentenceChunker,
+    SlumberChunker,
     TokenChunker,
 )
 from .embeddings import (
@@ -19,6 +21,10 @@ from .embeddings import (
     OpenAIEmbeddings,
     SentenceTransformerEmbeddings,
     InfinityEmbeddings,
+)
+from .genie import (
+    BaseGenie,
+    GeminiGenie,
 )
 from .refinery import (
     BaseRefinery,
@@ -45,7 +51,7 @@ from .utils import (
 )
 
 # This hippo grows with every release 🦛✨~
-__version__ = "1.0.5"
+__version__ = "1.0.6"
 __name__ = "chonkie"
 __author__ = "🦛 Chonkie Inc"
 
@@ -87,7 +93,9 @@ __all__ += [
     "SDPMChunker",
     "RecursiveChunker",
     "LateChunker",
-    "CodeChunker"
+    "CodeChunker",
+    "SlumberChunker",
+    "NeuralChunker",
 ]
 
 # Add all embeddings classes to __all__
@@ -113,4 +121,10 @@ __all__ += [
 __all__ += [
     "Hubbie",
     "Visualizer",
+]
+
+# Add all genie classes to __all__
+__all__ += [
+    "BaseGenie",
+    "GeminiGenie",
 ]

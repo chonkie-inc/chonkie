@@ -98,7 +98,7 @@ class RecursiveRules:
         if self.levels is None:
             paragraphs = RecursiveLevel(delimiters=["\n\n", "\r\n", "\n", "\r"])
             sentences = RecursiveLevel(
-                delimiters=".!?",
+                delimiters=[". ", "! ", "? "],
             )
             pauses = RecursiveLevel(
                 delimiters=[

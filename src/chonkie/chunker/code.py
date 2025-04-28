@@ -39,7 +39,7 @@ class CodeChunker(BaseChunker):
     def __init__(self,
                  tokenizer_or_token_counter: Union[str, List, Any] = "gpt2",
                  chunk_size: int = 512,
-                 language: "SupportedLanguage" = "python",
+                 language: Union[Literal["auto"], "SupportedLanguage"] = "auto",
                  include_nodes: bool = False,
                  return_type: Literal["chunks", "texts"] = "chunks") -> None:
         """Initialize a CodeChunker object.
@@ -65,24 +65,53 @@ class CodeChunker(BaseChunker):
         self.return_type = return_type
         self.include_nodes = include_nodes
 
-        # TODO: Check if this is one of the supported languages
-        self.language = language
+        # TODO: Figure out a way to check if the language is supported by tree-sitter-language-pack
+        #       Currently, we're just assuming that the language is supported.
 
-        # Initialize a Parser based on the language
-        self.parser: Parser = get_parser(language) 
+        # NOTE: Magika is a language detection library made by Google, that uses a 
+        #       deep-learning model to detect the language of the code.
+
+        # Initialize the Magika instance if the language is auto
+        self.language = language
+        if language == "auto":
+            # Set a warning to the user that the language is auto and this might
+            # effect the performance of the chunker.
+            warnings.warn("The language is set to `auto`. This would adversely affect the performance of the chunker. " +
+                         "Consider setting the `language` parameter to a specific language to improve performance.")
+
+            # Set the language to auto and initialize the Magika instance
+            self.magika = Magika() # type: ignore
+            self.parser = None
+        else:
+            self.parser = get_parser(language) # type: ignore
+        
+        # Set the use_multiprocessing flag
+        self._use_multiprocessing = True
 
     def _import_dependencies(self) -> None:
         """Import the dependencies for the CodeChunker."""
         # Lazy import dependencies to avoid importing them when not needed
         try:
-            global Node, Parser, Tree, get_parser, SupportedLanguage
+            # Set the global variables
+            global Node, Parser, Tree
+            global get_parser, SupportedLanguage, Magika
+
+            # Import the dependencies
+            from magika import Magika
             from tree_sitter import Node, Parser, Tree
             from tree_sitter_language_pack import SupportedLanguage, get_parser
         except ImportError:
-            raise ImportError("tree-sitter and tree-sitter-language-pack are not installed." + 
+            raise ImportError("One or more of the following dependencies are not installed: " +
+                             "[ tree-sitter, tree-sitter-language-pack, magika ]" +
                              " Please install them using `pip install chonkie[code]`.")
 
+    def _detect_language(self, bytes_text: bytes) -> "SupportedLanguage":
+        """Detect the language of the code."""
+        response = self.magika.identify_bytes(bytes_text)
+        return response.output.label # type: ignore
+
     def _merge_node_groups(self, node_groups: List[List["Node"]]) -> List["Node"]:
+        """Merge the node groups together."""
         merged_node_group = []
         for group in node_groups: 
             merged_node_group.extend(group)
@@ -286,6 +315,12 @@ class CodeChunker(BaseChunker):
             return []
 
         original_text_bytes = text.encode("utf-8") # Store bytes
+        
+        # At this point, if the language is auto, we need to detect the language
+        # and initialize the parser
+        if self.language == "auto":
+            language = self._detect_language(original_text_bytes)
+            self.parser = get_parser(language) # type: ignore
 
         try:
             # Create the parsing tree for the current code
