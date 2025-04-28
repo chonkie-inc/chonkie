@@ -86,6 +86,8 @@ Chonkie provides several chunkers to help you split your text efficiently for RA
 - **SDPMChunker**: Splits text using a Semantic Double-Pass Merge approach.
 - **LateChunker**: Embeds text and then splits it to have better chunk embeddings.
 - **CodeChunker**: Splits code into structurally meaningful chunks.
+- **NeuralChunker**: Splits text using a neural model.
+- **SlumberChunker**: Splits text using an LLM to find semantically meaningful chunks. Also known as _"AgenticChunker"_.
 
 More on these methods and the approaches taken inside the [docs](https://docs.chonkie.ai)
 
