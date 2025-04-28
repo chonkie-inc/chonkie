@@ -10,6 +10,7 @@ from .jina import JinaEmbeddings
 from .model2vec import Model2VecEmbeddings
 from .openai import OpenAIEmbeddings
 from .sentence_transformer import SentenceTransformerEmbeddings
+from .infinity import InfinityEmbeddings
 
 
 @dataclass
@@ -177,3 +178,9 @@ EmbeddingsRegistry.register("embed-multilingual-v2.0", CohereEmbeddings)
 # Register Jina embeddings
 EmbeddingsRegistry.register("jina", JinaEmbeddings, pattern=r"^jina|^jinaai")
 EmbeddingsRegistry.register("jina-embeddings-v3", JinaEmbeddings)
+
+EmbeddingsRegistry.register("infinity", InfinityEmbeddings, pattern=r"^infinity/|^jinaai/|^michaelfeil/|^mixedbread-ai/|^philschmid/")
+EmbeddingsRegistry.register("jinaai/jina-clip-v1", InfinityEmbeddings)
+EmbeddingsRegistry.register("michaelfeil/bge-small-en-v1.5", InfinityEmbeddings)
+EmbeddingsRegistry.register("mixedbread-ai/mxbai-rerank-xsmall-v1", InfinityEmbeddings)
+EmbeddingsRegistry.register("philschmid/tiny-bert-sst2-distilled", InfinityEmbeddings)
