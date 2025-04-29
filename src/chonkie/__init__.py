@@ -20,6 +20,7 @@ from .embeddings import (
     Model2VecEmbeddings,
     OpenAIEmbeddings,
     SentenceTransformerEmbeddings,
+    OllamaEmbeddings
 )
 from .genie import (
     BaseGenie,
@@ -104,6 +105,7 @@ __all__ += [
     "SentenceTransformerEmbeddings",
     "OpenAIEmbeddings",
     "CohereEmbeddings",
+    "OllamaEmbeddings",
     "AutoEmbeddings",
     "JinaEmbeddings",
 ]
