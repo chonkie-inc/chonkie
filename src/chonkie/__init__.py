@@ -2,25 +2,39 @@
 
 from .chunker import (
     BaseChunker,
+    CodeChunker,
     LateChunker,
+    NeuralChunker,
     RecursiveChunker,
     SDPMChunker,
     SemanticChunker,
     SentenceChunker,
+    SlumberChunker,
     TokenChunker,
 )
 from .embeddings import (
     AutoEmbeddings,
     BaseEmbeddings,
     CohereEmbeddings,
+    JinaEmbeddings,
     Model2VecEmbeddings,
     OpenAIEmbeddings,
     SentenceTransformerEmbeddings,
     OllamaEmbeddings
 )
+from .genie import (
+    BaseGenie,
+    GeminiGenie,
+)
+from .refinery import (
+    BaseRefinery,
+    EmbeddingsRefinery,
+    OverlapRefinery,
+)
 from .tokenizer import CharacterTokenizer, Tokenizer, WordTokenizer
 from .types import (
     Chunk,
+    CodeChunk,
     Context,
     LateChunk,
     RecursiveChunk,
@@ -37,7 +51,7 @@ from .utils import (
 )
 
 # This hippo grows with every release 🦛✨~
-__version__ = "1.0.3"
+__version__ = "1.0.6"
 __name__ = "chonkie"
 __author__ = "🦛 Chonkie Inc"
 
@@ -60,6 +74,7 @@ __all__ += [
     "Sentence",
     "SemanticSentence",
     "LateChunk",
+    "CodeChunk",
 ]
 
 # Add all tokenizer classes to __all__
@@ -78,6 +93,9 @@ __all__ += [
     "SDPMChunker",
     "RecursiveChunker",
     "LateChunker",
+    "CodeChunker",
+    "SlumberChunker",
+    "NeuralChunker",
 ]
 
 # Add all embeddings classes to __all__
@@ -89,11 +107,24 @@ __all__ += [
     "CohereEmbeddings",
     "OllamaEmbeddings",
     "AutoEmbeddings",
+    "JinaEmbeddings",
 ]
 
+# Add all refinery classes to __all__
+__all__ += [
+    "BaseRefinery",
+    "OverlapRefinery",
+    "EmbeddingsRefinery",
+]
 
 # Add all utils classes to __all__
 __all__ += [
     "Hubbie",
     "Visualizer",
+]
+
+# Add all genie classes to __all__
+__all__ += [
+    "BaseGenie",
+    "GeminiGenie",
 ]

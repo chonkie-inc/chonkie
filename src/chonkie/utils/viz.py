@@ -8,8 +8,6 @@ from typing import List, Optional, Union
 
 from chonkie.types import Chunk
 
-
-
 # Add the theme for the Visualizer
 # Pastel colored rainbow theme
 PASTEL_THEME = [
@@ -22,7 +20,18 @@ PASTEL_THEME = [
     "#BDB2FF",
     "#FFC6FF",
 ]
-
+# Tiktokenizer theme: [ “#bae6fc”, “#fde68a”, “#bbf7d0”, “#fed7aa”, “#a5f3fc”, “#e5e7eb”, “#eee2fd”, “#e4f9c0”, “#fecdd3”]
+TIKTOKENIZER_THEME = [
+    "#bae6fc",
+    "#fde68a",
+    "#bbf7d0",
+    "#fed7aa",
+    "#a5f3fc",
+    "#e5e7eb",
+    "#eee2fd",
+    "#e4f9c0",
+    "#fecdd3",
+]
 
 # Add all the HTML template content here
 # TODO: Make this prettier in the future — I'm not a fan of the current design
@@ -120,6 +129,8 @@ class Visualizer:
         """Get the theme from the theme name."""
         if theme == "pastel":
             return PASTEL_THEME
+        elif theme == "tiktokenizer":
+            return TIKTOKENIZER_THEME
         else:
             raise ValueError(f"Invalid theme: {theme}")
 

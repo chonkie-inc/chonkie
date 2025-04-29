@@ -5,7 +5,7 @@ from typing import Dict, List, Literal, Optional, Union, cast
 
 import requests
 
-from chonkie.cloud.chunkers.base import CloudChunker
+from .base import CloudChunker
 
 
 class TokenChunker(CloudChunker):

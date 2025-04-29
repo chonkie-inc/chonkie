@@ -16,7 +16,7 @@ class BaseEmbeddings(ABC):
     the embed() and similarity() methods according to their specific embedding strategy.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the BaseEmbeddings class.
 
         This class should be inherited by all embeddings classes and implement the
@@ -63,14 +63,13 @@ class BaseEmbeddings(ABC):
         """
         return [self.embed(text) for text in texts]
 
-    @classmethod
-    def _import_dependencies(cls) -> None:
+    def _import_dependencies(self) -> None:
         """Lazy import dependencies for the embeddings implementation.
 
         This method should be implemented by all embeddings implementations that require
         additional dependencies. It lazily imports the dependencies only when they are needed.
         """
-        if cls.is_available():
+        if self.is_available():
             global np
             import numpy as np
         else:
@@ -78,7 +77,7 @@ class BaseEmbeddings(ABC):
                 "numpy is not available. Please install it via `pip install chonkie[semantic]`"
             )
 
-    def similarity(self, u: "np.ndarray", v: "np.ndarray") -> float:
+    def similarity(self, u: "np.ndarray", v: "np.ndarray") -> "np.float32":
         """Compute the similarity between two embeddings.
 
         Most embeddings models will use cosine similarity for this purpose. However,
@@ -91,12 +90,10 @@ class BaseEmbeddings(ABC):
             v (np.ndarray): Second embedding vector
 
         Returns:
-            float: Similarity score between the two embeddings
+            np.float32: Similarity score between the two embeddings
 
         """
-        return float(
-            np.dot(u, v.T) / (np.linalg.norm(u) * np.linalg.norm(v))
-        )  # cosine similarity
+        return np.float32(np.dot(u, v.T) / (np.linalg.norm(u) * np.linalg.norm(v)))  # cosine similarity
 
     @property
     @abstractmethod
@@ -112,8 +109,7 @@ class BaseEmbeddings(ABC):
         """
         raise NotImplementedError
 
-    @classmethod
-    def is_available(cls) -> bool:
+    def is_available(self) -> bool:
         """Check if this embeddings implementation is available (dependencies installed).
 
         Override this method to add custom dependency checks.
@@ -144,7 +140,7 @@ class BaseEmbeddings(ABC):
         """
         raise NotImplementedError
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Representation of the BaseEmbeddings instance."""
         return self.__class__.__name__ + "()"
 

@@ -46,7 +46,7 @@ class SemanticChunker(BaseChunker):
         min_chunk_size: int = 2,
         min_characters_per_sentence: int = 12,
         threshold_step: float = 0.01,
-        delim: Union[str, List[str]] = [".", "!", "?", "\n"],
+        delim: Union[str, List[str]] = [". ", "! ", "? ", "\n"],
         include_delim: Union[Literal["prev", "next"], None] = "prev",
         return_type: Literal["chunks", "texts"] = "chunks",
         **kwargs: Dict[str, Any],

@@ -8,7 +8,12 @@ from typing import TYPE_CHECKING, List, Optional
 from .base import BaseEmbeddings
 
 if TYPE_CHECKING:
-    import numpy as np
+    try:
+        import numpy as np
+        import tiktoken
+    except ImportError:
+        np = Any # type: ignore
+        tiktoken = Any # type: ignore
 
 
 class OpenAIEmbeddings(BaseEmbeddings):
@@ -56,12 +61,12 @@ class OpenAIEmbeddings(BaseEmbeddings):
 
         self.model = model
         self._dimension = self.AVAILABLE_MODELS[model]
-        self._tokenizer = tiktoken.encoding_for_model(model)
+        self._tokenizer = tiktoken.encoding_for_model(model) # type: ignore
         self._batch_size = batch_size
         self._show_warnings = show_warnings
 
         # Setup OpenAI client
-        self.client = OpenAI(
+        self.client = OpenAI(               # type: ignore
             api_key=api_key or os.getenv("OPENAI_API_KEY"),
             organization=organization,
             timeout=timeout,
@@ -146,21 +151,18 @@ class OpenAIEmbeddings(BaseEmbeddings):
 
     def similarity(self, u: "np.ndarray", v: "np.ndarray") -> "np.float32":
         """Compute cosine similarity between two embeddings."""
-        return np.divide(
-            np.dot(u, v), np.linalg.norm(u) * np.linalg.norm(v), dtype=float
-        )
+        return np.float32(np.divide(np.dot(u, v), np.linalg.norm(u) * np.linalg.norm(v)))
 
     @property
     def dimension(self) -> int:
         """Return the embedding dimension."""
         return self._dimension
 
-    def get_tokenizer_or_token_counter(self):
+    def get_tokenizer_or_token_counter(self) -> "tiktoken.Encoding":
         """Return a tiktoken tokenizer object."""
         return self._tokenizer
 
-    @classmethod
-    def is_available(cls) -> bool:
+    def is_available(self) -> bool:
         """Check if the OpenAI package is available."""
         # We should check for OpenAI package alongside Numpy and tiktoken
         return (
@@ -169,14 +171,13 @@ class OpenAIEmbeddings(BaseEmbeddings):
             and importutil.find_spec("tiktoken") is not None
         )
 
-    @classmethod
-    def _import_dependencies(cls) -> None:
+    def _import_dependencies(self) -> None:
         """Lazy import dependencies for the embeddings implementation.
 
         This method should be implemented by all embeddings implementations that require
         additional dependencies. It lazily imports the dependencies only when they are needed.
         """
-        if cls.is_available():
+        if self.is_available():
             global np, tiktoken, OpenAI
             import numpy as np
             import tiktoken

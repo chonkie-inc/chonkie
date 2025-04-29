@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "chonkie"
-version = "1.0.3"
+version = "1.0.6"
 description = "🦛 CHONK your texts with Chonkie ✨ - The no-nonsense chunking library"
 readme = "README.md"
 requires-python = ">=3.9"
@@ -51,14 +51,21 @@ Documentation = "https://docs.chonkie.ai"
 [project.optional-dependencies]
 hub = ["huggingface-hub>=0.24.0", "jsonschema>=4.23.0"]
 viz = ["rich>=13.0.0"]
+code = ["tree-sitter>=0.20.0", "tree-sitter-language-pack>=0.7.0", "magika>=0.6.0, <0.7.0"]
 model2vec = ["model2vec>=0.3.0", "numpy>=2.0.0, <3.0"]
 st = ["sentence-transformers>=3.0.0", "numpy>=2.0.0, <3.0", "accelerate>=1.6.0"]
 openai = ["tiktoken>=0.5.0", "openai>=1.0.0", "numpy>=2.0.0, <3.0"]
-semantic = ["model2vec>=0.3.0", "numpy>=2.0.0, <3.0"]
 cohere = ["cohere>=5.13.0", "numpy>=2.0.0, <3.0"]
 ollama = ["ollama>=0.4.0", "numpy>=2.0.0, <3.0", "requests>=2.32.0"]
+jina = ["numpy>=2.0.0, <3.0"]
+semantic = ["model2vec>=0.3.0", "numpy>=2.0.0, <3.0"]
+neural = ["transformers>=4.0.0", "torch>=2.0.0, <3.0"]
+genie = ["pydantic", "google-genai"]
 all = [
     "rich>=13.0.0",
+    "tree-sitter>=0.20.0",
+    "tree-sitter-language-pack>=0.7.0",
+    "magika>=0.6.0, <0.7.0",
     "sentence-transformers>=3.0.0",
     "numpy>=2.0.0, <3.0",
     "openai>=1.0.0",
@@ -70,6 +77,10 @@ all = [
     "jsonschema>=4.23.0",
     "ollama>=0.4.0",
     "requests>=2.32.0"
+    "pydantic",
+    "google-genai",
+    "transformers>=4.0.0",
+    "torch>=2.0.0, <3.0",
 ]
 dev = [
     "datasets>=1.14.0",
@@ -92,8 +103,11 @@ packages = [
     "chonkie.chunker",
     "chonkie.types",
     "chonkie.embeddings",
+    "chonkie.utils",
+    "chonkie.refinery",
+    "chonkie.genie",
     "chonkie.cloud",
-    "chonkie.utils"
+    "chonkie.cloud.chunker",
 ]
 
 [tool.ruff]

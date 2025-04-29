@@ -1,0 +1,65 @@
+name: Python Automated Testing
+
+on:
+  pull_request:
+    branches-ignore:
+      - 'main'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.9", "3.10", "3.11", "3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv and set-up python
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          version: latest
+          enable-cache: true
+          cache-dependency-glob: "pyproject.toml"
+
+      - name: Install the project
+        run: uv sync --all-extras --dev
+
+      - name: Lint with Ruff
+        run: ruff check --fix
+        continue-on-error: true
+
+      - name: Cache Hugging Face models
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/huggingface/hub
+          key: ${{ runner.os }}-huggingface-${{ hashFiles('pyproject.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-huggingface-
+
+      - name: Run tests
+        run: |
+          source .venv/bin/activate
+          python -m pytest -n auto -vv --cov=chonkie --cov-branch --cov-report=xml --cov-report=term-missing --junitxml=junit.xml
+
+      - name: Upload coverage report to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: chonkie-inc/chonkie
+          # Only upload coverage from the latest Python version
+          fail_ci_if_error: false
+          verbose: true
+          override_commit: ${{ github.sha }}
+          flags: python-${{ matrix.python-version }}
+
+      - name: Upload test results to Codecov
+        if: ${{ !cancelled() }}
+        uses: codecov/test-results-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          flags: python-${{ matrix.python-version }}
+          fail_ci_if_error: false
+          verbose: true

@@ -5,8 +5,9 @@ from typing import Callable, Dict, List, Literal, Optional, Union, cast
 
 import requests
 
-from chonkie.cloud.chunkers.base import CloudChunker
 from chonkie.types import RecursiveRules
+
+from .base import CloudChunker
 
 
 class RecursiveChunker(CloudChunker):

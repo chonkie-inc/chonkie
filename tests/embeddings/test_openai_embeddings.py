@@ -106,7 +106,7 @@ def test_similarity(embedding_model: OpenAIEmbeddings, sample_texts: List[str]) 
     """Test that OpenAIEmbeddings correctly calculates similarity between two embeddings."""
     embeddings = embedding_model.embed_batch(sample_texts)
     similarity_score = embedding_model.similarity(embeddings[0], embeddings[1])
-    assert isinstance(similarity_score, float)
+    assert isinstance(similarity_score, np.float32)
     assert 0.0 <= similarity_score <= 1.0
 
 
@@ -126,7 +126,7 @@ def test_dimension_property(embedding_model: OpenAIEmbeddings) -> None:
 )
 def test_is_available() -> None:
     """Test that OpenAIEmbeddings correctly checks if it is available."""
-    assert OpenAIEmbeddings.is_available() is True
+    assert OpenAIEmbeddings().is_available() is True
 
 
 @pytest.mark.skipif(

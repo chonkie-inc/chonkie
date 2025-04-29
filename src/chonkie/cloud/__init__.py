@@ -1,6 +1,6 @@
 """Module for Chonkie Cloud APIs."""
 
-from .chunkers import (
+from .chunker import (
     CloudChunker,
     RecursiveChunker,
     SemanticChunker,

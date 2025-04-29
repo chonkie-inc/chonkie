@@ -116,11 +116,14 @@ class Chunk:
         return result
 
     @classmethod
-    def from_dict(cls, data: dict):
+    def from_dict(cls, data: dict) -> "Chunk":
         """Create a Chunk object from a dictionary."""
-        context_repr = data.pop("context")
+        context_repr = data.get("context", None)
         return cls(
-            **data,
+            text=data["text"],
+            start_index=data["start_index"],
+            end_index=data["end_index"],
+            token_count=data["token_count"],
             context=Context.from_dict(context_repr) if context_repr else None,
         )
 

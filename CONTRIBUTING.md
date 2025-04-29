@@ -90,7 +90,7 @@ src/
 
 ### For Beginners
 
-Start with issues labeled [`good-first-issue`](https://github.com/chonkie-ai/chonkie/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22)
+Start with issues labeled [`good-first-issue`](https://github.com/chonkie-inc/chonkie/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22)
 
 ### Documentation
 

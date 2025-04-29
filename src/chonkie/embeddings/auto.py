@@ -34,9 +34,7 @@ class AutoEmbeddings:
     """
 
     @classmethod
-    def get_embeddings(
-        cls, model: Union[str, BaseEmbeddings, Any], **kwargs
-    ) -> BaseEmbeddings:
+    def get_embeddings(cls, model: Union[str, BaseEmbeddings, Any], **kwargs: Any) -> BaseEmbeddings:
         """Get embeddings instance based on identifier.
 
         Args:
@@ -70,35 +68,52 @@ class AutoEmbeddings:
         if isinstance(model, BaseEmbeddings):
             return model
         elif isinstance(model, str):
-            # Try to find matching implementation via registry
+            embeddings_instance = None
             try:
+                # Try to find matching implementation via registry
                 embeddings_cls = EmbeddingsRegistry.match(model)
-                if embeddings_cls and embeddings_cls.is_available():
+                if embeddings_cls:
                     try:
-                        return embeddings_cls(model, **kwargs)
+                        # Try instantiating with the model identifier
+                        embeddings_instance = embeddings_cls(model, **kwargs)  # type: ignore
                     except Exception as e:
                         warnings.warn(
-                            f"Failed to load {embeddings_cls.__name__}: {e}. Falling back to default {embeddings_cls} model."
+                            f"Failed to load {embeddings_cls.__name__} with model identifier: {e}. Trying fallback constructor."
                         )
-                        return embeddings_cls(**kwargs)
+                        try:
+                            # Try instantiating without the model identifier
+                            embeddings_instance = embeddings_cls(**kwargs)
+                        except Exception as e2:
+                            warnings.warn(
+                                f"Fallback constructor {embeddings_cls.__name__}(**kwargs) also failed: {e2}. Proceeding to SentenceTransformer fallback."
+                            )
+                            # If both fail, embeddings_instance remains None, proceed to fallback
+                # If embeddings_cls is None, embeddings_instance remains None, proceed to fallback
             except Exception as error:
                 warnings.warn(
-                    f"Failed to load embeddings via registry: {error}. Falling back to SentenceTransformerEmbeddings."
+                    f"Error during registry lookup/instantiation: {error}. Falling back to SentenceTransformerEmbeddings."
                 )
-                # Fall back to SentenceTransformerEmbeddings if no matching implementation is found
-                from .sentence_transformer import SentenceTransformerEmbeddings
+                # If registry lookup itself fails, embeddings_instance remains None, proceed to fallback
 
+            # If registry lookup and instantiation succeeded, return the instance
+            if embeddings_instance:
+                return embeddings_instance
+
+            # Fallback to SentenceTransformerEmbeddings if registry failed or instantiation failed
+            warnings.warn("Falling back to SentenceTransformerEmbeddings.")
+            from .sentence_transformer import SentenceTransformerEmbeddings
+
+            try:
+                return SentenceTransformerEmbeddings(model, **kwargs)
+            except Exception as e:
+                # Try with ollama - as any gguf model can be loaded through ollama
+                from .ollama import OllamaEmbeddings
                 try:
-                    return SentenceTransformerEmbeddings(model, **kwargs)
+                    return OllamaEmbeddings(model, **kwargs)
                 except Exception as e:
-                    # try with ollama - as any gguf model can be loaded through ollama
-                    from .ollama import OllamaEmbeddings
-                    try:
-                        return OllamaEmbeddings(model, **kwargs)
-                    except Exception as e:
-                        raise ValueError(
-                            f"Failed to load embeddings via SentenceTransformerEmbeddings & Ollama: {e}"
-                        )
+                    raise ValueError(
+                        f"Failed to load embeddings via SentenceTransformerEmbeddings & OllamaEmbeddings after registry/fallback failure: {e}"
+                    )
         else:
             # get the wrapped embeddings instance
             try:

@@ -32,10 +32,14 @@ class BaseTokenizer(ABC):
     def __init__(self) -> None:
         """Initialize the BaseTokenizer."""
         self.vocab: list[str] = []
-        self.token2id: defaultdict[str, int] = defaultdict(lambda: len(self.vocab))
+        self.token2id: Dict[str, int] = defaultdict(self.defaulttoken2id)
+        # self.token2id: Dict[str, int] = defaultdict(lambda: len(self.vocab))
         self.token2id[" "]  # Add space to the vocabulary
         self.vocab.append(" ")  # Add space to the vocabulary
 
+    def defaulttoken2id(self) -> int:
+        """Return the default token ID."""
+        return len(self.vocab)
     @abstractmethod
     def __repr__(self) -> str:
         """Return a string representation of the BaseTokenizer."""

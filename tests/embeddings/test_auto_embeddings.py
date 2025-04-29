@@ -78,12 +78,10 @@ def test_auto_embeddings_sentence_transformer_alt(
     assert isinstance(embeddings, SentenceTransformerEmbeddings)
     assert embeddings.model_name_or_path == sentence_transformer_identifier_small
 
-
+@pytest.mark.skipif(not os.getenv("OPENAI_API_KEY"), reason="OpenAI API key not set")
 def test_auto_embeddings_openai(openai_identifier: str) -> None:
     """Test that the AutoEmbeddings class can get OpenAI embeddings."""
-    embeddings = AutoEmbeddings.get_embeddings(
-        openai_identifier, api_key="your_openai_api_key"
-    )
+    embeddings = AutoEmbeddings.get_embeddings(openai_identifier)
     assert isinstance(embeddings, OpenAIEmbeddings)
     assert embeddings.model == openai_identifier
 
