@@ -20,18 +20,32 @@ from .embeddings import (
     Model2VecEmbeddings,
     OpenAIEmbeddings,
     SentenceTransformerEmbeddings,
-    OllamaEmbeddings
+    OllamaEmbeddings,
+    VoyageAIEmbeddings,
+)
+from .friends import (
+    BaseHandshake,
+    BasePorter,
+    ChromaHandshake,
+    JSONPorter,
+    QdrantHandshake,
+    TurbopufferHandshake,
 )
 from .genie import (
     BaseGenie,
     GeminiGenie,
+    OpenAIGenie,
 )
 from .refinery import (
     BaseRefinery,
     EmbeddingsRefinery,
     OverlapRefinery,
 )
-from .tokenizer import CharacterTokenizer, Tokenizer, WordTokenizer
+from .tokenizer import (
+    CharacterTokenizer,
+    Tokenizer,
+    WordTokenizer,
+)
 from .types import (
     Chunk,
     CodeChunk,
@@ -51,7 +65,7 @@ from .utils import (
 )
 
 # This hippo grows with every release 🦛✨~
-__version__ = "1.0.6"
+__version__ = "1.0.7"
 __name__ = "chonkie"
 __author__ = "🦛 Chonkie Inc"
 
@@ -108,6 +122,7 @@ __all__ += [
     "OllamaEmbeddings",
     "AutoEmbeddings",
     "JinaEmbeddings",
+    "VoyageAIEmbeddings",
 ]
 
 # Add all refinery classes to __all__
@@ -127,4 +142,15 @@ __all__ += [
 __all__ += [
     "BaseGenie",
     "GeminiGenie",
+    "OpenAIGenie",
+]
+
+# Add all friends classes to __all__
+__all__ += [
+    "BasePorter",
+    "BaseHandshake",
+    "JSONPorter",
+    "ChromaHandshake",
+    "QdrantHandshake",
+    "TurbopufferHandshake",
 ]

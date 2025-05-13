@@ -8,30 +8,68 @@ from typing import List, Optional, Union
 
 from chonkie.types import Chunk
 
-# Add the theme for the Visualizer
-# Pastel colored rainbow theme
-PASTEL_THEME = [
-    "#FFADAD",
-    "#FFD6A5",  
-    "#FDFFB6",
-    "#CAFFBF",
-    "#9BF6FF",
-    "#A0C4FF",
-    "#BDB2FF",
-    "#FFC6FF",
-]
-# Tiktokenizer theme: [ “#bae6fc”, “#fde68a”, “#bbf7d0”, “#fed7aa”, “#a5f3fc”, “#e5e7eb”, “#eee2fd”, “#e4f9c0”, “#fecdd3”]
-TIKTOKENIZER_THEME = [
-    "#bae6fc",
-    "#fde68a",
-    "#bbf7d0",
-    "#fed7aa",
-    "#a5f3fc",
-    "#e5e7eb",
-    "#eee2fd",
-    "#e4f9c0",
-    "#fecdd3",
-]
+# light themes
+LIGHT_THEMES = {
+    # Pastel colored rainbow theme
+    "pastel": [
+        "#FFADAD",
+        "#FFD6A5",  
+        "#FDFFB6",
+        "#CAFFBF",
+        "#9BF6FF",
+        "#A0C4FF",
+        "#BDB2FF",
+        "#FFC6FF",
+    ],
+    # Tiktokenizer theme: [ “#bae6fc”, “#fde68a”, “#bbf7d0”, “#fed7aa”, “#a5f3fc”, “#e5e7eb”, “#eee2fd”, “#e4f9c0”, “#fecdd3”]
+    "tiktokenizer": [
+        "#bae6fc",
+        "#fde68a",
+        "#bbf7d0",
+        "#fed7aa",
+        "#a5f3fc",
+        "#e5e7eb",
+        "#eee2fd",
+        "#e4f9c0",
+        "#fecdd3",
+    ]
+}
+
+# dark themes
+DARK_THEMES = {
+    # Tiktokenizer but with darker colors
+    "tiktokenizer_dark": [
+        "#2A4E66",
+        "#80662A", 
+        "#2A6648", 
+        "#66422A", 
+        "#2A4A66", 
+        "#3A3D40", 
+        "#55386E", 
+        "#3A6640", 
+        "#66353B", 
+    ],
+    # Pastel but with darker colors
+    "pastel_dark": [
+        "#5C2E2E", 
+        "#5C492E",  
+        "#4F5C2E",  
+        "#2E5C4F",  
+        "#2E3F5C",  
+        "#3A3A3A",  
+        "#4F2E5C",  
+        "#2E5C3F"   
+    ]
+}
+
+# light mode colors
+BODY_BACKGROUND_COLOR_LIGHT = "#F0F2F5"
+CONTENT_BACKGROUND_COLOR_LIGHT = "#FFFFFF"    
+TEXT_COLOR_LIGHT = "#333333"
+# dark mode colors
+BODY_BACKGROUND_COLOR_DARK = "#121212"
+CONTENT_BACKGROUND_COLOR_DARK = "#1E1E1E"
+TEXT_COLOR_DARK = "#FFFFFF"
 
 # Add all the HTML template content here
 # TODO: Make this prettier in the future — I'm not a fan of the current design
@@ -45,8 +83,8 @@ HTML_TEMPLATE = """
     <title>{title}</title>
     {favicon_link_tag}
     <style>
-        body {{ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"; line-height: 1.6; padding: 0; margin: 0; background-color: #f0f2f5; color: #333; display: flex; flex-direction: column; min-height: 100vh; }}
-        .content-box {{ max-width: 900px; width: 100%; margin: 30px auto; padding: 30px 20px 20px 20px; background-color: #fff; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); box-sizing: border-box; }}
+        body {{ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"; line-height: 1.6; padding: 0; margin: 0; background-color: {body_bg_color}; color: {text_color}; display: flex; flex-direction: column; min-height: 100vh; }}
+        .content-box {{ max-width: 900px; width: 100%; margin: 30px auto; padding: 30px 20px 20px 20px; background-color: {content_bg_color}; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); box-sizing: border-box; }}
         .text-display {{ white-space: pre-wrap; word-wrap: break-word; font-family: "Consolas", "Monaco", "Courier New", monospace; font-size: 0.95em; padding: 0; }}
         .text-display span[style*="background-color"] {{ border-radius: 3px; padding: 0.1em 0; cursor: help; }}
         .text-display br {{ display: block; content: ""; margin-top: 0.6em; }}
@@ -108,12 +146,16 @@ class Visualizer:
 
         # Initialize the console
         self.console = Console() # type: ignore
-
+        
+        # We want the editor's text color to apply by default for custom themes
         # If the theme is a string, get the theme
         if isinstance(theme, str):
-            self.theme = self._get_theme(theme)
+            self.theme, self.text_color = self._get_theme(theme)
+            self.theme_name = theme
         else:
+            self.text_color = ""
             self.theme = theme
+            self.theme_name = "custom"
 
     def _import_dependencies(self) -> None:
         """Import the dependencies."""
@@ -127,10 +169,10 @@ class Visualizer:
     # NOTE: This is a helper function to manage the theme
     def _get_theme(self, theme: str) -> List[str]:
         """Get the theme from the theme name."""
-        if theme == "pastel":
-            return PASTEL_THEME
-        elif theme == "tiktokenizer":
-            return TIKTOKENIZER_THEME
+        if theme in DARK_THEMES:
+            return DARK_THEMES[theme], TEXT_COLOR_DARK
+        elif theme in LIGHT_THEMES:
+            return LIGHT_THEMES[theme], TEXT_COLOR_LIGHT
         else:
             raise ValueError(f"Invalid theme: {theme}")
 
@@ -189,7 +231,7 @@ class Visualizer:
             if start < end and start < text_length:
                 effective_end = min(end, text_length)
                 color = self._get_color(chunk_id)
-                style = f"on {color}"
+                style = f"{self.text_color} on {color}"
                 try: 
                     text.stylize(style, start, effective_end)
                 except Exception as e:
@@ -330,10 +372,25 @@ class Visualizer:
         footer_content = FOOTER_TEMPLATE
         main_content = MAIN_TEMPLATE.format(html_parts="".join(html_parts))
 
+        # Set the background colors and the text color
+        if (self.theme_name != "custom" and self.theme_name in DARK_THEMES):
+            # Set the dark mode colors
+            body_bg_color = BODY_BACKGROUND_COLOR_DARK
+            content_bg_color = CONTENT_BACKGROUND_COLOR_DARK
+            text_color = TEXT_COLOR_DARK
+        # The light mode is default to both light mode and custom themes
+        else:
+            body_bg_color = BODY_BACKGROUND_COLOR_LIGHT
+            content_bg_color = CONTENT_BACKGROUND_COLOR_LIGHT
+            text_color = TEXT_COLOR_LIGHT
+
         # Assemble HTML, including the favicon tag
         html_content = HTML_TEMPLATE.format(
             title=html.escape(title),
             favicon_link_tag=favicon_link_tag,
+            body_bg_color=body_bg_color,
+            content_bg_color=content_bg_color,
+            text_color=text_color,
             main_content=main_content,
             footer_content=footer_content
         )

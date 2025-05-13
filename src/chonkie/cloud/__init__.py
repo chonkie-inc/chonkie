@@ -2,7 +2,9 @@
 
 from .chunker import (
     CloudChunker,
+    LateChunker,
     RecursiveChunker,
+    SDPMChunker,
     SemanticChunker,
     SentenceChunker,
     TokenChunker,
@@ -14,4 +16,6 @@ __all__ = [
     "RecursiveChunker",
     "SemanticChunker",
     "SentenceChunker",
+    "LateChunker",
+    "SDPMChunker",
 ]

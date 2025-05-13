@@ -1,6 +1,6 @@
 <div align='center'>
 
-![Chonkie Logo](https://github.com/chonkie-inc/chonkie/blob/main/assets/chonkie_logo_br_transparent_bg.png)
+![Chonkie Logo](./assets/chonkie_logo_br_transparent_bg.png)
 
 # 🦛 Chonkie ✨
 
@@ -16,7 +16,8 @@
 _The no-nonsense ultra-light and lightning-fast chunking library that's ready to CHONK your texts!_
 
 [Installation](#installation) •
-[Usage](#usage) •
+[Usage](#basic-usage) •
+[Pipeline](#the-chonkie-pipeline) •
 [Chunkers](#chunkers) •
 [Integrations](#integrations) •
 [Benchmarks](#benchmarks)
@@ -37,7 +38,7 @@ Tired of making your gazillionth chunker? Sick of the overhead of large librarie
 
 **Chonkie** is a chunking library that "**just works**" ✨
 
-# Installation
+## Installation
 
 To install chonkie, run:
 
@@ -53,7 +54,7 @@ Don't want to think about it? Simply install `all` (Not recommended for producti
 pip install chonkie[all]
 ```
 
-# Usage
+## Basic Usage
 
 Here's a basic example to get you started:
 
@@ -75,30 +76,143 @@ for chunk in chunks:
 
 Check out more usage examples in the [docs](https://docs.chonkie.ai)!
 
-# Chunkers
+## The Chonkie Pipeline
+
+Chonkie processes text using a pipeline approach to transform raw documents into refined, usable chunks. This allows for flexibility and efficiency in handling different chunking strategies. We call this pipeline `CHOMP` (short for _'CHOnkie's Multi-step Pipeline'_).
+
+Here's a conceptual overview of the pipeline, as illustrated in the diagram:
+
+![🤖 CHOMP pipeline diagram](./assets/chomp-transparent-bg.png)
+
+The main stages are:
+
+1. 📄 Document: The starting point – your input text data. It can be in any format!
+2. 👨‍🍳 Chef: This stage handles initial text preprocessing. It might involve cleaning, normalization, or other preparatory steps to get the text ready for chunking. While this is optional, it is recommended to use the `Chef` stage to clean your text before chunking.
+3. 🦛 Chunker: The core component you select (e.g., RecursiveChunker, SentenceChunker). It applies its specific logic to split the preprocessed text into initial chunks based on the chosen strategy and parameters.
+4. 🏭 Refinery: After initial chunking, the Refinery performs post-processing. This can include merging small chunks based on overlap, adding embeddings, or adding additional context to the chunks. It helps ensure the quality and consistency of the output. You can have multiple `Refineries` to apply different post-processing steps. 
+5. 🤗 Friends: The pipeline's produces the final results which can be either exported to be saved or ingested into your vector database. Chonkie offers `Porters` to export the chunks and `Handshakes` to ingest the chunks into your vector database.
+   - 🐴 Porters: Porters can save the chunks to a file or a database. Currently, only `JSON` is supported for exporting the chunks.
+   - 🤝 Handshakes: Handshakes provide a unified interface for ingesting the chunks into your preferred vector databases.
+
+This modular pipeline allows Chonkie to be both powerful and easy to configure for various text chunking needs.
+
+## Chunkers
 
 Chonkie provides several chunkers to help you split your text efficiently for RAG applications. Here's a quick overview of the available chunkers:
 
-- **TokenChunker**: Splits text into fixed-size token chunks.
-- **SentenceChunker**: Splits text into chunks based on sentences.
-- **RecursiveChunker**: Splits text hierarchically using customizable rules to create semantically meaningful chunks.
-- **SemanticChunker**: Splits text into chunks based on semantic similarity.
-- **SDPMChunker**: Splits text using a Semantic Double-Pass Merge approach.
-- **LateChunker**: Embeds text and then splits it to have better chunk embeddings.
-- **CodeChunker**: Splits code into structurally meaningful chunks.
-- **NeuralChunker**: Splits text using a neural model.
-- **SlumberChunker**: Splits text using an LLM to find semantically meaningful chunks. Also known as _"AgenticChunker"_.
+| Name             | Alias      | Description                                                                                                |
+|------------------|------------|------------------------------------------------------------------------------------------------------------|
+| `TokenChunker`   | `token`    | Splits text into fixed-size token chunks.                                                                   |
+| `SentenceChunker`| `sentence` | Splits text into chunks based on sentences.                                                                |
+| `RecursiveChunker`| `recursive`| Splits text hierarchically using customizable rules to create semantically meaningful chunks.              |
+| `SemanticChunker`| `semantic` | Splits text into chunks based on semantic similarity. Inspired by the work of [Greg Kamradt](https://github.com/gkamradt).                                                        |
+| `SDPMChunker`    | `sdpm`     | Splits text using a Semantic Double-Pass Merge approach.                                                   |
+| `LateChunker`    | `late`     | Embeds text and then splits it to have better chunk embeddings.                                            |
+| `CodeChunker`    | `code`     | Splits code into structurally meaningful chunks.                                                           |
+| `NeuralChunker`  | `neural`   | Splits text using a neural model.                                                                          |
+| `SlumberChunker` | `slumber`  | Splits text using an LLM to find semantically meaningful chunks. Also known as _"AgenticChunker"_.         |
 
 More on these methods and the approaches taken inside the [docs](https://docs.chonkie.ai)
 
-# Integrations
+## Integrations
 
-Chonkie integrates smoothly with the tools you already use:
+Chonkie boasts 17+ integrations across tokenizers and embedding providers, ensuring it fits seamlessly into your existing workflow.
 
-- **Tokenizers:** Choose from **3 supported tokenizers** (like `Hugging Face 🤗` and `Tiktoken`) or provide your own custom token counting function. Flexibility first!
-- **Embedding Models:** Seamlessly works with **5 out-of-the-box embedding model providers**, including `SentenceTransformers`, `Model2Vec`, `OpenAI`, `Cohere`, and `Jina AI`. Bring your favorite embeddings to the CHONK party!
+<details>
+<summary><strong>🪓 Slice 'n' Dice! Chonkie supports 5+ ways to tokenize! </strong></summary>
 
-# Benchmarks
+Choose from supported tokenizers or provide your own custom token counting function. Flexibility first!
+
+| Name           | Description                                                    | Optional Install   |
+|----------------|----------------------------------------------------------------|--------------------|
+| `character`    | Basic character-level tokenizer.                               | `default`          |
+| `word`         | Basic word-level tokenizer.                                    | `default`          | 
+| `tokenizers`   | Load any tokenizer from the Hugging Face `tokenizers` library. | `default`          |
+| `tiktoken`     | Use OpenAI's `tiktoken` library (e.g., for `gpt-4`).           | `chonkie[tiktoken]`|
+| `transformers` | Load tokenizers via `AutoTokenizer` from HF `transformers`.    | `chonkie[transformers]`|
+
+`default` indicates that the feature is available with the default `pip install chonkie`.
+
+To use a custom token counter, you can pass in any function that takes a string and returns an integer! Something like this:
+
+```python
+def custom_token_counter(text: str) -> int:
+    return len(text)
+
+chunker = RecursiveChunker(tokenizer_or_token_counter=custom_token_counter)
+```
+
+You can use this to extend Chonkie to support any tokenization scheme you want!
+
+</details>
+
+<details>
+<summary><strong>🧠 Embed like a boss! Chonkie links up with 6+ embedding pals!</strong></summary>
+
+Seamlessly works with various embedding model providers. Bring your favorite embeddings to the CHONK party! Use `AutoEmbeddings` to load models easily.
+
+| Provider / Alias        | Class                           | Description                                  | Optional Install  |
+|-------------------------|---------------------------------|----------------------------------------------|-------------------|
+| `model2vec`             | `Model2VecEmbeddings`           | Use `Model2Vec` models.                      | `chonkie[model2vec]` |
+| `sentence-transformers` | `SentenceTransformerEmbeddings` | Use any `sentence-transformers` model.       | `chonkie[st]`       |
+| `openai`                | `OpenAIEmbeddings`              | Use OpenAI's embedding API.                  | `chonkie[openai]`   |
+| `cohere`                | `CohereEmbeddings`              | Use Cohere's embedding API.                  | `chonkie[cohere]`   |
+| `jina`                  | `JinaEmbeddings`                | Use Jina AI's embedding API.                 | `chonkie[jina]`     |
+| `voyageai`              | `VoyageAIEmbeddings`            | Use Voyage AI's embedding API.               | `chonkie[voyageai]` |
+
+</details>
+
+<details>
+<summary><strong>🧞‍♂️ Power Up with Genies! Chonkie supports 2+ LLM providers!</strong></summary>
+
+Genies provide interfaces to interact with Large Language Models (LLMs) for advanced chunking strategies or other tasks within the pipeline.
+
+| Genie Name   | Class         | Description                      | Optional Install     |
+|--------------|---------------|----------------------------------|----------------------|
+| `gemini`     | `GeminiGenie` | Interact with Google Gemini APIs. | `chonkie[gemini]`    |
+| `openai`     | `OpenAIGenie` | Interact with OpenAI APIs.       | `chonkie[openai]`    |
+
+You can also use the `OpenAIGenie` to interact with any LLM provider that supports the OpenAI API format, by simply changing the `model`, `base_url`, and `api_key` parameters. For example, here's how to use the `OpenAIGenie` to interact with the `Llama-4-Maverick` model via OpenRouter:
+
+```python
+from chonkie import OpenAIGenie
+
+genie = OpenAIGenie(model="meta-llama/llama-4-maverick",
+                    base_url="https://openrouter.ai/api/v1",
+                    api_key="your_api_key")
+```
+
+</details>
+
+<details>
+<summary><strong>🐴 Exporting CHONKs! Chonkie supports 1+ Porter!</strong></summary>
+
+Porters help you save your chunks easily.
+
+| Porter Name | Class        | Description                 | Optional Install |
+|-------------|--------------|-----------------------------|-----------------|
+| `json`      | `JSONPorter` | Export chunks to a JSON file. | `default`        |
+
+</details>
+
+<details>
+<summary><strong>🤝 Shake hands with your DB! Chonkie connects with 3+ vector stores!</strong></summary>
+
+Handshakes provide a unified interface to ingest chunks directly into your favorite vector databases.
+
+| Handshake Name | Class                 | Description                             | Optional Install          |
+|----------------|-----------------------|-----------------------------------------|---------------------------|
+| `chroma`       | `ChromaHandshake`     | Ingest chunks into ChromaDB.            | `chonkie[chroma]`         |
+| `qdrant`       | `QdrantHandshake`     | Ingest chunks into Qdrant.              | `chonkie[qdrant]`         |
+| `turbopuffer`  | `TurbopufferHandshake`| Ingest chunks into Turbopuffer.         | `chonkie[turbopuffer]`    |
+
+</details>
+
+
+
+With Chonkie's wide range of integrations, you can easily plug it into your existing infrastructure and start CHONKING!
+
+## Benchmarks
 
 > "I may be smol hippo, but I pack a big punch!" 🦛
 
@@ -117,20 +231,20 @@ Chonkie is not just cute, it's also fast and efficient! Here's how it stacks up 
 
 Check out our detailed [benchmarks](BENCHMARKS.md) to see how Chonkie races past the competition! 🏃‍♂️💨
 
-# Contributing
+## Contributing
 
 Want to help grow Chonkie? Check out [CONTRIBUTING.md](CONTRIBUTING.md) to get started! Whether you're fixing bugs, adding features, or improving docs, every contribution helps make Chonkie a better CHONK for everyone.
 
 Remember: No contribution is too small for this tiny hippo! 🦛
 
-# Acknowledgements
+## Acknowledgements
 
 Chonkie would like to CHONK its way through a special thanks to all the users and contributors who have helped make this library what it is today! Your feedback, issue reports, and improvements have helped make Chonkie the CHONKIEST it can be.
 
 And of course, special thanks to [Moto Moto](https://www.youtube.com/watch?v=I0zZC4wtqDQ&t=5s) for endorsing Chonkie with his famous quote:
 > "I like them big, I like them chonkie." ~ Moto Moto
 
-# Citation
+## Citation
 
 If you use Chonkie in your research, please cite it as follows:
 

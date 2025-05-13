@@ -3,9 +3,28 @@ name: Python Automated Testing
 on:
   pull_request:
     branches-ignore:
-      - 'main'
+      - "main"
 
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv and set-up python
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+          version: latest
+          enable-cache: true
+          cache-dependency-glob: "pyproject.toml"
+
+      - name: Install the project
+        run: uv sync --all-extras --dev
+
+      - name: Lint with Ruff
+        run: ruff check .
+
   test:
     runs-on: ubuntu-latest
     strategy:
@@ -26,10 +45,6 @@ jobs:
 
       - name: Install the project
         run: uv sync --all-extras --dev
-
-      - name: Lint with Ruff
-        run: ruff check --fix
-        continue-on-error: true
 
       - name: Cache Hugging Face models
         uses: actions/cache@v4

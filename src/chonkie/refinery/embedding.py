@@ -23,7 +23,7 @@ class EmbeddingsRefinery(BaseRefinery):
 
     def __init__(
         self,
-        embedding_model: Union[str, BaseEmbeddings, AutoEmbeddings],
+        embedding_model: Union[str, BaseEmbeddings, AutoEmbeddings] = "minishlab/potion-retrieval-32M",
         **kwargs: Dict[str, Any]
     ) -> None:
         """Initialize the EmbeddingRefinery."""
@@ -48,3 +48,12 @@ class EmbeddingsRefinery(BaseRefinery):
         for chunk, embed in zip(chunks, embeds):
             chunk.embedding = embed
         return chunks
+
+    def __repr__(self) -> str:
+        """Represent the EmbeddingRefinery."""
+        return f"EmbeddingsRefinery(embedding_model={self.embedding_model})"
+
+    @property
+    def dimension(self) -> int:
+        """Dimension of the embedding model."""
+        return self.embedding_model.dimension

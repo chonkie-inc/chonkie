@@ -3,7 +3,7 @@
 import importlib.util as importutil
 import os
 import warnings
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from .base import BaseEmbeddings
 
@@ -12,12 +12,26 @@ if TYPE_CHECKING:
         import numpy as np
         import tiktoken
     except ImportError:
-        np = Any # type: ignore
-        tiktoken = Any # type: ignore
+        np = Any
+        tiktoken = Any 
 
 
 class OpenAIEmbeddings(BaseEmbeddings):
-    """OpenAI embeddings implementation using their API."""
+    """OpenAI embeddings implementation using their API.
+    
+    Args:
+        model: The model to use.
+        tokenizer: The tokenizer to use. Can be loaded directly if it's a OpenAI model, otherwise needs to be provided.
+        dimension: The dimension of the embedding model to use. Can be inferred if it's a OpenAI model, otherwise needs to be provided.
+        base_url: The base URL to use.
+        api_key: The API key to use.
+        organization: The organization to use.
+        max_retries: The maximum number of retries to use.
+        timeout: The timeout to use.
+        batch_size: The batch size to use.
+        show_warnings: Whether to show warnings about token usage.
+
+    """
 
     AVAILABLE_MODELS = {
         "text-embedding-3-small": 1536,  # Latest model, best performance/cost ratio
@@ -30,23 +44,29 @@ class OpenAIEmbeddings(BaseEmbeddings):
     def __init__(
         self,
         model: str = DEFAULT_MODEL,
+        tokenizer: Optional[str] = None,
+        dimension: Optional[int] = None,
+        base_url: Optional[str] = None,
         api_key: Optional[str] = None,
-        organization: Optional[str] = None,
         max_retries: int = 3,
         timeout: float = 60.0,
         batch_size: int = 128,
         show_warnings: bool = True,
+        **kwargs: Dict[str, Any],
     ):
         """Initialize OpenAI embeddings.
 
         Args:
             model: Name of the OpenAI embedding model to use
+            tokenizer: The tokenizer to use. Can be loaded directly if it's a OpenAI model, otherwise needs to be provided.
+            dimension: The dimension of the embedding model to use. Can be inferred if it's a OpenAI model, otherwise needs to be provided.
+            base_url: The base URL to use.
             api_key: OpenAI API key (if not provided, looks for OPENAI_API_KEY env var)
-            organization: Optional organization ID for API requests
             max_retries: Maximum number of retries for failed requests
             timeout: Timeout in seconds for API requests
             batch_size: Maximum number of texts to embed in one API call
             show_warnings: Whether to show warnings about token usage
+            **kwargs: Additional keyword arguments to pass to the OpenAI client.
 
         """
         super().__init__()
@@ -54,23 +74,33 @@ class OpenAIEmbeddings(BaseEmbeddings):
         # Lazy import dependencies if they are not already imported
         self._import_dependencies()
 
-        if model not in self.AVAILABLE_MODELS:
-            raise ValueError(
-                f"Model {model} not available. Choose from: {list(self.AVAILABLE_MODELS.keys())}"
-            )
-
+        # Initialize the model
         self.model = model
-        self._dimension = self.AVAILABLE_MODELS[model]
-        self._tokenizer = tiktoken.encoding_for_model(model) # type: ignore
+        self.base_url = base_url
         self._batch_size = batch_size
         self._show_warnings = show_warnings
+
+        # Do something for the tokenizer
+        if tokenizer is not None: 
+            self._tokenizer = tokenizer
+        elif model in self.AVAILABLE_MODELS:
+            self._tokenizer = tiktoken.encoding_for_model(model) # type: ignore
+        else:
+            raise ValueError(f"Tokenizer not found for model {model}. Please provide a tokenizer.")
+
+        # Do something for the dimension
+        if dimension is not None:
+            self._dimension = dimension
+        elif model in self.AVAILABLE_MODELS:
+            self._dimension = self.AVAILABLE_MODELS[model]
 
         # Setup OpenAI client
         self.client = OpenAI(               # type: ignore
             api_key=api_key or os.getenv("OPENAI_API_KEY"),
-            organization=organization,
+            base_url=base_url,
             timeout=timeout,
             max_retries=max_retries,
+            **kwargs,
         )
 
         if self.client.api_key is None:

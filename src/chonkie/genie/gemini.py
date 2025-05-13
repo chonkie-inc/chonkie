@@ -74,3 +74,7 @@ class GeminiGenie(BaseGenie):
             from pydantic import BaseModel
         else:
             raise ImportError("One or more of the required modules are not available: [pydantic, google-genai]")
+    
+    def __repr__(self) -> str:
+        """Return a string representation of the GeminiGenie instance."""
+        return f"GeminiGenie(model={self.model})"

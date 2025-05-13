@@ -3,7 +3,7 @@
 import importlib.util as importutil
 from typing import TYPE_CHECKING, List, Union
 
-from chonkie.embeddings.base import BaseEmbeddings
+from .base import BaseEmbeddings
 
 if TYPE_CHECKING:
     import numpy as np
@@ -24,7 +24,9 @@ class SentenceTransformerEmbeddings(BaseEmbeddings):
     """
 
     def __init__(
-        self, model: Union[str, "SentenceTransformer"] = "all-MiniLM-L6-v2", **kwargs
+        self, 
+        model: Union[str, "SentenceTransformer"] = "all-MiniLM-L6-v2",
+        **kwargs
     ) -> None:
         """Initialize SentenceTransformerEmbeddings with a sentence-transformers model.
 

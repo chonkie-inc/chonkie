@@ -1,9 +1,9 @@
 """Model2Vec embeddings."""
 
 import importlib.util as importutil
-from typing import TYPE_CHECKING, List, Union
+from typing import TYPE_CHECKING, Any, List, Union
 
-from chonkie.embeddings.base import BaseEmbeddings
+from .base import BaseEmbeddings
 
 if TYPE_CHECKING:
     try:
