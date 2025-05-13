@@ -20,6 +20,7 @@ from .embeddings import (
     Model2VecEmbeddings,
     OpenAIEmbeddings,
     SentenceTransformerEmbeddings,
+    OllamaEmbeddings,
     VoyageAIEmbeddings,
 )
 from .friends import (
@@ -118,6 +119,7 @@ __all__ += [
     "SentenceTransformerEmbeddings",
     "OpenAIEmbeddings",
     "CohereEmbeddings",
+    "OllamaEmbeddings",
     "AutoEmbeddings",
     "JinaEmbeddings",
     "VoyageAIEmbeddings",
