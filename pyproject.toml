@@ -46,7 +46,12 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Information Analysis",
     "Topic :: Text Processing :: Linguistic",
 ]
-dependencies = ["tokenizers>=0.16.0", "tqdm>=4.64.0"]
+dependencies = [
+    "pydantic[dev]>=2.11.2",
+    "together[dev]>=1.4.6",
+    "tokenizers>=0.16.0",
+    "tqdm>=4.64.0",
+]
 
 [project.urls]
 Homepage = "https://github.com/chonkie-inc/chonkie"
