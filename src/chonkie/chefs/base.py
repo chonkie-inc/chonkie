@@ -11,7 +11,7 @@ from enum import Enum
 from typing import Any, Dict, List, Optional, Union
 
 from ..types.document import Document
-from .config import ChefConfig
+from .config import BaseChefConfig, PDFChefConfig
 from .exceptions import (
     ChefError,
     PDFProcessingError,
@@ -67,7 +67,7 @@ class BaseChef(ABC):
         name: str,
         version: str,
         supported_formats: List[str],
-        config: Optional[ChefConfig] = None
+        config: Optional[BaseChefConfig] = None
     ):
         """Initialize the Chef.
         
@@ -80,7 +80,7 @@ class BaseChef(ABC):
         self.name = name
         self.version = version
         self.supported_formats = supported_formats
-        self.config = config or ChefConfig()
+        self.config = config or BaseChefConfig()
 
     @abstractmethod
     def process(self, file_path: str, **kwargs) -> ProcessingResult:
@@ -137,7 +137,7 @@ class PDFProcessingChef(BaseChef):
     All PDF processing Chefs should inherit from this class.
     """
     
-    def __init__(self, name: str, version: str, config: Optional[ChefConfig] = None):
+    def __init__(self, name: str, version: str, config: Optional[PDFChefConfig] = None):
         """Initialize the PDF processing Chef.
         
         Args:
@@ -145,6 +145,7 @@ class PDFProcessingChef(BaseChef):
             version: The version of the Chef
             config: Optional configuration settings
         """
+        config = config or PDFChefConfig()
         super().__init__(name, version, ["pdf"], config)
 
     def validate_file(self, file_path: str) -> bool:
