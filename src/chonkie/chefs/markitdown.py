@@ -8,7 +8,7 @@ import os
 from typing import Any, Dict, Optional
 
 from .base import BaseChef, ProcessingResult, ProcessingStatus
-from .config import ChefConfig
+from .config import MarkdownChefConfig
 from .exceptions import ContentExtractionError
 from ..types import Document
 
@@ -29,7 +29,7 @@ class MarkitdownChef(BaseChef):
         self,
         name: str = "MarkitdownChef",
         version: str = "1.0.0",
-        config: Optional[ChefConfig] = None
+        config: Optional[MarkdownChefConfig] = None
     ):
         """Initialize the MarkitdownChef.
         
@@ -38,6 +38,7 @@ class MarkitdownChef(BaseChef):
             version: The version of the Chef
             config: Optional configuration settings
         """
+        config = config or MarkdownChefConfig()
         super().__init__(name, version, ["md", "markdown"], config)
         self._import_dependencies()
 
@@ -78,10 +79,12 @@ class MarkitdownChef(BaseChef):
                 markdown_content = f.read()
 
             # Convert markdown to HTML
-            html_content = self.markdown.markdown(
-                markdown_content,
-                extensions=['extra', 'codehilite', 'tables']
-            )
+            html_content = None
+            if self.config.html_output:
+                html_content = self.markdown.markdown(
+                    markdown_content,
+                    extensions=self.config.extensions
+                )
 
             # Create a new Document
             document = Document(
