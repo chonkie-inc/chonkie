@@ -425,7 +425,14 @@ class SemanticChunker(BaseChunker):
             similarities_array = np.array(similarities)
             
             # Detect peaks in the similarity signal
-            # Note: We invert the signal since we want to find minima
+            # We invert the signal (1 - similarities_array) because:
+            # 1. The peak detector is configured to find minima
+            # 2. High similarity values (close to 1) indicate strong semantic connections
+            # 3. By inverting, we transform:
+            #    - High similarities (1) become low values (0)
+            #    - Low similarities (0) become high values (1)
+            # 4. This means minima in the inverted signal correspond to maxima in the original
+            #    similarity signal, which represent optimal chunk boundaries
             peaks = self.peak_detector.detect_peaks(1 - similarities_array)
             
             # Convert peaks to split indices
