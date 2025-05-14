@@ -49,7 +49,7 @@ def test_chef_metadata():
     assert "config" in metadata
 
 
-def test_file_validation():
+def test_file_validation(tmp_path):
     """Test file validation."""
     chef = TestChef("test", "1.0.0")
     
@@ -58,17 +58,20 @@ def test_file_validation():
         chef.validate_file("nonexistent.pdf")
     
     # Test non-PDF file
+    non_pdf = tmp_path / "test.txt"
+    non_pdf.touch()
     with pytest.raises(ValidationError):
-        chef.validate_file("test.txt")
+        chef.validate_file(str(non_pdf))
     
     # Create a test PDF file
-    test_pdf = Path("test.pdf")
+    test_pdf = tmp_path / "test.pdf"
     test_pdf.touch()
     
     try:
-        assert chef.validate_file("test.pdf")
+        assert chef.validate_file(str(test_pdf))
     finally:
-        test_pdf.unlink()
+        # No need to manually clean up when using tmp_path
+        pass
 
 
 def test_processing_result():
