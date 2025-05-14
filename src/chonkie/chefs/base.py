@@ -1,8 +1,9 @@
 """Base classes and interfaces for Chonkie Chefs.
 
 This module provides the foundational classes and interfaces for implementing
-PDF processing Chefs in Chonkie. Chefs are responsible for processing PDFs and
-extracting structured information from them.
+various document processing Chefs in Chonkie. Chefs are responsible for processing
+documents (PDFs, markdown, restructured text, etc.) and extracting structured 
+information from them.
 """
 
 from abc import ABC, abstractmethod
