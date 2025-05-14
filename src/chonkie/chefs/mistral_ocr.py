@@ -264,7 +264,14 @@ class MistralOCRChef(PDFProcessingChef):
                     }
                 )
                 
+            except (mistralai.exceptions.APIError, mistralai.exceptions.AuthenticationError, mistralai.exceptions.BadRequestError, mistralai.exceptions.RateLimitError) as e:
+                # Handle specific Mistral API exceptions
+                raise OCRProcessingError(f"Mistral API error: {str(e)}") from e
+            except (ConnectionError, TimeoutError) as e:
+                # Handle network-related errors
+                raise OCRProcessingError(f"Network error connecting to Mistral API: {str(e)}") from e
             except Exception as e:
+                # Fallback for any other unexpected exceptions
                 raise OCRProcessingError(f"OCR processing failed: {str(e)}") from e
                 
         except Exception as e:
