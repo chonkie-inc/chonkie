@@ -85,20 +85,19 @@ class BaseChef(ABC):
 
     @abstractmethod
     def process(self, file_path: str, **kwargs) -> ProcessingResult:
-        """Process a PDF file.
+        """Process a file.
         
         Args:
-            file_path: Path to the PDF file to process
+            file_path: Path to the file to process
             **kwargs: Additional processing options
             
         Returns:
             ProcessingResult containing the processed document and metadata
             
         Raises:
-            PDFProcessingError: If processing fails
+            ChefError: Base exception for all Chef processing errors
             ValidationError: If file validation fails
             ContentExtractionError: If content extraction fails
-            OCRProcessingError: If OCR processing fails
         """
         pass
 
