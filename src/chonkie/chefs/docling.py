@@ -9,7 +9,7 @@ from typing import Any, Dict, Optional, List
 import re
 
 from .base import BaseChef, ProcessingResult, ProcessingStatus
-from .config import ChefConfig
+from .config import DocChefConfig
 from .exceptions import ContentExtractionError
 from ..types import Document
 
@@ -31,7 +31,7 @@ class DoclingChef(BaseChef):
         self,
         name: str = "DoclingChef",
         version: str = "1.0.0",
-        config: Optional[ChefConfig] = None
+        config: Optional[DocChefConfig] = None
     ):
         """Initialize the DoclingChef.
         
@@ -40,6 +40,7 @@ class DoclingChef(BaseChef):
             version: The version of the Chef
             config: Optional configuration settings
         """
+        config = config or DocChefConfig()
         super().__init__(name, version, ["md", "markdown", "rst", "txt"], config)
         self._import_dependencies()
 
