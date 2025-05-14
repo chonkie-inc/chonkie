@@ -122,7 +122,11 @@ class PeakDetector:
                     if signal[idx] <= self.threshold
                 ]
         else:
-            # Maxima: negative second derivative
+            # Find indices where second derivative is negative at zero crossings
+            # A negative second derivative at a zero crossing indicates a local maximum:
+            # - First derivative (slope) changes from positive to negative
+            # - Second derivative < 0 means the curve is concave down at this point
+            # - This combination identifies points where the function reaches a local maximum
             extrema = [
                 idx for idx in zero_crossings
                 if second_deriv[idx] < 0
