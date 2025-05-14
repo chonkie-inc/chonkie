@@ -274,8 +274,22 @@ class MistralOCRChef(PDFProcessingChef):
                 # Fallback for any other unexpected exceptions
                 raise OCRProcessingError(f"OCR processing failed: {str(e)}") from e
                 
-        except Exception as e:
+        except (IOError, FileNotFoundError, PermissionError) as e:
+            # Handle file-related errors
+            return ProcessingResult(
+                status=ProcessingStatus.FAILED,
+                error=f"File access error: {str(e)}"
+            )
+        except (ContentExtractionError, OCRProcessingError) as e:
+            # Handle content processing errors
             return ProcessingResult(
                 status=ProcessingStatus.FAILED,
                 error=str(e)
+            )
+        except Exception as e:
+            # Log unexpected errors here
+            # logger.error(f"Unexpected error in MistralOCRChef: {str(e)}")
+            return ProcessingResult(
+                status=ProcessingStatus.FAILED,
+                error=f"An unexpected error occurred: {str(e)}"
             ) 
