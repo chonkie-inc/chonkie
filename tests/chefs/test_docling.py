@@ -83,7 +83,7 @@ def test_docling_chef_missing_dependencies():
     with patch("builtins.__import__", side_effect=ImportError):
         with pytest.raises(ImportError) as exc_info:
             DoclingChef()
-        assert "Docutils dependencies not found" in str(exc_info.value)
+        assert "Dependencies not found" in str(exc_info.value)
 
 
 def test_docling_chef_process_success(test_doc):
