@@ -9,7 +9,8 @@ from chonkie.chefs import (
     PDFProcessingChef,
     ProcessingResult,
     ProcessingStatus,
-    ChefConfig,
+    BaseChefConfig,
+    PDFChefConfig,
     ValidationError,
 )
 from chonkie.types import Document, PDFDocument
@@ -29,7 +30,7 @@ class TestChef(PDFProcessingChef):
 
 def test_chef_initialization():
     """Test Chef initialization."""
-    config = ChefConfig(ocr_enabled=False)
+    config = PDFChefConfig(ocr_enabled=False)
     chef = TestChef("test", "1.0.0", config)
     
     assert chef.name == "test"
@@ -85,9 +86,28 @@ def test_processing_result():
     assert result.error is None
 
 
-def test_chef_config():
-    """Test ChefConfig functionality."""
-    config = ChefConfig()
+def test_base_config():
+    """Test BaseChefConfig functionality."""
+    config = BaseChefConfig()
+    
+    # Test default values
+    assert config.timeout == 300
+    assert config.max_file_size is None
+    
+    # Test update
+    config.update(timeout=600, custom_setting="test")
+    assert config.timeout == 600
+    assert config.additional_settings["custom_setting"] == "test"
+    
+    # Test to_dict
+    config_dict = config.to_dict()
+    assert "timeout" in config_dict
+    assert "custom_setting" in config_dict
+
+
+def test_pdf_config():
+    """Test PDFChefConfig functionality."""
+    config = PDFChefConfig()
     
     # Test default values
     assert config.ocr_enabled
