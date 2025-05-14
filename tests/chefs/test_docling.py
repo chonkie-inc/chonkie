@@ -146,7 +146,7 @@ def test_docling_chef_content_extraction_error(test_rst):
     with patch.object(chef, "publish_parts", side_effect=Exception("Test error")):
         with pytest.raises(ContentExtractionError) as exc_info:
             chef.process(test_rst)
-        assert "Failed to process documentation file" in str(exc_info.value)
+        assert "error processing documentation file" in str(exc_info.value)
 
 
 def test_docling_chef_section_extraction(test_doc):
