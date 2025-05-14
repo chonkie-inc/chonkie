@@ -237,8 +237,18 @@ class DoclingChef(BaseChef):
                 }
             )
 
+        except (IOError, FileNotFoundError, PermissionError) as e:
+            # File-related errors (not found, permission denied, etc.)
+            raise ContentExtractionError(f"Failed to read documentation file: {str(e)}") from e
+        except (ValueError, AttributeError, TypeError) as e:
+            # Data parsing and processing errors
+            raise ContentExtractionError(f"Failed to parse documentation content: {str(e)}") from e
+        except self.docutils.ApplicationError as e:
+            # Handle docutils specific errors
+            raise ContentExtractionError(f"Failed to process reStructuredText: {str(e)}") from e
         except Exception as e:
-            raise ContentExtractionError(f"Failed to process documentation file: {str(e)}") from e
+            # Fallback for any other unexpected exceptions
+            raise ContentExtractionError(f"Unexpected error processing documentation file: {str(e)}") from e
 
     def validate_file(self, file_path: str) -> bool:
         """Validate if the file is a valid documentation file.
