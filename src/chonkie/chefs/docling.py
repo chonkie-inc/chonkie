@@ -266,5 +266,7 @@ class DoclingChef(BaseChef):
             if not file_path.lower().endswith(('.md', '.markdown', '.rst', '.txt')):
                 return False
             return True
-        except Exception:
+        except (FileNotFoundError, PermissionError, IsADirectoryError, OSError) as e:
+            # Log the error if needed
+            # logger.error(f"Validation failed for {file_path}: {e}")
             return False 
