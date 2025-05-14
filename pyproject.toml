@@ -70,7 +70,7 @@ openai = ["tiktoken>=0.5.0", "openai>=1.0.0", "numpy>=2.0.0, <3.0", "pydantic>=2
 voyageai = ["voyageai>=0.3.2", "numpy>=2.0.0, <3.0"]
 cohere = ["cohere>=5.13.0", "numpy>=2.0.0, <3.0"]
 jina = ["numpy>=2.0.0, <3.0"]
-semantic = ["model2vec>=0.3.0", "numpy>=2.0.0, <3.0"]
+semantic = ["model2vec>=0.3.0", "numpy>=2.0.0, <3.0", "scipy>=1.11.0"]
 gemini = ["pydantic>=2.0.0", "google-genai>=1.0.0"]
 
 # optional dependencies for the friends
@@ -103,6 +103,7 @@ all = [
     "chromadb>=1.0.0",
     "qdrant-client>=1.0.0",
     "turbopuffer[fast]>=0.2.0",
+    "scipy>=1.11.0",
 ]
 dev = [
     "datasets>=1.14.0",
