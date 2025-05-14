@@ -107,7 +107,7 @@ class MarkitdownChef(BaseChef):
                 }
             )
 
-        except Exception as e:
+        except (IOError, FileNotFoundError, PermissionError, ValueError, AttributeError, TypeError) as e:
             raise ContentExtractionError(f"Failed to process markdown file: {str(e)}") from e
 
     def validate_file(self, file_path: str) -> bool:
