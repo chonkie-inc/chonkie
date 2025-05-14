@@ -10,7 +10,7 @@ import base64
 from typing import Any, Dict, Optional, List, Tuple
 
 from .base import PDFProcessingChef, ProcessingResult, ProcessingStatus
-from .config import ChefConfig
+from .config import PDFChefConfig
 from .exceptions import OCRProcessingError, ContentExtractionError
 from ..types import PDFDocument, PDFPage, PDFImage
 
@@ -32,7 +32,7 @@ class MistralOCRChef(PDFProcessingChef):
         self,
         name: str = "MistralOCRChef",
         version: str = "1.0.0",
-        config: Optional[ChefConfig] = None
+        config: Optional[PDFChefConfig] = None
     ):
         """Initialize the MistralOCRChef.
         
