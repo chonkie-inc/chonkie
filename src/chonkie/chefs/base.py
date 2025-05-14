@@ -168,5 +168,5 @@ class PDFProcessingChef(BaseChef):
                 raise ValidationError(f"Not a PDF file: {file_path}")
             # Basic PDF validation could be added here
             return True
-        except Exception as e:
+        except (FileNotFoundError, PermissionError, IsADirectoryError, OSError) as e:
             raise ValidationError(f"Validation failed: {str(e)}") from e 
