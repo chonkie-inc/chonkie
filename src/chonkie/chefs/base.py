@@ -50,11 +50,12 @@ class ProcessingResult:
 
 
 class BaseChef(ABC):
-    """Base class for all PDF processing Chefs.
+    """Base class for all document processing Chefs.
     
-    This abstract base class defines the interface that all PDF processing
+    This abstract base class defines the interface that all document processing
     Chefs must implement. It provides common functionality and enforces
-    consistent behavior across different Chef implementations.
+    consistent behavior across different Chef implementations for various
+    document types (PDFs, markdown, restructured text, etc.).
     
     Attributes:
         name: The name of the Chef
