@@ -106,15 +106,19 @@ class PeakDetector:
         zero_crossings = np.where(np.diff(np.signbit(first_deriv)))[0]
         
         if self.find == 'minima':
-            # Minima: positive second derivative
-            extrema = [
+            # Find indices where second derivative is positive at zero crossings
+            # A positive second derivative at a zero crossing indicates a local minimum:
+            # - First derivative (slope) changes from negative to positive
+            # - Second derivative > 0 means the curve is concave up at this point
+            # - This combination identifies points where the function reaches a local minimum
+            minima_indices = [
                 idx for idx in zero_crossings
                 if second_deriv[idx] > 0
             ]
             # Apply threshold if specified (minima: signal <= threshold)
             if self.threshold is not None:
-                extrema = [
-                    idx for idx in extrema
+                minima_indices = [
+                    idx for idx in minima_indices
                     if signal[idx] <= self.threshold
                 ]
         else:
