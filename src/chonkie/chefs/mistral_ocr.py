@@ -6,7 +6,8 @@ processing PDFs using Mistral's OCR capabilities.
 
 import os
 import re
-from typing import Any, Dict, Optional, List
+import base64
+from typing import Any, Dict, Optional, List, Tuple
 
 from .base import PDFProcessingChef, ProcessingResult, ProcessingStatus
 from .config import ChefConfig
@@ -100,6 +101,56 @@ class MistralOCRChef(PDFProcessingChef):
                 })
                 
         return pages
+        
+    def _extract_images_from_response(self, response_text: str) -> List[Dict[str, Any]]:
+        """Extract image information from the Mistral response.
+        
+        This method parses the AI response to identify base64-encoded images
+        and their associated metadata.
+        
+        Args:
+            response_text: The raw text response from Mistral
+            
+        Returns:
+            A list of dictionaries containing image information
+        """
+        images = []
+        
+        # Look for image data in format: 
+        # Image: [Base64 data...], Format: [format], Page: [page_number], Width: [width], Height: [height]
+        image_pattern = re.compile(
+            r'Image\s*?:?\s*?[<\[]?(.*?)[>\]]?'
+            r'(?:,|\n)?\s*?Format\s*?:?\s*?(\w+)'
+            r'(?:,|\n)?\s*?Page\s*?:?\s*?(\d+)'
+            r'(?:,|\n)?\s*?Width\s*?:?\s*?(\d+)'
+            r'(?:,|\n)?\s*?Height\s*?:?\s*?(\d+)',
+            re.DOTALL
+        )
+        
+        for match in image_pattern.finditer(response_text):
+            try:
+                base64_data = match.group(1).strip()
+                # Clean up the base64 data - remove whitespace and newlines
+                base64_data = re.sub(r'\s+', '', base64_data)
+                
+                image_format = match.group(2).strip().lower()
+                page_number = int(match.group(3))
+                width = int(match.group(4))
+                height = int(match.group(5))
+                
+                images.append({
+                    "data": base64_data,
+                    "format": image_format,
+                    "page_number": page_number,
+                    "width": width,
+                    "height": height,
+                    "bbox": [0, 0, width, height]  # Default bbox covering the entire image
+                })
+            except Exception:
+                # Skip this image if parsing fails
+                continue
+                
+        return images
 
     def process(self, file_path: str, **kwargs) -> ProcessingResult:
         """Process a PDF file using Mistral's OCR capabilities.
@@ -138,11 +189,17 @@ class MistralOCRChef(PDFProcessingChef):
                 response = client.chat(
                     model="mistral-large-latest",
                     messages=[
-                        {"role": "user", "content": f"Extract text from this PDF document. For each page, please start with 'Page X:' where X is the page number. {pdf_content}"}
+                        {"role": "user", "content": (
+                            f"Extract text and images from this PDF document. "
+                            f"For each page, start with 'Page X:' where X is the page number. "
+                            f"For any images, provide the following information: "
+                            f"Image: [base64 encoded image], Format: [format], "
+                            f"Page: [page number], Width: [width], Height: [height]. {pdf_content}"
+                        )}
                     ]
                 )
                 
-                # Parse the response and create pages
+                # Parse the response
                 text_content = response.choices[0].message.content
                 
                 # Extract individual pages from the response
@@ -155,16 +212,44 @@ class MistralOCRChef(PDFProcessingChef):
                         "text": text_content
                     }]
                 
+                # Extract images from the response
+                extracted_images = self._extract_images_from_response(text_content)
+                
                 # Create PDFPage objects for each extracted page
+                page_map = {}  # Map of page number to PDFPage object
                 for page_info in extracted_pages:
                     page = PDFPage(
                         page_number=page_info["page_number"],
                         text=page_info["text"]
                     )
                     document.pages.append(page)
+                    page_map[page_info["page_number"]] = page
                 
                 # Sort pages by page number to ensure correct order
                 document.pages.sort(key=lambda p: p.page_number)
+                
+                # Add images to pages and document
+                for img_info in extracted_images:
+                    try:
+                        pdf_image = PDFImage(
+                            data=img_info["data"],
+                            format=img_info["format"],
+                            width=img_info["width"],
+                            height=img_info["height"],
+                            page_number=img_info["page_number"],
+                            bbox=img_info.get("bbox", [])
+                        )
+                        
+                        # Add image to document's images list
+                        document.images.append(pdf_image)
+                        
+                        # Add image to its corresponding page
+                        page_num = img_info["page_number"]
+                        if page_num in page_map:
+                            page_map[page_num].images.append(pdf_image)
+                    except Exception as e:
+                        # Log error but continue processing
+                        print(f"Error processing image: {str(e)}")
                 
                 # Update document text
                 document.text = document.extract_text()
@@ -174,6 +259,7 @@ class MistralOCRChef(PDFProcessingChef):
                     document=document,
                     metadata={
                         "pages_processed": len(document.pages),
+                        "images_processed": len(document.images),
                         "ocr_engine": "mistral"
                     }
                 )
