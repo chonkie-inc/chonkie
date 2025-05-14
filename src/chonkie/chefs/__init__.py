@@ -11,7 +11,7 @@ from .base import (
     ProcessingResult,
     ProcessingStatus,
 )
-from .config import ChefConfig
+from .config import BaseChefConfig, PDFChefConfig, MarkdownChefConfig, DocChefConfig
 from .exceptions import (
     ChefError,
     PDFProcessingError,
@@ -23,12 +23,19 @@ from .mistral_ocr import MistralOCRChef
 from .markitdown import MarkitdownChef
 from .docling import DoclingChef
 
+# For backward compatibility
+from .config import ChefConfig
+
 __all__ = [
     "BaseChef",
     "PDFProcessingChef",
     "ProcessingResult",
     "ProcessingStatus",
-    "ChefConfig",
+    "BaseChefConfig",
+    "PDFChefConfig",
+    "MarkdownChefConfig",
+    "DocChefConfig",
+    "ChefConfig",  # Keep for backward compatibility
     "ChefError",
     "PDFProcessingError",
     "ValidationError",
