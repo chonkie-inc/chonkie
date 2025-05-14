@@ -53,8 +53,8 @@ console.log(calc.add(5, 3));
 
 @pytest.fixture
 def unsupported_code() -> str:
-    """
-    Return a sample ASP.NET code snippet.
+    """Return a sample ASP.NET code snippet.
+    
     ASP.NET is one of the languages that is not supported by the tree-sitter-language-pack yet.
     But, it can be detected by Magika.
     """
@@ -222,7 +222,7 @@ def test_code_chunker_chunking_unsupported_language(unsupported_language: str) -
     """Test if the UnsupportedLanguageException is being raised if an unsupported language is given."""
     chunk_size = 30
     with pytest.raises(UnsupportedLanguageException) as exc_info:
-        chunker = CodeChunker(language=unsupported_language, chunk_size=chunk_size)
+        CodeChunker(language=unsupported_language, chunk_size=chunk_size)
         
     assert isinstance(exc_info.value, UnsupportedLanguageException)
     

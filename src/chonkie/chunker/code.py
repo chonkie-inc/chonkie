@@ -374,6 +374,8 @@ class CodeChunker(BaseChunker):
         
 class UnsupportedLanguageException(Exception):
     """Raised when the detected language is not supported by the tree-sitter-language-pack."""
+
     def __init__(self, language: str):
+        """Initialize the UnsupportedLanguageException."""
         message = f"The language given or the detected language: '{language}' is not supported yet. Please contact support at support@chonkie.ai or raise an issue in Github."
         super().__init__(message)
