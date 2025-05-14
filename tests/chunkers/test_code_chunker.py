@@ -1,8 +1,9 @@
 """Test the CodeChunker class."""
 import pytest
 
-from chonkie import CodeChunker
+from chonkie.chunker import CodeChunker, UnsupportedLanguageException
 from chonkie.types.code import CodeChunk
+from chonkie.types.recursive import RecursiveChunk
 
 
 @pytest.fixture
@@ -48,6 +49,45 @@ const calc = new Calculator();
 greet('Developer');
 console.log(calc.add(5, 3));
 """
+
+
+@pytest.fixture
+def unsupported_code() -> str:
+    """
+    Return a sample ASP.NET code snippet.
+    ASP.NET is one of the languages that is not supported by the tree-sitter-language-pack yet.
+    But, it can be detected by Magika.
+    """
+    return """
+<%@ Page Language="C#" %>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ASP.NET Test</title>
+</head>
+<body>
+    <h1>ASP.NET Inline Example</h1>
+    <%
+        string message = "Hello from ASP.NET!";
+        Response.Write(message);
+    %>
+</body>
+</html>
+"""
+
+
+@pytest.fixture
+def unsupported_language() -> str:
+    """Return a language unsupported by the tree-sitter-language-pack."""
+    # asp.net is one of them
+    return "asp"
+
+
+@pytest.fixture
+def plain_text() -> str:
+    """Return a sample plain text."""
+    text = """# Chunking Strategies in Retrieval-Augmented Generation: A Comprehensive Analysis\n\nIn the rapidly evolving landscape of natural language processing, Retrieval-Augmented Generation (RAG) has emerged as a groundbreaking approach that bridges the gap between large language models and external knowledge bases. At the heart of these systems lies a crucial yet often overlooked process: chunking. This fundamental operation, which involves the systematic decomposition of large text documents into smaller, semantically meaningful units, plays a pivotal role in determining the overall effectiveness of RAG implementations.\n\nThe process of text chunking in RAG applications represents a delicate balance between competing requirements. On one side, we have the need for semantic coherence – ensuring that each chunk maintains meaningful context that can be understood and processed independently. On the other, we must optimize for information density, ensuring that each chunk carries sufficient signal without excessive noise that might impede retrieval accuracy. This balancing act becomes particularly crucial when we consider the downstream implications for vector databases and embedding models that form the backbone of modern RAG systems.\n\nThe selection of appropriate chunk size emerges as a fundamental consideration that significantly impacts system performance. Through extensive experimentation and real-world implementations, researchers have identified that chunks typically perform optimally in the range of 256 to 1024 tokens. However, this range should not be treated as a rigid constraint but rather as a starting point for optimization based on specific use cases and requirements. The implications of chunk size selection ripple throughout the entire RAG pipeline, affecting everything from storage requirements to retrieval accuracy and computational overhead.\n\nFixed-size chunking represents the most straightforward approach to document segmentation, offering predictable memory usage and consistent processing time. However, this apparent simplicity comes with significant drawbacks. By arbitrarily dividing text based on token or character count, fixed-size chunking risks fragmenting semantic units and disrupting the natural flow of information. Consider, for instance, a technical document where a complex concept is explained across several paragraphs – fixed-size chunking might split this explanation at critical junctures, potentially compromising the system's ability to retrieve and present this information coherently.\n\nIn response to these limitations, semantic chunking has gained prominence as a more sophisticated alternative. This approach leverages natural language understanding to identify meaningful boundaries within the text, respecting the natural structure of the document. Semantic chunking can operate at various levels of granularity, from simple sentence-based segmentation to more complex paragraph-level or topic-based approaches. The key advantage lies in its ability to preserve the inherent semantic relationships within the text, leading to more meaningful and contextually relevant retrieval results.\n\nRecent advances in the field have given rise to hybrid approaches that attempt to combine the best aspects of both fixed-size and semantic chunking. These methods typically begin with semantic segmentation but impose size constraints to prevent extreme variations in chunk length. Furthermore, the introduction of sliding window techniques with overlap has proved particularly effective in maintaining context across chunk boundaries. This overlap, typically ranging from 10% to 20% of the chunk size, helps ensure that no critical information is lost at segment boundaries, albeit at the cost of increased storage requirements.\n\nThe implementation of chunking strategies must also consider various technical factors that can significantly impact system performance. Vector database capabilities, embedding model constraints, and runtime performance requirements all play crucial roles in determining the optimal chunking approach. Moreover, content-specific factors such as document structure, language characteristics, and domain-specific requirements must be carefully considered. For instance, technical documentation might benefit from larger chunks that preserve detailed explanations, while news articles might perform better with smaller, more focused segments.\n\nThe future of chunking in RAG systems points toward increasingly sophisticated approaches. Current research explores the potential of neural chunking models that can learn optimal segmentation strategies from large-scale datasets. These models show promise in adapting to different content types and query patterns, potentially leading to more efficient and effective retrieval systems. Additionally, the emergence of cross-lingual chunking strategies addresses the growing need for multilingual RAG applications, while real-time adaptive chunking systems attempt to optimize segment boundaries based on user interaction patterns and retrieval performance metrics.\n\nThe effectiveness of RAG systems heavily depends on the thoughtful implementation of appropriate chunking strategies. While the field continues to evolve, practitioners must carefully consider their specific use cases and requirements when designing chunking solutions. Factors such as document characteristics, retrieval patterns, and performance requirements should guide the selection and optimization of chunking strategies. As we look to the future, the continued development of more sophisticated chunking approaches promises to further enhance the capabilities of RAG systems, enabling more accurate and efficient information retrieval and generation.\n\nThrough careful consideration of these various aspects and continued experimentation with different approaches, organizations can develop chunking strategies that effectively balance the competing demands of semantic coherence, computational efficiency, and retrieval accuracy. As the field continues to evolve, we can expect to see new innovations that further refine our ability to segment and process textual information in ways that enhance the capabilities of RAG systems while maintaining their practical utility in real-world applications."""
+    return text
 
 
 def test_code_chunker_initialization() -> None:
@@ -147,8 +187,6 @@ def test_code_chunker_chunking_javascript(js_code: str) -> None:
     assert isinstance(chunks, list)
     assert len(chunks) > 0
     assert all(isinstance(chunk, CodeChunk) for chunk in chunks)
-    reconstructed_text = "".join(chunk.text for chunk in chunks)
-    assert reconstructed_text == js_code
 
 
 def test_code_chunker_reconstruction_javascript(js_code: str) -> None:
@@ -167,3 +205,34 @@ def test_code_chunker_chunk_size_javascript(js_code: str) -> None:
     # Allow for some leeway
     assert all(chunk.token_count < chunk_size + 15 for chunk in chunks[:-1])
     assert chunks[-1].token_count > 0 
+    
+    
+def test_code_chunker_chunking_unsupported_input(unsupported_code: str) -> None:
+    """Test if the UnsupportedLanguageException is being raised if an unsupported input is given."""
+    chunk_size = 30
+    # language set to "auto", letting the chonkie detect the language 
+    chunker = CodeChunker(language="auto", chunk_size=chunk_size)
+    with pytest.raises(UnsupportedLanguageException) as exc_info:
+        chunker.chunk(unsupported_code)
+    
+    assert isinstance(exc_info.value, UnsupportedLanguageException)
+    
+    
+def test_code_chunker_chunking_unsupported_language(unsupported_language: str) -> None:
+    """Test if the UnsupportedLanguageException is being raised if an unsupported language is given."""
+    chunk_size = 30
+    with pytest.raises(UnsupportedLanguageException) as exc_info:
+        chunker = CodeChunker(language=unsupported_language, chunk_size=chunk_size)
+        
+    assert isinstance(exc_info.value, UnsupportedLanguageException)
+    
+    
+def test_code_chunker_chunking_plain_text(plain_text: str) -> None:
+    """Test if the CodeChunker is falling back to the RecursiveChunker if the input is detected as 'txt'."""
+    chunk_size = 30
+    chunker = CodeChunker(language="auto", chunk_size=chunk_size)
+    chunks = chunker.chunk(plain_text)
+    
+    assert isinstance(chunks, list)
+    assert len(chunks) > 0
+    assert all(isinstance(chunk, RecursiveChunk) for chunk in chunks)
