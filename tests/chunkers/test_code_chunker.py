@@ -228,11 +228,15 @@ def test_code_chunker_chunking_unsupported_language(unsupported_language: str) -
     
     
 def test_code_chunker_chunking_plain_text(plain_text: str) -> None:
-    """Test if the CodeChunker is falling back to the RecursiveChunker if the input is detected as 'txt'."""
+    """Test if the CodeChunker is falling back to the RecursiveChunker if the input is detected as 'txt' or the language given is 'txt'."""
     chunk_size = 30
-    chunker = CodeChunker(language="auto", chunk_size=chunk_size)
-    chunks = chunker.chunk(plain_text)
+    with pytest.raises(UnsupportedLanguageException) as exc_info:
+        CodeChunker(language="txt", chunk_size=chunk_size)
+        
+    assert isinstance(exc_info.value, UnsupportedLanguageException)
     
-    assert isinstance(chunks, list)
-    assert len(chunks) > 0
-    assert all(isinstance(chunk, RecursiveChunk) for chunk in chunks)
+    chunker = CodeChunker(language="auto", chunk_size=chunk_size)
+    with pytest.raises(UnsupportedLanguageException) as exc_info:
+        chunker.chunk(plain_text)
+
+    assert isinstance(exc_info.value, UnsupportedLanguageException)

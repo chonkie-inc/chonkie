@@ -319,30 +319,15 @@ class CodeChunker(BaseChunker):
         # At this point, if the language is auto, we need to detect the language
         # and initialize the parser
         if self.language == "auto":
-            language = self._detect_language(original_text_bytes)
+            language_detected = self._detect_language(original_text_bytes)
 
             # if the language is not supported by the tree-sitter-language-pack yet,
             # we raise the unsupported language error instead of making 
             # the tree-sitter-language-pack raise a LookUpError later while fetching the parser
-            if (language not in self.supported_languages):
-                # if the given text is detected as plain text ("txt"), fallback to the recursive chunker
-                if (language == "txt"):
-                    warnings.warn("The text given is detected as plain text. " + 
-                                  "Hence, falling back to the RecursiveChunker. " +
-                                  "Refer https://docs.chonkie.ai/python-sdk/chunkers/recursive-chunker to know more.")
-                    from chonkie import RecursiveChunker
-                    
-                    recursive_chunker = RecursiveChunker(
-                        tokenizer_or_token_counter=self.tokenizer,
-                        chunk_size=self.chunk_size,
-                        return_type=self.return_type
-                    )
-                    
-                    return recursive_chunker.chunk(text=text)
+            if (language_detected not in self.supported_languages):
+                raise UnsupportedLanguageException(self.language, language_detected)
 
-                raise UnsupportedLanguageException(language)
-
-            self.parser = get_parser(language) # type: ignore
+            self.parser = get_parser(language_detected) # type: ignore
 
         try:
             # Create the parsing tree for the current code
@@ -373,9 +358,29 @@ class CodeChunker(BaseChunker):
         
         
 class UnsupportedLanguageException(Exception):
-    """Raised when the detected language is not supported by the tree-sitter-language-pack."""
+    """Raised when the detected language is not yet supported by the tree-sitter-language-pack."""
 
-    def __init__(self, language: str):
+    def __init__(self, language: str, language_detected: str = None) -> None:
         """Initialize the UnsupportedLanguageException."""
-        message = f"The language given or the detected language: '{language}' is not supported yet. Please contact support at support@chonkie.ai or raise an issue in Github."
+        if (language_detected):
+            if (language_detected == 'txt'):
+                message = f"""
+                If the given input is a plain text and if you want to chunk plain text, please use the `RecursiveChunker` class or any other text chunking classes instead.
+                Refer: https://docs.chonkie.ai/python-sdk/chunkers/overview to know more about the available chunkers. 
+                Else, the given input language is not supported yet. Please contact support at support@chonkie.ai or raise an issue in Github. 
+                """
+            else:
+                message = f"""
+                The language detected: '{language_detected}' is not supported yet. Please contact support at support@chonkie.ai or raise an issue in Github.
+                """
+        else:    
+            if (language == "txt"):
+                message = """
+                Please use the `RecursiveChunker` class or any other text chunking classes instead.
+                Refer: https://docs.chonkie.ai/python-sdk/chunkers/overview to know more about the available chunkers. 
+                """
+            else:
+                message = f"""
+                The language given: '{language}' is not supported yet. Please contact support at support@chonkie.ai or raise an issue in Github.
+                """
         super().__init__(message)
