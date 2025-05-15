@@ -98,7 +98,7 @@ class BaseChef(Generic[T, R], ABC):
             ChefError: If there is an error during processing
         """
         if not self.validate(data):
-            raise ValueError(f"Invalid input data for chef {self.config.name}")
+            raise ChefError(f"Invalid input data for chef {self.config.name}")
         
         prepared_data = self.prepare(data)
         return self.clean(prepared_data)
