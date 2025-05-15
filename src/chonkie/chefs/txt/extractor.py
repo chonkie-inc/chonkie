@@ -39,5 +39,13 @@ class TXTExtractorChef(BaseChef):
         except Exception as e:
             raise ChefError(f"Error extracting content from TXT: {str(e)}")
     
-    def clean(self):
-        pass 
+    def clean(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        """Clean method that's compatible with BaseChef.
+        
+        Args:
+            data: The data to be returned
+            
+        Returns:
+            The same data unchanged
+        """
+        return data
