@@ -63,16 +63,9 @@ class DOCXExtractorConfig(BaseModel):
             raise ValueError("Image quality must be between 1 and 100")
         return v
 
-    def validate(self) -> None:
-        """Validate configuration values."""
-        if self.image_format not in ["png", "jpeg"]:
-            raise ValueError("Image format must be 'png' or 'jpeg'")
-        
-        if not 1 <= self.image_quality <= 100:
-            raise ValueError("Image quality must be between 1 and 100")
-        
-        if self.table_format not in ["markdown", "html", "json"]:
-            raise ValueError("Table format must be 'markdown', 'html', or 'json'")
-        
-        if self.image_output_dir is not None and not isinstance(self.image_output_dir, str):
-            raise ValueError("Image output directory must be a string") 
+    @field_validator("image_output_dir")
+    def validate_image_output_dir(cls, v: Optional[str]) -> Optional[str]:
+        """Validate image output directory."""
+        if v is not None and not isinstance(v, str):
+            raise ValueError("Image output directory must be a string")
+        return v 
