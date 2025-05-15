@@ -81,6 +81,33 @@ tpuf = ["turbopuffer[fast]>=0.2.0"]
 # Optional dependencies for the genie
 genie = ["pydantic>=2.0.0", "google-genai>=1.0.0"]
 
+# Optional dependencies for the chefs
+pdf = [
+    "PyPDF2>=3.0.0",
+    "pdfplumber>=0.10.0",
+    "pytesseract>=0.3.10",
+    "pdf2image>=1.16.0",
+    "opencv-python>=4.8.0",
+    "tabula-py>=2.8.0",
+    "pandas>=2.0.0",
+    "PyMuPDF>=1.22.0",
+]
+
+# Enhanced PDF functionality with more features
+pdf-full = [
+    "PyPDF2>=3.0.0",
+    "pdfplumber>=0.10.0",
+    "pytesseract>=0.3.10",
+    "pdf2image>=1.16.0",
+    "opencv-python>=4.8.0",
+    "tabula-py>=2.8.0",
+    "pandas>=2.0.0",
+    "PyMuPDF>=1.22.0",
+    "camelot-py>=0.11.0",
+    "ghostscript>=0.7.0",
+    "pdfminer.six>=20221105",
+]
+
 # All dependencies
 all = [
     "rich>=13.0.0",
@@ -103,6 +130,17 @@ all = [
     "chromadb>=1.0.0",
     "qdrant-client>=1.0.0",
     "turbopuffer[fast]>=0.2.0",
+    "PyPDF2>=3.0.0",
+    "pdfplumber>=0.10.0",
+    "pytesseract>=0.3.10",
+    "pdf2image>=1.16.0",
+    "opencv-python>=4.8.0",
+    "tabula-py>=2.8.0",
+    "pandas>=2.0.0",
+    "PyMuPDF>=1.22.0",
+    "camelot-py>=0.11.0",
+    "ghostscript>=0.7.0",
+    "pdfminer.six>=20221105",
 ]
 dev = [
     "datasets>=1.14.0",
@@ -136,6 +174,9 @@ packages = [
     "chonkie.friends.handshakes",
     "chonkie.cloud",
     "chonkie.cloud.chunker",
+    "chonkie.chefs",
+    "chonkie.chefs.pdf",
+    "chonkie.chefs.docx",
 ]
 
 [tool.ruff]
