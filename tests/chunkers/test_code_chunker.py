@@ -3,7 +3,6 @@ import pytest
 
 from chonkie.chunker import CodeChunker, UnsupportedLanguageException
 from chonkie.types.code import CodeChunk
-from chonkie.types.recursive import RecursiveChunk
 
 
 @pytest.fixture

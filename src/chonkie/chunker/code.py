@@ -364,7 +364,7 @@ class UnsupportedLanguageException(Exception):
         """Initialize the UnsupportedLanguageException."""
         if (language_detected):
             if (language_detected == 'txt'):
-                message = f"""
+                message = """
                 If the given input is a plain text and if you want to chunk plain text, please use the `RecursiveChunker` class or any other text chunking classes instead.
                 Refer: https://docs.chonkie.ai/python-sdk/chunkers/overview to know more about the available chunkers. 
                 Else, the given input language is not supported yet. Please contact support at support@chonkie.ai or raise an issue in Github. 
