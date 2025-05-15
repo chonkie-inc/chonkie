@@ -821,8 +821,15 @@ class DOCXExtractorChef(BaseChef):
         except Exception as e:
             raise ChefError(f"Error extracting content from DOCX: {str(e)}")
     
-    def clean(self) -> None:
-        """Clean up temporary files and resources."""
+    def clean(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        """Clean up temporary files and resources and return the data.
+        
+        Args:
+            data: The data to clean and return
+            
+        Returns:
+            The cleaned data
+        """
         try:
             # Remove temporary image files
             for temp_file in self._temp_files:
@@ -833,9 +840,16 @@ class DOCXExtractorChef(BaseChef):
             # Clear document reference
             self._doc = None
             
+            return data
+            
         except Exception as e:
             raise ChefError(f"Error cleaning up DOCX extractor: {str(e)}")
     
     def __del__(self):
         """Ensure cleanup on object destruction."""
-        self.clean() 
+        try:
+            # Call clean with empty dict to ensure resources are cleaned
+            self.clean({}) 
+        except:
+            # Ignore errors during destruction
+            pass 
