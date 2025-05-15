@@ -228,7 +228,7 @@ def test_docx_chef_cleanup(sample_docx_file, temp_image_dir):
     temp_files = [image["path"] for image in result["images"] if "path" in image]
     
     # Clean up
-    chef.clean()
+    chef.clean(result)
     
     # Verify files are removed
     for temp_file in temp_files:
