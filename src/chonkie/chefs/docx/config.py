@@ -9,7 +9,6 @@ class DOCXExtractorConfig(BaseModel):
     extract_images: bool = Field(True, description="Whether to extract embedded images")
     image_format: str = Field("png", description="Format to save extracted images in (png, jpeg)")
     image_quality: int = Field(85, description="Image quality for JPEG format (1-100)")
-    page_range: Optional[List[int]] = Field(None, description="Specific pages to extract (0-based indexing). If None, extract all pages")
     
     # New configuration options
     extract_tables: bool = Field(True, description="Whether to extract tables with structure")
@@ -64,21 +63,6 @@ class DOCXExtractorConfig(BaseModel):
             raise ValueError("Image quality must be between 1 and 100")
         return v
 
-    @field_validator("page_range")
-    def validate_page_range(cls, v: Optional[List[int]]) -> Optional[List[int]]:
-        """Validate page range."""
-        if v is not None:
-            if len(v) == 0:
-                raise ValueError("Page range cannot be empty")
-            if len(v) > 2:
-                raise ValueError("Page range must have at most 2 elements")
-            if len(v) == 2 and v[0] > v[1]:
-                raise ValueError("First page must be less than or equal to last page")
-            for page in v:
-                if page < 1:
-                    raise ValueError("Page numbers must be positive")
-        return v
-
     def validate(self) -> None:
         """Validate configuration values."""
         if self.image_format not in ["png", "jpeg"]:
@@ -86,12 +70,6 @@ class DOCXExtractorConfig(BaseModel):
         
         if not 1 <= self.image_quality <= 100:
             raise ValueError("Image quality must be between 1 and 100")
-        
-        if self.page_range is not None:
-            if not isinstance(self.page_range, list):
-                raise ValueError("Page range must be a list of integers")
-            if not all(isinstance(p, int) and p >= 0 for p in self.page_range):
-                raise ValueError("Page numbers must be non-negative integers")
         
         if self.table_format not in ["markdown", "html", "json"]:
             raise ValueError("Table format must be 'markdown', 'html', or 'json'")
