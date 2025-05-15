@@ -51,7 +51,7 @@ class DOCXExtractorConfig(BaseModel):
     @field_validator("image_format")
     def validate_image_format(cls, v: str) -> str:
         """Validate image format."""
-        valid_formats = ["png", "jpeg", "webp", "base64"]
+        valid_formats = ["png", "jpeg"]
         if v not in valid_formats:
             raise ValueError(f"Invalid image format. Must be one of {valid_formats}")
         return v
