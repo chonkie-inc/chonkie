@@ -33,6 +33,7 @@ Tired of making your gazillionth chunker? Sick of the overhead of large librarie
 **🌏 Wide support**: CHONKie [integrates](#integrations) with your favorite tokenizer, embedding model and APIs! </br>
 **💬 ️Multilingual**: Out-of-the-box support for 5+ language CHONKS (more coming 🔜) </br>
 **☁️ Cloud-Ready**: CHONK locally or in the [Chonkie Cloud](https://cloud.chonkie.ai) </br>
+**🔄 Async Support**: Process documents concurrently with async/await </br>
 **🦛 Cute CHONK mascot**: psst it's a pygmy hippo btw </br>
 **❤️ [Moto Moto](#acknowledgements)'s favorite python library** </br>
 
@@ -72,6 +73,31 @@ chunks = chunker("Chonkie is the goodest boi! My favorite chunking hippo hehe.")
 for chunk in chunks:
     print(f"Chunk: {chunk.text}")
     print(f"Tokens: {chunk.token_count}")
+```
+
+### Async Processing
+
+Chonkie also supports asynchronous processing for improved performance:
+
+```python
+import asyncio
+from chonkie import TokenChunker
+
+# Initialize chunker
+chunker = TokenChunker()
+
+async def process_texts():
+    texts = ["Text 1...", "Text 2...", "Text 3..."]
+    
+    # Configure concurrency
+    chunker.configure(max_concurrency=10)
+    
+    # Process batch asynchronously
+    results = await chunker.async_chunk_batch(texts)
+    return results
+
+# Run async code
+results = asyncio.run(process_texts())
 ```
 
 Check out more usage examples in the [docs](https://docs.chonkie.ai)!
