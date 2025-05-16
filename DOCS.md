@@ -905,7 +905,7 @@ print(json_response)
 
 ### `OpenAIGenie`
 
-The `OpenAIGenie` class provides an interface to interact with OpenAI's models (like GPT-4) or any LLM provider that offers an OpenAI-compatible API endpoint.
+The `OpenAIGenie` class provides an interface to interact with OpenAI's models (like GPT-4) or any LLM provider that offers an OpenAI-compatible API endpoint. It now has explicit support for OpenRouter, allowing easy access to various AI models available through OpenRouter's platform.
 
 Requires `pip install "chonkie[openai]"`.
 
@@ -983,30 +983,31 @@ print(json_response)
 </details>
 
 <details>
-<summary><strong>3. Using `OpenAIGenie` with a Custom OpenAI-Compatible API (e.g., OpenRouter)</strong></summary>
+<summary><strong>3. Using `OpenAIGenie` with OpenRouter</strong></summary>
 
 ```python
 # Requires "chonkie[openai]"
-# Ensure your custom provider's API key is set (e.g., OPENROUTER_API_KEY)
+# Ensure your OpenRouter API key is set (e.g., OPENROUTER_API_KEY)
 import os
 from chonkie.genie import OpenAIGenie
 
-# Replace with your actual API key and provider details
-# Example uses OpenRouter
-custom_api_key = os.getenv("OPENROUTER_API_KEY")
-if not custom_api_key:
-    raise ValueError("Please set the API key for your custom provider.")
+# Replace with your actual OpenRouter API key
+openrouter_api_key = os.getenv("OPENROUTER_API_KEY")
+if not openrouter_api_key:
+    raise ValueError("Please set the OPENROUTER_API_KEY environment variable.")
 
-custom_base_url = "https://openrouter.ai/api/v1"
-# Example using a model available on OpenRouter
-custom_model = "mistralai/mistral-7b-instruct"
-
-# Initialize the genie for the custom provider
+# Method 1: Use the dedicated openrouter_api_key parameter (recommended)
 genie = OpenAIGenie(
-    model=custom_model,
-    base_url=custom_base_url,
-    api_key=custom_api_key
+    model="mistralai/mistral-7b-instruct",  # Example model available on OpenRouter
+    openrouter_api_key=openrouter_api_key
 )
+
+# Method 2: Explicitly specify both the API key and base URL
+# genie = OpenAIGenie(
+#     model="mistralai/mistral-7b-instruct",
+#     base_url="https://openrouter.ai/api/v1",
+#     api_key=openrouter_api_key
+# )
 
 # Generate text
 prompt = "Tell me a fun fact about hippos."
