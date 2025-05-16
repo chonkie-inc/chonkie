@@ -23,8 +23,9 @@ class OpenAIEmbeddings(BaseEmbeddings):
         model: The model to use.
         tokenizer: The tokenizer to use. Can be loaded directly if it's a OpenAI model, otherwise needs to be provided.
         dimension: The dimension of the embedding model to use. Can be inferred if it's a OpenAI model, otherwise needs to be provided.
-        base_url: The base URL to use.
-        api_key: The API key to use.
+        base_url: The base URL to use for API requests. If not provided, will check for OPENAI_BASE_URL environment variable.
+                 This allows compatibility with OpenAI-compliant embedding services.
+        api_key: The API key to use. If not provided, will check for OPENAI_API_KEY environment variable.
         organization: The organization to use.
         max_retries: The maximum number of retries to use.
         timeout: The timeout to use.
@@ -60,7 +61,8 @@ class OpenAIEmbeddings(BaseEmbeddings):
             model: Name of the OpenAI embedding model to use
             tokenizer: The tokenizer to use. Can be loaded directly if it's a OpenAI model, otherwise needs to be provided.
             dimension: The dimension of the embedding model to use. Can be inferred if it's a OpenAI model, otherwise needs to be provided.
-            base_url: The base URL to use.
+            base_url: Base URL for API requests. If not provided, will check for OPENAI_BASE_URL environment variable.
+                     This allows compatibility with OpenAI-compliant embedding services.
             api_key: OpenAI API key (if not provided, looks for OPENAI_API_KEY env var)
             max_retries: Maximum number of retries for failed requests
             timeout: Timeout in seconds for API requests
@@ -76,7 +78,7 @@ class OpenAIEmbeddings(BaseEmbeddings):
 
         # Initialize the model
         self.model = model
-        self.base_url = base_url
+        self.base_url = base_url or os.getenv("OPENAI_BASE_URL")
         self._batch_size = batch_size
         self._show_warnings = show_warnings
 
@@ -94,10 +96,14 @@ class OpenAIEmbeddings(BaseEmbeddings):
         elif model in self.AVAILABLE_MODELS:
             self._dimension = self.AVAILABLE_MODELS[model]
 
+        # Normalize base_url if provided (remove trailing slashes)
+        if self.base_url is not None and self.base_url.endswith("/"):
+            self.base_url = self.base_url.rstrip("/")
+
         # Setup OpenAI client
         self.client = OpenAI(               # type: ignore
             api_key=api_key or os.getenv("OPENAI_API_KEY"),
-            base_url=base_url,
+            base_url=self.base_url,
             timeout=timeout,
             max_retries=max_retries,
             **kwargs,
@@ -117,12 +123,20 @@ class OpenAIEmbeddings(BaseEmbeddings):
                 "It will be truncated."
             )
 
-        response = self.client.embeddings.create(
-            model=self.model,
-            input=text,
-        )
-
-        return np.array(response.data[0].embedding, dtype=np.float32)
+        try:
+            response = self.client.embeddings.create(
+                model=self.model,
+                input=text,
+            )
+            return np.array(response.data[0].embedding, dtype=np.float32)
+        except Exception as e:
+            if self.base_url is not None:
+                # Enhance error message when a custom base_url is used
+                raise RuntimeError(
+                    f"Failed to generate embeddings with custom base_url={self.base_url}. "
+                    f"Ensure the endpoint is OpenAI compatible and accessible. Error: {str(e)}"
+                ) from e
+            raise
 
     def embed_batch(self, texts: List[str]) -> List["np.ndarray"]:
         """Get embeddings for multiple texts using batched API calls."""
@@ -160,12 +174,33 @@ class OpenAIEmbeddings(BaseEmbeddings):
             except Exception as e:
                 # If the batch fails, try one by one
                 if len(batch) > 1:
-                    warnings.warn(
-                        f"Batch embedding failed: {str(e)}. Trying one by one."
-                    )
-                    individual_embeddings = [self.embed(text) for text in batch]
-                    all_embeddings.extend(individual_embeddings)
+                    if self.base_url is not None:
+                        warnings.warn(
+                            f"Batch embedding failed with custom base_url={self.base_url}: {str(e)}. "
+                            "Trying one by one."
+                        )
+                    else:
+                        warnings.warn(
+                            f"Batch embedding failed: {str(e)}. Trying one by one."
+                        )
+                    try:
+                        individual_embeddings = [self.embed(text) for text in batch]
+                        all_embeddings.extend(individual_embeddings)
+                    except Exception as inner_e:
+                        if self.base_url is not None:
+                            # Enhance error message when a custom base_url is used
+                            raise RuntimeError(
+                                f"Failed to generate embeddings with custom base_url={self.base_url}. "
+                                f"Ensure the endpoint is OpenAI compatible and accessible. Error: {str(inner_e)}"
+                            ) from inner_e
+                        raise inner_e
                 else:
+                    if self.base_url is not None:
+                        # Enhance error message when a custom base_url is used
+                        raise RuntimeError(
+                            f"Failed to generate embeddings with custom base_url={self.base_url}. "
+                            f"Ensure the endpoint is OpenAI compatible and accessible. Error: {str(e)}"
+                        ) from e
                     raise e
 
         return all_embeddings
@@ -219,4 +254,6 @@ class OpenAIEmbeddings(BaseEmbeddings):
 
     def __repr__(self) -> str:
         """Representation of the OpenAIEmbeddings instance."""
+        if self.base_url is not None:
+            return f"OpenAIEmbeddings(model={self.model}, base_url={self.base_url})"
         return f"OpenAIEmbeddings(model={self.model})"
