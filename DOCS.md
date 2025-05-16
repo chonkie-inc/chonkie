@@ -38,6 +38,7 @@ Unfortunately, we do need docs for Chonkie (we tried!). While official docs are 
 - [Genies](#genies)
   - [`GeminiGenie`](#geminigenie)
   - [`OpenAIGenie`](#openaigenie)
+  - [`TogetherGenie`](#togethergenie)
 - [Porters](#porters)
   - [`JSONPorter`](#jsonporter)
 - [Handshakes](#handshakes)
@@ -514,7 +515,6 @@ for i, chunk in enumerate(chunks):
     print(f"Token Count: {chunk.token_count}")
     print(f"Start Index: {chunk.start_index}")
     print(f"End Index: {chunk.end_index}")
-    print(f"Number of Sentences: {len(chunk.sentences)}")
 ```
 
 </details>
@@ -820,9 +820,11 @@ Of course the above example is a bit contrived, but you get the idea. Once you'r
 
 ## Genies
 
-Genies are Chonkie's interface for interacting with Large Language Models (LLMs). They can be integrated into advanced chunking strategies (like the `SlumberChunker`) or used for other LLM-powered tasks within your data processing pipeline. Genies handle the communication with different LLM providers, offering a consistent way to generate text or structured JSON output.
+Genies are interfaces to large language models (LLMs) that provide text generation capabilities. Chonkie currently supports the following genies:
 
-Currently, Chonkie provides Genies for Google's Gemini models and OpenAI's models (including compatible APIs).
+- [`GeminiGenie`](#geminigenie)
+- [`OpenAIGenie`](#openaigenie)  
+- [`TogetherGenie`](#togethergenie)
 
 ### `GeminiGenie`
 
@@ -1013,6 +1015,94 @@ prompt = "Tell me a fun fact about hippos."
 response = genie.generate(prompt)
 
 print(response)
+```
+
+</details>
+
+### `TogetherGenie`
+
+The `TogetherGenie` class provides an interface to interact with TogetherAI's models, which include a variety of LLMs such as Llama 3, Mistral, Mixtral, and more.
+
+Requires `pip install "chonkie[together]"`.
+
+**Parameters:**
+
+- `model (str)`: The model to use. Defaults to `"mistralai/Mixtral-8x7B-Instruct-v0.1"`.
+- `api_key (Optional[str])`: The API key to use. Defaults to the environment variable `TOGETHER_API_KEY`.
+- `temperature (float)`: The temperature to use for generation. Controls randomness in the output. Defaults to `0.7`.
+- `max_tokens (int)`: The maximum number of tokens to generate. Defaults to `1024`.
+
+**Methods:**
+
+- `generate(prompt: str) -> str`: Generates a text response based on the given prompt.
+- `generate_json(prompt: str, schema: BaseModel) -> Dict[str, Any]`: Generates a JSON response that conforms to the provided schema.
+
+**Examples:**
+
+<details>
+<summary><strong>1. Basic Text Generation with TogetherGenie</strong></summary>
+
+```python
+# Requires "chonkie[together]"
+import os
+from chonkie.genie import TogetherGenie
+
+# Get your API key from the environment or set it directly
+api_key = os.getenv("TOGETHER_API_KEY")
+if not api_key:
+    raise ValueError("Please set the TOGETHER_API_KEY environment variable.")
+
+# Initialize the genie with a specific model
+genie = TogetherGenie(
+    model="meta-llama/Meta-Llama-3-8B-Instruct",
+    api_key=api_key
+)
+
+# Generate text based on a prompt
+prompt = "What are three benefits of text chunking for RAG systems?"
+response = genie.generate(prompt)
+
+print(response)
+```
+
+</details>
+
+<details>
+<summary><strong>2. Generating Structured JSON with TogetherGenie</strong></summary>
+
+```python
+# Requires "chonkie[together]"
+import os
+from typing import List
+from pydantic import BaseModel, Field
+from chonkie.genie import TogetherGenie
+
+# Define a schema for the response
+class RecipeSuggestion(BaseModel):
+    name: str = Field(..., description="Name of the dish")
+    ingredients: List[str] = Field(..., description="List of required ingredients")
+    cooking_time: int = Field(..., description="Approximate cooking time in minutes")
+
+# Get your API key from the environment
+api_key = os.getenv("TOGETHER_API_KEY")
+if not api_key:
+    raise ValueError("Please set the TOGETHER_API_KEY environment variable.")
+
+# Initialize the genie
+genie = TogetherGenie(
+    model="meta-llama/Meta-Llama-3-8B-Instruct",
+    api_key=api_key
+)
+
+# Generate a JSON response
+prompt = "Suggest a quick vegetarian dinner recipe."
+response = genie.generate_json(prompt, RecipeSuggestion)
+
+print(f"Recipe: {response['name']}")
+print(f"Cooking Time: {response['cooking_time']} minutes")
+print("Ingredients:")
+for ingredient in response['ingredients']:
+    print(f"- {ingredient}")
 ```
 
 </details>
