@@ -79,7 +79,7 @@ qdrant = ["qdrant-client>=1.0.0"]
 tpuf = ["turbopuffer[fast]>=0.2.0"]
 
 # Optional dependencies for the genie
-genie = ["pydantic>=2.0.0", "google-genai>=1.0.0"]
+genie = ["pydantic>=2.0.0", "google-genai>=1.0.0", "cohere>=5.13.0"]
 
 # All dependencies
 all = [
