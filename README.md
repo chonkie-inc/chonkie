@@ -155,7 +155,7 @@ Seamlessly works with various embedding model providers. Bring your favorite emb
 |-------------------------|---------------------------------|----------------------------------------------|-------------------|
 | `model2vec`             | `Model2VecEmbeddings`           | Use `Model2Vec` models.                      | `chonkie[model2vec]` |
 | `sentence-transformers` | `SentenceTransformerEmbeddings` | Use any `sentence-transformers` model.       | `chonkie[st]`       |
-| `openai`                | `OpenAIEmbeddings`              | Use OpenAI's embedding API.                  | `chonkie[openai]`   |
+| `openai`                | `OpenAIEmbeddings`              | Use OpenAI's embedding API or any OpenAI-compatible API (via `base_url` parameter or `OPENAI_BASE_URL` env var).  | `chonkie[openai]`   |
 | `cohere`                | `CohereEmbeddings`              | Use Cohere's embedding API.                  | `chonkie[cohere]`   |
 | `jina`                  | `JinaEmbeddings`                | Use Jina AI's embedding API.                 | `chonkie[jina]`     |
 | `voyageai`              | `VoyageAIEmbeddings`            | Use Voyage AI's embedding API.               | `chonkie[voyageai]` |
