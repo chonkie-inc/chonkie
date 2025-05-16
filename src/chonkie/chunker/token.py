@@ -4,15 +4,16 @@ This module provides a TokenChunker class for splitting text into chunks of a sp
 
 """
 
-from typing import Any, Generator, List, Literal, Sequence, Union
+import asyncio
+from typing import Any, Generator, List, Literal, Sequence, Union, AsyncIterator
 
 from tqdm import trange
 
-from chonkie.chunker.base import BaseChunker
+from chonkie.chunker.base import BaseChunker, T
 from chonkie.types.base import Chunk
 
 
-class TokenChunker(BaseChunker):
+class TokenChunker(BaseChunker[Chunk]):
     """Chunker that splits text into chunks of a specified token size.
 
     Args:
@@ -112,6 +113,16 @@ class TokenChunker(BaseChunker):
             if end == len(tokens):
                 break
 
+    async def _async_token_group_generator(
+        self, tokens: List[int]
+    ) -> AsyncIterator[List[int]]:
+        """Generate chunks asynchronously from a list of tokens."""
+        for start in range(0, len(tokens), self.chunk_size - self.chunk_overlap):
+            end = min(start + self.chunk_size, len(tokens))
+            yield tokens[start:end]
+            if end == len(tokens):
+                break
+
     def chunk(self, text: str) -> Sequence[Chunk]:
         """Split text into overlapping chunks of specified token size.
 
@@ -146,6 +157,98 @@ class TokenChunker(BaseChunker):
         elif self.return_type == "texts":
             return self.tokenizer.decode_batch(token_groups)
 
+    async def async_chunk(self, text: str) -> Sequence[Chunk]:
+        """Split text into overlapping chunks asynchronously.
+        
+        Optimized asynchronous implementation of chunk() method.
+
+        Args:
+            text: Input text to be chunked
+
+        Returns:
+            List of Chunk objects containing the chunked text and metadata
+        """
+        if not text.strip():
+            return []
+
+        # Create a thread-safe executor task for CPU-bound tokenization
+        loop = asyncio.get_event_loop()
+        text_tokens = await loop.run_in_executor(None, self.tokenizer.encode, text)
+        
+        # Calculate token groups
+        token_groups = []
+        async for token_group in self._async_token_group_generator(text_tokens):
+            token_groups.append(token_group)
+
+        # Process according to return type
+        if self.return_type == "chunks":
+            token_counts = [len(toks) for toks in token_groups]
+            
+            # Use executor for batch decoding
+            chunk_texts = await loop.run_in_executor(
+                None, self.tokenizer.decode_batch, token_groups
+            )
+            
+            # Create chunks
+            chunks = await loop.run_in_executor(
+                None, self._create_chunks, chunk_texts, token_groups, token_counts
+            )
+            
+            return chunks
+        else:  # return_type is "texts"
+            return await loop.run_in_executor(
+                None, self.tokenizer.decode_batch, token_groups
+            )
+
+    async def stream_chunk(self, text: str) -> AsyncIterator[Chunk]:
+        """Stream chunks as they're generated.
+        
+        Args:
+            text: Input text to be chunked
+            
+        Yields:
+            Chunks as they're created, one by one
+        """
+        if not text.strip():
+            return
+            
+        # Create a thread-safe executor task for CPU-bound tokenization
+        loop = asyncio.get_event_loop()
+        text_tokens = await loop.run_in_executor(None, self.tokenizer.encode, text)
+        
+        current_index = 0
+        previous_token_group = None
+        
+        async for token_group in self._async_token_group_generator(text_tokens):
+            # Decode the token group
+            chunk_text = await loop.run_in_executor(
+                None, self.tokenizer.decode, token_group
+            )
+            
+            # Calculate overlap length if needed
+            overlap_length = 0
+            if self.chunk_overlap > 0 and previous_token_group is not None:
+                overlap_tokens = previous_token_group[-self.chunk_overlap:] if len(previous_token_group) > self.chunk_overlap else previous_token_group
+                overlap_text = await loop.run_in_executor(None, self.tokenizer.decode, overlap_tokens)
+                overlap_length = len(overlap_text)
+            
+            # Create chunk
+            start_index = current_index
+            end_index = start_index + len(chunk_text)
+            
+            chunk = Chunk(
+                text=chunk_text,
+                start_index=start_index,
+                end_index=end_index,
+                token_count=len(token_group),
+            )
+            
+            yield chunk
+            
+            # Update for next iteration
+            current_index = end_index - overlap_length
+            previous_token_group = token_group
+
     def _process_batch(self, texts: List[str]) -> Sequence[Sequence[Chunk]]:
         """Process a batch of texts."""
         # encode the texts into tokens in a batch
@@ -176,6 +279,48 @@ class TokenChunker(BaseChunker):
                 raise ValueError(
                     "Invalid return_type. Must be either 'chunks' or 'texts'."
                 )
+
+        return result
+
+    async def _async_process_batch(self, texts: List[str]) -> Sequence[Sequence[Chunk]]:
+        """Process a batch of texts asynchronously."""
+        loop = asyncio.get_event_loop()
+        
+        # Encode the texts into tokens in a batch (CPU-bound)
+        tokens_list = await loop.run_in_executor(
+            None, self.tokenizer.encode_batch, texts
+        )
+        
+        result = []
+        for tokens in tokens_list:
+            if not tokens:
+                result.append([])
+                continue
+
+            # Get the token groups
+            token_groups = []
+            async for token_group in self._async_token_group_generator(tokens):
+                token_groups.append(token_group)
+
+            if self.return_type == "chunks":
+                # Get the token counts
+                token_counts = [len(token_group) for token_group in token_groups]
+
+                # Decode the token groups into the chunk texts (CPU-bound)
+                chunk_texts = await loop.run_in_executor(
+                    None, self.tokenizer.decode_batch, token_groups
+                )
+
+                # Create the chunks from the token groups and token counts
+                chunks = await loop.run_in_executor(
+                    None, self._create_chunks, chunk_texts, token_groups, token_counts
+                )
+                result.append(chunks)
+            elif self.return_type == "texts":
+                decoded = await loop.run_in_executor(
+                    None, self.tokenizer.decode_batch, token_groups
+                )
+                result.append(decoded)
 
         return result
 
