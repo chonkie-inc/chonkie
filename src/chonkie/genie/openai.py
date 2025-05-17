@@ -18,18 +18,28 @@ if TYPE_CHECKING:
 
 
 class OpenAIGenie(BaseGenie):
-    """OpenAI's Genie."""
+    """OpenAI's Genie.
+    
+    Supports both OpenAI API and OpenRouter API to access various models including:
+    - OpenAI models (GPT-3.5, GPT-4, etc.)
+    - OpenRouter supported models
+    """
 
     def __init__(self,
                  model: str = "gpt-4.1",
                  base_url: Optional[str] = None,
-                 api_key: Optional[str] = None):
+                 api_key: Optional[str] = None,
+                 openrouter_api_key: Optional[str] = None):
         """Initialize the OpenAIGenie class.
 
         Args:
             model (str): The model to use.
-            base_url (Optional[str]): The base URL to use. If not provided, the default OpenAI base URL will be used.
+            base_url (Optional[str]): The base URL to use. 
+                - If not provided, the default OpenAI base URL will be used.
+                - For OpenRouter, use "https://openrouter.ai/api/v1"
             api_key (Optional[str]): The API key to use. Defaults to env var OPENAI_API_KEY.
+            openrouter_api_key (Optional[str]): The OpenRouter API key. Defaults to env var OPENROUTER_API_KEY.
+                If provided, this takes precedence over api_key.
 
         """
         super().__init__()
@@ -38,9 +48,20 @@ class OpenAIGenie(BaseGenie):
         self._import_dependencies()
 
         # Initialize the API key
-        self.api_key = api_key or os.environ.get("OPENAI_API_KEY")
+        self.openrouter_mode = openrouter_api_key is not None or os.environ.get("OPENROUTER_API_KEY") is not None
+        
+        if self.openrouter_mode:
+            self.api_key = openrouter_api_key or os.environ.get("OPENROUTER_API_KEY")
+            if base_url is None:
+                base_url = "https://openrouter.ai/api/v1"
+        else:
+            self.api_key = api_key or os.environ.get("OPENAI_API_KEY")
+        
         if not self.api_key:
-            raise ValueError("OpenAIGenie requires an API key. Either pass the `api_key` parameter or set the `OPENAI_API_KEY` in your environment.")
+            if self.openrouter_mode:
+                raise ValueError("OpenRouter mode requires an API key. Either pass the `openrouter_api_key` parameter or set the `OPENROUTER_API_KEY` in your environment.")
+            else:
+                raise ValueError("OpenAIGenie requires an API key. Either pass the `api_key` parameter or set the `OPENAI_API_KEY` in your environment.")
 
         # Initialize the client and model
         if base_url is None:
@@ -90,4 +111,5 @@ class OpenAIGenie(BaseGenie):
 
     def __repr__(self) -> str:
         """Return a string representation of the OpenAIGenie instance."""
-        return f"OpenAIGenie(model={self.model})"
+        provider = "OpenRouter" if self.openrouter_mode else "OpenAI"
+        return f"OpenAIGenie(provider={provider}, model={self.model})"
