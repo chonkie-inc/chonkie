@@ -2,6 +2,7 @@
 
 import os
 from typing import List
+from unittest.mock import patch
 
 import numpy as np
 import pytest
@@ -138,6 +139,40 @@ def test_repr(embedding_model: OpenAIEmbeddings) -> None:
     repr_str = repr(embedding_model)
     assert isinstance(repr_str, str)
     assert repr_str.startswith("OpenAIEmbeddings")
+
+
+@pytest.mark.skipif(
+    "OPENAI_API_KEY" not in os.environ,
+    reason="Skipping test because OPENAI_API_KEY is not defined",
+)
+def test_base_url_configuration():
+    """Test that OpenAIEmbeddings correctly handles base_url configurations.
+    
+    This is an integration test that checks:
+    1. The constructor accepts a base_url parameter
+    2. The base_url is stored in the instance
+    3. The repr includes the base_url
+    4. The base_url is normalized by removing trailing slashes
+    """
+    # Test with explicit base_url
+    with patch.dict(os.environ, {"OPENAI_API_KEY": os.environ.get("OPENAI_API_KEY", "")}):
+        # Test with trailing slashes in base_url
+        embeddings = OpenAIEmbeddings(base_url="https://api.example.com/////")
+        assert embeddings.base_url == "https://api.example.com"
+        assert "base_url=https://api.example.com" in repr(embeddings)
+        
+    # Test with OPENAI_BASE_URL env var
+    with patch.dict(os.environ, {
+        "OPENAI_API_KEY": os.environ.get("OPENAI_API_KEY", ""),
+        "OPENAI_BASE_URL": "https://env-api.example.com"
+    }):
+        # Create embeddings with no explicit base_url
+        embeddings = OpenAIEmbeddings()
+        assert embeddings.base_url == "https://env-api.example.com"
+        
+        # Test that explicit parameter overrides env var
+        embeddings = OpenAIEmbeddings(base_url="https://param-api.example.com")
+        assert embeddings.base_url == "https://param-api.example.com"
 
 
 if __name__ == "__main__":
