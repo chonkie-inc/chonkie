@@ -779,43 +779,506 @@ embedding = embeddings("Hello, world!")
 
 ### Custom Embeddings
 
-If you're trying to load a model that is not already supported by Chonkie, don't worry! We've got you covered. Just follow the steps below:
+Chonkie provides a flexible system for adding custom embeddings support. This guide will walk you through creating your own embeddings implementation, from basic to advanced features.
 
-1. Check if your provider supports the OpenAI API. If it does, you can use the `OpenAIEmbeddings` class with the `base_url` parameter to point to your provider's API. You're all set!
-2. If your provider does not support the OpenAI API, and you're loading a model locally, you can use the `SentenceTransformerEmbeddings` class to load your model. You'll need to pass in the `model` object initialized with your model.
-3. Lastly, you can create your own `Embeddings` class by inheriting from the `BaseEmbeddings` class and implementing the `embed`, `embed_batch`, and `get_tokenizer_or_token_counter` methods.
+#### Overview
 
-**Example:**
+The embeddings system in Chonkie is built around the `BaseEmbeddings` abstract class, which provides a consistent interface for all embedding implementations. To create your own embeddings, you'll need to:
+
+1. Inherit from `BaseEmbeddings`
+2. Implement required methods
+3. Handle dependencies properly
+4. Register your implementation (optional)
+
+#### Required Methods
+
+Here are the methods you must implement:
+
+- `embed(text: str) -> np.ndarray`: Convert a single text into an embedding vector
+- `embed_batch(texts: List[str]) -> List[np.ndarray]`: Convert multiple texts into embedding vectors
+- `dimension` property: Return the dimension of your embedding vectors
+- `get_tokenizer_or_token_counter()`: Return a tokenizer or token counter for your model
+
+#### Example Implementation
+
+Here's a complete example of a custom embeddings class:
 
 ```python
-from typing import List, Any
+from typing import List, Any, Union
+import numpy as np
 from chonkie import BaseEmbeddings
 
-# Let's say we have a custom embedding model that we want to support
-class MyEmbeddings(BaseEmbeddings):
-    def __init__(self, model, tokenizer):
+class MyCustomEmbeddings(BaseEmbeddings):
+    """Custom embeddings implementation for MyModel."""
+    
+    def __init__(
+        self,
+        model: Any,
+        tokenizer: Any,
+        dimension: int,
+        **kwargs: Any
+    ) -> None:
+        """Initialize MyCustomEmbeddings.
+        
+        Args:
+            model: Your embedding model
+            tokenizer: Tokenizer for your model
+            dimension: Dimension of the embedding vectors
+            **kwargs: Additional arguments for your model
+        """
+        super().__init__()
         self.model = model
-        self.tokenizer = tokenizer
-
-    def embed(self, text: str) -> List[float]:
-        return self.model.embed(text)
+        self._tokenizer = tokenizer
+        self._dimension = dimension
+        
+        # Lazy import dependencies
+        self._import_dependencies()
     
-    def embed_batch(self, texts: List[str]) -> List[List[float]]:
-        return self.model.embed_batch(texts)
+    def embed(self, text: str) -> np.ndarray:
+        """Embed a single text.
+        
+        Args:
+            text: Input text to embed
+            
+        Returns:
+            np.ndarray: Embedding vector
+        """
+        # Your embedding logic here
+        embedding = self.model.encode(text)
+        return np.array(embedding, dtype=np.float32)
     
-    def get_tokenizer_or_token_counter(self) -> Any:
-        return self.tokenizer
-
+    def embed_batch(self, texts: List[str]) -> List[np.ndarray]:
+        """Embed multiple texts.
+        
+        Args:
+            texts: List of input texts to embed
+            
+        Returns:
+            List[np.ndarray]: List of embedding vectors
+        """
+        # Your batch embedding logic here
+        embeddings = self.model.encode_batch(texts)
+        return [np.array(emb, dtype=np.float32) for emb in embeddings]
+    
     @property
     def dimension(self) -> int:
-        return self.model.dimension
-
+        """Get the dimension of the embedding vectors."""
+        return self._dimension
+    
+    def get_tokenizer_or_token_counter(self) -> Any:
+        """Get the tokenizer or token counter."""
+        return self._tokenizer
+    
+    @classmethod
+    def is_available(cls) -> bool:
+        """Check if required dependencies are available."""
+        # Add your dependency checks here
+        return True
+    
+    @classmethod
+    def _import_dependencies(cls) -> None:
+        """Lazy import dependencies."""
+        # Import your dependencies here
+        pass
+    
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(model={self.model}, tokenizer={self.tokenizer})"
-
+        """String representation of the embeddings instance."""
+        return f"{self.__class__.__name__}(dimension={self.dimension})"
 ```
 
-Of course the above example is a bit contrived, but you get the idea. Once you're done, you can use the above `Embeddings` class with the `SemanticChunker` or `LateChunker` classes, and it will work as expected!
+#### Registering Your Embeddings
+
+To make your embeddings available through Chonkie's auto-loading system, register it with the `EmbeddingsRegistry`:
+
+```python
+from chonkie import EmbeddingsRegistry
+
+# Register your embeddings
+EmbeddingsRegistry.register(
+    name="my-custom-embeddings",
+    embedding_cls=MyCustomEmbeddings,
+    pattern=r"my-model://.*",  # Optional pattern for auto-detection
+    supported_types=["text"]  # Optional list of supported types
+)
+```
+
+#### Best Practices
+
+1. **Error Handling**:
+   - Handle API errors gracefully
+   - Provide meaningful error messages
+   - Include retry logic for transient failures
+
+2. **Performance**:
+   - Implement efficient batch processing
+   - Cache tokenizer instances
+   - Use appropriate data types (np.float32 for embeddings)
+
+3. **Dependencies**:
+   - Use lazy imports to avoid unnecessary dependencies
+   - Check for required packages in `is_available()`
+   - Provide clear installation instructions
+
+4. **Testing**:
+   - Test with various input types
+   - Verify embedding dimensions
+   - Check tokenizer behavior
+   - Test error cases
+
+#### Advanced Features
+
+1. **Custom Tokenization**:
+```python
+def count_tokens(self, text: str) -> int:
+    """Count tokens in text."""
+    return len(self._tokenizer.encode(text))
+
+def count_tokens_batch(self, texts: List[str]) -> List[int]:
+    """Count tokens in multiple texts."""
+    return [len(self._tokenizer.encode(text)) for text in texts]
+```
+
+2. **Custom Similarity**:
+```python
+def similarity(self, u: np.ndarray, v: np.ndarray) -> np.float32:
+    """Compute custom similarity between embeddings."""
+    # Implement your similarity metric
+    return np.float32(your_similarity_function(u, v))
+```
+
+3. **Model Configuration**:
+```python
+def configure_model(self, **kwargs: Any) -> None:
+    """Configure model parameters."""
+    self.model.configure(**kwargs)
+```
+
+#### Usage Examples
+
+1. **Basic Usage**:
+```python
+from chonkie import MyCustomEmbeddings
+
+# Initialize embeddings
+embeddings = MyCustomEmbeddings(
+    model=your_model,
+    tokenizer=your_tokenizer,
+    dimension=768
+)
+
+# Get embeddings
+text = "Hello, world!"
+vector = embeddings(text)
+```
+
+2. **Batch Processing**:
+```python
+# Process multiple texts
+texts = ["Hello", "World", "!"]
+vectors = embeddings.embed_batch(texts)
+```
+
+3. **With AutoEmbeddings**:
+```python
+from chonkie import AutoEmbeddings
+
+# Auto-detect and load your embeddings
+embeddings = AutoEmbeddings.get_embeddings("my-model://your-model-name")
+```
+
+Remember to handle errors appropriately and provide clear documentation for your implementation. The more robust and well-documented your embeddings class is, the easier it will be for others to use and maintain.
+
+#### Testing Your Implementation
+
+Testing is crucial for ensuring your custom embeddings work correctly and reliably. Here's a comprehensive guide to testing your implementation:
+
+1. **Basic Test Structure**:
+```python
+import pytest
+import numpy as np
+from chonkie import BaseEmbeddings
+
+class TestMyCustomEmbeddings:
+    @pytest.fixture
+    def embeddings(self):
+        # Setup your embeddings instance
+        model = YourModel()
+        tokenizer = YourTokenizer()
+        return MyCustomEmbeddings(model, tokenizer, dimension=768)
+    
+    def test_embedding_dimension(self, embeddings):
+        """Test if embeddings have correct dimension."""
+        text = "Test text"
+        vector = embeddings.embed(text)
+        assert vector.shape == (768,)
+        assert vector.dtype == np.float32
+    
+    def test_batch_embedding(self, embeddings):
+        """Test batch embedding functionality."""
+        texts = ["Text 1", "Text 2", "Text 3"]
+        vectors = embeddings.embed_batch(texts)
+        assert len(vectors) == len(texts)
+        assert all(v.shape == (768,) for v in vectors)
+    
+    def test_tokenizer(self, embeddings):
+        """Test tokenizer functionality."""
+        text = "Test text"
+        tokenizer = embeddings.get_tokenizer_or_token_counter()
+        tokens = tokenizer.encode(text)
+        assert len(tokens) > 0
+    
+    def test_empty_input(self, embeddings):
+        """Test handling of empty input."""
+        with pytest.raises(ValueError):
+            embeddings.embed("")
+    
+    def test_large_batch(self, embeddings):
+        """Test handling of large batches."""
+        texts = ["Text"] * 1000
+        vectors = embeddings.embed_batch(texts)
+        assert len(vectors) == 1000
+```
+
+2. **Edge Cases and Error Handling**:
+```python
+def test_special_characters(self, embeddings):
+    """Test handling of special characters."""
+    text = "!@#$%^&*()_+{}|:<>?"
+    vector = embeddings.embed(text)
+    assert not np.isnan(vector).any()
+    assert not np.isinf(vector).any()
+
+def test_unicode_text(self, embeddings):
+    """Test handling of Unicode text."""
+    text = "Hello, 世界! 🌍"
+    vector = embeddings.embed(text)
+    assert vector.shape == (768,)
+
+def test_long_text(self, embeddings):
+    """Test handling of long text."""
+    text = "Test " * 1000
+    vector = embeddings.embed(text)
+    assert vector.shape == (768,)
+```
+
+3. **Performance Testing**:
+```python
+import time
+
+def test_embedding_speed(self, embeddings):
+    """Test embedding generation speed."""
+    text = "Test text"
+    start_time = time.time()
+    vector = embeddings.embed(text)
+    end_time = time.time()
+    assert end_time - start_time < 1.0  # Should complete within 1 second
+
+def test_batch_speed(self, embeddings):
+    """Test batch processing speed."""
+    texts = ["Test text"] * 100
+    start_time = time.time()
+    vectors = embeddings.embed_batch(texts)
+    end_time = time.time()
+    assert end_time - start_time < 5.0  # Should complete within 5 seconds
+```
+
+#### Advanced Error Handling
+
+Proper error handling is essential for a robust embeddings implementation. Here are some advanced patterns:
+
+1. **API Rate Limiting**:
+```python
+from tenacity import retry, stop_after_attempt, wait_exponential
+
+class MyCustomEmbeddings(BaseEmbeddings):
+    def embed(self, text: str) -> np.ndarray:
+        """Embed text with rate limit handling."""
+        @retry(
+            stop=stop_after_attempt(3),
+            wait=wait_exponential(multiplier=1, min=4, max=10)
+        )
+        def _embed_with_retry(text: str) -> np.ndarray:
+            try:
+                return self.model.encode(text)
+            except RateLimitError:
+                # Log the rate limit hit
+                logger.warning("Rate limit hit, retrying...")
+                raise
+            except Exception as e:
+                logger.error(f"Error during embedding: {e}")
+                raise
+        
+        return _embed_with_retry(text)
+```
+
+2. **Batch Processing with Error Recovery**:
+```python
+def embed_batch(self, texts: List[str]) -> List[np.ndarray]:
+    """Embed multiple texts with error recovery."""
+    results = []
+    errors = []
+    
+    for i, text in enumerate(texts):
+        try:
+            embedding = self.embed(text)
+            results.append(embedding)
+        except Exception as e:
+            errors.append((i, text, str(e)))
+            # Use a fallback embedding or skip
+            results.append(self._get_fallback_embedding())
+    
+    if errors:
+        logger.warning(f"Encountered {len(errors)} errors during batch processing")
+        for i, text, error in errors:
+            logger.error(f"Error processing text at index {i}: {error}")
+    
+    return results
+```
+
+3. **Input Validation**:
+```python
+def _validate_input(self, text: str) -> None:
+    """Validate input text."""
+    if not isinstance(text, str):
+        raise TypeError(f"Expected string, got {type(text)}")
+    if not text.strip():
+        raise ValueError("Empty text provided")
+    if len(text) > self.max_text_length:
+        raise ValueError(f"Text length {len(text)} exceeds maximum {self.max_text_length}")
+```
+
+#### Performance Optimization
+
+Here are advanced techniques for optimizing your embeddings implementation:
+
+1. **Caching Strategy**:
+```python
+from functools import lru_cache
+import hashlib
+
+class MyCustomEmbeddings(BaseEmbeddings):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._cache = {}
+        self._cache_size = 1000
+    
+    def _get_cache_key(self, text: str) -> str:
+        """Generate cache key for text."""
+        return hashlib.md5(text.encode()).hexdigest()
+    
+    @lru_cache(maxsize=1000)
+    def embed(self, text: str) -> np.ndarray:
+        """Embed text with caching."""
+        cache_key = self._get_cache_key(text)
+        if cache_key in self._cache:
+            return self._cache[cache_key]
+        
+        embedding = self.model.encode(text)
+        self._cache[cache_key] = embedding
+        return embedding
+```
+
+2. **Batch Processing Optimization**:
+```python
+def embed_batch(self, texts: List[str], batch_size: int = 32) -> List[np.ndarray]:
+    """Optimized batch processing."""
+    results = []
+    
+    # Process in smaller batches
+    for i in range(0, len(texts), batch_size):
+        batch = texts[i:i + batch_size]
+        
+        # Check cache first
+        cache_hits = []
+        cache_misses = []
+        for text in batch:
+            cache_key = self._get_cache_key(text)
+            if cache_key in self._cache:
+                cache_hits.append(self._cache[cache_key])
+            else:
+                cache_misses.append(text)
+        
+        # Process cache misses
+        if cache_misses:
+            new_embeddings = self.model.encode_batch(cache_misses)
+            for text, emb in zip(cache_misses, new_embeddings):
+                self._cache[self._get_cache_key(text)] = emb
+            results.extend(new_embeddings)
+        
+        # Add cache hits
+        results.extend(cache_hits)
+    
+    return results
+```
+
+3. **Memory Management**:
+```python
+class MyCustomEmbeddings(BaseEmbeddings):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._cache = {}
+        self._max_cache_size = 1000
+        self._cache_hits = 0
+        self._cache_misses = 0
+    
+    def _clean_cache(self):
+        """Clean cache when it gets too large."""
+        if len(self._cache) > self._max_cache_size:
+            # Remove least recently used items
+            sorted_items = sorted(
+                self._cache.items(),
+                key=lambda x: x[1]['last_used']
+            )
+            self._cache = dict(sorted_items[-self._max_cache_size:])
+    
+    def embed(self, text: str) -> np.ndarray:
+        """Embed with memory-aware caching."""
+        cache_key = self._get_cache_key(text)
+        
+        if cache_key in self._cache:
+            self._cache_hits += 1
+            self._cache[cache_key]['last_used'] = time.time()
+            return self._cache[cache_key]['embedding']
+        
+        self._cache_misses += 1
+        embedding = self.model.encode(text)
+        
+        self._cache[cache_key] = {
+            'embedding': embedding,
+            'last_used': time.time()
+        }
+        
+        self._clean_cache()
+        return embedding
+```
+
+4. **Async Support**:
+```python
+import asyncio
+from typing import List, Union
+
+class MyCustomEmbeddings(BaseEmbeddings):
+    async def embed_async(self, text: str) -> np.ndarray:
+        """Asynchronous embedding."""
+        return await self.model.encode_async(text)
+    
+    async def embed_batch_async(
+        self,
+        texts: List[str],
+        batch_size: int = 32
+    ) -> List[np.ndarray]:
+        """Asynchronous batch embedding."""
+        results = []
+        for i in range(0, len(texts), batch_size):
+            batch = texts[i:i + batch_size]
+            embeddings = await asyncio.gather(
+                *[self.embed_async(text) for text in batch]
+            )
+            results.extend(embeddings)
+        return results
+```
+
+These enhancements provide a more complete guide for implementing custom embeddings, covering testing, error handling, and performance optimization. The examples show real-world patterns and best practices that will help users create robust and efficient implementations.
 
 
 ## Genies
@@ -1215,7 +1678,7 @@ This handshake requires the `qdrant-client` library. You can install it with `pi
 
 **Methods:**
 
-- `write(chunks: Union[Chunk, Sequence[Chunk]]) -> None`: Embeds the chunks and upserts them as `PointStruct` objects into the target Qdrant collection. Each point includes a vector (embedding), a payload (text, indices, token count), and a generated UUID.
+- `write(chunks: Union[Chunk, Sequence[Chunk]]) -> None`: Embeds the chunks and uploads them to the specified Qdrant collection using the `upsert_columns` method. It includes generated IDs, embeddings, text, and metadata.
 
 **Examples:**
 
