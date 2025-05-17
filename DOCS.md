@@ -38,6 +38,7 @@ Unfortunately, we do need docs for Chonkie (we tried!). While official docs are 
 - [Genies](#genies)
   - [`GeminiGenie`](#geminigenie)
   - [`OpenAIGenie`](#openaigenie)
+  - [`CohereGenie`](#coheregenie)
 - [Porters](#porters)
   - [`JSONPorter`](#jsonporter)
 - [Handshakes](#handshakes)
@@ -820,9 +821,11 @@ Of course the above example is a bit contrived, but you get the idea. Once you'r
 
 ## Genies
 
-Genies are Chonkie's interface for interacting with Large Language Models (LLMs). They can be integrated into advanced chunking strategies (like the `SlumberChunker`) or used for other LLM-powered tasks within your data processing pipeline. Genies handle the communication with different LLM providers, offering a consistent way to generate text or structured JSON output.
+Genies are interfaces to large language models (LLMs) that provide text generation capabilities. Chonkie currently supports the following genies:
 
-Currently, Chonkie provides Genies for Google's Gemini models and OpenAI's models (including compatible APIs).
+- [`GeminiGenie`](#geminigenie)
+- [`OpenAIGenie`](#openaigenie)  
+- [`CohereGenie`](#coheregenie)
 
 ### `GeminiGenie`
 
@@ -1013,6 +1016,95 @@ prompt = "Tell me a fun fact about hippos."
 response = genie.generate(prompt)
 
 print(response)
+```
+
+</details>
+
+### `CohereGenie`
+
+The `CohereGenie` class provides an interface to interact with Cohere's Command series of models, which are optimized for instruction-following and conversational tasks.
+
+Requires `pip install "chonkie[cohere]"`.
+
+**Parameters:**
+
+- `model (str)`: The specific Cohere model to use (e.g., `"command"`, `"command-light"`, `"command-r"`). Defaults to `"command"`.
+- `api_key (Optional[str])`: Your Cohere API key. If not provided, it will attempt to read from the `COHERE_API_KEY` environment variable. Defaults to `None`.
+- `temperature (float)`: Controls the randomness of the output. Higher values (e.g., 0.8) make output more random, while lower values (e.g., 0.2) make it more deterministic. Defaults to `0.7`.
+- `max_tokens (int)`: The maximum number of tokens to generate. Defaults to `1024`.
+
+**Methods:**
+
+- `generate(prompt: str) -> str`: Sends the prompt to the specified Cohere model and returns the generated text response.
+- `generate_json(prompt: str, schema: BaseModel) -> Dict[str, Any]`: Sends the prompt and a Pydantic `BaseModel` schema to the Cohere model, requesting a JSON output that conforms to the schema. Returns the parsed JSON as a Python dictionary.
+
+**Examples:**
+
+<details>
+<summary><strong>1. Basic Text Generation with CohereGenie</strong></summary>
+
+```python
+# Requires "chonkie[cohere]"
+import os
+from chonkie.genie import CohereGenie
+
+# Get your API key from the environment or set it directly
+api_key = os.getenv("COHERE_API_KEY")
+if not api_key:
+    raise ValueError("Please set the COHERE_API_KEY environment variable.")
+
+# Initialize the genie with a specific model
+genie = CohereGenie(
+    model="command",  # Using the standard Command model
+    api_key=api_key,
+    temperature=0.3  # Lower temperature for more deterministic responses
+)
+
+# Generate text based on a prompt
+prompt = "Compare different approaches to text chunking for RAG applications."
+response = genie.generate(prompt)
+
+print(response)
+```
+
+</details>
+
+<details>
+<summary><strong>2. Generating Structured JSON with CohereGenie</strong></summary>
+
+```python
+# Requires "chonkie[cohere]"
+import os
+from typing import List
+from pydantic import BaseModel, Field
+from chonkie.genie import CohereGenie
+
+# Define a schema for the response
+class BookRecommendation(BaseModel):
+    title: str = Field(..., description="Title of the recommended book")
+    author: str = Field(..., description="Author of the book")
+    genres: List[str] = Field(..., description="List of genres the book belongs to")
+    year_published: int = Field(..., description="Year the book was published")
+    reason: str = Field(..., description="Reason for recommending this book")
+
+# Get your API key from the environment
+api_key = os.getenv("COHERE_API_KEY")
+if not api_key:
+    raise ValueError("Please set the COHERE_API_KEY environment variable.")
+
+# Initialize the genie
+genie = CohereGenie(
+    model="command-r", # Using Command-R for enhanced reasoning
+    api_key=api_key
+)
+
+# Generate a JSON response
+prompt = "Recommend a science fiction book that deals with artificial intelligence."
+response = genie.generate_json(prompt, BookRecommendation)
+
+print(f"Title: {response['title']} by {response['author']} ({response['year_published']})")
+print(f"Genres: {', '.join(response['genres'])}")
+print(f"Why read it: {response['reason']}")
 ```
 
 </details>
