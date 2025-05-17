@@ -38,6 +38,7 @@ Unfortunately, we do need docs for Chonkie (we tried!). While official docs are 
 - [Genies](#genies)
   - [`GeminiGenie`](#geminigenie)
   - [`OpenAIGenie`](#openaigenie)
+  - [`ClaudeGenie`](#claudegenie)
 - [Porters](#porters)
   - [`JSONPorter`](#jsonporter)
 - [Handshakes](#handshakes)
@@ -820,9 +821,11 @@ Of course the above example is a bit contrived, but you get the idea. Once you'r
 
 ## Genies
 
-Genies are Chonkie's interface for interacting with Large Language Models (LLMs). They can be integrated into advanced chunking strategies (like the `SlumberChunker`) or used for other LLM-powered tasks within your data processing pipeline. Genies handle the communication with different LLM providers, offering a consistent way to generate text or structured JSON output.
+Genies are interfaces to large language models (LLMs) that provide text generation capabilities. Chonkie currently supports the following genies:
 
-Currently, Chonkie provides Genies for Google's Gemini models and OpenAI's models (including compatible APIs).
+- [`GeminiGenie`](#geminigenie)
+- [`OpenAIGenie`](#openaigenie)  
+- [`ClaudeGenie`](#claudegenie)
 
 ### `GeminiGenie`
 
@@ -1013,6 +1016,99 @@ prompt = "Tell me a fun fact about hippos."
 response = genie.generate(prompt)
 
 print(response)
+```
+
+</details>
+
+### `ClaudeGenie`
+
+The `ClaudeGenie` class provides an interface to interact with Anthropic's Claude models, known for their powerful reasoning capabilities and instruction-following performance.
+
+Requires `pip install "chonkie[claude]"`.
+
+**Parameters:**
+
+- `model (str)`: The specific Claude model to use (e.g., `"claude-3-opus-20240229"`, `"claude-3-sonnet-20240229"`). Defaults to `"claude-3-opus-20240229"`.
+- `api_key (Optional[str])`: Your Anthropic API key. If not provided, it will attempt to read from the `ANTHROPIC_API_KEY` environment variable. Defaults to `None`.
+- `temperature (float)`: Controls the randomness of the output. Higher values (e.g., 0.8) make output more random, while lower values (e.g., 0.2) make it more deterministic. Defaults to `0.7`.
+- `max_tokens (int)`: The maximum number of tokens to generate. Defaults to `1024`.
+
+**Methods:**
+
+- `generate(prompt: str) -> str`: Sends the prompt to the specified Claude model and returns the generated text response.
+- `generate_json(prompt: str, schema: BaseModel) -> Dict[str, Any]`: Sends the prompt and a Pydantic `BaseModel` schema to the Claude model, requesting a JSON output that conforms to the schema. Returns the parsed JSON as a Python dictionary.
+
+**Examples:**
+
+<details>
+<summary><strong>1. Basic Text Generation with ClaudeGenie</strong></summary>
+
+```python
+# Requires "chonkie[claude]"
+import os
+from chonkie.genie import ClaudeGenie
+
+# Get your API key from the environment or set it directly
+api_key = os.getenv("ANTHROPIC_API_KEY")
+if not api_key:
+    raise ValueError("Please set the ANTHROPIC_API_KEY environment variable.")
+
+# Initialize the genie with a specific model
+genie = ClaudeGenie(
+    model="claude-3-sonnet-20240229",  # Using Claude 3 Sonnet
+    api_key=api_key,
+    temperature=0.5  # Lower temperature for more deterministic responses
+)
+
+# Generate text based on a prompt
+prompt = "Explain what makes text chunking important for large document processing."
+response = genie.generate(prompt)
+
+print(response)
+```
+
+</details>
+
+<details>
+<summary><strong>2. Generating Structured JSON with ClaudeGenie</strong></summary>
+
+```python
+# Requires "chonkie[claude]"
+import os
+from typing import List
+from pydantic import BaseModel, Field
+from chonkie.genie import ClaudeGenie
+
+# Define a schema for the response
+class TextAnalysis(BaseModel):
+    summary: str = Field(..., description="A concise summary of the text")
+    key_themes: List[str] = Field(..., description="Major themes identified in the text")
+    readability: str = Field(..., description="Assessment of text complexity (e.g., 'simple', 'moderate', 'complex')")
+
+# Get your API key from the environment
+api_key = os.getenv("ANTHROPIC_API_KEY")
+if not api_key:
+    raise ValueError("Please set the ANTHROPIC_API_KEY environment variable.")
+
+# Initialize the genie
+genie = ClaudeGenie(
+    model="claude-3-opus-20240229",
+    api_key=api_key
+)
+
+# Generate a JSON response
+text = """The process of chunking text involves breaking down large documents 
+into smaller, more manageable pieces. This is particularly useful for semantic 
+search, document processing, and working with context windows in language models."""
+
+prompt = f"Analyze this text:\n\n{text}"
+response = genie.generate_json(prompt, TextAnalysis)
+
+print(f"Summary: {response['summary']}")
+print("Key Themes:")
+for theme in response['key_themes']:
+    print(f"- {theme}")
+print(f"Readability: {response['readability']}")
 ```
 
 </details>
