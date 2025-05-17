@@ -10,6 +10,7 @@ from .jina import JinaEmbeddings
 from .model2vec import Model2VecEmbeddings
 from .openai import OpenAIEmbeddings
 from .sentence_transformer import SentenceTransformerEmbeddings
+from .vertexai import VertexAIEmbeddings
 from .voyageai import VoyageAIEmbeddings
 
 
@@ -189,3 +190,12 @@ EmbeddingsRegistry.register("voyage-code-3", VoyageAIEmbeddings)
 EmbeddingsRegistry.register("voyage-finance-2", VoyageAIEmbeddings)
 EmbeddingsRegistry.register("voyage-law-2", VoyageAIEmbeddings)
 EmbeddingsRegistry.register("voyage-code-2", VoyageAIEmbeddings)
+
+# Register Google Vertex AI embeddings
+EmbeddingsRegistry.register("vertexai", VertexAIEmbeddings, pattern=r"^vertexai|^google|^textembedding-")
+EmbeddingsRegistry.register("textembedding-gecko@001", VertexAIEmbeddings)
+EmbeddingsRegistry.register("textembedding-gecko@latest", VertexAIEmbeddings)
+EmbeddingsRegistry.register("textembedding-gecko-multilingual@latest", VertexAIEmbeddings)
+EmbeddingsRegistry.register("textembedding-gecko-multilingual@001", VertexAIEmbeddings)
+EmbeddingsRegistry.register("text-embedding-004", VertexAIEmbeddings)
+EmbeddingsRegistry.register("text-multilingual-embedding-002", VertexAIEmbeddings)

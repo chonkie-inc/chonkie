@@ -7,6 +7,7 @@ from .jina import JinaEmbeddings
 from .model2vec import Model2VecEmbeddings
 from .openai import OpenAIEmbeddings
 from .sentence_transformer import SentenceTransformerEmbeddings
+from .vertexai import VertexAIEmbeddings
 from .voyageai import VoyageAIEmbeddings
 
 # Add all embeddings classes to __all__
@@ -18,5 +19,6 @@ __all__ = [
     "CohereEmbeddings",
     "AutoEmbeddings",
     "JinaEmbeddings",
+    "VertexAIEmbeddings",
     "VoyageAIEmbeddings",
 ]
