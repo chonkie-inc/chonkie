@@ -19,6 +19,7 @@ _The no-nonsense ultra-light and lightning-fast chunking library that's ready to
 [Usage](#basic-usage) •
 [Pipeline](#the-chonkie-pipeline) •
 [Chunkers](#chunkers) •
+[Refineries](#refineries) •
 [Integrations](#integrations) •
 [Benchmarks](#benchmarks)
 
@@ -113,6 +114,41 @@ Chonkie provides several chunkers to help you split your text efficiently for RA
 | `SlumberChunker` | `slumber`  | Splits text using an LLM to find semantically meaningful chunks. Also known as _"AgenticChunker"_.         |
 
 More on these methods and the approaches taken inside the [docs](https://docs.chonkie.ai)
+
+## Refineries
+
+Refineries in Chonkie help post-process chunks to improve their quality and utility for downstream tasks. Here's a quick overview of the available refineries:
+
+| Name                   | Description                                                                                                |
+|------------------------|------------------------------------------------------------------------------------------------------------|
+| `OverlapRefinery`      | Adds overlapping context between chunks to improve continuity and retrieval.                                |
+| `EmbeddingsRefinery`   | Embeds chunks for use in vector search applications.                                                        |
+| `PropositionalRefinery`| Transforms chunks into atomic proposition-based chunks for improved retrieval performance.                   |
+
+### PropositionalRefinery
+
+Based on the "Dense X Retrieval" paper, `PropositionalRefinery` extracts atomic propositions from chunks:
+
+```python
+from chonkie.chunker import TokenChunker
+from chonkie.refinery import PropositionalRefinery
+
+# Create chunks from text
+chunker = TokenChunker(chunk_size=200)
+chunks = chunker("Your text here")
+
+# Refine into proposition-based chunks
+refinery = PropositionalRefinery(
+    method="rule-based",  # or "transformer-based"
+    min_prop_length=30,
+    max_prop_length=200, 
+    min_token_count=5,
+    max_token_count=50,
+)
+refined_chunks = refinery.refine(chunks)
+```
+
+Propositions are atomic expressions that each encapsulate a distinct factoid in a concise, self-contained format. Research shows proposition-based retrieval significantly outperforms traditional passage or sentence-based methods, as the retrieved texts are more condensed with query-relevant information.
 
 ## Integrations
 
