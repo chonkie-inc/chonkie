@@ -31,6 +31,7 @@ Unfortunately, we do need docs for Chonkie (we tried!). While official docs are 
 - [Refinery](#refinery)
   - [`OverlapRefinery`](#overlaprefinery)
   - [`EmbeddingRefinery`](#embeddingrefinery)
+  - [`PropositionalRefinery`](#propositionalrefinery)
 - [Chefs](#chefs)
 - [Tokenizers](#tokenizers)
 - [Embeddings](#embeddings)
@@ -651,10 +652,66 @@ for chunk in chunks:
 The `Refinery` classes are used to refine and add additional context to the chunks, through various means.
 
 ### `OverlapRefinery`
-
+The `OverlapRefinery` adds overlapping context between chunks to improve continuity and enhance retrieval effectiveness. It ensures that chunks maintain context from neighboring chunks, which can be crucial for understanding content that spans multiple chunks.
 
 ### `EmbeddingRefinery`
+The `EmbeddingsRefinery` calculates embeddings for chunks, making them ready for vector search applications. This is particularly useful when you plan to store chunks in a vector database for semantic search.
 
+### `PropositionalRefinery`
+The `PropositionalRefinery` implements proposition-based text segmentation as described in the "Dense X Retrieval" paper. It transforms existing chunks into proposition-based chunks, which can significantly improve retrieval performance.
+
+Propositions are atomic expressions within text, each encapsulating a distinct factoid in a concise, self-contained natural language format. Research shows that proposition-based retrieval outperforms traditional passage or sentence-based methods because the retrieved texts are more condensed with query-relevant information.
+
+**Parameters:**
+- `method (str)`: Method for proposition extraction. Options are "rule-based" or "transformer-based". Default is "rule-based".
+- `model_name (str)`: Name of model to use for transformer-based method. Default is "distilbert-base-uncased".
+- `min_prop_length (int)`: Minimum character length for a valid proposition. Default is 30.
+- `max_prop_length (int)`: Maximum character length for a valid proposition. Default is 200.
+- `min_token_count (int)`: Minimum token count for a valid proposition. Default is 5.
+- `max_token_count (int)`: Maximum token count for a valid proposition. Default is 50.
+- `merge_short (bool)`: Whether to merge short propositions with neighbors. Default is True.
+- `inplace (bool)`: Whether to modify chunks in place or return new ones. Default is True.
+- `tokenizer_or_token_counter`: The tokenizer or token counter to use. Default is "character".
+
+**Example:**
+```python
+from chonkie.chunker import TokenChunker
+from chonkie.refinery import PropositionalRefinery
+
+# First, create chunks using any chunker
+chunker = TokenChunker(chunk_size=200)
+chunks = chunker("The Dense X Retrieval paper introduces propositions as atomic expressions. Propositions encapsulate distinct factoids in a concise format. Studies show that proposition-based retrieval outperforms traditional methods.")
+
+# Initialize the PropositionalRefinery
+refinery = PropositionalRefinery(
+    method="rule-based",
+    min_prop_length=20,
+    max_prop_length=200,
+    min_token_count=3,
+    max_token_count=50,
+    merge_short=True,
+    inplace=False  # Create new chunks instead of modifying existing ones
+)
+
+# Apply the refinery to get proposition-based chunks
+proposition_chunks = refinery.refine(chunks)
+
+# Each proposition chunk now contains a distinct factoid
+for i, chunk in enumerate(proposition_chunks):
+    print(f"Proposition {i+1}: {chunk.text}")
+```
+
+**Dependencies:**
+The rule-based method requires spaCy. You can install it with:
+```bash
+pip install spacy
+python -m spacy download en_core_web_sm
+```
+
+The transformer-based method requires the transformers library:
+```bash
+pip install transformers
+```
 
 ## Chefs
 
