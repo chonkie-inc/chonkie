@@ -1,0 +1,69 @@
+---
+title: Chunkers Overview
+sidebarTitle: Overview
+description: Overview of the different chunkers available in Chonkie TS
+icon: 'list'
+iconType: 'solid'
+---
+
+Chonkie TS provides multiple chunking strategies to handle different text processing needs in JavaScript and TypeScript environments. Each chunker is designed to be easy to use, fast, and consistent with the core principles outlined in the [concepts](/getting-started/concepts) page.
+
+<CardGroup cols={2}>
+  <Card
+    title="TokenChunker"
+    icon="scissors"
+    href="/chunkers/token-chunker"
+  >
+    Splits text into fixed-size token chunks. Best for maintaining consistent chunk sizes and working with token-based models.
+  </Card>
+  <Card
+    title="SentenceChunker"
+    icon="align-left"
+    href="/chunkers/sentence-chunker"
+  >
+    Splits text at sentence boundaries. Perfect for maintaining semantic completeness at the sentence level.
+  </Card>
+  <Card
+    title="RecursiveChunker"
+    icon="chart-tree-map"
+    href="/chunkers/recursive-chunker"
+  >
+    Recursively chunks documents into smaller, semantically meaningful pieces using customizable rules. Great for long or structured documents.
+  </Card>
+</CardGroup>
+
+## Availability
+
+The following chunkers are currently available in Chonkie TS:
+
+| Chunker          | Available |
+|------------------|:---------:|
+| TokenChunker     | ✅        |
+| SentenceChunker  | ✅        |
+| RecursiveChunker | ✅        |
+
+## Common Interface
+
+All chunkers in Chonkie TS share a consistent, async interface:
+
+```ts
+// Import and create a chunker instance (async)
+const chunker = await TokenChunker.create({ chunkSize: 256 });
+
+// Chunk a single string
+const chunks = await chunker("Some text to chunk!");
+
+// Or chunk a batch of texts
+const batchChunks = await chunker(["Text 1", "Text 2"]);
+```
+<Note>
+All chunkers are directly callable as async functions after creation: `await chunker(text)` or `await chunker([text1, text2])`.
+</Note>
+
+## F.A.Q.
+
+<AccordionGroup>
+  <Accordion title="Are all the chunkers async and thread-safe?" icon="reel">
+    Yes, all chunkers in Chonkie TS are async and safe to use in concurrent environments. Performance may vary depending on the chunker and workload.
+  </Accordion>
+</AccordionGroup>

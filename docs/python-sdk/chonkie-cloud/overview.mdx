@@ -1,0 +1,89 @@
+---
+title: Chonkie Cloud
+description: Chonkie's hosted chunking service
+icon: "cloud"
+iconType: "solid"
+---
+<div align='center'>
+
+<img
+  src="/images/chonkie_cloud_logo.png"
+  alt="Chonkie Logo Dark"
+  height={200}
+  width={200}
+/>
+_✨This hippo lives in the clouds✨_
+</div>
+
+Just want to chunk some text? Don't want deal with the annoying 
+infrastructure of running a chunker? 
+Well then, look no further than Chonkie Cloud!
+
+Chonkie Cloud is our hosted chunking service that allows you to chunk text 
+without having to worry about the underlying infrastructure.
+
+Just send us your text and get back the CHONKS! ___It's that simple.___
+
+## Getting Started
+
+To get started with Chonkie Cloud, you'll need to sign up for an account and get your API key.
+1. Sign up for an account at [Chonkie Cloud](https://cloud.chonkie.ai).
+2. Create an API key from your [dashboard](https://cloud.chonkie.ai/keys).
+3. Use the API key to get Chonking!
+
+Check out the [API documentation](/chonkie-cloud/token-chunker) for details on how to use the API.
+
+## Basic Usage
+
+Quick example to get you started with Chonkie Cloud.
+
+<CodeGroup>
+  ```bash cURL
+  curl -X POST \
+     -H "Content-Type: application/json" \
+     -H "Authorization: Bearer <YOUR_API_KEY>" \
+     -d '{
+           "text": "The tiny hippo lives in the clouds!",
+           "args": {}
+         }' \
+     https://api.chonkie.ai/v1/chunk/token
+  ```
+  ```python Python
+  # First import the chunker you want from Chonkie
+  from chonkie.cloud import TokenChunker
+  
+  # Initialize the chunker
+  # Don't forget to get your API key from cloud.chonkie.ai!
+  chunker = TokenChunker(api_key=CHONKIE_API_KEY) 
+
+  # Here's some text to chunk
+  text = """The tiny hippo lives in the clouds!"""
+  
+  # Chunk some text
+  chunks = chunker(text)
+  
+  # Access chunks
+  for chunk in chunks:
+    print(f"Chunk: {chunk.text}")
+    print(f"Tokens: {chunk.token_count}")
+  ```
+</CodeGroup>
+
+## Support
+Questions? We're here to help!
+<CardGroup cols={2}>
+<Card
+  title="Join our Discord"
+  icon="discord"
+  href="https://discord.gg/Q6zkP8w6ur"
+  >
+  Join our Discord community for support from Chonkers all over the world!
+</Card>
+
+<Card
+  title="Email us"
+  icon="envelope"
+  href="mailto:support@chonkie.ai">
+  Email the Chonkie team at support@chonkie.ai for any questions or feedback!
+</Card>
+</CardGroup>

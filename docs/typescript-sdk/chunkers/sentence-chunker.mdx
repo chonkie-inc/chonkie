@@ -1,0 +1,189 @@
+---
+title: 'SentenceChunker'
+description: 'Split text into chunks while preserving sentence boundaries'
+icon: 'align-left'
+---
+
+The `SentenceChunker` splits text into chunks based on sentences, ensuring each chunk maintains complete sentences and stays within specified token limits. This is ideal for preparing text for models that work best with semantically complete units, or for consistent chunking across different texts.
+
+## Installation
+
+SentenceChunker is included in the base installation of Chonkie TS. No additional dependencies are required.
+
+<Info> For installation instructions, see the [Getting Started Guide](/getting-started/introduction).</Info>
+
+## Initialization
+
+```ts
+import { SentenceChunker } from "chonkie";
+
+// Basic initialization with default parameters (async)
+const chunker = await SentenceChunker.create({
+  tokenizer: "Xenova/gpt2", // Supports string identifiers or Tokenizer instance
+  chunkSize: 512,            // Maximum tokens per chunk
+  chunkOverlap: 128,         // Overlap between chunks
+  minSentencesPerChunk: 1    // Minimum sentences per chunk
+});
+
+// Using a custom tokenizer
+import { Tokenizer } from "@huggingface/transformers";
+const customTokenizer = await Tokenizer.from_pretrained("your-tokenizer");
+const chunker = await SentenceChunker.create({
+  tokenizer: customTokenizer,
+  chunkSize: 512,
+  chunkOverlap: 128
+});
+```
+
+## Parameters
+
+<ParamField
+    path="tokenizer"
+    type="string | Tokenizer"
+    default="Xenova/gpt2"
+>
+    Tokenizer to use. Can be a string identifier (model name) or a Tokenizer instance. Defaults to using `Xenova/gpt2` tokenizer.
+</ParamField>
+
+<ParamField
+    path="chunkSize"
+    type="number"
+    default="512"
+>
+    Maximum number of tokens per chunk.
+</ParamField>
+
+<ParamField
+    path="chunkOverlap"
+    type="number"
+    default="0"
+>
+    Number of overlapping tokens between chunks. Must be >= 0 and < chunkSize.
+</ParamField>
+
+<ParamField
+    path="minSentencesPerChunk"
+    type="number"
+    default="1"
+>
+    Minimum number of sentences per chunk. Must be > 0.
+</ParamField>
+
+<ParamField
+    path="minCharactersPerSentence"
+    type="number"
+    default="12"
+>
+    Minimum number of characters for a valid sentence. Sentences shorter than this are merged with adjacent sentences.
+</ParamField>
+
+<ParamField
+    path="approximate"
+    type="boolean"
+    default="false"
+>
+    (Deprecated) Whether to use approximate token counting.
+</ParamField>
+
+<ParamField
+    path="delim"
+    type="string[]"
+    default="[. , ! , ? , \n]"
+>
+    List of sentence delimiters to use for splitting. Default: `[". ", "! ", "? ", "\n"]`.
+</ParamField>
+
+<ParamField
+    path="includeDelim"
+    type="'prev' | 'next' | null"
+    default="prev"
+>
+    Whether to include the delimiter with the previous sentence (`"prev"`), next sentence (`"next"`), or exclude it (`null`).
+</ParamField>
+
+<ParamField
+    path="returnType"
+    type="'chunks' | 'texts'"
+    default="chunks"
+>
+    Whether to return chunks as `SentenceChunk` objects (with metadata) or plain text strings.
+</ParamField>
+
+## Usage
+
+### Single Text Chunking
+
+```ts
+const text = "This is the first sentence. This is the second sentence! And here's a third one?";
+const chunks = await chunker.chunk(text);
+
+for (const chunk of chunks) {
+  console.log(`Chunk text: ${chunk.text}`);
+  console.log(`Token count: ${chunk.tokenCount}`);
+  console.log(`Number of sentences: ${chunk.sentences.length}`);
+}
+```
+
+### Batch Chunking
+
+```ts
+const texts = [
+  "First document. With multiple sentences.",
+  "Second document. Also with sentences. And more context."
+];
+const batchChunks = await chunker.chunkBatch(texts);
+
+for (const docChunks of batchChunks) {
+  for (const chunk of docChunks) {
+    console.log(`Chunk: ${chunk.text}`);
+  }
+}
+```
+
+### Using as a Callable
+
+```ts
+// Single text
+const chunks = await chunker("First sentence. Second sentence.");
+
+// Multiple texts
+const batchChunks = await chunker(["Text 1. More text.", "Text 2. More."]);
+```
+
+## Return Type
+
+SentenceChunker returns chunks as `SentenceChunk` objects by default. Each chunk includes metadata:
+
+```ts
+class SentenceChunk {
+  text: string;        // The chunk text
+  startIndex: number;  // Starting position in original text
+  endIndex: number;    // Ending position in original text
+  tokenCount: number;  // Number of tokens in chunk
+  sentences: Sentence[]; // List of sentences in the chunk
+}
+
+class Sentence {
+  text: string;        // The sentence text
+  startIndex: number;  // Starting position in original text
+  endIndex: number;    // Ending position in original text
+  tokenCount: number;  // Number of tokens in sentence
+}
+```
+
+If `returnType` is set to `'texts'`, only the chunked text strings are returned.
+
+---
+
+**Notes:**
+
+- The chunker is directly callable as a function after creation: `const chunks = await chunker(text)` or `await chunker([text1, text2])`.
+- If `returnType` is set to `'chunks'`, each chunk includes metadata: `text`, `startIndex`, `endIndex`, `tokenCount`, and the list of `sentences`.
+- The chunker ensures that no chunk exceeds the specified `chunkSize` in tokens, and that each chunk contains at least `minSentencesPerChunk` sentences (except possibly the last chunk).
+- Sentences shorter than `minCharactersPerSentence` are merged with adjacent sentences.
+- Overlap is specified in tokens, and the chunker will overlap sentences as needed to meet the overlap requirement.
+- You can customize sentence splitting using the `delim` and `includeDelim` options.
+
+---
+
+For more details, see the [TypeScript API Reference](https://github.com/chonkie-inc/chonkie-ts).

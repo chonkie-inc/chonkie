@@ -1,0 +1,115 @@
+---
+title: Chunkers Overview
+sidebarTitle: Overview
+description: Overview of the different chunkers available in Chonkie
+icon: 'list'
+iconType: 'solid'
+---
+
+Chonkie provides multiple chunking strategies to handle different text processing needs. Each chunker in Chonkie is designed to follow the same core principles
+outlined in the [concepts](/getting-started/concepts) page.
+
+<CardGroup cols={2}>
+  <Card
+    title="TokenChunker"
+    icon="scissors"
+    href="/chunkers/token-chunker"
+  >
+    Splits text into fixed-size token chunks. Best for maintaining consistent chunk sizes and working with token-based models.
+  </Card>
+  <Card
+    title="SentenceChunker"
+    icon="align-left"
+    href="/chunkers/sentence-chunker"
+  >
+    Splits text at sentence boundaries. Perfect for maintaining semantic completeness at the sentence level.
+  </Card>
+  <Card
+    title="RecursiveChunker"
+    icon="chart-tree-map"
+    href="/chunkers/recursive-chunker"
+  >
+    Recursively chunks documents into smaller chunks. Best for long documents with well-defined structure.
+  </Card>
+  <Card
+    title="SemanticChunker"
+    icon="magnet"
+    href="/chunkers/semantic-chunker"
+  >
+    Groups content based on semantic similarity. Best for preserving context and topical coherence.
+  </Card>
+  <Card
+    title="SDPMChunker"
+    icon="layer-group"
+    href="/chunkers/sdpm-chunker"
+  >
+    Chunks using Semantic Double-Pass Merging (SDPM) algorithm, best for maintaining topical coherence when text has frequent breaks.
+  </Card>
+  <Card
+    title="LateChunker"
+    icon="clock"
+    href="/chunkers/late-chunker"
+  >
+    Chunks using Late Chunking algorithm, best for higher recall in your RAG applications.
+  </Card>
+  <Card
+    title="CodeChunker"
+    icon="laptop"
+    href="/chunkers/code-chunker"
+  >
+    Splits code based on its structure using ASTs. Ideal for chunking source code files.
+  </Card>
+  <Card
+    title="NeuralChunker"
+    icon="brain"
+    href="/chunkers/neural-chunker"
+  >
+    Uses a fine-tuned BERT model to split text based on semantic shifts. Great for topic-coherent chunks.
+  </Card>
+  <Card
+    title="SlumberChunker"
+    icon="wand-magic-sparkles"
+    href="/chunkers/slumber-chunker"
+  >
+    Agentic chunking using generative models (LLMs) via the Genie interface for S-tier chunk quality. 🦛🧞
+  </Card>
+</CardGroup>
+
+## Availability
+
+Different chunkers are available depending on your installation:
+
+| Chunker         | Default | embeddings | 'all' | Chonkie Cloud |
+|-----------------|:-------:|:----------:|:-----:|:-------------:|
+| TokenChunker    | ✅      | ✅         | ✅    | ✅            |
+| SentenceChunker | ✅      | ✅         | ✅    | ✅            |
+| RecursiveChunker| ✅      | ✅         | ✅    | ✅            |
+| CodeChunker     | ❌      | ✅         | ✅    | ✅            |
+| SemanticChunker | ❌      | ✅         | ✅    | ✅            |
+| SDPMChunker     | ❌      | ✅         | ✅    | ✅            |
+| LateChunker     | ❌      | ✅         | ✅    | ✅            |
+| NeuralChunker   | ❌      | ✅         | ✅    | ✅            |
+| SlumberChunker  | ❌      | ✅         | ✅    | ✅            |
+
+## Common Interface
+
+All chunkers share a consistent interface:
+
+```python
+# Single text chunking
+chunks = chunker.chunk(text)
+
+# Batch processing
+chunks = chunker.chunk_batch(texts)
+
+# Direct calling
+chunks = chunker(text)  # or chunker([text1, text2])
+```
+
+## F.A.Q.
+
+<AccordionGroup>
+  <Accordion title="Are all the chunkers thread-safe?" icon="reel">
+    Yes, all the chunkers are thread-safe. Though, the performance might vary since some chunkers use threading under the hood. So, monitor your performance accordingly.
+  </Accordion>
+</AccordionGroup>

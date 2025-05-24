@@ -1,0 +1,182 @@
+---
+title: 'RecursiveChunker'
+description: 'Recursively chunk documents into smaller, semantically meaningful pieces using customizable rules.'
+icon: 'chart-tree-map'
+---
+
+The `RecursiveChunker` recursively splits documents into smaller, semantically meaningful chunks using customizable hierarchical rules. It is ideal for long or structured documents (e.g., books, research papers, technical docs) where you want to preserve logical structure while respecting token limits.
+
+## Installation
+
+RecursiveChunker is included in the base installation of Chonkie TS. No additional dependencies are required.
+
+<Info> For installation instructions, see the [Getting Started Guide](/getting-started/introduction).</Info>
+
+## Initialization
+
+```ts
+import { RecursiveChunker } from "chonkie";
+
+// Basic initialization with default parameters (async)
+const chunker = await RecursiveChunker.create({
+  tokenizer: "Xenova/gpt2", // Supports string identifiers or Tokenizer instance
+  chunkSize: 512,            // Maximum tokens per chunk
+  // rules, minCharactersPerChunk, returnType are optional
+});
+
+// Using custom rules for hierarchical chunking
+import { RecursiveRules } from "chonkie";
+const rules = new RecursiveRules([
+  { delimiters: ["\n\n"], includeDelim: "prev" }, // Paragraphs
+  { delimiters: [". ", "! ", "? "], includeDelim: "prev" }, // Sentences
+  {} // Fallback to token-based
+]);
+const chunker = await RecursiveChunker.create({
+  tokenizer: "Xenova/gpt2",
+  chunkSize: 256,
+  rules,
+  minCharactersPerChunk: 24
+});
+```
+
+## Parameters
+
+<ParamField
+    path="tokenizer"
+    type="string | Tokenizer"
+    default="Xenova/gpt2"
+>
+    Tokenizer to use. Can be a string identifier (model name) or a Tokenizer instance. Defaults to using `Xenova/gpt2` tokenizer.
+</ParamField>
+
+<ParamField
+    path="chunkSize"
+    type="number"
+    default="512"
+>
+    Maximum number of tokens per chunk.
+</ParamField>
+
+<ParamField
+    path="rules"
+    type="RecursiveRules"
+    default="new RecursiveRules()"
+>
+    Rules that define how text should be recursively chunked. Allows for hierarchical, multi-level splitting (e.g., paragraphs, then sentences, then tokens). See <a href="#recursiverules">RecursiveRules</a> below.
+</ParamField>
+
+<ParamField
+    path="minCharactersPerChunk"
+    type="number"
+    default="24"
+>
+    Minimum number of characters per chunk. Chunks shorter than this may be merged with adjacent chunks.
+</ParamField>
+
+<ParamField
+    path="returnType"
+    type="'chunks' | 'texts'"
+    default="chunks"
+>
+    Whether to return chunks as `RecursiveChunk` objects (with metadata) or plain text strings.
+</ParamField>
+
+## Usage
+
+### Single Text Chunking
+
+```ts
+const text = "This is the first sentence. This is the second sentence! And here's a third one?";
+const chunks = await chunker.chunk(text);
+
+for (const chunk of chunks) {
+  console.log(`Chunk text: ${chunk.text}`);
+  console.log(`Token count: ${chunk.tokenCount}`);
+  console.log(`Level: ${chunk.level}`); // Recursion depth
+}
+```
+
+### Batch Chunking
+
+```ts
+const texts = [
+  "First document. With multiple sentences.\n\nSecond paragraph.",
+  "Second document. Also with structure."
+];
+const batchChunks = await chunker.chunkBatch(texts);
+
+for (const docChunks of batchChunks) {
+  for (const chunk of docChunks) {
+    console.log(`Chunk: ${chunk.text}`);
+  }
+}
+```
+
+### Using as a Callable
+
+```ts
+// Single text
+const chunks = await chunker("First sentence. Second sentence.");
+
+// Multiple texts
+const batchChunks = await chunker(["Text 1. More text.", "Text 2. More."]);
+```
+
+## Return Type
+
+RecursiveChunker returns chunks as `RecursiveChunk` objects by default. Each chunk includes metadata:
+
+```ts
+class RecursiveChunk {
+  text: string;        // The chunk text
+  startIndex: number;  // Starting position in original text
+  endIndex: number;    // Ending position in original text
+  tokenCount: number;  // Number of tokens in chunk
+  level?: number;      // Recursion depth (lower = coarser)
+}
+```
+
+If `returnType` is set to `'texts'`, only the chunked text strings are returned.
+
+---
+
+## RecursiveRules & RecursiveLevel
+
+The `rules` parameter allows for highly flexible, hierarchical chunking strategies. You can specify a list of levels, each with its own delimiters or whitespace splitting. For example:
+
+```ts
+import { RecursiveRules } from "chonkie";
+const rules = new RecursiveRules([
+  { delimiters: ["\n\n"], includeDelim: "prev" }, // Paragraphs
+  { delimiters: [". ", "! ", "? "], includeDelim: "prev" }, // Sentences
+  { whitespace: true } // Words
+]);
+```
+
+Each level is a `RecursiveLevel`:
+
+```ts
+class RecursiveLevel {
+  delimiters?: string | string[];
+  whitespace?: boolean;
+  includeDelim?: "prev" | "next";
+}
+```
+
+- `delimiters`: Custom string(s) to split on (cannot be used with `whitespace`).
+- `whitespace`: If true, splits on whitespace (cannot be used with `delimiters`).
+- `includeDelim`: Whether to include the delimiter with the previous chunk (`"prev"`, default) or the next chunk (`"next"`).
+
+See the [DOCS.md](https://github.com/chonkie-inc/chonkie-ts/blob/main/.temp/DOCS.md) for more on advanced rule customization.
+
+---
+
+**Notes:**
+
+- The chunker is directly callable as a function after creation: `const chunks = await chunker(text)` or `await chunker([text1, text2])`.
+- If `returnType` is set to `'chunks'`, each chunk includes metadata: `text`, `startIndex`, `endIndex`, `tokenCount`, and `level` (recursion depth).
+- The `rules` parameter allows for hierarchical chunking (e.g., paragraphs → sentences → tokens). See `RecursiveRules` and `RecursiveLevel` for customization.
+- Chunks shorter than `minCharactersPerChunk` may be merged with adjacent chunks.
+- The chunker ensures that no chunk exceeds the specified `chunkSize` in tokens.
+- The `chunkBatch` method (or calling with an array) allows efficient batch processing.
+- For more details, see the [TypeScript API Reference](https://github.com/chonkie-inc/chonkie-ts).

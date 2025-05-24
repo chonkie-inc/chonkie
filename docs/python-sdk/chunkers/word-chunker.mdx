@@ -1,0 +1,145 @@
+---
+title: 'WordChunker'
+description: 'Split text into chunks while maintaining word boundaries'
+icon: 'font'
+---
+
+The `WordChunker` splits text into chunks while preserving word boundaries, ensuring that words stay intact and readable.
+
+## API Reference
+To use the `WordChunker` via the API, check out the [API reference documentation](../api-reference/word-chunker).
+
+## Installation
+
+WordChunker is included in the base installation of Chonkie. No additional dependencies are required.
+
+<Info>For installation instructions, see the [Installation Guide](/getting-started/installation).</Info>
+
+## Initialization
+
+```python
+from chonkie import WordChunker
+
+# Basic initialization with default parameters
+chunker = WordChunker(
+    tokenizer="gpt2",        # Supports string identifiers
+    chunk_size=512,          # Maximum tokens per chunk
+    chunk_overlap=128        # Overlap between chunks
+)
+
+# Using a custom tokenizer
+from tokenizers import Tokenizer
+custom_tokenizer = Tokenizer.from_pretrained("your-tokenizer")
+chunker = WordChunker(
+    tokenizer=custom_tokenizer,
+    chunk_size=512,
+    chunk_overlap=128
+)
+```
+
+
+## Parameters
+
+<ParamField
+    path="tokenizer"
+    type="Union[str, tokenizers.Tokenizer, tiktoken.Encoding]"
+    default="gpt2"
+>
+    Tokenizer to use. Can be a string identifier or a tokenizer instance
+</ParamField>
+
+<ParamField
+    path="chunk_size"
+    type="int"
+    default="512"
+>
+    Maximum number of tokens per chunk
+</ParamField>
+
+<ParamField
+    path="chunk_overlap"
+    type="int"
+    default="128"
+>
+    Number of overlapping tokens between chunks
+</ParamField>
+
+## Usage
+
+### Single Text Chunking
+
+```python
+text = "The WordChunker splits text while preserving complete words..."
+chunks = chunker.chunk(text)
+
+for chunk in chunks:
+    print(f"Chunk text: {chunk.text}")
+    print(f"Token count: {chunk.token_count}")
+    print(f"Start index: {chunk.start_index}")
+    print(f"End index: {chunk.end_index}")
+```
+
+### Batch Chunking
+
+```python
+texts = [
+    "First document with complete words...",
+    "Second document to process..."
+]
+batch_chunks = chunker.chunk_batch(texts)
+
+for doc_chunks in batch_chunks:
+    for chunk in doc_chunks:
+        print(f"Chunk: {chunk.text}")
+```
+
+### Using as a Callable
+
+```python
+# Single text
+chunks = chunker("Text to chunk while preserving words...")
+
+# Multiple texts
+batch_chunks = chunker(["Text 1...", "Text 2..."])
+```
+
+## Supported Tokenizers
+
+WordChunker supports multiple tokenizer backends:
+
+- **TikToken** (Recommended)
+  ```python
+  import tiktoken
+  tokenizer = tiktoken.get_encoding("gpt2")
+  ```
+
+- **AutoTikTokenizer**
+  ```python
+  from autotiktokenizer import AutoTikTokenizer
+  tokenizer = AutoTikTokenizer.from_pretrained("gpt2")
+  ```
+
+- **Hugging Face Tokenizers**
+  ```python
+  from tokenizers import Tokenizer
+  tokenizer = Tokenizer.from_pretrained("gpt2")
+  ```
+
+- **Transformers**
+  ```python
+  from transformers import AutoTokenizer
+  tokenizer = AutoTokenizer.from_pretrained("gpt2")
+  ```
+
+## Return Type
+
+WordChunker returns chunks as `Chunk` objects with the following attributes:
+
+```python
+@dataclass
+class Chunk:
+    text: str           # The chunk text
+    start_index: int    # Starting position in original text
+    end_index: int      # Ending position in original text
+    token_count: int    # Number of tokens in chunk
+```

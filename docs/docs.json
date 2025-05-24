@@ -1,0 +1,165 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "palm",
+  "name": "Chonkie",
+  "colors": {
+    "primary": "#1a1a1a",
+    "light": "#faf6e3",
+    "dark": "#77c775"
+  },
+  "favicon": "/favicon.png",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Python SDK",
+        "icon": "book",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "pages": [
+              "python-sdk/getting-started/introduction",
+              "python-sdk/getting-started/installation",
+              "python-sdk/getting-started/concepts",
+              "python-sdk/chonkie-cloud/overview",
+              "python-sdk/getting-started/pricing"
+            ]
+          },
+          {
+            "group": "Chunkers",
+            "pages": [
+              "python-sdk/chunkers/overview",
+              "python-sdk/chunkers/token-chunker",
+              "python-sdk/chunkers/sentence-chunker",
+              "python-sdk/chunkers/recursive-chunker",
+              "python-sdk/chunkers/code-chunker",
+              "python-sdk/chunkers/semantic-chunker",
+              "python-sdk/chunkers/sdpm-chunker",
+              "python-sdk/chunkers/late-chunker",
+              "python-sdk/chunkers/neural-chunker",
+              "python-sdk/chunkers/slumber-chunker"
+            ]
+          },
+          {
+            "group": "Embeddings",
+            "pages": [
+              "python-sdk/embeddings/overview",
+              "python-sdk/embeddings/auto-embeddings",
+              "python-sdk/embeddings/sentence-transformer-embeddings",
+              "python-sdk/embeddings/openai-embeddings",
+              "python-sdk/embeddings/model2vec-embeddings",
+              "python-sdk/embeddings/custom-embeddings"
+            ]
+          },
+          {
+            "group": "Refinery",
+            "pages": [
+              "python-sdk/refinery/overview",
+              "python-sdk/refinery/overlap-refinery",
+              "python-sdk/refinery/embeddings-refinery"
+            ]
+          },
+          {
+            "group": "Utils",
+            "pages": [
+              "python-sdk/utils/visualizer",
+              "python-sdk/utils/hubbie"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Typescript SDK",
+        "icon": "book",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "pages": [
+              "typescript-sdk/getting-started/introduction" 
+            ]
+          },
+          {
+            "group": "Chunkers",
+            "pages": [
+              "typescript-sdk/chunkers/overview",
+              "typescript-sdk/chunkers/token-chunker",
+              "typescript-sdk/chunkers/sentence-chunker", 
+              "typescript-sdk/chunkers/recursive-chunker"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Chonkie API",
+        "openapi": "python-sdk/chonkie-cloud/openapi.json"
+      },
+      {
+        "tab": "Changelog",
+        "pages": [
+          "changelog/changelog"
+        ]
+      }
+    ],
+    "global": {
+      "anchors": [
+        {
+          "anchor": "Discord",
+          "href": "https://discord.gg/Q6zkP8w6ur",
+          "icon": "discord"
+        }
+      ]
+    }
+  },
+  "styling": {
+    "codeblocks": "system"
+  },
+  "logo": {
+    "light": "/logo/chonkie_logo_horizontal_large.png",
+    "dark": "/logo/chonkie_logo_horizontal_large.png"
+  },
+  "appearance": {
+    "default": "light",
+    "strict": false
+  },
+  "background": {
+    "color": {
+      "light": "#faf6e3",
+      "dark": "#1a1a1a"
+    }
+  },
+  "navbar": {
+    "primary": {
+      "type": "github",
+      "href": "https://github.com/chonkie-inc/chonkie"
+    },
+    "links": [
+      {
+        "label": "Chonkie Cloud",
+        "href": "https://cloud.chonkie.ai"
+      }
+    ]
+  },
+  "seo": {
+    "metatags": {
+      "og:site_map": "Chonkie Documentation",
+      "og:title": "Chonkie Documentation",
+      "og:description": "🦛 CHONK your text with Chonkie✨ - A no nonsense text chunking library for RAGs",
+      "og:url": "https://docs.chonkie.ai",
+      "og:image": "/images/chonkie_logo_white_bg_brown.png",
+      "og:logo": "/logo/chonkie_logo_horizontal_large.png",
+      "article:publisher": "https://github.com/chonkie-inc",
+      "twitter:title": "Chonkie Documentation",
+      "twitter:description": "🦛 CHONK your text with Chonkie✨ - A no nonsense text chunking library for RAGS",
+      "twitter:site": "https://docs.chonkie.ai",
+      "twitter:image": "/images/chonkie_logo_white_bg_brown.png"
+    },
+    "indexing": "navigable"
+  },
+  "footer": {
+    "socials": {
+      "website": "https://chonkie.ai/",
+      "github": "https://github.com/chonkie-inc/chonkie",
+      "x": "https://x.com/ChonkieAI",
+      "discord": "https://discord.com/invite/Q6zkP8w6ur"
+    }
+  }
+}

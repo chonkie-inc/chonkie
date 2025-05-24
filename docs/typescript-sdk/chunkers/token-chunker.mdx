@@ -1,0 +1,130 @@
+---
+title: 'TokenChunker'
+description: 'Split text into fixed-size token chunks with configurable overlap'
+icon: 'scissors'
+---
+
+The `TokenChunker` splits text into chunks based on token count, ensuring each chunk stays within specified token limits. It is ideal for preparing text for models with token limits, or for consistent chunking across different texts.
+
+## Installation
+
+TokenChunker is included in the base installation of Chonkie TS. No additional dependencies are required.
+
+<Info> For installation instructions, see the [Getting Started Guide](/getting-started/introduction).</Info>
+
+## Initialization
+
+```ts
+import { TokenChunker } from "chonkie";
+
+// Basic initialization with default parameters (async)
+const chunker = await TokenChunker.create({
+  tokenizer: "Xenova/gpt2", // Supports string identifiers or Tokenizer instance
+  chunkSize: 512,            // Maximum tokens per chunk
+  chunkOverlap: 128          // Overlap between chunks
+});
+
+// Using a custom tokenizer
+import { Tokenizer } from "@huggingface/transformers";
+const customTokenizer = await Tokenizer.from_pretrained("your-tokenizer");
+const chunker = await TokenChunker.create({
+  tokenizer: customTokenizer,
+  chunkSize: 512,
+  chunkOverlap: 128
+});
+```
+
+## Parameters
+
+<ParamField
+    path="tokenizer"
+    type="string | Tokenizer"
+    default="Xenova/gpt2"
+>
+    Tokenizer to use. Can be a string identifier (model name) or a Tokenizer instance. Defaults to using `Xenova/gpt2` tokenizer.
+</ParamField>
+
+<ParamField
+    path="chunkSize"
+    type="number"
+    default="512"
+>
+    Maximum number of tokens per chunk.
+</ParamField>
+
+<ParamField
+    path="chunkOverlap"
+    type="number"
+    default="0"
+>
+    Number or percentage of overlapping tokens between chunks. Can be an absolute number (e.g., 16) or a decimal between 0 and 1 (e.g., 0.1 for 10% overlap).
+</ParamField>
+
+<ParamField
+    path="returnType"
+    type="'chunks' | 'texts'"
+    default="chunks"
+>
+    Whether to return chunks as `Chunk` objects (with metadata) or plain text strings.
+</ParamField>
+
+## Usage
+
+### Single Text Chunking
+
+```ts
+const text = "Some long text that needs to be chunked into smaller pieces...";
+const chunks = await chunker.chunk(text);
+
+for (const chunk of chunks) {
+  console.log(`Chunk text: ${chunk.text}`);
+  console.log(`Token count: ${chunk.tokenCount}`);
+  console.log(`Start index: ${chunk.startIndex}`);
+  console.log(`End index: ${chunk.endIndex}`);
+}
+```
+
+### Batch Chunking
+
+```ts
+const texts = [
+  "First document to chunk...",
+  "Second document to chunk..."
+];
+const batchChunks = await chunker.chunkBatch(texts);
+
+for (const docChunks of batchChunks) {
+  for (const chunk of docChunks) {
+    console.log(`Chunk: ${chunk.text}`);
+  }
+}
+```
+
+### Using as a Callable
+
+```ts
+// Single text
+const chunks = await chunker("Text to chunk...");
+
+// Multiple texts
+const batchChunks = await chunker(["Text 1...", "Text 2..."]);
+```
+
+## Return Type
+
+TokenChunker returns chunks as `Chunk` objects by default. Each chunk includes metadata:
+
+```ts
+class Chunk {
+  text: string;        // The chunk text
+  startIndex: number;  // Starting position in original text
+  endIndex: number;    // Ending position in original text
+  tokenCount: number;  // Number of tokens in chunk
+}
+```
+
+If `returnType` is set to `'texts'`, only the chunked text strings are returned.
+
+---
+
+For more details, see the [TypeScript API Reference](https://github.com/chonkie-inc/chonkie-ts).

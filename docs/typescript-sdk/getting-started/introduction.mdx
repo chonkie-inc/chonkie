@@ -1,0 +1,159 @@
+---
+title: 🦛 Chonkie TS ✨
+sidebarTitle: Introduction
+description: The no-nonsense RAG chunking library that's lightweight, fast, and ready to CHONK your texts!
+icon: "hippo"
+iconType: "solid"
+mode: wide
+---
+
+<img
+  className="block dark:hidden"
+  src="/images/chonkie_logo_br_transparent_bg.png"
+  alt="Chonkie Logo Light"
+/>
+<img
+  className="hidden dark:block"
+  src="/images/chonkie_logo_br_transparent_bg.png"
+  alt="Chonkie Logo Dark"
+/>
+
+Ever found yourself making a RAG pipeline yet again (your 2,342,148th one), only to realize you're stuck having to write chunking with bloated software library X or the painfully feature-less library Y?
+_WHY CAN'T THIS JUST BE SIMPLE, UGH?_
+
+Well, look no further than Chonkie TS! (chonkie boi is a gud boi 🦛)
+
+<CardGroup cols={2}>
+  <Card
+    title="Feature-rich"
+    icon="puzzle-piece"
+  >
+    All the CHONKs you'd ever need for your RAG applications
+  </Card>
+  <Card
+    title="Easy to use"
+    icon="wand-magic-sparkles"
+  >
+    Install, Import, CHONK - it's that simple!
+  </Card>
+  <Card
+    title="Lightning Fast"
+    icon="bolt"
+  >
+    CHONK at the max speed of TypeScript! tssssooooooom
+  </Card>
+  <Card
+    title="Type-Safe"
+    icon="shield"
+  >
+    Full TypeScript support with type safety
+  </Card>
+  <Card
+    title="Lightweight"
+    icon="feather"
+  >
+    No bloat, just CHONK - minimal dependencies by default
+  </Card>
+  <Card
+    title="Cute Mascot"
+    icon="hippo"
+  >
+    psst it's a pygmy hippo btw! Moto Moto approved
+  </Card>
+</CardGroup>
+
+## Quick Start
+
+Get started with Chonkie TS in three simple steps: Install, Import and CHONK!
+
+```bash
+npm install chonkie
+```
+
+Want minimal dependencies? Install with optional dependencies omitted:
+```bash
+npm install chonkie --omit=optional
+```
+
+<Note>
+  Chonkie TS follows a special approach to dependencies, keeping the base installation lightweight while allowing you to add extra features as and when needed.
+  Please check the [Installation](/installation) page for more details.
+</Note>
+
+Release the CHONK! 🦛✨
+
+```typescript
+import { TokenChunker } from 'chonkie';
+
+async function main() {
+  // Create a token chunker with default options
+  const chunker = await TokenChunker.create();
+
+  // Here's some text to chunk
+  const text = "Woah! Chonkie is such a great ts library!";
+
+  // Chunk some text
+  const chunks = await chunker.chunk(text);
+
+  // Access chunks
+  for (const chunk of chunks) {
+    console.log(chunk.text);
+    console.log(chunk.token_count);
+  }
+}
+
+main();
+```
+
+<Note>
+  Chonkie TS is a port of the original Python library, designed specifically for TypeScript developers. While it maintains the core functionality, it adds type safety and TypeScript-specific features. The library is under active development and working towards feature parity with the original Python version.
+</Note>
+
+## Build With Chonkie
+
+Ready to learn more about Chonkie TS?
+
+<CardGroup cols={2}>
+  <Card
+    title="Chunkers"
+    icon="list"
+    href="/chunkers/overview"
+  >
+    Explore different chunking strategies
+  </Card>
+  <Card
+    title="GitHub"
+    icon="github"
+    href="https://github.com/chonkie-inc/chonkie-ts"
+  >
+    Star us on GitHub and contribute
+  </Card>
+</CardGroup>
+
+---
+## Support
+Got questions? We're here to help!
+<CardGroup cols={3}>
+<Card
+  title="Join our Discord"
+  icon="discord"
+  href="https://discord.gg/Q6zkP8w6ur"
+  >
+  Join our Discord community for support from Chonkers all over the world!
+</Card>
+
+<Card
+  title="Open an issue"
+  icon="bug"
+  href="https://github.com/chonkie-inc/chonkie-ts/issues/new"
+  >
+  Found a bug? Open an issue on GitHub and we'll fix it!
+</Card>
+
+<Card
+  title="Email us"
+  icon="envelope"
+  href="mailto:support@chonkie.ai">
+  Email the Chonkie team at support@chonkie.ai for any questions or feedback!
+</Card>
+</CardGroup>

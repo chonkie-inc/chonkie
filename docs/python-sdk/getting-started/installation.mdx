@@ -1,0 +1,116 @@
+---
+title: 'Installation'
+description: 'Installing Chonkie and its various components'
+icon: 'download'
+iconType: 'solid'
+---
+
+Chonkie follows a modular approach to dependencies, keeping the base installation lightweight while allowing you to add extra features as needed.
+
+## Basic Installation
+
+For basic token and sentence chunking capabilities:
+
+```bash
+pip install chonkie
+```
+
+## Installation Options
+
+Chonkie provides several installation options to match your specific needs:
+
+```bash
+# Basic installation (TokenChunker, SentenceChunker, RecursiveChunker)
+pip install chonkie
+
+# For Hugging Face Hub support
+pip install "chonkie[hub]"
+
+# For visualization support (e.g., rich text output)
+pip install "chonkie[viz]"
+
+# For the default semantic provider support (includes Model2Vec)
+pip install "chonkie[semantic]"
+
+# For OpenAI embeddings support
+pip install "chonkie[openai]"
+
+# For Cohere embeddings support
+pip install "chonkie[cohere]"
+
+# For Jina embeddings support
+pip install "chonkie[jina]"
+
+# For SentenceTransformer embeddings support (required by LateChunker)
+pip install "chonkie[st]"
+
+# For CodeChunker support
+pip install "chonkie[code]"
+
+# For NeuralChunker support (BERT-based)
+pip install "chonkie[neural]"
+
+# For SlumberChunker support (Genie/LLM interface)
+pip install "chonkie[genie]"
+
+# For installing multiple features together
+pip install "chonkie[st, code, genie]"
+
+# For all features
+pip install "chonkie[all]"
+```
+
+## Chunker Availability
+
+The following table shows which chunkers are available with different installation options:
+
+| Chunker         | Default | embeddings | 'all' |
+|-----------------|:-------:|:----------:|:-----:|
+| TokenChunker    | ✅      | ✅         | ✅    |
+| RecursiveChunker| ✅      | ✅         | ✅    |
+| SentenceChunker | ✅      | ✅         | ✅    |
+| SemanticChunker | ❌      | ✅         | ❌    |
+| SDPMChunker     | ❌      | ✅         | ❌    |
+| LateChunker     | ❌      | ✅         | ❌    |
+| CodeChunker     | ❌      | ❌         | ✅    |
+| NeuralChunker   | ❌      | ✅         | ✅    |
+| SlumberChunker  | ❌      | ✅         | ✅    |
+
+
+## Embeddings Availability
+
+Different embedding providers are available with different installation options:
+
+| Embeddings Provider           | Default | 'model2vec' | 'st' | 'openai' | 'semantic'| 'all' |
+|-------------------------------|:-------:|:-----------:|:----:|:--------:|:---------:|:-----:|
+| Model2VecEmbeddings           | ❌      | ✅          | ❌   | ❌       | ✅        | ✅    |
+| SentenceTransformerEmbeddings | ❌      | ❌          | ✅   | ❌       | ❌        | ✅    |
+| OpenAIEmbeddings              | ❌      | ❌          | ❌   | ✅       | ❌        | ✅    |
+
+## Dependencies
+
+Here's what each installation option adds:
+
+| Installation Option | Additional Dependencies                                     |
+|---------------------|-------------------------------------------------------------|
+| Default             | autotiktokenizer                                            |
+| 'hub'               | + huggingface-hub, jsonschema                               |
+| 'viz'               | + rich                                                      |
+| 'model2vec'         | + model2vec, numpy                                          |
+| 'st'                | + sentence-transformers, numpy, accelerate                  |
+| 'openai'            | + openai, tiktoken, numpy                                   |
+| 'cohere'            | + cohere, numpy                                             |
+| 'jina'              | + numpy                                                     |
+| 'semantic'          | + model2vec, numpy                                          |
+| 'code'              | + tree-sitter, tree-sitter-language-pack, magika            |
+| 'neural'            | + transformers, torch (or tensorflow/flax), sentencepiece   |
+| 'genie'             | + pydantic, google-genai                                    |
+| 'all'               | all above dependencies                                      |
+
+*(Note: Specific dependencies for `[genie]` might vary slightly based on implementation details and chosen models/APIs.)*
+
+## Important Notes
+
+- We provide separate `semantic` and `all` installs pre-packaged that might match other installation options breeding redundancy. This redundancy is intentional to provide users with the best experience and freedom to choose their preferred means.
+- The `semantic` and `all` optional installs may change in future versions, so what you download today may not be the same for tomorrow.
+- Installing either 'semantic' or 'openai' extras will enable SemanticChunker and SDPMChunker, as these chunkers can work with any embeddings provider. The difference is in which embedding providers are available for use with these chunkers.
