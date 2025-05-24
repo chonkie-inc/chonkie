@@ -72,6 +72,7 @@ cohere = ["cohere>=5.13.0", "numpy>=2.0.0, <3.0"]
 jina = ["numpy>=2.0.0, <3.0"]
 semantic = ["model2vec>=0.3.0", "numpy>=2.0.0, <3.0"]
 gemini = ["pydantic>=2.0.0", "google-genai>=1.0.0"]
+together = ["pydantic>=2.0.0", "together>=1.0.0"]
 
 # optional dependencies for the friends
 chroma = ["chromadb>=1.0.0"]
@@ -79,7 +80,7 @@ qdrant = ["qdrant-client>=1.0.0"]
 tpuf = ["turbopuffer[fast]>=0.2.0"]
 
 # Optional dependencies for the genie
-genie = ["pydantic>=2.0.0", "google-genai>=1.0.0"]
+genie = ["pydantic>=2.0.0", "google-genai>=1.0.0", "together>=1.0.0"]
 
 # All dependencies
 all = [
@@ -98,6 +99,7 @@ all = [
     "jsonschema>=4.23.0",
     "pydantic>=2.0.0",
     "google-genai>=1.0.0",
+    "together>=1.0.0",
     "transformers>=4.0.0",
     "torch>=2.0.0, <3.0",
     "chromadb>=1.0.0",
