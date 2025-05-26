@@ -146,7 +146,7 @@ class SentenceTransformerEmbeddings(BaseEmbeddings):
         return self.model.get_max_seq_length()  # type: ignore
 
     @classmethod
-    def is_available(cls) -> bool:
+    def _is_available(cls) -> bool:
         """Check if sentence-transformers is available."""
         return (
             importutil.find_spec("sentence_transformers") is not None
@@ -160,7 +160,7 @@ class SentenceTransformerEmbeddings(BaseEmbeddings):
         This method should be implemented by all embeddings implementations that require
         additional dependencies. It lazily imports the dependencies only when they are needed.
         """
-        if cls.is_available():
+        if cls._is_available():
             global np, SentenceTransformer
             import numpy as np
             from sentence_transformers import SentenceTransformer

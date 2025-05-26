@@ -62,41 +62,47 @@ class AutoEmbeddings:
         if isinstance(model, BaseEmbeddings):
             return model
         elif isinstance(model, str):
+            # Initializing the embedding instance
             embeddings_instance = None
-            try:
+
+            # Check if the user passed in a provider alias
+            if "://" in model:
+                provider, model_name = model.split("://")
+                embeddings_cls = EmbeddingsRegistry.get_provider(provider)
+                if embeddings_cls:
+                    try:
+                        return embeddings_cls(model_name, **kwargs)  # type: ignore
+                    except Exception as error:
+                        raise ValueError(f"Failed to load {model} with {embeddings_cls.__name__}, with error: {error}")
+                else:
+                    raise ValueError(f"No provider found for {provider}. Please check the provider name and try again.")
+            else:
                 # Try to find matching implementation via registry
                 embeddings_cls = EmbeddingsRegistry.match(model)
                 if embeddings_cls:
-                    try:
-                        # Try instantiating with the model identifier
-                        embeddings_instance = embeddings_cls(model, **kwargs)  # type: ignore
-                    except Exception as e:
-                        warnings.warn(
-                            f"Failed to load {embeddings_cls.__name__} with model identifier: {e}. Trying fallback constructor."
-                        )
                         try:
-                            # Try instantiating without the model identifier
-                            embeddings_instance = embeddings_cls(**kwargs)
-                        except Exception as e2:
+                            # Try instantiating with the model identifier
+                            embeddings_instance = embeddings_cls(model, **kwargs)  # type: ignore
+                        except Exception as error:
                             warnings.warn(
-                                f"Fallback constructor {embeddings_cls.__name__}(**kwargs) also failed: {e2}. Proceeding to SentenceTransformer fallback."
+                                f"Failed to load {model} with {embeddings_cls.__name__}: {error}\n"
+                                f"Falling back to loading default provider model."
                             )
-                            # If both fail, embeddings_instance remains None, proceed to fallback
-                # If embeddings_cls is None, embeddings_instance remains None, proceed to fallback
-            except Exception as error:
-                warnings.warn(
-                    f"Error during registry lookup/instantiation: {error}. Falling back to SentenceTransformerEmbeddings."
-                )
-                # If registry lookup itself fails, embeddings_instance remains None, proceed to fallback
+                            try:
+                                # Try instantiating with the default provider model without the model identifier
+                                embeddings_instance = embeddings_cls(**kwargs)
+                            except Exception as error:
+                                warnings.warn(
+                                    f"Failed to load the default model for {embeddings_cls.__name__}: {error}\n"
+                                    f"Falling back to SentenceTransformerEmbeddings."
+                                )
 
             # If registry lookup and instantiation succeeded, return the instance
             if embeddings_instance:
                 return embeddings_instance
 
-            # Fallback to SentenceTransformerEmbeddings if registry failed or instantiation failed
-            warnings.warn("Falling back to SentenceTransformerEmbeddings.")
+            # If registry lookup and instantiation failed, return the default SentenceTransformerEmbeddings
             from .sentence_transformer import SentenceTransformerEmbeddings
-
             try:
                 return SentenceTransformerEmbeddings(model, **kwargs)
             except Exception as e:

@@ -12,12 +12,8 @@ from .base import BaseHandshake
 from .utils import generate_random_collection_name
 
 if TYPE_CHECKING:
-    try:
-        import chromadb
-        import numpy as np
-    except ImportError:
-        chromadb = Any
-        np = Any
+    import chromadb
+    import numpy as np
 
 
 # NOTE: This is a bit of a hack to work with Chroma's EmbeddingFunction interface

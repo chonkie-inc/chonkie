@@ -2,6 +2,7 @@
 import os
 import uuid
 from typing import List
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -17,6 +18,39 @@ from chonkie.types import Chunk
 DEFAULT_EMBEDDING_MODEL = "minishlab/potion-retrieval-32M"
 
 # ---- Fixtures ----
+
+@pytest.fixture(autouse=True)
+def mock_embeddings():
+    """Mock AutoEmbeddings to avoid downloading models in CI."""
+    with patch('chonkie.embeddings.AutoEmbeddings.get_embeddings') as mock_get_embeddings:
+        # Create a mock embedding model that inherits from BaseEmbeddings
+        from chonkie.embeddings import BaseEmbeddings
+        
+        class MockEmbeddings(BaseEmbeddings):
+            def __init__(self):
+                super().__init__()
+                self._dimension = 512  # Match the real embedding dimension
+                self.model_name_or_path = DEFAULT_EMBEDDING_MODEL
+            
+            @property
+            def dimension(self):
+                return self._dimension
+            
+            def embed(self, text):
+                return [0.1] * 512  # Match the dimension
+            
+            def embed_batch(self, texts):
+                return [[0.1] * 512] * len(texts)  # Match the dimension
+            
+            def get_tokenizer_or_token_counter(self):
+                return Mock()
+            
+            def _is_available(self):
+                return True
+        
+        mock_embedding = MockEmbeddings()
+        mock_get_embeddings.return_value = mock_embedding
+        yield mock_get_embeddings
 
 @pytest.fixture(scope="module")
 def real_embeddings() -> BaseEmbeddings:

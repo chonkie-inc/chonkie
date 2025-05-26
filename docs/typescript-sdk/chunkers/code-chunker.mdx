@@ -1,0 +1,111 @@
+---
+title: 'Code Chunker'
+description: 'Split code into chunks based on code structure'
+icon: 'laptop'
+---
+
+The `CodeChunker` splits code into chunks based on its structure, leveraging Abstract Syntax Trees (ASTs) to create contextually relevant segments.
+
+## API Reference
+To use the `CodeChunker` via the API, check out the [API reference documentation](../../api-reference/code-chunker).
+
+## Initialization
+
+```typescript
+import { CodeChunker } from "chonkie";
+
+// Basic initialization
+// NOTE: Language is required!
+const chunker = await CodeChunker.create({
+    lang: "typescript"
+});
+
+// Using a custom tokenizer
+import { Tokenizer } from "@huggingface/transformers";
+const tokenizer = await Tokenizer.from_pretrained("Xenova/gpt2");
+const chunker = await CodeChunker.create({
+    lang: "typescript",
+    tokenizer
+});
+```
+
+## Parameters
+
+<ParamField
+    path="lang"
+    type="string"
+    required
+>
+    Programming language of the code to chunk.
+</ParamField>
+
+<ParamField
+    path="tokenizer"
+    type="string | Tokenizer"
+    default="Xenova/gpt2"
+>
+    Tokenizer to use. Can be a string identifier (model name) or a Tokenizer instance. Defaults to `Xenova/gpt2`.
+</ParamField>
+
+<ParamField
+    path="chunkSize"
+    type="number"
+    default="512"
+>
+    Maximum number of tokens per chunk.
+</ParamField>
+
+<ParamField
+    path="includeNodes"
+    type="boolean"
+    default="false"
+>
+    Whether to include the list of corresponding AST `Node` objects within each `CodeChunk`.
+</ParamField>
+
+## Usage
+
+### Single Code Chunking
+
+```typescript
+import { CodeChunker } from "chonkie";
+
+const code = "add = lambda x, y: x + y";
+const chunker = await CodeChunker.create({
+    lang: "python"
+});
+const chunks = await chunker.chunk(code);
+```
+
+### Batch Code Chunking
+
+```typescript
+import { CodeChunker } from "chonkie";
+
+const codes = [
+    "add = lambda x, y: x + y",
+    "subtract = lambda x, y: x - y",
+    "multiply = lambda x, y: x * y",
+    "divide = lambda x, y: x / y"
+];
+const chunker = await CodeChunker.create({
+    lang: "python"
+});
+
+const chunks = await chunker.chunkBatch(codes);
+```
+
+## Return Type
+
+CodeChunker returns chunks as `CodeChunk` objects:
+
+```typescript
+class CodeChunk {
+    text: string;
+    start_index: number;
+    end_index: number;
+    token_count: number;
+    lang: string;
+    nodes: Node[];
+}
+```

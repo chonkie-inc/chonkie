@@ -80,8 +80,8 @@ def test_dimension_property(embedding_model: Model2VecEmbeddings) -> None:
 
 
 def test_is_available() -> None:
-    """Test that the is_available method returns True."""
-    assert Model2VecEmbeddings.is_available() is True
+    """Test that the _is_available method returns True."""
+    assert Model2VecEmbeddings._is_available() is True
 
 
 def test_repr(embedding_model: Model2VecEmbeddings) -> None:

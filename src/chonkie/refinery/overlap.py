@@ -1,7 +1,8 @@
 """Refinery for adding overlap to chunks."""
 
 import warnings
-from typing import Any, Callable, List, Literal, Union
+from functools import lru_cache
+from typing import Any, Callable, Dict, List, Literal, Union
 
 from chonkie.refinery.base import BaseRefinery
 from chonkie.tokenizer import Tokenizer
@@ -14,11 +15,14 @@ from chonkie.types import Chunk, RecursiveLevel, RecursiveRules
 # TODO: Add support for `justified` method which is the best of
 # both prefix and suffix overlap.
 
-# TODO: The OverlapRefinery is so slow right now (TwT)
-# We need to find a way to speed it up.
 
 class OverlapRefinery(BaseRefinery):
-    """Refinery for adding overlap to chunks."""
+    """Refinery for adding overlap to chunks.
+    
+    Uses LRU caching (maxsize=8192) for tokenization operations to improve
+    performance when processing similar text repeatedly. The cache can be
+    monitored with cache_info() and cleared with clear_cache() if needed.
+    """
 
     def __init__(
         self,
@@ -69,13 +73,44 @@ class OverlapRefinery(BaseRefinery):
         self.inplace = inplace
         self.rules = rules
         self.sep = '✄'
+        
+        # Performance optimization: Set cache size for LRU caches  
+        self._cache_size = 8192
+        
+        # Create LRU cached methods
+        self._get_tokens_cached = lru_cache(maxsize=self._cache_size)(self._get_tokens_impl)
+        self._count_tokens_cached = lru_cache(maxsize=self._cache_size)(self._count_tokens_impl)
 
 
-    def is_available(self) -> bool:
+    def _is_available(self) -> bool:
         """Check if the refinery is available."""
         return True
 
-    def _split_text(self, text: str, recursive_level: RecursiveLevel) -> list[str]:
+    def _get_tokens_impl(self, text: str) -> list:
+        """Implementation for getting tokens."""
+        return self.tokenizer.encode(text)
+
+    def _count_tokens_impl(self, text: str) -> int:
+        """Implementation for counting tokens."""
+        return len(self.tokenizer.encode(text))
+
+    def clear_cache(self) -> None:
+        """Clear the LRU caches to free memory."""
+        if hasattr(self, '_get_tokens_cached'):
+            self._get_tokens_cached.cache_clear()
+        if hasattr(self, '_count_tokens_cached'):
+            self._count_tokens_cached.cache_clear()
+
+    def cache_info(self) -> dict:
+        """Get cache information for monitoring."""
+        info = {}
+        if hasattr(self, '_get_tokens_cached'):
+            info['tokens_cache'] = self._get_tokens_cached.cache_info()._asdict()
+        if hasattr(self, '_count_tokens_cached'):
+            info['count_cache'] = self._count_tokens_cached.cache_info()._asdict()
+        return info
+
+    def _split_text(self, text: str, recursive_level: RecursiveLevel, effective_context_size: int) -> list[str]:
         """Split the text into chunks using the delimiters."""
         # At every delimiter, replace it with the sep
         if recursive_level.whitespace:
@@ -95,21 +130,25 @@ class OverlapRefinery(BaseRefinery):
             # Encode, Split, and Decode
             encoded = self.tokenizer.encode(text)
             token_splits = [
-                encoded[i : i + self.context_size]
-                for i in range(0, len(encoded), self.context_size)]
-            splits = self.tokenizer.decode_batch(token_splits)
+                encoded[i : i + effective_context_size]
+                for i in range(0, len(encoded), effective_context_size)]
+            splits = list(self.tokenizer.decode_batch(token_splits))
 
         # Some splits may not be meaningful yet.
         # This will be handled during chunk creation.
         return splits
 
+    def _get_token_counts_cached(self, splits: List[str]) -> List[int]:
+        """Get token counts with LRU caching for performance optimization."""
+        return [self._count_tokens_cached(split) for split in splits]
 
-    def _group_splits(self, splits: List[str], token_counts: List[int]) -> List[str]:
+    def _group_splits(self, splits: List[str], token_counts: List[int], effective_context_size: int) -> List[str]:
         """Group the splits.
 
         Args:
             splits: The splits to merge.
             token_counts: The token counts of the splits.
+            effective_context_size: The effective context size to use.
 
         Returns:
             The grouped splits.
@@ -118,7 +157,7 @@ class OverlapRefinery(BaseRefinery):
         group = []
         current_token_count = 0
         for token_count, split in zip(token_counts, splits):
-            if current_token_count + token_count < self.context_size:
+            if current_token_count + token_count < effective_context_size:
                 group.append(split)
                 current_token_count += token_count
             else:
@@ -126,7 +165,7 @@ class OverlapRefinery(BaseRefinery):
         return group
 
 
-    def _prefix_overlap_token(self, chunk: Chunk) -> str:
+    def _prefix_overlap_token(self, chunk: Chunk, effective_context_size: int) -> str:
         """Calculate token-based overlap context using tokenizer.
 
         Takes a larger window of text from the chunk end, tokenizes it,
@@ -134,26 +173,29 @@ class OverlapRefinery(BaseRefinery):
 
         Args:
             chunk: The chunk to calculate the overlap context for.
+            effective_context_size: The effective context size to use.
 
         Returns:
             The overlap context.
 
         """
-        tokens = self.tokenizer.encode(chunk.text)
-        if self.context_size > len(tokens):
+        # Performance optimization: Use LRU cached tokenization
+        tokens = self._get_tokens_cached(chunk.text)
+            
+        if effective_context_size > len(tokens):
             warnings.warn("Context size is greater than the chunk size. The entire chunk will be returned as the context.")
             return chunk.text
         else:
-            assert isinstance(self.context_size, int), "Context size must be an integer."
-            return self.tokenizer.decode(tokens[-self.context_size:])
+            return self.tokenizer.decode(tokens[-effective_context_size:])
     
-    def _recursive_overlap(self, text: str, level: int, method: Literal["prefix", "suffix"]) -> str:
+    def _recursive_overlap(self, text: str, level: int, method: Literal["prefix", "suffix"], effective_context_size: int) -> str:
         """Calculate recursive overlap context.
         
         Args:
             text: The text to calculate the overlap context for.
             level: The recursive level to use.
             method: The method to use for the context.
+            effective_context_size: The effective context size to use.
         
         Returns:
             The overlap context.
@@ -162,21 +204,28 @@ class OverlapRefinery(BaseRefinery):
         if text == "":
             return ""
             
+        # Check if we've exceeded the available recursive levels
+        if level >= len(self.rules):
+            return text
+            
         # Split the Chunk text based on the recursive rules
-        splits = self._split_text(text, self.rules[level])
+        recursive_level = self.rules[level]
+        if recursive_level is None:
+            return text
+        splits = self._split_text(text, recursive_level, effective_context_size)
 
         if method == "prefix":
             splits = splits[::-1]
 
-        # Get the token counts
-        token_counts = self.tokenizer.count_tokens_batch(splits)
+        # Performance optimization: Get token counts with caching
+        token_counts = self._get_token_counts_cached(splits)
 
         # Group the splits
-        grouped_splits = self._group_splits(splits, token_counts)
+        grouped_splits = self._group_splits(splits, token_counts, effective_context_size)
 
         # If the grouped splits is empty, then we need to recursively split the first split
         if not grouped_splits:
-            return self._recursive_overlap(splits[0], level+1, method)
+            return self._recursive_overlap(splits[0], level+1, method, effective_context_size)
 
         if method == "prefix":
             grouped_splits = grouped_splits[::-1]
@@ -186,35 +235,44 @@ class OverlapRefinery(BaseRefinery):
         return context
 
     
-    def _prefix_overlap_recursive(self, chunk: Chunk) -> str:
+    def _prefix_overlap_recursive(self, chunk: Chunk, effective_context_size: int) -> str:
         """Calculate recursive overlap context.
 
         Takes a larger window of text from the chunk end, tokenizes it,
         and selects exactly context_size tokens worth of text.
+
+        Args:
+            chunk: The chunk to calculate the overlap context for.
+            effective_context_size: The effective context size to use.
+
+        Returns:
+            The overlap context.
         
         """
-        return self._recursive_overlap(chunk.text, 0, "prefix")
+        return self._recursive_overlap(chunk.text, 0, "prefix", effective_context_size)
 
-    def _get_prefix_overlap_context(self, chunk: Chunk) -> str:
+    def _get_prefix_overlap_context(self, chunk: Chunk, effective_context_size: int) -> str:
         """Get the prefix overlap context.
 
         Args:
             chunk: The chunk to get the prefix overlap context for.
+            effective_context_size: The effective context size to use.
 
         """
         # Route to the appropriate method
         if self.mode == "token":
-            return self._prefix_overlap_token(chunk)
+            return self._prefix_overlap_token(chunk, effective_context_size)
         elif self.mode == "recursive":
-            return self._prefix_overlap_recursive(chunk)
+            return self._prefix_overlap_recursive(chunk, effective_context_size)
         else:
             raise ValueError("Mode must be one of: token, recursive.")
 
-    def _refine_prefix(self, chunks: List[Chunk]) -> List[Chunk]:
+    def _refine_prefix(self, chunks: List[Chunk], effective_context_size: int) -> List[Chunk]:
         """Refine the prefix of the chunk.
         
         Args:
             chunks: The chunks to refine.
+            effective_context_size: The effective context size to use.
 
         Returns:
             The refined chunks.
@@ -226,7 +284,7 @@ class OverlapRefinery(BaseRefinery):
             prev_chunk = chunks[i]
 
             # Calculate the overlap context
-            context = self._get_prefix_overlap_context(prev_chunk)
+            context = self._get_prefix_overlap_context(prev_chunk, effective_context_size)
 
             # Set it as a part of the chunk
             setattr(chunk, "context", context)
@@ -234,60 +292,79 @@ class OverlapRefinery(BaseRefinery):
             # Merge the context if merge is True
             if self.merge:
                 chunk.text = context + chunk.text
-                # Since the context is added as a prefix, we need to adjust the start index
-                chunk.start_index -= len(context)
+                # Note: We don't adjust start_index/end_index when adding context
+                # because they should represent the original document positions.
+                # The context is additional information, not part of the original chunk position.
 
-                # Update the token count if a tokenizer is passed
+                # Performance optimization: Update the token count with LRU caching
                 if self.tokenizer:
-                    chunk.token_count += self.tokenizer.count_tokens(context)
+                    context_tokens = self._count_tokens_cached(context)
+                    chunk.token_count += context_tokens
 
         return chunks
 
 
-    def _suffix_overlap_token(self, chunk: Chunk) -> str:
+    def _suffix_overlap_token(self, chunk: Chunk, effective_context_size: int) -> str:
         """Calculate token-based overlap context using tokenizer.
 
         Takes a larger window of text from the chunk start, tokenizes it,
         and selects exactly context_size tokens worth of text.
+
+        Args:
+            chunk: The chunk to calculate the overlap context for.
+            effective_context_size: The effective context size to use.
+
+        Returns:
+            The overlap context.
         
         """
-        tokens = self.tokenizer.encode(chunk.text)
-        if self.context_size > len(tokens):
+        # Performance optimization: Use LRU cached tokenization
+        tokens = self._get_tokens_cached(chunk.text)
+            
+        if effective_context_size > len(tokens):
             warnings.warn("Context size is greater than the chunk size. The entire chunk will be returned as the context.")
             return chunk.text
         else:
-            assert isinstance(self.context_size, int), "Context size must be an integer."
-            return self.tokenizer.decode(tokens[:self.context_size])
+            return self.tokenizer.decode(tokens[:effective_context_size])
     
-    def _suffix_overlap_recursive(self, chunk: Chunk) -> str:
+    def _suffix_overlap_recursive(self, chunk: Chunk, effective_context_size: int) -> str:
         """Calculate recursive overlap context.
 
         Takes a larger window of text from the chunk start, tokenizes it,
         and selects exactly context_size tokens worth of text.
+
+        Args:
+            chunk: The chunk to calculate the overlap context for.
+            effective_context_size: The effective context size to use.
+
+        Returns:
+            The overlap context.
         
         """
-        return self._recursive_overlap(chunk.text, 0, "suffix")
+        return self._recursive_overlap(chunk.text, 0, "suffix", effective_context_size)
 
-    def _get_suffix_overlap_context(self, chunk: Chunk) -> str:
+    def _get_suffix_overlap_context(self, chunk: Chunk, effective_context_size: int) -> str:
         """Get the suffix overlap context.
 
         Args:
             chunk: The chunk to get the suffix overlap context for.
+            effective_context_size: The effective context size to use.
 
         """
         # Route to the appropriate method
         if self.mode == "token":
-            return self._suffix_overlap_token(chunk)
+            return self._suffix_overlap_token(chunk, effective_context_size)
         elif self.mode == "recursive":
-            return self._suffix_overlap_recursive(chunk)
+            return self._suffix_overlap_recursive(chunk, effective_context_size)
         else:
             raise ValueError("Mode must be one of: token, recursive.")
 
-    def _refine_suffix(self, chunks: List[Chunk]) -> List[Chunk]:
+    def _refine_suffix(self, chunks: List[Chunk], effective_context_size: int) -> List[Chunk]:
         """Refine the suffix of the chunk.
         
         Args:
             chunks: The chunks to refine.
+            effective_context_size: The effective context size to use.
 
         Returns:
             The refined chunks.
@@ -299,7 +376,7 @@ class OverlapRefinery(BaseRefinery):
             prev_chunk = chunks[i+1]
 
             # Calculate the overlap context
-            context = self._get_suffix_overlap_context(prev_chunk)
+            context = self._get_suffix_overlap_context(prev_chunk, effective_context_size)
 
             # Set it as a part of the chunk
             setattr(chunk, "context", context)
@@ -307,12 +384,14 @@ class OverlapRefinery(BaseRefinery):
             # Merge the context if merge is True
             if self.merge:
                 chunk.text = chunk.text + context
-                # Since the context is added as a suffix, we need to adjust the end index
-                chunk.end_index += len(context)
+                # Note: We don't adjust start_index/end_index when adding context
+                # because they should represent the original document positions.
+                # The context is additional information, not part of the original chunk position.
 
-                # Update the token count if a tokenizer is passed
+                # Performance optimization: Update the token count with LRU caching
                 if self.tokenizer:
-                    chunk.token_count += self.tokenizer.count_tokens(context)
+                    context_tokens = self._count_tokens_cached(context)
+                    chunk.token_count += context_tokens
 
         return chunks
 
@@ -323,7 +402,7 @@ class OverlapRefinery(BaseRefinery):
             chunks: The chunks to get the overlap context size for.
 
         """
-        # If the context size is a float, calculate the overlap context size
+        # Calculate context size for each call (float context size depends on chunk set)
         if isinstance(self.context_size, float):
             return int(self.context_size * max(chunk.token_count for chunk in chunks))
         else:
@@ -352,14 +431,14 @@ class OverlapRefinery(BaseRefinery):
         if not self.inplace:
             chunks = [chunk.copy() for chunk in chunks]
         
-        # Get a rough estimate of the overlap if the context size is a float
-        self.context_size = self._get_overlap_context_size(chunks)
+        # Get the effective context size for this chunk set (don't overwrite self.context_size)
+        effective_context_size = self._get_overlap_context_size(chunks)
 
         # Refine the chunks based on the method
         if self.method == "prefix":
-            return self._refine_prefix(chunks)
+            return self._refine_prefix(chunks, effective_context_size)
         elif self.method == "suffix":
-            return self._refine_suffix(chunks)
+            return self._refine_suffix(chunks, effective_context_size)
         else:
             raise ValueError("Method must be one of: prefix, suffix.")
         

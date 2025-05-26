@@ -77,6 +77,7 @@ You can install optional features using the `pip install "chonkie[feature]"` syn
 | `voyageai` | Use Voyage AI's embedding models.                                                                       |
 | `cohere`   | Integrate with Cohere's embedding models.                                                               |
 | `jina`     | Use Jina AI's embedding models.                                                                         |
+| `gemini`   | Use Google's Gemini embedding models.                                                                   |
 | `semantic` | Enable semantic chunking capabilities, potentially leveraging `model2vec`.                              |
 | `neural`   | Utilize local Hugging Face `transformers` models (with `torch`) for advanced NLP tasks.                 |
 | `genie`    | Integrate with Google's Generative AI (Gemini) models for advanced functionalities.                     |
@@ -736,6 +737,7 @@ Chonkie has quite a few usecases for embeddings —— `SemanticChunker` uses th
 - `SentenceTransformerEmbeddings` (`sentence-transformers`): Uses a `SentenceTransformer` model to embed text.
 - `OpenAIEmbeddings` (`openai`): Uses the OpenAI embedding API to embed text.
 - `CohereEmbeddings` (`cohere`): Uses Cohere's embedding API to embed text.
+- `GeminiEmbeddings` (`gemini`): Uses Google's Gemini embedding API to embed text.
 - `JinaEmbeddings` (`jina`): Uses Jina's embedding API to embed text.
 - `VoyageAIEmbeddings` (`voyageai`): Uses the Voyage AI embedding API to embed text.
 
@@ -745,10 +747,13 @@ Given that it has a bunch of different embedding models, it becomes challenging 
 from chonkie import AutoEmbeddings
 
 # Since this model is registered with the Registry, we can use the string directly
-embeddings = AutoEmbeddings("minishlab/potion-base-8M")
+embeddings = AutoEmbeddings.get_embedding("minishlab/potion-base-32M")
 
-# If it's not registered, we can use the full URI
+# If it's not registered, we can use the full URI with the provider name
 embeddings = AutoEmbeddings.get_embedding("model2vec://minishlab/potion-base-32M")
+
+# You can also load the same model with different providers as long as they support the same model
+embeddings = AutoEmbeddings.get_embedding("st://minishlab/potion-base-32M")
 ```
 
 If you're trying to load a model from a local path, it's recommended to use the `SentenceTransformerEmbeddings` class. With the `AutoEmbeddings` class, you can pass in the `model` object initialized with the `SentenceTransformer` class as well, and it will return chonkie's `SentenceTransformerEmbeddings` object. 
@@ -763,7 +768,7 @@ All `Embeddings` classes have the following methods:
 - `embed(text: str) -> List[float]`: Embeds a string into a list of floats.
 - `embed_batch(texts: List[str]) -> List[List[float]]`: Embeds a list of strings into a list of lists of floats.
 - `get_tokenizer_or_token_counter() -> Any`: Returns the tokenizer or token counter object.
-- `__call__(text: str) -> List[float]`: Embeds a string into a list of floats.
+- `__call__(text: Union[str, List[str]]) -> Union[List[float], List[List[float]]]`: Embeds a string or a list of strings into a list of floats.
 
 **Example:**
 
@@ -771,10 +776,13 @@ All `Embeddings` classes have the following methods:
 from chonkie import AutoEmbeddings
 
 # Get the embeddings for a model
-embeddings = AutoEmbeddings("minishlab/potion-base-8M")
+embeddings = AutoEmbeddings.get_embedding("minishlab/potion-base-32M")
 
 # Embed a string
-embedding = embeddings("Hello, world!")
+embedding = embeddings.embed("Hello, world!")
+
+# Embed a list of strings
+embeddings = embeddings.embed_batch(["Hello, world!", "Hello, world!"])
 ```
 
 ### Custom Embeddings
@@ -905,22 +913,42 @@ print(json_response)
 
 ### `OpenAIGenie`
 
+---
+
 The `OpenAIGenie` class provides an interface to interact with OpenAI's models (like GPT-4) or any LLM provider that offers an OpenAI-compatible API endpoint.
 
-Requires `pip install "chonkie[openai]"`.
+**Installation:**
 
-**Parameters:**
+`OpenAIGenie` requires `openai` optional dependency to be installed. You can install it via the following command:
 
-- `model (str)`: The specific model identifier to use (e.g., `"gpt-4o"`, `"gpt-3.5-turbo"`). Defaults to `"gpt-4.1"`.
-- `base_url (Optional[str])`: The base URL for the API endpoint. If `None`, it defaults to OpenAI's standard API URL. Use this to connect to custom or self-hosted OpenAI-compatible APIs. Defaults to `None`.
-- `api_key (Optional[str])`: Your API key for the service (OpenAI or the custom provider). If not provided, it will attempt to read from the `OPENAI_API_KEY` environment variable. Defaults to `None`.
+```bash
+pip install "chonkie[openai]"
+```
 
-**Methods:**
+**Class Definition:**
 
-- `generate(prompt: str) -> str`: Sends the prompt to the specified model via the configured endpoint and returns the generated text response.
-- `generate_json(prompt: str, schema: BaseModel) -> Dict[str, Any]`: Sends the prompt and a Pydantic `BaseModel` schema to the model, requesting a JSON output that conforms to the schema using OpenAI's JSON mode (or compatible feature). Returns the parsed JSON as a Python dictionary.
+```python
+class OpenAIGenie(BaseGenie):
+
+    # Class Attributes
+    model: str = "gpt-4.1" # The specific model identifier to use (e.g., "gpt-4o", "gpt-3.5-turbo"). Defaults to "gpt-4.1".
+    base_url: Optional[str] = None # The base URL for the API endpoint. If None, defaults to OpenAI's standard API URL. Use this to connect to custom or self-hosted OpenAI-compatible APIs. Defaults to None.
+    api_key: Optional[str] = None # Your API key for the service (OpenAI or the custom provider). If not provided, reads from OPENAI_API_KEY env var. Defaults to None.
+    client: Optional[OpenAI] = None # The OpenAI client instance. If None, a new client will be created. Defaults to None.
+
+    # Class Methods
+    def generate(self, prompt: str) -> str:
+        """Sends the prompt to the specified model via the configured endpoint and returns the generated text response."""
+        ...
+
+    def generate_json(self, prompt: str, schema: BaseModel) -> Dict[str, Any]:
+        """Sends the prompt and a Pydantic BaseModel schema to the model, requesting a JSON output that conforms to the schema."""
+        ...
+```
 
 **Examples:**
+
+Here are some examples of how to use the `OpenAIGenie` class.
 
 <details>
 <summary><strong>1. Basic Text Generation with `OpenAIGenie` (OpenAI)</strong></summary>

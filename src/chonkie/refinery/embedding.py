@@ -37,9 +37,9 @@ class EmbeddingsRefinery(BaseRefinery):
         else:
             raise ValueError("Model must be a string or a BaseEmbeddings instance.")
 
-    def is_available(self) -> bool:
+    def _is_available(self) -> bool:
         """Check if the embedding model is available."""
-        return self.embedding_model.is_available()
+        return self.embedding_model._is_available()
         
     def refine(self, chunks: List[Chunk]) -> List[Chunk]:
         """Refine the chunks."""

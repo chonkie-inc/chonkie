@@ -1,0 +1,51 @@
+---
+title: Embeddings Overview
+sidebarTitle: Overview
+description: Overview of the different embeddings available in Chonkie
+icon: brain-circuit
+iconType: solid
+---
+
+Chonkie provides a variety of embeddings handlers to handle different embedding models in a consistent manner.
+Embeddings handlers are used in conjunction with chunkers to embed chunks of text. 
+Only few chunkers require embeddings, see the [Chunkers Overview](/chunkers/overview) for more information.
+
+## Installation
+
+Embeddings handlers require additional dependencies. See the [Installation Guide](/getting-started/installation) for more information.
+
+<Info>
+    By default, Chonkie `semantic` installation includes `Model2VecEmbeddings`, which is the current default embeddings handler
+</Info>
+
+## Available Embeddings
+
+<CardGroup cols={2}>
+    <Card title="AutoEmbeddings" icon="brain-circuit" href="/embeddings/auto-embeddings">
+        Automatically select the best embeddings handler for your use case.
+    </Card>
+    <Card title="SentenceTransformerEmbeddings" icon="brain-circuit" href="/embeddings/sentence-transformer-embeddings">
+        Embed text using SentenceTransformer embeddings (requires `sentence-transformers`).
+    </Card>
+    <Card title="OpenAIEmbeddings" icon="brain-circuit" href="/embeddings/openai-embeddings">
+        Embed text using OpenAI embeddings (requires `openai`). 
+    </Card>
+    <Card title="Model2VecEmbeddings" icon="brain-circuit" href="/embeddings/model2vec-embeddings">
+        Embed text using Model2Vec embeddings (requires `model2vec`).
+    </Card>
+</CardGroup>
+
+## Common Interface
+
+All embeddings handlers share a consistent interface:
+
+```python
+# Single text embedding
+emb = embeddings.embed(text)
+
+# Batch processing
+emb = embeddings.embed_batch(texts)
+
+# Direct calling
+emb = embeddings(text)  # or embeddings([text1, text2])
+```

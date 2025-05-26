@@ -15,6 +15,20 @@ from chonkie.types import (
     RecursiveRules,
 )
 
+# Import the unified split function
+try:
+    from .c_extensions.split import split_text
+    SPLIT_AVAILABLE = True
+except ImportError:
+    SPLIT_AVAILABLE = False
+
+# Import optimized merge functions
+try:
+    from .c_extensions.merge import _merge_splits as _merge_splits_cython
+    MERGE_CYTHON_AVAILABLE = True
+except ImportError:
+    MERGE_CYTHON_AVAILABLE = False
+
 
 class RecursiveChunker(BaseChunker):
     """Chunker that recursively splits text into smaller chunks, based on the provided RecursiveRules.
@@ -124,55 +138,64 @@ class RecursiveChunker(BaseChunker):
 
     def _split_text(self, text: str, recursive_level: RecursiveLevel) -> list[str]:
         """Split the text into chunks using the delimiters."""
-        # At every delimiter, replace it with the sep
-        if recursive_level.whitespace:
-            splits = text.split(" ")
-        elif recursive_level.delimiters:
-            if recursive_level.include_delim == "prev":
-                for delimiter in recursive_level.delimiters:
-                    text = text.replace(delimiter, delimiter + self.sep)
-            elif recursive_level.include_delim == "next":
-                for delimiter in recursive_level.delimiters:
-                    text = text.replace(delimiter, self.sep + delimiter)
-            else:
-                for delimiter in recursive_level.delimiters:
-                    text = text.replace(delimiter, self.sep)
-
-            splits = [split for split in text.split(self.sep) if split != ""]
-
-            # Merge short splits
-            current = ""
-            merged = []
-            for split in splits:
-                if len(split) < self.min_characters_per_chunk:
-                    current += split
-                elif current:
-                    current += split
-                    merged.append(current)
-                    current = ""
-                else:
-                    merged.append(split)
-
-                if len(current) >= self.min_characters_per_chunk:
-                    merged.append(current)
-                    current = ""
-
-            if current:
-                merged.append(current)
-
-            splits = merged
+        if SPLIT_AVAILABLE and recursive_level.delimiters:
+            # Use optimized Cython split function for delimiter-based splitting only
+            return split_text(
+                text=text,
+                delim=recursive_level.delimiters,
+                include_delim=recursive_level.include_delim,
+                min_characters_per_segment=self.min_characters_per_chunk,
+                whitespace_mode=False,
+                character_fallback=False
+            )
         else:
-            # Encode, Split, and Decode
-            encoded = self.tokenizer.encode(text)
-            token_splits = [
-                encoded[i : i + self.chunk_size]
-                for i in range(0, len(encoded), self.chunk_size)
-            ]
-            splits = self.tokenizer.decode_batch(token_splits)
+            # Fallback to original implementation
+            if recursive_level.whitespace:
+                splits = text.split(" ")
+            elif recursive_level.delimiters:
+                if recursive_level.include_delim == "prev":
+                    for delimiter in recursive_level.delimiters:
+                        text = text.replace(delimiter, delimiter + self.sep)
+                elif recursive_level.include_delim == "next":
+                    for delimiter in recursive_level.delimiters:
+                        text = text.replace(delimiter, self.sep + delimiter)
+                else:
+                    for delimiter in recursive_level.delimiters:
+                        text = text.replace(delimiter, self.sep)
 
-        # Some splits may not be meaningful yet.
-        # This will be handled during chunk creation.
-        return splits
+                splits = [split for split in text.split(self.sep) if split != ""]
+
+                # Merge short splits
+                current = ""
+                merged = []
+                for split in splits:
+                    if len(split) < self.min_characters_per_chunk:
+                        current += split
+                    elif current:
+                        current += split
+                        merged.append(current)
+                        current = ""
+                    else:
+                        merged.append(split)
+
+                    if len(current) >= self.min_characters_per_chunk:
+                        merged.append(current)
+                        current = ""
+
+                if current:
+                    merged.append(current)
+
+                splits = merged
+            else:
+                # Encode, Split, and Decode
+                encoded = self.tokenizer.encode(text)
+                token_splits = [
+                    encoded[i : i + self.chunk_size]
+                    for i in range(0, len(encoded), self.chunk_size)
+                ]
+                splits = self.tokenizer.decode_batch(token_splits)
+
+            return splits
 
     def _make_chunks(
         self,
@@ -210,7 +233,29 @@ class RecursiveChunker(BaseChunker):
         token_counts: list[int],
         combine_whitespace: bool = False,
     ) -> Tuple[List[str], List[int]]:
-        """Merge short splits."""
+        """Merge short splits into larger chunks.
+        
+        Uses optimized Cython implementation when available, with Python fallback.
+        """
+        if MERGE_CYTHON_AVAILABLE:
+            # Use optimized Cython implementation
+            return _merge_splits_cython(
+                splits, 
+                token_counts, 
+                self.chunk_size, 
+                combine_whitespace
+            )
+        else:
+            # Fallback to original Python implementation
+            return self._merge_splits_fallback(splits, token_counts, combine_whitespace)
+    
+    def _merge_splits_fallback(
+        self,
+        splits: list[str],
+        token_counts: list[int],
+        combine_whitespace: bool = False,
+    ) -> Tuple[List[str], List[int]]:
+        """Original Python implementation of _merge_splits (fallback)."""
         if not splits or not token_counts:
             return [], []
 

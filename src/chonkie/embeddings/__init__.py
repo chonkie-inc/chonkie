@@ -3,6 +3,7 @@
 from .auto import AutoEmbeddings
 from .base import BaseEmbeddings
 from .cohere import CohereEmbeddings
+from .gemini import GeminiEmbeddings
 from .jina import JinaEmbeddings
 from .model2vec import Model2VecEmbeddings
 from .openai import OpenAIEmbeddings
@@ -16,6 +17,7 @@ __all__ = [
     "SentenceTransformerEmbeddings",
     "OpenAIEmbeddings",
     "CohereEmbeddings",
+    "GeminiEmbeddings",
     "AutoEmbeddings",
     "JinaEmbeddings",
     "VoyageAIEmbeddings",

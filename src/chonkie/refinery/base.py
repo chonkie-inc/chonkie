@@ -10,7 +10,7 @@ class BaseRefinery(ABC):
     """Base class for all refinery classes."""
 
     @abstractmethod
-    def is_available(self) -> bool:
+    def _is_available(self) -> bool:
         """Check if the refinery is available."""
         pass
 

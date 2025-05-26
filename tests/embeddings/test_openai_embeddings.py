@@ -126,7 +126,7 @@ def test_dimension_property(embedding_model: OpenAIEmbeddings) -> None:
 )
 def test_is_available() -> None:
     """Test that OpenAIEmbeddings correctly checks if it is available."""
-    assert OpenAIEmbeddings().is_available() is True
+    assert OpenAIEmbeddings()._is_available() is True
 
 
 @pytest.mark.skipif(

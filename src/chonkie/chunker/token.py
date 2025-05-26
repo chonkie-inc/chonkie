@@ -63,7 +63,7 @@ class TokenChunker(BaseChunker):
 
     def _create_chunks(
         self,
-        chunk_texts: List[str],
+        chunk_texts: Sequence[str],
         token_groups: List[List[int]],
         token_counts: List[int],
     ) -> Sequence[Chunk]:
@@ -103,12 +103,12 @@ class TokenChunker(BaseChunker):
         return chunks
 
     def _token_group_generator(
-        self, tokens: List[int]
+        self, tokens: Sequence[int]
     ) -> Generator[List[int], None, None]:
         """Generate chunks from a list of tokens."""
         for start in range(0, len(tokens), self.chunk_size - self.chunk_overlap):
             end = min(start + self.chunk_size, len(tokens))
-            yield tokens[start:end]
+            yield list(tokens[start:end])
             if end == len(tokens):
                 break
 
@@ -150,7 +150,7 @@ class TokenChunker(BaseChunker):
         """Process a batch of texts."""
         # encode the texts into tokens in a batch
         tokens_list = self.tokenizer.encode_batch(texts)
-        result = []
+        result: list = []
 
         for tokens in tokens_list:
             if not tokens:
@@ -196,7 +196,7 @@ class TokenChunker(BaseChunker):
             List of lists of Chunk objects containing the chunked text and metadata
 
         """
-        chunks = []
+        chunks: list = []
         for i in trange(
             0,
             len(texts),

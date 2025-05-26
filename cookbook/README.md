@@ -13,6 +13,7 @@ _A collection of examples, tutorials, and projects using Chonkie_
 |----------|-------------|-----------------|
 | Recursive Chunking for PDF/Markdown Documents | A quick look at how you can use Chonkie's RecursiveChunker to chunk your PDF/Markdown documents and build a RAG pipeline over it! | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/chonkie-inc/chonkie/blob/main/cookbook/tutorials/Chonkie_RecursiveChunker_for_PDF_and_Markdown.ipynb) |
 | SlumberChunker with OpenRouter | A quick look at how you can use the `SlumberChunker` with models from OpenRouter with the help of the `OpenAIGenie`! | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/chonkie-inc/chonkie/blob/main/cookbook/tutorials/Chonkie_SlumberChunker_w_OpenRouter_models.ipynb) |
+| Gemini Embeddings with Recursive Chunking | Learn how to use Google's Gemini embedding models with Chonkie's RecursiveChunker for high-quality text embeddings and similarity analysis! | [![View on GitHub](https://img.shields.io/badge/View_on_GitHub-181717?style=flat&logo=github&logoColor=white)](https://github.com/chonkie-inc/chonkie/blob/main/cookbook/examples/gemini_embeddings_with_recursive_chunking.py) |
 
 ## 🔌 Community Integrations
 

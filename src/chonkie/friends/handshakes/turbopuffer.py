@@ -12,10 +12,7 @@ from .base import BaseHandshake
 from .utils import generate_random_collection_name
 
 if TYPE_CHECKING:
-    try:
-        import turbopuffer as tpuf
-    except ImportError:
-        tpuf = Any
+    import turbopuffer as tpuf
 
 
 class TurbopufferHandshake(BaseHandshake):

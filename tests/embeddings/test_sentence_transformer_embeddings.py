@@ -108,8 +108,8 @@ def test_dimension_property(embedding_model: SentenceTransformerEmbeddings) -> N
 
 
 def test_is_available() -> None:
-    """Test the is_available method."""
-    assert SentenceTransformerEmbeddings.is_available() is True
+    """Test the _is_available method."""
+    assert SentenceTransformerEmbeddings._is_available() is True
 
 
 def test_repr(embedding_model: SentenceTransformerEmbeddings) -> None:

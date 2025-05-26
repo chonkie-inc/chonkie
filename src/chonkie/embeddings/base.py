@@ -69,7 +69,7 @@ class BaseEmbeddings(ABC):
         This method should be implemented by all embeddings implementations that require
         additional dependencies. It lazily imports the dependencies only when they are needed.
         """
-        if self.is_available():
+        if self._is_available():
             global np
             import numpy as np
         else:
@@ -109,7 +109,7 @@ class BaseEmbeddings(ABC):
         """
         raise NotImplementedError
 
-    def is_available(self) -> bool:
+    def _is_available(self) -> bool:
         """Check if this embeddings implementation is available (dependencies installed).
 
         Override this method to add custom dependency checks.

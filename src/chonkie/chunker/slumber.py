@@ -11,6 +11,12 @@ from chonkie.types import Chunk, RecursiveLevel, RecursiveRules
 
 from .base import BaseChunker
 
+try:
+    from .c_extensions.split import split_text
+    _CYTHON_AVAILABLE = True
+except ImportError:
+    _CYTHON_AVAILABLE = False
+
 # PROMPT_W_CONTEXT_TEMPLATE = """<task> You are given a set of texts between the starting tag <passages> and ending tag </passages>. Each text is labeled as 'ID `N`' where 'N' is the passage number. Your task is to find the first passage where the content clearly separates from the previous passages in topic and/or semantics. 
 
 # The user may provide you some context on the passages which may help you in your task. This context is provided between the starting tag <context> and ending tag </context>.
@@ -100,10 +106,40 @@ class SlumberChunker(BaseChunker):
         # behaviour of the Genie under multiprocessing conditions
         self._use_multiprocessing = False
 
-    #TODO: There's an issue where if the self.candidate_size is too small, the text becomes un-reconstructable. I believe this has something to do with the implementation in this function...
-    #TODO: The same error above also causes the start_index and end_index for a couple of splits to be incorrect.
     def _split_text(self, text: str, recursive_level: RecursiveLevel) -> List[str]:
         """Split the text into chunks using the delimiters."""
+        if _CYTHON_AVAILABLE:
+            # Use the optimized Cython split function
+            if recursive_level.whitespace:
+                return split_text(
+                    text,
+                    delim=None,
+                    include_delim=recursive_level.include_delim,
+                    min_characters_per_segment=self.min_characters_per_chunk,
+                    whitespace_mode=True,
+                    character_fallback=False
+                )
+            elif recursive_level.delimiters:
+                return split_text(
+                    text,
+                    delim=recursive_level.delimiters,
+                    include_delim=recursive_level.include_delim,
+                    min_characters_per_segment=self.min_characters_per_chunk,
+                    whitespace_mode=False,
+                    character_fallback=False
+                )
+            else:
+                # Token-based splitting - fall back to original implementation
+                encoded = self.tokenizer.encode(text)
+                token_splits = [encoded[i : i + self.chunk_size]
+                    for i in range(0, len(encoded), self.chunk_size)]
+                return self.tokenizer.decode_batch(token_splits)
+        else:
+            # Fallback to original implementation when Cython is not available
+            return self._split_text_fallback(text, recursive_level)
+
+    def _split_text_fallback(self, text: str, recursive_level: RecursiveLevel) -> List[str]:
+        """Fallback implementation when Cython is not available."""
         # At every delimiter, replace it with the sep
         if recursive_level.whitespace:
             candidate_splits = text.split(" ")

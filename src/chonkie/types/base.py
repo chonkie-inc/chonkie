@@ -1,7 +1,7 @@
 """Custom base types for Chonkie."""
 
 from dataclasses import dataclass
-from typing import Optional
+from typing import Iterator, Optional
 
 
 @dataclass
@@ -21,7 +21,7 @@ class Context:
     start_index: Optional[int] = None
     end_index: Optional[int] = None
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Validate context attributes."""
         if not isinstance(self.text, str):
             raise ValueError("Text must be a string.")
@@ -38,7 +38,7 @@ class Context:
         ):
             raise ValueError("Start index must be less than end index.")
 
-    def __len__(self):
+    def __len__(self) -> int:
         """Return the length of the text."""
         return len(self.text)
 
@@ -82,7 +82,7 @@ class Chunk:
     token_count: int
     context: Optional[Context] = None
 
-    def __len__(self):
+    def __len__(self) -> int:
         """Return the length of the text."""
         return len(self.text)
 
@@ -101,11 +101,11 @@ class Chunk:
         else:
             return repr + ")"
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[str]:
         """Return an iterator over the chunk's text."""
         return iter(self.text)
 
-    def __getitem__(self, index):
+    def __getitem__(self, index: int) -> str:
         """Return a slice of the chunk's text."""
         return self.text[index]
 

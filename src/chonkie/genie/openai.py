@@ -6,15 +6,8 @@ from typing import TYPE_CHECKING, Any, Dict, Optional
 from .base import BaseGenie
 
 if TYPE_CHECKING:
-    try:
-        from openai import OpenAI
-    except ImportError:
-        OpenAI = Any # type: ignore
-
-    try:
-        from pydantic import BaseModel
-    except ImportError:
-        BaseModel = Any # type: ignore
+    from openai import OpenAI
+    from pydantic import BaseModel
 
 
 class OpenAIGenie(BaseGenie):

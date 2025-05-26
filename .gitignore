@@ -3,6 +3,10 @@ __pycache__
 *.py[cod]
 *$py.class
 
+# Compiled files and C files
+*.so
+*.c
+
 # Distribution / packaging
 build/*
 dist/
@@ -47,3 +51,5 @@ Thumbs.db
 /tmp/*
 /tests/data/*
 notebooks/*
+CLAUDE.md
+.temp/*

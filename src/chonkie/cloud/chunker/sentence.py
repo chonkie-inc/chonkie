@@ -13,7 +13,6 @@ class SentenceChunker(CloudChunker):
 
     BASE_URL = "https://api.chonkie.ai"
     VERSION = "v1"
-    API_KEY = os.getenv("CHONKIE_API_KEY")
 
     def __init__(
         self,

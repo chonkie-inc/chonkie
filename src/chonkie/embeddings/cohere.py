@@ -228,7 +228,7 @@ class CohereEmbeddings(BaseEmbeddings):
         return self._tokenizer
 
     @classmethod
-    def is_available(cls) -> bool:
+    def _is_available(cls) -> bool:
         """Check if the Cohere package is available."""
         return importlib.util.find_spec("cohere") is not None
 
@@ -240,7 +240,7 @@ class CohereEmbeddings(BaseEmbeddings):
         additional dependencies. It lazily imports the dependencies only when they are needed.
 
         """
-        if cls.is_available():
+        if cls._is_available():
             global np, tokenizers, ClientV2
             import numpy as np
             import tokenizers

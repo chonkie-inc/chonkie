@@ -147,7 +147,7 @@ You can use this to extend Chonkie to support any tokenization scheme you want!
 </details>
 
 <details>
-<summary><strong>🧠 Embed like a boss! Chonkie links up with 6+ embedding pals!</strong></summary>
+<summary><strong>🧠 Embed like a boss! Chonkie links up with 7+ embedding pals!</strong></summary>
 
 Seamlessly works with various embedding model providers. Bring your favorite embeddings to the CHONK party! Use `AutoEmbeddings` to load models easily.
 
@@ -157,6 +157,7 @@ Seamlessly works with various embedding model providers. Bring your favorite emb
 | `sentence-transformers` | `SentenceTransformerEmbeddings` | Use any `sentence-transformers` model.       | `chonkie[st]`       |
 | `openai`                | `OpenAIEmbeddings`              | Use OpenAI's embedding API.                  | `chonkie[openai]`   |
 | `cohere`                | `CohereEmbeddings`              | Use Cohere's embedding API.                  | `chonkie[cohere]`   |
+| `gemini`                | `GeminiEmbeddings`              | Use Google's Gemini embedding API.           | `chonkie[gemini]`   |
 | `jina`                  | `JinaEmbeddings`                | Use Jina AI's embedding API.                 | `chonkie[jina]`     |
 | `voyageai`              | `VoyageAIEmbeddings`            | Use Voyage AI's embedding API.               | `chonkie[voyageai]` |
 

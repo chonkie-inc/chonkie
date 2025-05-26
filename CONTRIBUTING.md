@@ -16,7 +16,7 @@ Welcome fellow CHONKer! We're thrilled you want to contribute to Chonkie. Every 
 
 ```bash
 # 1. Fork and clone the repository
-git clone https://github.com/your-username/chonkie.git
+git clone https://github.com/chonkie-inc/chonkie.git
 cd chonkie
 
 # 2. Create a virtual environment

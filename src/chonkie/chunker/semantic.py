@@ -12,6 +12,13 @@ from chonkie.utils import Hubbie
 if TYPE_CHECKING:
     import numpy as np
 
+# Import the unified split function
+try:
+    from .c_extensions.split import split_text
+    SPLIT_AVAILABLE = True
+except ImportError:
+    SPLIT_AVAILABLE = False
+
 
 class SemanticChunker(BaseChunker):
     """Chunker that splits text into semantically coherent chunks using embeddings.
@@ -216,56 +223,66 @@ class SemanticChunker(BaseChunker):
         self,
         text: str,
     ) -> List[str]:
-        """Fast sentence splitting while maintaining accuracy.
+        """Fast sentence splitting using unified split function when available.
 
         This method is faster than using regex for sentence splitting and is more accurate than using the spaCy sentence tokenizer.
 
         Args:
             text: Input text to be split into sentences
-            delim: Delimiters to split sentences on
-            sep: Separator to use when splitting sentences
 
         Returns:
             List of sentences
 
         """
-        t = text
-        for c in self.delim:
-            if self.include_delim == "prev":
-                t = t.replace(c, c + self.sep)
-            elif self.include_delim == "next":
-                t = t.replace(c, self.sep + c)
-            else:
-                t = t.replace(c, self.sep)
+        if SPLIT_AVAILABLE:
+            # Use optimized Cython split function
+            return split_text(
+                text=text,
+                delim=self.delim,
+                include_delim=self.include_delim,
+                min_characters_per_segment=self.min_characters_per_sentence,
+                whitespace_mode=False,
+                character_fallback=True
+            )
+        else:
+            # Fallback to original Python implementation
+            t = text
+            for c in self.delim:
+                if self.include_delim == "prev":
+                    t = t.replace(c, c + self.sep)
+                elif self.include_delim == "next":
+                    t = t.replace(c, self.sep + c)
+                else:
+                    t = t.replace(c, self.sep)
 
-        # Initial split
-        splits = [s for s in t.split(self.sep) if s != ""]
+            # Initial split
+            splits = [s for s in t.split(self.sep) if s != ""]
 
-        # Combine short splits with previous sentence
-        current = ""
-        sentences = []
-        for s in splits:
-            # If the split is short, add to current and if long add to sentences
-            if len(s) < self.min_characters_per_sentence:
-                current += s
-            elif current:
-                current += s
+            # Combine short splits with previous sentence
+            current = ""
+            sentences = []
+            for s in splits:
+                # If the split is short, add to current and if long add to sentences
+                if len(s) < self.min_characters_per_sentence:
+                    current += s
+                elif current:
+                    current += s
+                    sentences.append(current)
+                    current = ""
+                else:
+                    sentences.append(s)
+
+                # At any point if the current sentence is longer than the min_characters_per_sentence,
+                # add it to the sentences
+                if len(current) >= self.min_characters_per_sentence:
+                    sentences.append(current)
+                    current = ""
+
+            # If there is a current split, add it to the sentences
+            if current:
                 sentences.append(current)
-                current = ""
-            else:
-                sentences.append(s)
 
-            # At any point if the current sentence is longer than the min_characters_per_sentence,
-            # add it to the sentences
-            if len(current) >= self.min_characters_per_sentence:
-                sentences.append(current)
-                current = ""
-
-        # If there is a current split, add it to the sentences
-        if current:
-            sentences.append(current)
-
-        return sentences
+            return sentences
 
     def _compute_similarity_threshold(self, all_similarities: List[float]) -> float:
         """Compute similarity threshold based on percentile if specified."""

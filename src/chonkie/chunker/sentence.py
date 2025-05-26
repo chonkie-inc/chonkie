@@ -17,6 +17,20 @@ from chonkie.utils import Hubbie
 
 from .base import BaseChunker
 
+# Import optimized merge functions
+try:
+    from .c_extensions.merge import find_merge_indices
+    MERGE_CYTHON_AVAILABLE = True
+except ImportError:
+    MERGE_CYTHON_AVAILABLE = False
+
+# Import the unified split function
+try:
+    from .c_extensions.split import split_text
+    SPLIT_AVAILABLE = True
+except ImportError:
+    SPLIT_AVAILABLE = False
+
 
 class SentenceChunker(BaseChunker):
     """SentenceChunker splits the sentences in a text based on token limits and sentence boundaries.
@@ -152,7 +166,7 @@ class SentenceChunker(BaseChunker):
 
 
     def _split_text(self, text: str) -> List[str]:
-        """Fast sentence splitting while maintaining accuracy.
+        """Fast sentence splitting using unified split function when available.
 
         This method is faster than using regex for sentence splitting and is more accurate than using the spaCy sentence tokenizer.
 
@@ -163,43 +177,55 @@ class SentenceChunker(BaseChunker):
             List of sentences
 
         """
-        t = text
-        for c in self.delim:
-            if self.include_delim == "prev":
-                t = t.replace(c, c + self.sep)
-            elif self.include_delim == "next":
-                t = t.replace(c, self.sep + c)
-            else:
-                t = t.replace(c, self.sep)
+        if SPLIT_AVAILABLE:
+            # Use optimized Cython split function
+            return split_text(
+                text=text,
+                delim=self.delim,
+                include_delim=self.include_delim,
+                min_characters_per_segment=self.min_characters_per_sentence,
+                whitespace_mode=False,
+                character_fallback=True
+            )
+        else:
+            # Fallback to original Python implementation
+            t = text
+            for c in self.delim:
+                if self.include_delim == "prev":
+                    t = t.replace(c, c + self.sep)
+                elif self.include_delim == "next":
+                    t = t.replace(c, self.sep + c)
+                else:
+                    t = t.replace(c, self.sep)
 
-        # Initial split
-        splits = [s for s in t.split(self.sep) if s != ""]
+            # Initial split
+            splits = [s for s in t.split(self.sep) if s != ""]
 
-        # Combine short splits with previous sentence
-        current = ""
-        sentences = []
-        for s in splits:
-            # If the split is short, add to current and if long add to sentences
-            if len(s) < self.min_characters_per_sentence:
-                current += s
-            elif current:
-                current += s
+            # Combine short splits with previous sentence
+            current = ""
+            sentences = []
+            for s in splits:
+                # If the split is short, add to current and if long add to sentences
+                if len(s) < self.min_characters_per_sentence:
+                    current += s
+                elif current:
+                    current += s
+                    sentences.append(current)
+                    current = ""
+                else:
+                    sentences.append(s)
+
+                # At any point if the current sentence is longer than the min_characters_per_sentence,
+                # add it to the sentences
+                if len(current) >= self.min_characters_per_sentence:
+                    sentences.append(current)
+                    current = ""
+
+            # If there is a current split, add it to the sentences
+            if current:
                 sentences.append(current)
-                current = ""
-            else:
-                sentences.append(s)
 
-            # At any point if the current sentence is longer than the min_characters_per_sentence,
-            # add it to the sentences
-            if len(current) >= self.min_characters_per_sentence:
-                sentences.append(current)
-                current = ""
-
-        # If there is a current split, add it to the sentences
-        if current:
-            sentences.append(current)
-
-        return sentences
+            return sentences
 
     def _prepare_sentences(self, text: str) -> List[Sentence]:
         """Split text into sentences and calculate token counts for each sentence.
@@ -287,7 +313,6 @@ class SentenceChunker(BaseChunker):
             return []
 
         # Pre-calculate cumulative token counts for bisect
-        # Add 1 token for spaces between sentences
         token_sums = list(
             accumulate(
                 [s.token_count for s in sentences],
@@ -300,13 +325,26 @@ class SentenceChunker(BaseChunker):
         pos = 0
 
         while pos < len(sentences):
-            # Use bisect_left to find initial split point
-            target_tokens = token_sums[pos] + self.chunk_size
-            split_idx = bisect_left(token_sums, target_tokens) - 1
-            split_idx = min(split_idx, len(sentences))
+            # OPTIMIZATION: Use Cython for single bisect operation when available
+            if MERGE_CYTHON_AVAILABLE:
+                # Create a subset view for the Cython function to work on
+                remaining_token_counts = [s.token_count for s in sentences[pos:]]
+                if remaining_token_counts:
+                    merge_indices = find_merge_indices(remaining_token_counts, self.chunk_size, 0)
+                    if merge_indices:
+                        split_idx = pos + merge_indices[0]
+                    else:
+                        split_idx = len(sentences)
+                else:
+                    split_idx = len(sentences)
+            else:
+                # Use bisect_left to find initial split point (fallback)
+                target_tokens = token_sums[pos] + self.chunk_size
+                split_idx = bisect_left(token_sums, target_tokens) - 1
+                split_idx = min(split_idx, len(sentences))
 
-            # Ensure we include at least one sentence beyond pos
-            split_idx = max(split_idx, pos + 1)
+                # Ensure we include at least one sentence beyond pos
+                split_idx = max(split_idx, pos + 1)
 
             # Handle minimum sentences requirement
             if split_idx - pos < self.min_sentences_per_chunk:

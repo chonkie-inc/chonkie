@@ -8,22 +8,9 @@ from collections import defaultdict
 from typing import TYPE_CHECKING, Any, Callable, Dict, Sequence, Union
 
 if TYPE_CHECKING:
-    # check if we can import tiktoken
-    try:
-        import tiktoken
-    except ImportError:
-        tiktoken = Any  # type: ignore # fallback to Any
-    #  check if we can import tokenizers
-    try:
-        import tokenizers
-    except ImportError:
-        tokenizers = Any  # type: ignore # fallback to Any
-
-    # check if we can import transformers
-    try:
-        import transformers
-    except ImportError:
-        transformers = Any  # type: ignore # fallback to Any
+    import tiktoken
+    import tokenizers
+    import transformers
 
 
 class BaseTokenizer(ABC):
@@ -33,12 +20,17 @@ class BaseTokenizer(ABC):
         """Initialize the BaseTokenizer."""
         self.vocab: list[str] = []
         self.token2id: Dict[str, int] = defaultdict(self.defaulttoken2id)
+        # Note: Using a lambda here would cause pickling issues:
         # self.token2id: Dict[str, int] = defaultdict(lambda: len(self.vocab))
         self.token2id[" "]  # Add space to the vocabulary
         self.vocab.append(" ")  # Add space to the vocabulary
 
     def defaulttoken2id(self) -> int:
-        """Return the default token ID."""
+        """Return the default token ID.
+        
+        This method is used as the default_factory for defaultdict.
+        Using a named method instead of a lambda ensures the object can be pickled.
+        """
         return len(self.vocab)
     @abstractmethod
     def __repr__(self) -> str:

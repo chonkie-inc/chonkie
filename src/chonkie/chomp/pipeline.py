@@ -3,7 +3,7 @@
 class Chomp: 
     """Chonkie's multi-step pipeline."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the pipeline."""
         pass
     

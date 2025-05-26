@@ -9,15 +9,9 @@ from typing import TYPE_CHECKING, Any, List, Literal, Optional
 from .base import BaseEmbeddings
 
 if TYPE_CHECKING:
-    try: 
-        import numpy as np
-        import voyageai
-        from tokenizers import Tokenizer
-
-    except ImportError:
-        np = Any # type: ignore
-        Tokenizer = Any # type: ignore
-        voyageai = Any # type: ignore
+    import numpy as np
+    import voyageai
+    from tokenizers import Tokenizer
 
 class VoyageAIEmbeddings(BaseEmbeddings):
     """Voyage Embeddings client for interfacing with the VoyageAI API."""
@@ -280,7 +274,7 @@ class VoyageAIEmbeddings(BaseEmbeddings):
             embeddings.extend(result)
         return embeddings
 
-    def is_available(self) -> bool:
+    def _is_available(self) -> bool:
         """Check if the voyageai package is available."""
         return (importutil.find_spec("voyageai") is not None
                 and importutil.find_spec("numpy") is not None
@@ -288,7 +282,7 @@ class VoyageAIEmbeddings(BaseEmbeddings):
 
     def _import_dependencies(self) -> None:
         """Lazy import dependencies if they are not already imported.""" 
-        if self.is_available():
+        if self._is_available():
             global np, Tokenizer, voyageai
             import numpy as np
             import voyageai

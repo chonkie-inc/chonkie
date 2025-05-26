@@ -21,12 +21,8 @@ from .base import BaseHandshake
 from .utils import generate_random_collection_name
 
 if TYPE_CHECKING:
-    try:
-        import qdrant_client
-        from qdrant_client.http.models import PointStruct
-    except ImportError:
-        qdrant_client = Any
-        PointStruct = Any
+    import qdrant_client
+    from qdrant_client.http.models import PointStruct
 
 class QdrantHandshake(BaseHandshake):
     """Qdrant Handshake to export Chonkie's Chunks into a Qdrant collection.

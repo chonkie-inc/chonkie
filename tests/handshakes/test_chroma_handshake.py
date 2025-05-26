@@ -1,6 +1,7 @@
 """Test the ChromaHandshake class."""
 import uuid
 from typing import List
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -29,6 +30,29 @@ from chonkie.types import Chunk
 
 # Mark all tests in this module to be skipped if chromadb is not installed
 pytestmark = pytest.mark.skipif(chromadb is None, reason="chromadb not installed")
+
+
+@pytest.fixture(autouse=True)
+def mock_embeddings():
+    """Mock AutoEmbeddings to avoid downloading models in CI."""
+    with patch('chonkie.embeddings.AutoEmbeddings.get_embeddings') as mock_get_embeddings:
+        # Create a mock embedding model
+        mock_embedding = Mock()
+        
+        # Mock the embed method to return consistent results
+        def mock_embed_single(text):
+            return [0.1] * 128
+        
+        # Mock the embed_batch method to return the right number of embeddings
+        def mock_embed_batch(texts):
+            return [[0.1] * 128] * len(texts)  # Return one embedding per text
+        
+        mock_embedding.embed.side_effect = mock_embed_single
+        mock_embedding.embed_batch.side_effect = mock_embed_batch
+        mock_embedding.dimension = 128
+        mock_get_embeddings.return_value = mock_embedding
+        yield mock_get_embeddings
+
 
 # Sample Chunks for testing
 SAMPLE_CHUNKS: List[Chunk] = [

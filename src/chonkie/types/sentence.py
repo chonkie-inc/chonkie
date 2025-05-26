@@ -23,7 +23,7 @@ class Sentence:
     end_index: int
     token_count: int
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Validate attributes."""
         if not isinstance(self.text, str):
             raise ValueError("Text must be a string.")

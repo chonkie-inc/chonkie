@@ -7,10 +7,7 @@ from typing import TYPE_CHECKING, Any, Dict, Optional
 from .base import BaseGenie
 
 if TYPE_CHECKING:
-    try: 
-        from Pydantic import BaseModel
-    except ImportError:
-        BaseModel = Any  # type: ignore
+    from pydantic import BaseModel
 
 class GeminiGenie(BaseGenie):
     """Gemini's Genie."""
