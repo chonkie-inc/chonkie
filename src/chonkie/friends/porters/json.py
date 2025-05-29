@@ -49,3 +49,13 @@ class JSONPorter(BasePorter):
             self._export_lines(chunks, file)
         else:
             self._export_json(chunks, file)
+    
+    def __call__(self, chunks: list[Chunk], file: str = "chunks.jsonl") -> None: # type: ignore[override]
+        """Export the Chunks into a JSON string.
+        
+        Args:
+            chunks: The chunks to export.
+            file: The file to export the chunks to.
+
+        """
+        self.export(chunks, file)
