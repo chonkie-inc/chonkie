@@ -5,6 +5,7 @@ import warnings
 from typing import TYPE_CHECKING, Any, Dict, List, Literal, Optional, Union
 
 from chonkie.chunker.base import BaseChunker
+from chonkie.chunker.peak_detection import PeakDetector
 from chonkie.embeddings.base import BaseEmbeddings
 from chonkie.types.semantic import SemanticChunk, SemanticSentence, Sentence
 from chonkie.utils import Hubbie
@@ -36,6 +37,9 @@ class SemanticChunker(BaseChunker):
         delim: Delimiters to split sentences on
         include_delim: Whether to include the delimiters in the sentences
         return_type: Whether to return chunks or texts
+        use_peak_detection: Whether to use peak detection for finding chunk boundaries
+        peak_window_length: Length of the smoothing window for peak detection
+        peak_polyorder: Order of the polynomial for peak detection smoothing
 
     Raises:
         ValueError: If parameters are invalid
@@ -56,6 +60,9 @@ class SemanticChunker(BaseChunker):
         delim: Union[str, List[str]] = [". ", "! ", "? ", "\n"],
         include_delim: Union[Literal["prev", "next"], None] = "prev",
         return_type: Literal["chunks", "texts"] = "chunks",
+        use_peak_detection: bool = False,
+        peak_window_length: int = 5,
+        peak_polyorder: int = 2,
         **kwargs: Dict[str, Any],
     ) -> None:  # type: ignore
         """Initialize the SemanticChunker.
@@ -75,6 +82,9 @@ class SemanticChunker(BaseChunker):
             delim: Delimiters to split sentences on
             include_delim: Whether to include the delimiters in the sentences
             return_type: Whether to return chunks or texts
+            use_peak_detection: Whether to use peak detection for finding chunk boundaries
+            peak_window_length: Length of the smoothing window for peak detection
+            peak_polyorder: Order of the polynomial for peak detection smoothing
             **kwargs: Additional keyword arguments
 
         Raises:
@@ -122,6 +132,15 @@ class SemanticChunker(BaseChunker):
         self.include_delim = include_delim
         self.sep = "✄"
         self.return_type = return_type
+        self.use_peak_detection = use_peak_detection
+
+        # Initialize peak detector if enabled
+        if use_peak_detection:
+            self.peak_detector = PeakDetector(
+                window_length=peak_window_length,
+                polyorder=peak_polyorder,
+                threshold=self.similarity_threshold if isinstance(threshold, float) else None
+            )
 
         if isinstance(threshold, float):
             self.similarity_threshold = threshold
@@ -409,30 +428,70 @@ class SemanticChunker(BaseChunker):
     def _get_split_indices(
         self, similarities: List[float], threshold: float = None
     ) -> List[int]:
-        """Get indices of sentences to split at."""
-        if threshold is None:
-            threshold = (
-                self.similarity_threshold
-                if self.similarity_threshold is not None
-                else 0.5
-            )
+        """Get indices of sentences to split at.
+        
+        Args:
+            similarities: List of similarity scores between consecutive sentences
+            threshold: Optional threshold for splitting
+            
+        Returns:
+            List of indices where splits should occur
+        """
+        if self.use_peak_detection:
+            # Convert similarities to numpy array
+            similarities_array = np.array(similarities)
+            
+            # Detect peaks in the similarity signal
+            # We invert the signal (1 - similarities_array) because:
+            # 1. The peak detector is configured to find minima
+            # 2. High similarity values (close to 1) indicate strong semantic connections
+            # 3. By inverting, we transform:
+            #    - High similarities (1) become low values (0)
+            #    - Low similarities (0) become high values (1)
+            # 4. This means minima in the inverted signal correspond to maxima in the original
+            #    similarity signal, which represent optimal chunk boundaries
+            peaks = self.peak_detector.detect_peaks(1 - similarities_array)
+            
+            # Convert peaks to split indices
+            splits = [i + 1 for i in peaks if i + 1 < len(similarities)]
+            
+            # Add start and end indices
+            splits = [0] + splits + [len(similarities)]
+            
+            # Ensure minimum number of sentences between splits
+            i = 0
+            while i < len(splits) - 1:
+                if splits[i + 1] - splits[i] < self.min_sentences:
+                    splits.pop(i + 1)
+                else:
+                    i += 1
+                    
+            return splits
+        else:
+            # Original threshold-based splitting logic
+            if threshold is None:
+                threshold = (
+                    self.similarity_threshold
+                    if self.similarity_threshold is not None
+                    else 0.5
+                )
 
-        # get the indices of the sentences that are below the threshold
-        splits = [
-            i + 1
-            for i, s in enumerate(similarities)
-            if s <= threshold and i + 1 < len(similarities)
-        ]
-        # add the start and end of the text
-        splits = [0] + splits + [len(similarities)]
-        # check if the splits are valid (i.e. there are enough sentences between them)
-        i = 0
-        while i < len(splits) - 1:
-            if splits[i + 1] - splits[i] < self.min_sentences:
-                splits.pop(i + 1)
-            else:
-                i += 1
-        return splits
+            # get the indices of the sentences that are below the threshold
+            splits = [
+                i + 1
+                for i, s in enumerate(similarities)
+                if s <= threshold and i + 1 < len(similarities)
+            ]
+            # add the start and end of the text
+            splits = [0] + splits + [len(similarities)]
+            # check if the splits are valid (i.e. there are enough sentences between them)
+            i = 0
+            while i < len(splits) - 1:
+                if splits[i + 1] - splits[i] < self.min_sentences:
+                    splits.pop(i + 1)
+                else:
+                    i += 1
+            return splits
 
     def _calculate_threshold_via_binary_search(
         self, sentences: List[SemanticSentence]
