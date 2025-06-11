@@ -14,9 +14,9 @@ class AzureOpenAIEmbeddings(BaseEmbeddings):
     """Embedding class using Azure OpenAI service.
 
     Args:
+        azure_endpoint: Azure OpenAI resource endpoint URL.
         model: Logical model name (used for tokenizer + dimension, not API).
         deployment: Name of the Azure deployment (required unless same as model).
-        azure_endpoint: Azure OpenAI resource endpoint URL.
         azure_api_key: Optional Azure API key (or use Entra ID).
         tokenizer: Optional tokenizer override.
         dimension: Optional embedding dimension override.
@@ -36,10 +36,10 @@ class AzureOpenAIEmbeddings(BaseEmbeddings):
 
     def __init__(
         self,
+        azure_endpoint: str,
         model: str = DEFAULT_MODEL,
         tokenizer: Optional[Any] = None,
         dimension: Optional[int] = None,
-        azure_endpoint: Optional[str] = None,
         azure_api_key: Optional[str] = None,
         api_version: str = "2024-10-21",
         deployment: Optional[str] = None,
@@ -51,10 +51,10 @@ class AzureOpenAIEmbeddings(BaseEmbeddings):
         """Initialize Azure OpenAI embeddings.
 
         Args:
+            azure_endpoint: Azure OpenAI resource endpoint URL.
             model: Name of the Azure OpenAI embedding model to use.
             tokenizer: Optional tokenizer override.
             dimension: Optional embedding dimension override.
-            azure_endpoint: Azure OpenAI resource endpoint URL.
             azure_api_key: Optional Azure API key (or use Entra ID).
             api_version: Azure OpenAI API version.
             deployment: Name of the Azure deployment (required unless same as model).
@@ -105,8 +105,6 @@ class AzureOpenAIEmbeddings(BaseEmbeddings):
         if tokenizer is not None:
             self._tokenizer = tokenizer
         elif model in self.AVAILABLE_MODELS:
-            import tiktoken
-
             self._tokenizer = tiktoken.encoding_for_model(model)
         else:
             raise ValueError(f"Tokenizer not available for model '{model}'.")
@@ -125,7 +123,6 @@ class AzureOpenAIEmbeddings(BaseEmbeddings):
             model=self._deployment,
             input=text,
         )
-        import numpy as np
 
         return np.array(response.data[0].embedding, dtype=np.float32)
 
@@ -133,8 +130,6 @@ class AzureOpenAIEmbeddings(BaseEmbeddings):
         """Embed a batch of strings."""
         if not texts:
             return []
-
-        import numpy as np
 
         all_embeddings = []
         for i in range(0, len(texts), self._batch_size):
@@ -161,8 +156,6 @@ class AzureOpenAIEmbeddings(BaseEmbeddings):
 
     def similarity(self, u: "np.ndarray", v: "np.ndarray") -> "np.float32":
         """Compute cosine similarity between two vectors."""
-        import numpy as np
-
         return np.float32(np.dot(u, v) / (np.linalg.norm(u) * np.linalg.norm(v)))
 
     @property
@@ -172,7 +165,7 @@ class AzureOpenAIEmbeddings(BaseEmbeddings):
 
     def get_tokenizer_or_token_counter(self) -> "tiktoken.Encoding":
         """Return a tiktoken tokenizer object."""
-        return self._tokenizer  # type: ignore
+        return self._tokenizer  # type: ignore[return-value]
 
     def _is_available(self) -> bool:
         """Check if the required dependencies are available."""

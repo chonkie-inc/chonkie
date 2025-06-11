@@ -15,9 +15,9 @@ class AzureOpenAIGenie(BaseGenie):
 
     def __init__(
         self,
+        azure_endpoint: str,
         model: str = "gpt-4o",
         deployment: Optional[str] = None,
-        azure_endpoint: Optional[str] = None,
         azure_api_key: Optional[str] = None,
         api_version: str = "2024-10-21",
     ):
