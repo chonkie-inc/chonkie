@@ -7,7 +7,7 @@ This module provides a CodeChunker class for splitting code into chunks of a spe
 import warnings
 from bisect import bisect_left
 from itertools import accumulate
-from typing import TYPE_CHECKING, Any, List, Literal, Tuple, Union
+from typing import TYPE_CHECKING, Any, List, Literal, Tuple, Union, get_args
 
 from chonkie.chunker.base import BaseChunker
 from chonkie.tokenizer import Tokenizer
@@ -62,9 +62,7 @@ class CodeChunker(BaseChunker):
         self.chunk_size = chunk_size
         self.return_type = return_type
         self.include_nodes = include_nodes
-
-        # TODO: Figure out a way to check if the language is supported by tree-sitter-language-pack
-        #       Currently, we're just assuming that the language is supported.
+        self.supported_languages = get_args(SupportedLanguage)
 
         # NOTE: Magika is a language detection library made by Google, that uses a 
         #       deep-learning model to detect the language of the code.
@@ -80,6 +78,8 @@ class CodeChunker(BaseChunker):
             # Set the language to auto and initialize the Magika instance
             self.magika = Magika() # type: ignore
             self.parser = None
+        elif language not in self.supported_languages:
+            raise UnsupportedLanguageException(language)
         else:
             self.parser = get_parser(language) # type: ignore
         
@@ -326,8 +326,15 @@ class CodeChunker(BaseChunker):
         # At this point, if the language is auto, we need to detect the language
         # and initialize the parser
         if self.language == "auto":
-            language = self._detect_language(original_text_bytes)
-            self.parser = get_parser(language) # type: ignore
+            language_detected = self._detect_language(original_text_bytes)
+
+            # if the language is not supported by the tree-sitter-language-pack yet,
+            # we raise the unsupported language error instead of making 
+            # the tree-sitter-language-pack raise a LookUpError later while fetching the parser
+            if (language_detected not in self.supported_languages):
+                raise UnsupportedLanguageException(self.language, language_detected)
+
+            self.parser = get_parser(language_detected) # type: ignore
 
         try:
             # Create the parsing tree for the current code
@@ -355,3 +362,35 @@ class CodeChunker(BaseChunker):
                 f"chunk_size={self.chunk_size},"
                 f"language={self.language},"
                 f"return_type={self.return_type})")
+        
+        
+class UnsupportedLanguageException(Exception):
+    """Raised when the detected language is not yet supported by the tree-sitter-language-pack."""
+
+    def __init__(self, language: str, language_detected: str = None) -> None:
+        """Initialize the UnsupportedLanguageException."""
+        if (language_detected):
+            if (language_detected == 'txt'):
+                message = """
+                If the given input is a plain text and if you want to chunk plain text, please use the `RecursiveChunker` class or any other text chunking classes instead.
+                Refer: https://docs.chonkie.ai/python-sdk/chunkers/overview to know more about the available chunkers.
+
+                If not, kindly try providing the language in the `language` parameter while initializing the CodeChunker class and check once again.
+                Else, the given input language is not supported yet. Please contact support at support@chonkie.ai or raise an issue in Github. 
+                """
+            else:
+                message = f"""
+                Kindly try providing the language in the `language` parameter while initializing the CodeChunker class and check once again.
+                Else, the language: '{language_detected}' is not supported yet. Please contact support at support@chonkie.ai or raise an issue in Github.
+                """
+        else:    
+            if (language == "txt"):
+                message = """
+                Please use the `RecursiveChunker` class or any other text chunking classes instead.
+                Refer: https://docs.chonkie.ai/python-sdk/chunkers/overview to know more about the available chunkers.
+                """
+            else:
+                message = f"""
+                The language given: '{language}' is not supported yet. Please contact support at support@chonkie.ai or raise an issue in Github.
+                """
+        super().__init__(message)
