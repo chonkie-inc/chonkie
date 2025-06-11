@@ -79,6 +79,7 @@ cohere = ["tokenizers>=0.16.0", "cohere>=5.13.0", "numpy>=2.0.0, <3.0"]
 jina = ["tokenizers>=0.16.0", "numpy>=2.0.0, <3.0"]
 semantic = ["tokenizers>=0.16.0", "model2vec>=0.3.0", "numpy>=2.0.0, <3.0"]
 gemini = ["pydantic>=2.0.0", "google-genai>=1.0.0"]
+azure-openai = ["azure-identity>=1.23.0", "tiktoken>=0.5.0", "openai>=1.0.0", "numpy>=2.0.0, <3.0", "pydantic>=2.0.0"]
 
 # optional dependencies for the friends
 chroma = ["chromadb>=1.0.0"]
@@ -113,6 +114,7 @@ all = [
     "chromadb>=1.0.0",
     "qdrant-client>=1.0.0",
     "turbopuffer[fast]>=0.2.0",
+    "azure-identity>=1.23.0",
 ]
 dev = [
     "datasets>=1.14.0",
