@@ -28,7 +28,7 @@ class AzureOpenAIGenie(BaseGenie):
             deployment (Optional[str]): Azure deployment name (used for API call). Defaults to `model`.
             azure_endpoint (Optional[str]): Your Azure OpenAI endpoint.
             azure_api_key (Optional[str]): Your Azure OpenAI API key. If omitted, uses Entra ID.
-            api_version (str): Required API version (default: "2024-02-15-preview").
+            api_version (str): Required API version (default: "2024-10-21").
 
         """
         super().__init__()
