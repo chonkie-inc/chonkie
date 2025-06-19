@@ -13,6 +13,8 @@ if TYPE_CHECKING:
         import numpy as np
     except ImportError:
         class np:  # type: ignore
+            """Stub class for numpy when not available."""
+
             pass
 
 

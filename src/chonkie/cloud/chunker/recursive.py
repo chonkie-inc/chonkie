@@ -1,11 +1,11 @@
 """Recursive Chunking for Chonkie API."""
 
 import os
-from typing import Callable, Dict, List, Literal, Optional, Union, cast
+from typing import Any, Callable, Dict, List, Optional, Union, cast
 
 import requests
 
-from chonkie.types import RecursiveRules, RecursiveChunk
+from chonkie.types import RecursiveChunk
 
 from .base import CloudChunker
 
@@ -34,6 +34,7 @@ class RecursiveChunker(CloudChunker):
             recipe: The name of the recursive rules recipe to use. Find all available recipes at https://hf.co/datasets/chonkie-ai/recipes
             lang: The language of the recipe. Please make sure a valid recipe with the given `recipe` value and `lang` values exists on https://hf.co/datasets/chonkie-ai/recipes
             api_key: The Chonkie API key. If None, it's read from the CHONKIE_API_KEY environment variable.
+
         """
         # If no API key is provided, use the environment variable
         self.api_key = api_key or os.getenv("CHONKIE_API_KEY")
@@ -65,7 +66,7 @@ class RecursiveChunker(CloudChunker):
                 + "If the issue persists, please contact support at support@chonkie.ai."
             )
 
-    def chunk(self, text: Union[str, List[str]]) -> List[RecursiveChunk]:
+    def chunk(self, text: Union[str, List[str]]) -> Any:
         """Chunk the text into a list of chunks."""
         # Make the payload
         payload = {
@@ -86,17 +87,18 @@ class RecursiveChunker(CloudChunker):
         # Try to parse the response
         try:
             if isinstance(text, list):
-                result: List[List[Dict]] = cast(List[List[Dict]], response.json())
-                result_chunks = []
-                for chunk_list in result:
+                batch_result: List[List[Dict]] = cast(List[List[Dict]], response.json())
+                batch_chunks: List[List[RecursiveChunk]] = []
+                for chunk_list in batch_result:
                     curr_chunks = []
                     for chunk in chunk_list:
                         curr_chunks.append(RecursiveChunk.from_dict(chunk))
-                    result_chunks.append(curr_chunks)
+                    batch_chunks.append(curr_chunks)
+                return batch_chunks
             else:
-                result: List[Dict] = cast(List[Dict], response.json())
-                result_chunks = [RecursiveChunk.from_dict(chunk) for chunk in result]
-            return result_chunks
+                single_result: List[Dict] = cast(List[Dict], response.json())
+                single_chunks: List[RecursiveChunk] = [RecursiveChunk.from_dict(chunk) for chunk in single_result]
+                return single_chunks
         except Exception as error:
             raise ValueError(
                 "Oh no! The Chonkie API returned an invalid response."
@@ -104,6 +106,6 @@ class RecursiveChunker(CloudChunker):
                 + "If the issue persists, please contact support at support@chonkie.ai."
             ) from error
 
-    def __call__(self, text: Union[str, List[str]]) -> List[RecursiveChunk]:
+    def __call__(self, text: Union[str, List[str]]) -> Any:
         """Call the RecursiveChunker."""
         return self.chunk(text)

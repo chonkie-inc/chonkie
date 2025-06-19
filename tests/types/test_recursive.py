@@ -102,7 +102,7 @@ def test_recursive_level_from_recipe() -> None:
     """Test RecursiveLevel from recipe."""
     level = RecursiveLevel.from_recipe("default", lang="en")
     assert isinstance(level, RecursiveLevel)
-    assert level.delimiters == ['.', '!', '?', '\n']
+    assert level.delimiters == ['. ', '! ', '? ', '\n']
     assert not level.whitespace
     assert level.include_delim == "prev"
 

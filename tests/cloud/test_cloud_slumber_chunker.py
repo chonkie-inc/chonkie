@@ -7,7 +7,7 @@ import pytest
 from pytest import MonkeyPatch
 
 from chonkie.cloud import SlumberChunker
-from chonkie.types import RecursiveLevel, RecursiveRules, Chunk
+from chonkie.types import Chunk
 
 
 @pytest.fixture

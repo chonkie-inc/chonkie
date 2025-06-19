@@ -84,7 +84,11 @@ def test_count_tokens() -> None:
     with patch("google.genai.Client") as mock_client_class:
         mock_client = MagicMock()
         mock_client_class.return_value = mock_client
-        mock_client.models.count_tokens.return_value = 10
+        
+        # Mock the CountTokensResponse object
+        mock_response = MagicMock()
+        mock_response.total_tokens = 10
+        mock_client.models.count_tokens.return_value = mock_response
         
         embeddings = GeminiEmbeddings(api_key="test-key")
         
@@ -97,7 +101,17 @@ def test_count_tokens() -> None:
 
 def test_count_tokens_batch() -> None:
     """Test batch token counting functionality."""
-    with patch("google.genai.Client"):
+    with patch("google.genai.Client") as mock_client_class:
+        mock_client = MagicMock()
+        mock_client_class.return_value = mock_client
+        
+        # Mock the CountTokensResponse object
+        mock_response1 = MagicMock()
+        mock_response1.total_tokens = 2
+        mock_response2 = MagicMock()
+        mock_response2.total_tokens = 4
+        mock_client.models.count_tokens.side_effect = [mock_response1, mock_response2]
+        
         embeddings = GeminiEmbeddings(api_key="test-key")
         
         texts = ["Hello world", "This is a test"]
@@ -105,6 +119,7 @@ def test_count_tokens_batch() -> None:
         
         assert len(token_counts) == 2
         assert all(isinstance(count, int) for count in token_counts)
+        assert token_counts == [2, 4]
 
 
 def test_similarity() -> None:

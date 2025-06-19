@@ -27,10 +27,6 @@ jobs:
       - name: Install the project
         run: uv sync --all-extras --dev
 
-      - name: Lint with Ruff
-        run: ruff check --fix
-        continue-on-error: true
-
       - name: Cache Hugging Face models
         uses: actions/cache@v4
         with:

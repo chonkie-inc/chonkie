@@ -1,12 +1,11 @@
 """Test the Chonkie Cloud Late Chunker."""
 
-import os
 from unittest.mock import Mock, patch
 
 import pytest
 
 from chonkie.cloud import LateChunker
-from chonkie.types import LateChunk, RecursiveLevel, RecursiveRules
+from chonkie.types import LateChunk
 
 
 @pytest.fixture

@@ -71,7 +71,7 @@ class SlumberChunker(CloudChunker):
             ) from error
 
 
-    def chunk(self, text: Union[str, List[str]]) -> List[Chunk]:
+    def chunk(self, text: Union[str, List[str]]) -> Union[List[Chunk], List[List[Chunk]]]:
         """Chunk the text into a list of chunks using the Slumber strategy via API.
 
         Args:
@@ -117,17 +117,18 @@ class SlumberChunker(CloudChunker):
         try:
             # Assuming the API always returns a list of dictionaries.
             if isinstance(text, list):
-                result: List[List[Dict]] = cast(List[List[Dict]], response.json())
-                result_chunks = []
-                for chunk_list in result:
-                    curr_chunks = []
+                batch_result: List[List[Dict]] = cast(List[List[Dict]], response.json())
+                batch_chunks: List[List[Chunk]] = []
+                for chunk_list in batch_result:
+                    curr_chunks: List[Chunk] = []
                     for chunk in chunk_list:
                         curr_chunks.append(Chunk.from_dict(chunk))
-                    result_chunks.append(curr_chunks)
+                    batch_chunks.append(curr_chunks)
+                return batch_chunks
             else:
-                result: List[Dict] = cast(List[Dict], response.json())
-                result_chunks = [Chunk.from_dict(chunk) for chunk in result]
-            return result_chunks
+                single_result: List[Dict] = cast(List[Dict], response.json())
+                single_chunks: List[Chunk] = [Chunk.from_dict(chunk) for chunk in single_result]
+                return single_chunks
         except ValueError as error: # JSONDecodeError inherits from ValueError
             raise ValueError(
                 "Oh no! The Chonkie API returned an invalid JSON response for Slumber chunking."
@@ -144,7 +145,7 @@ class SlumberChunker(CloudChunker):
             ) from error
 
 
-    def __call__(self, text: Union[str, List[str]]) -> List[Chunk]:
+    def __call__(self, text: Union[str, List[str]]) -> Union[List[Chunk], List[List[Chunk]]]:
         """Call the SlumberChunker."""
         return self.chunk(text)
 

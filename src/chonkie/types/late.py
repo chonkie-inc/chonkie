@@ -1,7 +1,7 @@
 """Module containing the associated types for the LateChunker."""
 
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Dict, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
 from .recursive import RecursiveChunk
 
@@ -27,12 +27,15 @@ class LateChunk(RecursiveChunk):
 
     embedding: Optional["np.ndarray"] = field(default=None)
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> Dict[str, Any]:
         """Return the LateChunk as a dictionary."""
-        try:
-            embedding_list = self.embedding.tolist()
-        except AttributeError:
-            embedding_list = self.embedding
+        if self.embedding is not None:
+            try:
+                embedding_list: Union[List[float], Any] = self.embedding.tolist()
+            except AttributeError:
+                embedding_list = self.embedding
+        else:
+            embedding_list = None
         return {
             "text": self.text,
             "start_index": self.start_index,

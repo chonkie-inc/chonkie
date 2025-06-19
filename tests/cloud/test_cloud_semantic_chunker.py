@@ -1,6 +1,5 @@
 """Test the Chonkie Cloud Semantic Chunker."""
 
-import os
 from unittest.mock import Mock, patch
 
 import pytest

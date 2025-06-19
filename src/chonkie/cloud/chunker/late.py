@@ -4,8 +4,10 @@ from typing import Dict, List, Optional, Union, cast
 
 import requests
 
-from .recursive import RecursiveChunker
 from chonkie.types import LateChunk
+
+from .recursive import RecursiveChunker
+
 
 class LateChunker(RecursiveChunker):
     """Late Chunking for Chonkie API.
@@ -42,7 +44,7 @@ class LateChunker(RecursiveChunker):
             lang=lang,
         )
 
-    def chunk(self, text: Union[str, List[str]]) -> List[LateChunk]:
+    def chunk(self, text: Union[str, List[str]]) -> Union[List[LateChunk], List[List[LateChunk]]]:
         """Chunk the text into a list of late-interaction chunks via the Chonkie API.
 
         Args:
@@ -77,17 +79,18 @@ class LateChunker(RecursiveChunker):
         try:
             response.raise_for_status()  # Raise an exception for HTTP errors (4xx or 5xx)
             if isinstance(text, list):
-                result: List[List[Dict]] = cast(List[List[Dict]], response.json())
-                result_chunks = []
-                for chunk_list in result:
+                batch_result: List[List[Dict]] = cast(List[List[Dict]], response.json())
+                batch_chunks: List[List[LateChunk]] = []
+                for chunk_list in batch_result:
                     curr_chunks = []
                     for chunk in chunk_list:
                         curr_chunks.append(LateChunk.from_dict(chunk))
-                    result_chunks.append(curr_chunks)
+                    batch_chunks.append(curr_chunks)
+                return batch_chunks
             else:
-                result: List[Dict] = cast(List[Dict], response.json())
-                result_chunks = [LateChunk.from_dict(chunk) for chunk in result]
-            return result_chunks
+                single_result: List[Dict] = cast(List[Dict], response.json())
+                single_chunks: List[LateChunk] = [LateChunk.from_dict(chunk) for chunk in single_result]
+                return single_chunks
         except requests.exceptions.HTTPError as http_error:
             # Attempt to get more detailed error from API response if possible
             error_detail = ""
@@ -113,6 +116,6 @@ class LateChunker(RecursiveChunker):
                 + "If the issue persists, please contact support at support@chonkie.ai."
             ) from error
 
-    def __call__(self, text: Union[str, List[str]]) -> List[LateChunk]:
+    def __call__(self, text: Union[str, List[str]]) -> Union[List[LateChunk], List[List[LateChunk]]]:
         """Call the LateChunker to chunk text."""
         return self.chunk(text)

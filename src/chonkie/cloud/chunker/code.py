@@ -5,8 +5,9 @@ from typing import Dict, List, Literal, Optional, Union, cast
 
 import requests
 
-from .base import CloudChunker
 from chonkie.types import CodeChunk
+
+from .base import CloudChunker
 
 
 class CodeChunker(CloudChunker):
@@ -60,7 +61,7 @@ class CodeChunker(CloudChunker):
                 + " If the issue persists, please contact support at support@chonkie.ai or raise an issue on GitHub."
             )
 
-    def chunk(self, text: Union[str, List[str]]) -> List[CodeChunk]:
+    def chunk(self, text: Union[str, List[str]]) -> Union[List[CodeChunk], List[List[CodeChunk]]]:
         """Chunk the code into a list of chunks.
         
         Args:
@@ -99,22 +100,21 @@ class CodeChunker(CloudChunker):
         # Parse the response
         try:
             if isinstance(text, list):
-                result: List[List[Dict]] = cast(List[List[Dict]], response.json())
-                result_chunks = []
-                for chunk_list in result:
+                batch_result: List[List[Dict]] = cast(List[List[Dict]], response.json())
+                batch_chunks: List[List[CodeChunk]] = []
+                for chunk_list in batch_result:
                     curr_chunks = []
                     for chunk in chunk_list:
                         curr_chunks.append(CodeChunk.from_dict(chunk))
-                    result_chunks.append(curr_chunks)
+                    batch_chunks.append(curr_chunks)
+                return batch_chunks
             else:
-                result: List[Dict] = cast(List[Dict], response.json())
-                result_chunks = [CodeChunk.from_dict(chunk) for chunk in result]
+                single_result: List[Dict] = cast(List[Dict], response.json())
+                single_chunks: List[CodeChunk] = [CodeChunk.from_dict(chunk) for chunk in single_result]
+                return single_chunks
         except Exception as error:
             raise ValueError(f"Error parsing the response: {error}") from error
 
-        # Return the result
-        return result_chunks
-
-    def __call__(self, text: Union[str, List[str]]) -> List[CodeChunk]:
+    def __call__(self, text: Union[str, List[str]]) -> Union[List[CodeChunk], List[List[CodeChunk]]]:
         """Call the chunker."""
         return self.chunk(text)

@@ -4,7 +4,9 @@ import os
 from typing import Any, Dict, List, Literal, Optional, Union, cast
 
 import requests
+
 from chonkie.types import SemanticChunk
+
 from .base import CloudChunker
 
 
@@ -136,7 +138,7 @@ class SDPMChunker(CloudChunker):
         self.skip_window = skip_window
 
 
-    def chunk(self, text: Union[str, List[str]]) -> List[SemanticChunk]:
+    def chunk(self, text: Union[str, List[str]]) -> Union[List[SemanticChunk], List[List[SemanticChunk]]]:
         """Chunk the text into a list of chunks.
         
         Args:
@@ -173,17 +175,18 @@ class SDPMChunker(CloudChunker):
         # Try to parse the response
         try:
             if isinstance(text, list):
-                result: List[List[Dict]] = cast(List[List[Dict]], response.json())
-                result_chunks = []
-                for chunk_list in result:
+                batch_result: List[List[Dict]] = cast(List[List[Dict]], response.json())
+                batch_chunks: List[List[SemanticChunk]] = []
+                for chunk_list in batch_result:
                     curr_chunks = []
                     for chunk in chunk_list:
                         curr_chunks.append(SemanticChunk.from_dict(chunk))
-                    result_chunks.append(curr_chunks)
+                    batch_chunks.append(curr_chunks)
+                return batch_chunks
             else:
-                result: List[Dict] = cast(List[Dict], response.json())
-                result_chunks = [SemanticChunk.from_dict(chunk) for chunk in result]
-            return result_chunks
+                single_result: List[Dict] = cast(List[Dict], response.json())
+                single_chunks: List[SemanticChunk] = [SemanticChunk.from_dict(chunk) for chunk in single_result]
+                return single_chunks
         except Exception as error:
             raise ValueError(
                 "Oh no! The Chonkie API returned an invalid response."
@@ -191,7 +194,7 @@ class SDPMChunker(CloudChunker):
                 + "If the issue persists, please contact support at support@chonkie.ai." 
             ) from error
 
-    def __call__(self, text: Union[str, List[str]]) -> List[SemanticChunk]:
+    def __call__(self, text: Union[str, List[str]]) -> Union[List[SemanticChunk], List[List[SemanticChunk]]]:
         """Call the chunker.
         
         Args:

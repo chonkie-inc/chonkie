@@ -1,12 +1,10 @@
 """Test the Chonkie Cloud Recursive Chunker."""
 
-import os
 from unittest.mock import Mock, patch
 
 import pytest
 
 from chonkie.cloud import RecursiveChunker
-from chonkie.types import RecursiveRules
 
 
 @pytest.fixture

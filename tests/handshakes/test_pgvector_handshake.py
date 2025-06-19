@@ -152,7 +152,6 @@ def test_pgvector_handshake_init_with_existing_client(mock_dependencies):
 def test_pgvector_handshake_init_custom_vector_dimensions(mock_dependencies):
     """Test PgvectorHandshake initialization with custom vector dimensions."""
     mock_create_client = mock_dependencies['create_client']
-    mock_client = mock_dependencies['client']
     
     # Create a mock vecs module
     mock_vecs = Mock()
@@ -173,7 +172,6 @@ def test_pgvector_handshake_dimension_detection_from_property(mock_dependencies)
     """Test that dimension is detected from embedding model's dimension property when available."""
     mock_embeddings = mock_dependencies['embeddings']
     mock_create_client = mock_dependencies['create_client']
-    mock_client = mock_dependencies['client']
     
     # Create a mock embedding with dimension property
     mock_embedding_with_dim = Mock()
@@ -199,7 +197,6 @@ def test_pgvector_handshake_dimension_detection_from_test_embedding(mock_depende
     """Test that dimension is detected from test embedding when dimension property is not available."""
     mock_embeddings = mock_dependencies['embeddings']
     mock_create_client = mock_dependencies['create_client']
-    mock_client = mock_dependencies['client']
     
     # Create a mock embedding without dimension property
     mock_embedding_no_dim = Mock()
@@ -227,7 +224,6 @@ def test_pgvector_handshake_dimension_detection_from_test_embedding_when_none(mo
     """Test that dimension is detected from test embedding when dimension property is None."""
     mock_embeddings = mock_dependencies['embeddings']
     mock_create_client = mock_dependencies['create_client']
-    mock_client = mock_dependencies['client']
     
     # Create a mock embedding with dimension property set to None
     mock_embedding_none_dim = Mock()
@@ -252,7 +248,6 @@ def test_pgvector_handshake_dimension_detection_from_test_embedding_when_none(mo
 def test_pgvector_handshake_generate_id(mock_dependencies):
     """Test the _generate_id method."""
     mock_client = mock_dependencies['client']
-    mock_collection = mock_dependencies['collection']
     
     with patch.object(PgvectorHandshake, '_import_dependencies'), \
          patch('chonkie.friends.handshakes.pgvector.vecs', Mock(create_client=Mock(return_value=mock_client))):
@@ -272,7 +267,6 @@ def test_pgvector_handshake_generate_id(mock_dependencies):
 def test_pgvector_handshake_generate_metadata(mock_dependencies):
     """Test the _generate_metadata method."""
     mock_client = mock_dependencies['client']
-    mock_collection = mock_dependencies['collection']
     
     with patch.object(PgvectorHandshake, '_import_dependencies'), \
          patch('chonkie.friends.handshakes.pgvector.vecs', Mock(create_client=Mock(return_value=mock_client))):
@@ -292,7 +286,6 @@ def test_pgvector_handshake_generate_metadata(mock_dependencies):
 def test_pgvector_handshake_generate_metadata_with_attributes(mock_dependencies):
     """Test the _generate_metadata method with chunk attributes."""
     mock_client = mock_dependencies['client']
-    mock_collection = mock_dependencies['collection']
     
     with patch.object(PgvectorHandshake, '_import_dependencies'), \
          patch('chonkie.friends.handshakes.pgvector.vecs', Mock(create_client=Mock(return_value=mock_client))):
@@ -458,7 +451,6 @@ def test_pgvector_handshake_create_index(mock_dependencies):
 def test_pgvector_handshake_delete_collection(mock_dependencies):
     """Test deleting collection."""
     mock_client = mock_dependencies['client']
-    mock_collection = mock_dependencies['collection']
     
     # Create a mock vecs module
     mock_vecs = Mock()
@@ -498,7 +490,6 @@ def test_pgvector_handshake_get_collection_info(mock_dependencies):
 def test_pgvector_handshake_repr(mock_dependencies):
     """Test the __repr__ method."""
     mock_client = mock_dependencies['client']
-    mock_collection = mock_dependencies['collection']
     
     # Create a mock vecs module
     mock_vecs = Mock()

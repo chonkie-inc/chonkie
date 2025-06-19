@@ -5,8 +5,9 @@ from typing import Any, Dict, List
 
 import pytest
 import requests  # Import requests to mock its methods
-from chonkie.types import Chunk
+
 from chonkie.cloud.chunker import NeuralChunker
+from chonkie.types import Chunk
 
 
 @pytest.fixture

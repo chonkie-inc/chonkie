@@ -14,6 +14,8 @@ if TYPE_CHECKING:
         from cohere import ClientV2
     except ImportError:
         class ClientV2:  # type: ignore
+            """Stub class for cohere ClientV2 when not available."""
+
             pass
 
 from .base import BaseEmbeddings

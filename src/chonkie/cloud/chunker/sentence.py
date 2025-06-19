@@ -70,7 +70,7 @@ class SentenceChunker(CloudChunker):
                 + "If the issue persists, please contact support at support@chonkie.ai or raise an issue on GitHub."
             )
 
-    def chunk(self, text: Union[str, List[str]]) -> List[SentenceChunk]:
+    def chunk(self, text: Union[str, List[str]]) -> Union[List[SentenceChunk], List[List[SentenceChunk]]]:
         """Chunk the text via sentence boundaries."""
         # Define the payload for the request
         payload = {
@@ -95,17 +95,18 @@ class SentenceChunker(CloudChunker):
         # Parse the response
         try:
             if isinstance(text, list):
-                result: List[List[Dict]] = cast(List[List[Dict]], response.json())
-                result_chunks = []
-                for chunk_list in result:
-                    curr_chunks = []
+                batch_result: List[List[Dict]] = cast(List[List[Dict]], response.json())
+                batch_chunks: List[List[SentenceChunk]] = []
+                for chunk_list in batch_result:
+                    curr_chunks: List[SentenceChunk] = []
                     for chunk in chunk_list:
                         curr_chunks.append(SentenceChunk.from_dict(chunk))
-                    result_chunks.append(curr_chunks)
+                    batch_chunks.append(curr_chunks)
+                return batch_chunks
             else:
-                result: List[Dict] = cast(List[Dict], response.json())
-                result_chunks = [SentenceChunk.from_dict(chunk) for chunk in result]
-            return result_chunks
+                single_result: List[Dict] = cast(List[Dict], response.json())
+                single_chunks: List[SentenceChunk] = [SentenceChunk.from_dict(chunk) for chunk in single_result]
+                return single_chunks
         except Exception as error:
             raise ValueError(
                 "Oh no! The Chonkie API returned an invalid response."
@@ -113,6 +114,6 @@ class SentenceChunker(CloudChunker):
                 + "If the issue persists, please contact support at support@chonkie.ai."
             ) from error
 
-    def __call__(self, text: Union[str, List[str]]) -> List[SentenceChunk]:
+    def __call__(self, text: Union[str, List[str]]) -> Union[List[SentenceChunk], List[List[SentenceChunk]]]:
         """Call the SentenceChunker."""
         return self.chunk(text)

@@ -1,0 +1,29 @@
+name: Lint Code
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv and set-up python
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.10"
+          version: latest
+          enable-cache: true
+          cache-dependency-glob: "pyproject.toml"
+
+      - name: Install the project
+        run: uv sync --all-extras --dev
+
+      - name: Lint with Ruff
+        run: |
+          source .venv/bin/activate
+          ruff check src/chonkie tests/

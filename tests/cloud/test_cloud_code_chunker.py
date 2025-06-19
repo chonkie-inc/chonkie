@@ -1,6 +1,5 @@
 """Test for the Chonkie Cloud Code Chunker class."""
 
-import os
 from typing import Any, Callable, Dict, List, Union
 from unittest.mock import Mock, patch
 

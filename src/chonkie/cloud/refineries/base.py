@@ -1,7 +1,7 @@
 """Base class for all refinery classes."""
 
 from abc import ABC, abstractmethod
-
+from typing import Any, List
 
 
 class BaseRefinery(ABC):
@@ -11,11 +11,11 @@ class BaseRefinery(ABC):
     VERSION = "v1"
 
     @abstractmethod
-    def refine(self, chunks):
+    def refine(self, chunks: List[Any]) -> List[Any]:
         """Refine the chunks."""
         raise NotImplementedError("Subclasses must implement this method.")
     
-    def __call__(self, chunks):
+    def __call__(self, chunks: List[Any]) -> List[Any]:
         """Call the refinery.
         
         Args:

@@ -1,10 +1,11 @@
-"""
-Overlap Refinery for Chonkie Cloud
-"""
-from .base import BaseRefinery
+"""Overlap Refinery for Chonkie Cloud."""
 import os
-from typing import Dict, List, Literal, Optional, Union, cast
+from typing import Any, Dict, List, Literal, Optional, Union, cast
+
 import requests
+
+from .base import BaseRefinery
+
 
 class OverlapRefinery(BaseRefinery):
     """Overlap Refinery for Chonkie Cloud."""
@@ -30,6 +31,7 @@ class OverlapRefinery(BaseRefinery):
             lang: The language of the recipe. Please make sure a valide recipe with the given `recipe` value and `lang` values exists on https://hf.co/datasets/chonkie-ai/recipes
             merge: Whether to merge the chunks.
             api_key: Your Chonkie Cloud API Key.
+
         """
         super().__init__()
 
@@ -48,7 +50,7 @@ class OverlapRefinery(BaseRefinery):
                 + "or pass an API key to the OverlapRefinery constructor."
             )
 
-    def refine(self, chunks):
+    def refine(self, chunks: List[Any]) -> List[Any]:
         """Refine the chunks.
         
         Args:
@@ -59,6 +61,7 @@ class OverlapRefinery(BaseRefinery):
 
         Raises:
             ValueError: If all chunks are not of the same type.
+
         """
         # Define the payload for the request
         if any(type(chunk) != type(chunks[0]) for chunk in chunks):
@@ -87,6 +90,6 @@ class OverlapRefinery(BaseRefinery):
         result_chunks = [og_type.from_dict(chunk) for chunk in result]
         return result_chunks
 
-    def __call__(self, chunks):
+    def __call__(self, chunks: List[Any]) -> List[Any]:
         """Call the OverlapRefinery."""
         return self.refine(chunks)

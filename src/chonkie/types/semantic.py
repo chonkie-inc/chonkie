@@ -1,7 +1,7 @@
 """Semantic types for Chonkie."""
 
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any, List, Optional, cast
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from chonkie.types.sentence import Sentence, SentenceChunk
 
@@ -26,13 +26,16 @@ class SemanticSentence(Sentence):
 
     embedding: Optional["np.ndarray"] = field(default=None)
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> Dict[str, Any]:
         """Return the SemanticSentence as a dictionary."""
-        result = super().to_dict()
-        try:
-            result["embedding"] = self.embedding.tolist()
-        except AttributeError:
-            result["embedding"] = self.embedding
+        result: Dict[str, Any] = super().to_dict()
+        if self.embedding is not None:
+            try:
+                result["embedding"] = self.embedding.tolist()
+            except AttributeError:
+                result["embedding"] = self.embedding
+        else:
+            result["embedding"] = None
         return result
 
     @classmethod
@@ -42,17 +45,20 @@ class SemanticSentence(Sentence):
         NOTE: If numpy is available, `.embedding` will be a numpy array.
         If not, it will be a list.
         """
-        embedding_list = data.pop("embedding")
+        embedding_list = data.pop("embedding", None)
         # If numpy is available, we will use it.
         # If not, skip and keep it as a list.
-        try:
-            import numpy as np
-            if isinstance(embedding_list, list):
-                embedding = np.array(embedding_list)
-            else:
+        if embedding_list is not None:
+            try:
+                import numpy as np
+                if isinstance(embedding_list, list):
+                    embedding = np.array(embedding_list)
+                else:
+                    embedding = embedding_list
+            except ImportError:
                 embedding = embedding_list
-        except ImportError:
-            embedding = embedding_list
+        else:
+            embedding = None
         return cls(**data, embedding=embedding)
 
     def __repr__(self) -> str:
