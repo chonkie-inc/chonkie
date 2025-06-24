@@ -287,7 +287,7 @@ def test_sentence_chunker_from_recipe_default() -> None:
     chunker = SentenceChunker.from_recipe()
 
     assert chunker is not None
-    assert chunker.delim == [".", "!", "?", "\n"]
+    assert chunker.delim == [". ", "! ", "? ", "\n"]
     assert chunker.include_delim == "prev"
 
 def test_sentence_chunker_from_recipe_custom_params() -> None:
@@ -304,7 +304,7 @@ def test_sentence_chunker_from_recipe_custom_params() -> None:
     assert chunker.chunk_size == 256
     assert chunker.min_characters_per_sentence == 32
     assert chunker.return_type == "texts"
-    assert chunker.delim == [".", "!", "?", "\n"]
+    assert chunker.delim == [". ", "! ", "? ", "\n"]
     assert chunker.include_delim == "prev"
 
 def test_sentence_chunker_from_recipe_custom_lang() -> None:

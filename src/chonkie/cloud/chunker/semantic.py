@@ -5,6 +5,8 @@ from typing import Dict, List, Literal, Optional, Union, cast
 
 import requests
 
+from chonkie.types import SemanticChunk
+
 from .base import CloudChunker
 
 
@@ -24,9 +26,8 @@ class SemanticChunker(CloudChunker):
         min_chunk_size: int = 2,
         min_characters_per_sentence: int = 12,
         threshold_step: float = 0.01,
-        delim: Union[str, List[str]] = [".", "!", "?", "\n"],
+        delim: Union[str, List[str]] = [". ", "! ", "? ", "\n"],
         include_delim: Optional[Literal["prev", "next"]] = "prev",
-        return_type: Literal["chunks", "texts"] = "chunks",
         api_key: Optional[str] = None,
     ) -> None:
         """Initialize the Chonkie Cloud Semantic Chunker."""
@@ -82,9 +83,6 @@ class SemanticChunker(CloudChunker):
         if include_delim not in ["prev", "next", None]:
             raise ValueError("Include delim must be either 'prev', 'next', or None.")
 
-        # Check if the return type is valid
-        if return_type not in ["chunks", "texts"]:
-            raise ValueError("Return type must be either 'chunks' or 'texts'.")
 
         # Add all the attributes
         self.embedding_model = embedding_model
@@ -97,7 +95,6 @@ class SemanticChunker(CloudChunker):
         self.threshold_step = threshold_step
         self.delim = delim
         self.include_delim = include_delim
-        self.return_type = return_type
 
         # Check if the API is up right now
         response = requests.get(f"{self.BASE_URL}/")
@@ -108,7 +105,7 @@ class SemanticChunker(CloudChunker):
                 + "If the issue persists, please contact support at support@chonkie.ai."
             )
 
-    def chunk(self, text: Union[str, List[str]]) -> List[Dict]:
+    def chunk(self, text: Union[str, List[str]]) -> Union[List[SemanticChunk], List[List[SemanticChunk]]]:
         """Chunk the text into a list of chunks."""
         # Make the payload
         payload = {
@@ -123,7 +120,6 @@ class SemanticChunker(CloudChunker):
             "threshold_step": self.threshold_step,
             "delim": self.delim,
             "include_delim": self.include_delim,
-            "return_type": self.return_type,
         }
 
         # Make the request to the Chonkie API
@@ -135,7 +131,19 @@ class SemanticChunker(CloudChunker):
 
         # Try to parse the response
         try:
-            result: List[Dict] = cast(List[Dict], response.json())
+            if isinstance(text, list):
+                batch_result: List[List[Dict]] = cast(List[List[Dict]], response.json())
+                batch_chunks: List[List[SemanticChunk]] = []
+                for chunk_list in batch_result:
+                    curr_chunks = []
+                    for chunk in chunk_list:
+                        curr_chunks.append(SemanticChunk.from_dict(chunk))
+                    batch_chunks.append(curr_chunks)
+                return batch_chunks
+            else:
+                single_result: List[Dict] = cast(List[Dict], response.json())
+                single_chunks: List[SemanticChunk] = [SemanticChunk.from_dict(chunk) for chunk in single_result]
+                return single_chunks
         except Exception as error:
             raise ValueError(
                 "Oh no! The Chonkie API returned an invalid response."
@@ -143,8 +151,6 @@ class SemanticChunker(CloudChunker):
                 + "If the issue persists, please contact support at support@chonkie.ai."
             ) from error
 
-        return result
-
-    def __call__(self, text: Union[str, List[str]]) -> List[Dict]:
+    def __call__(self, text: Union[str, List[str]]) -> Union[List[SemanticChunk], List[List[SemanticChunk]]]:
         """Call the chunker."""
         return self.chunk(text)

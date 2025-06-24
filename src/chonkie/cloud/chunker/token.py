@@ -5,6 +5,8 @@ from typing import Dict, List, Literal, Optional, Union, cast
 
 import requests
 
+from chonkie.types import Chunk
+
 from .base import CloudChunker
 
 
@@ -16,9 +18,9 @@ class TokenChunker(CloudChunker):
 
     def __init__(
         self,
-        tokenizer: str,
-        chunk_size: int,
-        chunk_overlap: int,
+        tokenizer: str = "gpt2",
+        chunk_size: int = 512,
+        chunk_overlap: int = 0,
         return_type: Literal["texts", "chunks"] = "chunks",
         api_key: Optional[str] = None,
     ) -> None:
@@ -56,7 +58,7 @@ class TokenChunker(CloudChunker):
                 + "If the issue persists, please contact support at support@chonkie.ai or raise an issue on GitHub."
             )
 
-    def chunk(self, text: Union[str, List[str]]) -> List[Dict]:
+    def chunk(self, text: Union[str, List[str]]) -> Union[List[Chunk], List[List[Chunk]]]:
         """Chunk the text into a list of chunks."""
         # Define the payload for the request
         payload = {
@@ -80,13 +82,22 @@ class TokenChunker(CloudChunker):
 
         # Parse the response
         try:
-            result: List[Dict] = cast(List[Dict], response.json())
+            if isinstance(text, list):
+                batch_result: List[List[Dict]] = cast(List[List[Dict]], response.json())
+                batch_chunks: List[List[Chunk]] = []
+                for chunk_list in batch_result:
+                    curr_chunks: List[Chunk] = []
+                    for chunk in chunk_list:
+                        curr_chunks.append(Chunk.from_dict(chunk))
+                    batch_chunks.append(curr_chunks)
+                return batch_chunks
+            else:
+                single_result: List[Dict] = cast(List[Dict], response.json())
+                single_chunks: List[Chunk] = [Chunk.from_dict(chunk) for chunk in single_result]
+                return single_chunks
         except Exception as error:
             raise ValueError(f"Error parsing the response: {error}") from error
 
-        # Return the result
-        return result
-
-    def __call__(self, text: Union[str, List[str]]) -> List[Dict]:
+    def __call__(self, text: Union[str, List[str]]) -> Union[List[Chunk], List[List[Chunk]]]:
         """Call the chunker."""
         return self.chunk(text)

@@ -1,6 +1,5 @@
 """Test the Chonkie Cloud Semantic Chunker."""
 
-import os
 from unittest.mock import Mock, patch
 
 import pytest
@@ -106,10 +105,6 @@ def test_cloud_semantic_chunker_initialization(mock_requests_get) -> None:
     with pytest.raises(ValueError):
         SemanticChunker(include_delim=1, api_key="test_key")
 
-    # Check if the return_type is not "chunks" or "texts"
-    with pytest.raises(ValueError):
-        SemanticChunker(return_type="not_a_string", api_key="test_key")
-
     # Finally, check if the attributes are set correctly
     chunker = SemanticChunker(chunk_size=512, api_key="test_key")
     assert chunker.embedding_model == "minishlab/potion-base-32M"
@@ -120,9 +115,8 @@ def test_cloud_semantic_chunker_initialization(mock_requests_get) -> None:
     assert chunker.min_chunk_size == 2
     assert chunker.min_characters_per_sentence == 12
     assert chunker.threshold_step == 0.01
-    assert chunker.delim == [".", "!", "?", "\n"]
+    assert chunker.delim == [". ", "! ", "? ", "\n"]
     assert chunker.include_delim == "prev"
-    assert chunker.return_type == "chunks"
 
 
 def test_cloud_semantic_chunker_single_sentence(mock_requests_get, mock_requests_post, mock_api_response) -> None:
@@ -142,10 +136,10 @@ def test_cloud_semantic_chunker_single_sentence(mock_requests_get, mock_requests
 
     result = semantic_chunker(text)
     assert len(result) == 1
-    assert result[0]["text"] == "Hello, world!"
-    assert result[0]["token_count"] == 2  # Based on simple word split
-    assert result[0]["start_index"] == 0
-    assert result[0]["end_index"] == 13
+    assert result[0].text == "Hello, world!"
+    assert result[0].token_count == 2  # Based on simple word split
+    assert result[0].start_index == 0
+    assert result[0].end_index == 13
 
 
 def test_cloud_semantic_chunker_batch(mock_requests_get, mock_requests_post, mock_api_response) -> None:
@@ -169,10 +163,10 @@ def test_cloud_semantic_chunker_batch(mock_requests_get, mock_requests_post, moc
     
     result = semantic_chunker(texts)
     assert len(result) == 3
-    assert result[0][0]["text"] == "Hello, world!"
-    assert result[0][0]["token_count"] == 2
-    assert result[0][0]["start_index"] == 0
-    assert result[0][0]["end_index"] == 13
+    assert result[0][0].text == "Hello, world!"
+    assert result[0][0].token_count == 2
+    assert result[0][0].start_index == 0
+    assert result[0][0].end_index == 13
 
 
 def test_cloud_semantic_chunker_empty_text(mock_requests_get, mock_requests_post, mock_api_response) -> None:
@@ -205,4 +199,4 @@ def test_cloud_semantic_chunker_real_api(mock_requests_get, mock_requests_post, 
     semantic_chunker = SemanticChunker(chunk_size=512, api_key="test_key")
     result = semantic_chunker(text)
     assert len(result) >= 1
-    assert result[0]["text"] == "Hello, world!"
+    assert result[0].text == "Hello, world!"

@@ -5,6 +5,8 @@ from typing import Dict, List, Literal, Optional, Union, cast
 
 import requests
 
+from chonkie.types import CodeChunk
+
 from .base import CloudChunker
 
 
@@ -19,7 +21,6 @@ class CodeChunker(CloudChunker):
         tokenizer_or_token_counter: str = "gpt2",
         chunk_size: int = 512,
         language: Union[Literal["auto"], str] = "auto",
-        return_type: Literal["texts", "chunks"] = "chunks",
         api_key: Optional[str] = None,
     ) -> None:
         """Initialize the Cloud CodeChunker.
@@ -28,7 +29,6 @@ class CodeChunker(CloudChunker):
             tokenizer_or_token_counter: The tokenizer or token counter to use.
             chunk_size: The size of the chunks to create.
             language: The language of the code to parse. Accepts any of the languages supported by tree-sitter-language-pack.
-            return_type: The type of the return value.
             api_key: The API key for the Chonkie API.
             
         Raises:
@@ -46,14 +46,11 @@ class CodeChunker(CloudChunker):
         # Validate parameters
         if chunk_size <= 0:
             raise ValueError("Chunk size must be greater than 0.")
-        if return_type not in ["texts", "chunks"]:
-            raise ValueError("Return type must be either 'texts' or 'chunks'.")
 
         # Assign all the attributes to the instance
         self.tokenizer_or_token_counter = tokenizer_or_token_counter
         self.chunk_size = chunk_size
         self.language = language
-        self.return_type = return_type
 
         # Check if the API is up right now
         response = requests.get(f"{self.BASE_URL}/")
@@ -64,14 +61,14 @@ class CodeChunker(CloudChunker):
                 + " If the issue persists, please contact support at support@chonkie.ai or raise an issue on GitHub."
             )
 
-    def chunk(self, text: Union[str, List[str]]) -> List[Dict]:
+    def chunk(self, text: Union[str, List[str]]) -> Union[List[CodeChunk], List[List[CodeChunk]]]:
         """Chunk the code into a list of chunks.
         
         Args:
             text: The code text(s) to chunk.
             
         Returns:
-            A list of chunk dictionaries containing the chunked code.
+            A list of CodeChunk objects containing the chunked code.
             
         Raises:
             ValueError: If the API request fails or returns invalid data.
@@ -83,8 +80,8 @@ class CodeChunker(CloudChunker):
             "tokenizer_or_token_counter": self.tokenizer_or_token_counter,
             "chunk_size": self.chunk_size,
             "language": self.language,
+            "lang": self.language, # For backward compatibility
             "include_nodes": False,  # API doesn't support tree-sitter nodes
-            "return_type": self.return_type,
         }
         
         # Make the request to the Chonkie API
@@ -102,13 +99,22 @@ class CodeChunker(CloudChunker):
 
         # Parse the response
         try:
-            result: List[Dict] = cast(List[Dict], response.json())
+            if isinstance(text, list):
+                batch_result: List[List[Dict]] = cast(List[List[Dict]], response.json())
+                batch_chunks: List[List[CodeChunk]] = []
+                for chunk_list in batch_result:
+                    curr_chunks = []
+                    for chunk in chunk_list:
+                        curr_chunks.append(CodeChunk.from_dict(chunk))
+                    batch_chunks.append(curr_chunks)
+                return batch_chunks
+            else:
+                single_result: List[Dict] = cast(List[Dict], response.json())
+                single_chunks: List[CodeChunk] = [CodeChunk.from_dict(chunk) for chunk in single_result]
+                return single_chunks
         except Exception as error:
             raise ValueError(f"Error parsing the response: {error}") from error
 
-        # Return the result
-        return result
-
-    def __call__(self, text: Union[str, List[str]]) -> List[Dict]:
+    def __call__(self, text: Union[str, List[str]]) -> Union[List[CodeChunk], List[List[CodeChunk]]]:
         """Call the chunker."""
         return self.chunk(text)

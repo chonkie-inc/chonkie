@@ -7,6 +7,7 @@ import pytest
 import requests  # Import requests to mock its methods
 
 from chonkie.cloud.chunker import NeuralChunker
+from chonkie.types import Chunk
 
 
 @pytest.fixture
@@ -61,16 +62,10 @@ def test_cloud_neural_chunker_initialization(mock_requests_get_success: Any) -> 
     with pytest.raises(ValueError):
         NeuralChunker(min_characters_per_chunk=0)
 
-    # Check if return_type not in ["texts", "chunks"] raises an error
-    with pytest.raises(ValueError):
-        NeuralChunker(return_type="invalid_type") # type: ignore
-
     # Check default initialization
     chunker = NeuralChunker()
     assert chunker.model == NeuralChunker.DEFAULT_MODEL
     assert chunker.min_characters_per_chunk == 10
-    assert chunker.stride == NeuralChunker.SUPPORTED_MODEL_STRIDES[NeuralChunker.DEFAULT_MODEL]
-    assert chunker.return_type == "chunks"
     assert chunker.api_key == os.getenv("CHONKIE_API_KEY")
 
     # Check initialization with custom parameters
@@ -79,13 +74,11 @@ def test_cloud_neural_chunker_initialization(mock_requests_get_success: Any) -> 
         model=custom_model,
         min_characters_per_chunk=5,
         stride=128,
-        return_type="texts",
         api_key="test_key",
     )
     assert custom_chunker.model == custom_model
     assert custom_chunker.min_characters_per_chunk == 5
     assert custom_chunker.stride == 128
-    assert custom_chunker.return_type == "texts"
     assert custom_chunker.api_key == "test_key"
 
     # Test initialization without API key (should raise ValueError if not in env)
@@ -128,41 +121,59 @@ def test_cloud_neural_chunker_single_text(mock_requests_get_success: Any, mock_r
     assert isinstance(result, list)
     if result:
         for chunk_dict in result: # API returns List[Dict] directly
-            assert isinstance(chunk_dict, dict)
-            assert "text" in chunk_dict
-            assert isinstance(chunk_dict["text"], str)
-            assert "start_index" in chunk_dict
-            assert isinstance(chunk_dict["start_index"], int)
-            assert "end_index" in chunk_dict
-            assert isinstance(chunk_dict["end_index"], int)
-            # token_count is part of the mocked response
-            assert "token_count" in chunk_dict
-            assert isinstance(chunk_dict["token_count"], int)
+            assert isinstance(chunk_dict, Chunk)
+            assert isinstance(chunk_dict.text, str)
+            assert isinstance(chunk_dict.start_index, int)
+            assert isinstance(chunk_dict.end_index, int)
+            assert isinstance(chunk_dict.token_count, int)
 
 
 @pytest.mark.skipif(
     "CHONKIE_API_KEY" not in os.environ,
     reason="CHONKIE_API_KEY is not set",
 )
-def test_cloud_neural_chunker_batch_texts(mock_requests_get_success: Any, mock_requests_post_success: Any) -> None:
+def test_cloud_neural_chunker_batch_texts(mock_requests_get_success: Any, monkeypatch: pytest.MonkeyPatch) -> None:
     """Test that the Neural Chunker works with a batch of texts."""
+    class MockResponse:
+        def __init__(self, status_code: int, json_data: List[Dict[str, Any]]):
+            self.status_code = status_code
+            self._json_data = json_data
+
+        def json(self) -> List[Dict[str, Any]]:
+            return self._json_data
+
+    custom_chunks: List[List[Dict[str, Any]]] = [
+        [
+            {"text": "chunk1_doc1", "start_index": 0, "end_index": 10, "token_count": 2},
+            {"text": "chunk2_doc1", "start_index": 11, "end_index": 21, "token_count": 2},
+        ],
+        [
+            {"text": "chunk1_doc2", "start_index": 0, "end_index": 10, "token_count": 2},
+        ],
+    ]
+
+    def mock_post(*args: Any, **kwargs: Any) -> MockResponse:
+        return MockResponse(200, custom_chunks)
+
+    monkeypatch.setattr(requests, "post", mock_post)
+
     chunker = NeuralChunker()
     texts = [
         "First document for batch processing.",
         "Second document, slightly longer.",
     ]
-    # The mock_requests_post_success by default returns a flat list of chunks,
-    # which is the expected behavior for NeuralChunker for both single and batch.
     result = chunker(texts)
 
     assert isinstance(result, list)
-    if result:
-        for chunk_dict in result: # API returns List[Dict] directly
-            assert isinstance(chunk_dict, dict)
-            assert "text" in chunk_dict
-            assert "start_index" in chunk_dict
-            assert "end_index" in chunk_dict
-            assert "token_count" in chunk_dict
+    assert len(result) == len(custom_chunks)
+    for i, chunk_obj_list in enumerate(result):
+        assert isinstance(chunk_obj_list, list)
+        for j, chunk_obj in enumerate(chunk_obj_list):
+            assert isinstance(chunk_obj, Chunk)
+            assert chunk_obj.text == custom_chunks[i][j]['text']
+            assert chunk_obj.start_index == custom_chunks[i][j]['start_index']
+            assert chunk_obj.end_index == custom_chunks[i][j]['end_index']
+            assert chunk_obj.token_count == custom_chunks[i][j]['token_count']
 
 
 @pytest.mark.skipif(

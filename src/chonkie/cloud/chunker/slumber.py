@@ -1,11 +1,11 @@
 """Slumber Chunking for Chonkie API."""
 
 import os
-from typing import Callable, Dict, List, Literal, Optional, Union, cast
+from typing import Callable, Dict, List, Optional, Union, cast
 
 import requests
 
-from chonkie.types import RecursiveRules
+from chonkie.types import Chunk
 
 from .base import CloudChunker
 
@@ -20,10 +20,10 @@ class SlumberChunker(CloudChunker):
         self,
         tokenizer_or_token_counter: Union[str, Callable] = "gpt2",
         chunk_size: int = 1024,
-        rules: RecursiveRules = RecursiveRules(),
+        recipe: str = "default",
+        lang: str = "en",
         candidate_size: int = 128,
         min_characters_per_chunk: int = 24,
-        return_type: Literal["texts", "chunks"] = "chunks",
         api_key: Optional[str] = None,
     ) -> None:
         """Initialize the SlumberChunker.
@@ -31,10 +31,10 @@ class SlumberChunker(CloudChunker):
         Args:
             tokenizer_or_token_counter (Union[str, Callable]): The tokenizer or token counter to use.
             chunk_size (int): The target size of the chunks.
-            rules (RecursiveRules): The rules to use to split the candidate chunks.
+            recipe (str): The recipe to use.
+            lang (str): The language to use.
             candidate_size (int): The size of the candidate splits that the chunker will consider.
             min_characters_per_chunk (int): The minimum number of characters per chunk.
-            return_type (Literal["texts", "chunks"]): The type of output to return.
             api_key (Optional[str]): The Chonkie API key.
 
         """
@@ -51,15 +51,13 @@ class SlumberChunker(CloudChunker):
             raise ValueError("Candidate size must be greater than 0.")
         if min_characters_per_chunk < 1:
             raise ValueError("Minimum characters per chunk must be greater than 0.")
-        if return_type not in ["texts", "chunks"]:
-            raise ValueError("Return type must be either 'texts' or 'chunks'.")
 
         self.tokenizer_or_token_counter = tokenizer_or_token_counter
         self.chunk_size = chunk_size
-        self.rules = rules
+        self.recipe = recipe
+        self.lang = lang
         self.candidate_size = candidate_size
         self.min_characters_per_chunk = min_characters_per_chunk
-        self.return_type = return_type
 
         # Check if the API is up
         try:
@@ -73,7 +71,7 @@ class SlumberChunker(CloudChunker):
             ) from error
 
 
-    def chunk(self, text: Union[str, List[str]]) -> List[Dict]:
+    def chunk(self, text: Union[str, List[str]]) -> Union[List[Chunk], List[List[Chunk]]]:
         """Chunk the text into a list of chunks using the Slumber strategy via API.
 
         Args:
@@ -87,10 +85,10 @@ class SlumberChunker(CloudChunker):
             "text": text,
             "tokenizer_or_token_counter": self.tokenizer_or_token_counter,
             "chunk_size": self.chunk_size,
-            "rules": self.rules.to_dict(), # Assuming RecursiveRules has a to_dict method
+            "recipe": self.recipe,
+            "lang": self.lang,
             "candidate_size": self.candidate_size,
             "min_characters_per_chunk": self.min_characters_per_chunk,
-            "return_type": self.return_type,
         }
 
         try:
@@ -118,9 +116,19 @@ class SlumberChunker(CloudChunker):
 
         try:
             # Assuming the API always returns a list of dictionaries.
-            # The content of these dictionaries depends on the 'return_type' specified in the payload.
-            result: List[Dict] = cast(List[Dict], response.json())
-            return result
+            if isinstance(text, list):
+                batch_result: List[List[Dict]] = cast(List[List[Dict]], response.json())
+                batch_chunks: List[List[Chunk]] = []
+                for chunk_list in batch_result:
+                    curr_chunks: List[Chunk] = []
+                    for chunk in chunk_list:
+                        curr_chunks.append(Chunk.from_dict(chunk))
+                    batch_chunks.append(curr_chunks)
+                return batch_chunks
+            else:
+                single_result: List[Dict] = cast(List[Dict], response.json())
+                single_chunks: List[Chunk] = [Chunk.from_dict(chunk) for chunk in single_result]
+                return single_chunks
         except ValueError as error: # JSONDecodeError inherits from ValueError
             raise ValueError(
                 "Oh no! The Chonkie API returned an invalid JSON response for Slumber chunking."
@@ -137,7 +145,7 @@ class SlumberChunker(CloudChunker):
             ) from error
 
 
-    def __call__(self, text: Union[str, List[str]]) -> List[Dict]:
+    def __call__(self, text: Union[str, List[str]]) -> Union[List[Chunk], List[List[Chunk]]]:
         """Call the SlumberChunker."""
         return self.chunk(text)
 
@@ -147,8 +155,8 @@ class SlumberChunker(CloudChunker):
             f"SlumberChunker(api_key={'********' if self.api_key else None}, "
             f"tokenizer_or_token_counter='{self.tokenizer_or_token_counter}', "
             f"chunk_size={self.chunk_size}, "
-            f"rules={self.rules}, "
+            f"recipe='{self.recipe}', "
+            f"lang='{self.lang}', "
             f"candidate_size={self.candidate_size}, "
-            f"min_characters_per_chunk={self.min_characters_per_chunk}, "
-            f"return_type='{self.return_type}')"
+            f"min_characters_per_chunk={self.min_characters_per_chunk})"
         )

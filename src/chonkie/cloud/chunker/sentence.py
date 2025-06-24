@@ -5,6 +5,8 @@ from typing import Dict, List, Literal, Optional, Union, cast
 
 import requests
 
+from chonkie.types import SentenceChunk
+
 from .base import CloudChunker
 
 
@@ -22,9 +24,8 @@ class SentenceChunker(CloudChunker):
         min_sentences_per_chunk: int = 1,
         min_characters_per_sentence: int = 12,
         approximate: bool = True,
-        delim: Union[str, List[str]] = [".", "!", "?", "\n"],
+        delim: Union[str, List[str]] = [". ", "! ", "? ", "\n"],
         include_delim: Union[Literal["prev", "next"], None] = "prev",
-        return_type: Literal["texts", "chunks"] = "chunks",
         api_key: Optional[str] = None,
     ) -> None:
         """Initialize the SentenceChunker."""
@@ -49,8 +50,6 @@ class SentenceChunker(CloudChunker):
             raise ValueError("Approximate must be either True or False.")
         if include_delim not in ["prev", "next", None]:
             raise ValueError("Include delim must be either 'prev', 'next' or None.")
-        if return_type not in ["texts", "chunks"]:
-            raise ValueError("Return type must be either 'texts' or 'chunks'.")
 
         # Assign all the attributes to the instance
         self.tokenizer_or_token_counter = tokenizer_or_token_counter
@@ -61,7 +60,6 @@ class SentenceChunker(CloudChunker):
         self.approximate = approximate
         self.delim = delim
         self.include_delim = include_delim
-        self.return_type = return_type
 
         # Check if the API is up right now
         response = requests.get(f"{self.BASE_URL}/")
@@ -72,7 +70,7 @@ class SentenceChunker(CloudChunker):
                 + "If the issue persists, please contact support at support@chonkie.ai or raise an issue on GitHub."
             )
 
-    def chunk(self, text: Union[str, List[str]]) -> List[Dict]:
+    def chunk(self, text: Union[str, List[str]]) -> Union[List[SentenceChunk], List[List[SentenceChunk]]]:
         """Chunk the text via sentence boundaries."""
         # Define the payload for the request
         payload = {
@@ -85,7 +83,6 @@ class SentenceChunker(CloudChunker):
             "approximate": self.approximate,
             "delim": self.delim,
             "include_delim": self.include_delim,
-            "return_type": self.return_type,
         }
 
         # Make the request to the Chonkie API
@@ -96,9 +93,27 @@ class SentenceChunker(CloudChunker):
         )
 
         # Parse the response
-        result: List[Dict] = cast(List[Dict], response.json())
-        return result
+        try:
+            if isinstance(text, list):
+                batch_result: List[List[Dict]] = cast(List[List[Dict]], response.json())
+                batch_chunks: List[List[SentenceChunk]] = []
+                for chunk_list in batch_result:
+                    curr_chunks: List[SentenceChunk] = []
+                    for chunk in chunk_list:
+                        curr_chunks.append(SentenceChunk.from_dict(chunk))
+                    batch_chunks.append(curr_chunks)
+                return batch_chunks
+            else:
+                single_result: List[Dict] = cast(List[Dict], response.json())
+                single_chunks: List[SentenceChunk] = [SentenceChunk.from_dict(chunk) for chunk in single_result]
+                return single_chunks
+        except Exception as error:
+            raise ValueError(
+                "Oh no! The Chonkie API returned an invalid response."
+                + "Please try again in a short while."
+                + "If the issue persists, please contact support at support@chonkie.ai."
+            ) from error
 
-    def __call__(self, text: Union[str, List[str]]) -> List[Dict]:
+    def __call__(self, text: Union[str, List[str]]) -> Union[List[SentenceChunk], List[List[SentenceChunk]]]:
         """Call the SentenceChunker."""
         return self.chunk(text)

@@ -22,4 +22,5 @@ __all__ = [
     "CodeChunker",
     "NeuralChunker",
     "SlumberChunker",
+    "ValidateAuth"
 ]

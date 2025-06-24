@@ -1,5 +1,6 @@
 """Module for Chonkie Cloud APIs."""
 
+from .auth import Auth
 from .chunker import (
     CloudChunker,
     CodeChunker,
@@ -12,6 +13,7 @@ from .chunker import (
     SlumberChunker,
     TokenChunker,
 )
+from .refineries import EmbeddingsRefinery, OverlapRefinery
 
 __all__ = [
     "CloudChunker",
@@ -24,4 +26,7 @@ __all__ = [
     "CodeChunker",
     "NeuralChunker",
     "SlumberChunker",
+    "Auth",
+    "EmbeddingsRefinery",
+    "OverlapRefinery",
 ]

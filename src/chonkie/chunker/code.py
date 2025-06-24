@@ -19,6 +19,8 @@ if TYPE_CHECKING:
         from tree_sitter import Node
     except ImportError:
         class Node:  # type: ignore
+            """Stub class for tree_sitter Node when not available."""
+
             pass
 
 

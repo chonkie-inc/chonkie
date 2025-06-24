@@ -3,7 +3,7 @@
     "info": {
         "title": "Chonkie API",
         "description": "🦛 Chonkie running on the Internet! 🌎 Get chunks via POST HTTP calls~",
-        "version": "0.1.0"
+        "version": "0.1.8"
     },
     "servers": [
         {
@@ -16,986 +16,6 @@
             "BearerAuth": []
         }
     ],
-    "paths": {
-        "/v1/auth/validate": {
-            "post": {
-                "summary": "Validate API Key",
-                "description": "Validates the provided API key. Use this endpoint to check if your API key is valid and active.",
-                "operationId": "validate_auth_v1_auth_validate_post",
-                "responses": {
-                    "200": {
-                        "description": "API key is valid and active",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Token is valid!"
-                                        },
-                                        "status": {
-                                            "type": "integer",
-                                            "example": 200
-                                        }
-                                    }
-                                },
-                                "example": {
-                                    "message": "Token is valid!",
-                                    "status": 200
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/v1/chunk/token": {
-            "post": {
-                "summary": "Token Chunker",
-                "description": "Splits text into chunks based on token count, ensuring each chunk stays within specified token limits.",
-                "operationId": "get_token_chunks_v1_chunk_token_post",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "multipart/form-data": {
-                            "schema": {
-                                "type": "object",
-                                "properties": {
-                                    "file": {
-                                        "type": "string",
-                                        "format": "binary",
-                                        "description": "The file to chunk."
-                                    },
-                                    "tokenizer": {
-                                        "type": "string",
-                                        "title": "Tokenizer",
-                                        "default": "gpt2",
-                                        "description": "Tokenizer to use. Can be a string identifier or a tokenizer instance."
-                                    },
-                                    "chunk_size": {
-                                        "type": "integer",
-                                        "title": "Chunk Size",
-                                        "default": 512,
-                                        "description": "Maximum number of tokens per chunk."
-                                    },
-                                    "chunk_overlap": {
-                                        "type": "integer",
-                                        "title": "Chunk Overlap",
-                                        "default": 0,
-                                        "description": "Number or percentage of overlapping tokens between chunks."
-                                    },
-                                    "return_type": {
-                                        "type": "string",
-                                        "title": "Return Type",
-                                        "default": "chunks",
-                                        "enum": [
-                                            "texts",
-                                            "chunks"
-                                        ],
-                                        "description": "Whether to return chunks as `Chunk` objects or plain text strings."
-                                    }
-                                }
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Successful Response: A list of `Chunk` objects.",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "title": "TokenChunkResponse",
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/Chunk"
-                                    },
-                                    "description": "A list containing `Chunk` objects, each detailing a segment of the original text based on token count."
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/v1/chunk/sentence": {
-            "post": {
-                "summary": "Sentence Chunker",
-                "description": "Splits text into chunks while preserving complete sentences, ensuring that each chunk maintains proper sentence boundaries and context.",
-                "operationId": "get_sentence_chunks_v1_chunk_sentence_post",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "multipart/form-data": {
-                            "schema": {
-                                "type": "object",
-                                "properties": {
-                                    "file": {
-                                        "type": "string",
-                                        "format": "binary",
-                                        "description": "The file to chunk."
-                                    },
-                                    "tokenizer_or_token_counter": {
-                                        "type": "string",
-                                        "title": "Tokenizer Or Token Counter",
-                                        "default": "gpt2",
-                                        "description": "Tokenizer or token counting function to use. Can be a string identifier or an instance."
-                                    },
-                                    "chunk_size": {
-                                        "type": "integer",
-                                        "title": "Chunk Size",
-                                        "default": 512,
-                                        "description": "Maximum number of tokens per chunk."
-                                    },
-                                    "chunk_overlap": {
-                                        "type": "integer",
-                                        "title": "Chunk Overlap",
-                                        "default": 0,
-                                        "description": "Number of overlapping tokens between chunks."
-                                    },
-                                    "min_sentences_per_chunk": {
-                                        "type": "integer",
-                                        "title": "Min Sentences Per Chunk",
-                                        "default": 1,
-                                        "description": "Minimum number of sentences to include in each chunk."
-                                    },
-                                    "min_characters_per_sentence": {
-                                        "type": "integer",
-                                        "title": "Min Characters Per Sentence",
-                                        "default": 12,
-                                        "description": "Minimum number of characters per sentence."
-                                    },
-                                    "approximate": {
-                                        "type": "boolean",
-                                        "title": "Approximate",
-                                        "default": false,
-                                        "description": "Use approximate token counting for faster processing (deprecated)."
-                                    },
-                                    "delim": {
-                                        "anyOf": [
-                                            {
-                                                "type": "string"
-                                            },
-                                            {
-                                                "items": {
-                                                    "type": "string"
-                                                },
-                                                "type": "array"
-                                            }
-                                        ],
-                                        "title": "Delim",
-                                        "default": [
-                                            ".",
-                                            "!",
-                                            "?",
-                                            "\n"
-                                        ],
-                                        "description": "Delimiters to split sentences on."
-                                    },
-                                    "include_delim": {
-                                        "anyOf": [
-                                            {
-                                                "type": "string",
-                                                "enum": [
-                                                    "prev",
-                                                    "next"
-                                                ]
-                                            },
-                                            {
-                                                "type": "null"
-                                            }
-                                        ],
-                                        "title": "Include Delim",
-                                        "default": "prev",
-                                        "description": "Include delimiters in the chunk text. If so, specify whether to include the previous or next delimiter."
-                                    },
-                                    "return_type": {
-                                        "type": "string",
-                                        "title": "Return Type",
-                                        "default": "chunks",
-                                        "enum": [
-                                            "texts",
-                                            "chunks"
-                                        ],
-                                        "description": "Whether to return chunks as text strings or as `SentenceChunk` objects."
-                                    }
-                                }
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Successful Response: A list of `SentenceChunk` objects.",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "title": "SentenceChunkResponse",
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/SentenceChunkSchema"
-                                    },
-                                    "description": "A list containing `SentenceChunk` objects, each detailing a segment of the original text and the sentences within it."
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/v1/chunk/recursive": {
-            "post": {
-                "summary": "Recursive Chunker",
-                "description": "Recursively chunks documents into smaller chunks. It is a good choice for documents that are long but well structured.",
-                "operationId": "get_recursive_chunks_v1_chunk_recursive_post",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "multipart/form-data": {
-                            "schema": {
-                                "type": "object",
-                                "properties": {
-                                    "file": {
-                                        "type": "string",
-                                        "format": "binary",
-                                        "description": "The file to chunk."
-                                    },
-                                    "tokenizer_or_token_counter": {
-                                        "type": "string",
-                                        "title": "Tokenizer Or Token Counter",
-                                        "default": "gpt2",
-                                        "description": "Tokenizer or token counting function to use. Can be a string identifier or an instance."
-                                    },
-                                    "chunk_size": {
-                                        "type": "integer",
-                                        "title": "Chunk Size",
-                                        "default": 512,
-                                        "description": "Maximum number of tokens per chunk."
-                                    },
-                                    "recipe": {
-                                        "type": "string",
-                                        "title": "Recipe",
-                                        "default": "default",
-                                        "description": "Pre-defined rules for chunking. Find all recipes on our [Hugging Face Hub](https://huggingface.co/datasets/chonkie-ai/recipes)."
-                                    },
-                                    "lang": {
-                                        "type": "string",
-                                        "title": "Language",
-                                        "default": "en",
-                                        "description": "Language of the text, used with recipes. Must match the language of the recipe."
-                                    },
-                                    "min_characters_per_chunk": {
-                                        "type": "integer",
-                                        "title": "Min Characters Per Chunk",
-                                        "default": 12,
-                                        "description": "Minimum number of characters per chunk."
-                                    },
-                                    "return_type": {
-                                        "type": "string",
-                                        "title": "Return Type",
-                                        "default": "chunks",
-                                        "enum": [
-                                            "texts",
-                                            "chunks"
-                                        ],
-                                        "description": "Whether to return chunks as text strings or as `RecursiveChunk` objects."
-                                    }
-                                }
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Successful Response: A list of `RecursiveChunk` objects.",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "title": "RecursiveChunkResponse",
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/RecursiveChunkSchema"
-                                    },
-                                    "description": "A list containing `RecursiveChunk` objects, each detailing a segment of the original text and its level in the recursive tree."
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/v1/chunk/semantic": {
-            "post": {
-                "summary": "Semantic Chunker",
-                "description": "Splits text into chunks based on semantic similarity, ensuring that related content stays together in the same chunk.",
-                "operationId": "get_semantic_chunks_v1_chunk_semantic_post",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "multipart/form-data": {
-                            "schema": {
-                                "type": "object",
-                                "properties": {
-                                    "file": {
-                                        "type": "string",
-                                        "format": "binary",
-                                        "description": "The file to chunk."
-                                    },
-                                    "embedding_model": {
-                                        "type": "string",
-                                        "title": "Embedding Model",
-                                        "default": "minishlab/potion-base-8M",
-                                        "description": "Model identifier or embedding model instance to use for semantic analysis."
-                                    },
-                                    "threshold": {
-                                        "anyOf": [
-                                            {
-                                                "type": "string",
-                                                "const": "auto"
-                                            },
-                                            {
-                                                "type": "number"
-                                            },
-                                            {
-                                                "type": "integer"
-                                            }
-                                        ],
-                                        "title": "Threshold",
-                                        "default": "auto",
-                                        "description": "Similarity threshold for grouping sentences. Can be a float [0,1] for direct threshold, int (1,100] for percentile, or 'auto' for automatic calculation."
-                                    },
-                                    "chunk_size": {
-                                        "type": "integer",
-                                        "title": "Chunk Size",
-                                        "default": 512,
-                                        "description": "Maximum tokens per chunk."
-                                    },
-                                    "similarity_window": {
-                                        "type": "integer",
-                                        "title": "Similarity Window",
-                                        "default": 1,
-                                        "description": "Number of preceding sentences to consider for similarity comparison."
-                                    },
-                                    "min_sentences": {
-                                        "type": "integer",
-                                        "title": "Min Sentences",
-                                        "default": 1,
-                                        "description": "Minimum number of sentences per chunk."
-                                    },
-                                    "min_chunk_size": {
-                                        "type": "integer",
-                                        "title": "Min Chunk Size",
-                                        "default": null,
-                                        "description": "Minimum tokens per chunk (optional)."
-                                    },
-                                    "min_characters_per_sentence": {
-                                        "type": "integer",
-                                        "title": "Min Characters Per Sentence",
-                                        "default": 12,
-                                        "description": "Minimum number of characters per sentence."
-                                    },
-                                    "threshold_step": {
-                                        "type": "number",
-                                        "title": "Threshold Step",
-                                        "default": 0.01,
-                                        "description": "Step size used when automatically calculating the similarity threshold."
-                                    },
-                                    "delim": {
-                                        "anyOf": [
-                                            {
-                                                "type": "string"
-                                            },
-                                            {
-                                                "items": {
-                                                    "type": "string"
-                                                },
-                                                "type": "array"
-                                            }
-                                        ],
-                                        "title": "Delim",
-                                        "default": [
-                                            ".",
-                                            "!",
-                                            "?",
-                                            "\n"
-                                        ],
-                                        "description": "Delimiters to split sentences on."
-                                    },
-                                    "include_delim": {
-                                        "anyOf": [
-                                            {
-                                                "type": "string",
-                                                "enum": [
-                                                    "prev",
-                                                    "next"
-                                                ]
-                                            },
-                                            {
-                                                "type": "null"
-                                            }
-                                        ],
-                                        "title": "Include Delim",
-                                        "default": "prev",
-                                        "description": "Include delimiters in the chunk text. If so, specify whether to include the previous or next delimiter."
-                                    },
-                                    "return_type": {
-                                        "type": "string",
-                                        "title": "Return Type",
-                                        "default": "chunks",
-                                        "enum": [
-                                            "texts",
-                                            "chunks"
-                                        ],
-                                        "description": "Return type for chunking. If 'chunks', returns a list of `SemanticChunk` objects. If 'texts', returns a list of strings."
-                                    }
-                                }
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Successful Response: A list of `SemanticChunk` objects.",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "title": "SemanticChunkResponse",
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/SemanticChunkSchema"
-                                    },
-                                    "description": "A list containing `SemanticChunk` objects, detailing segments and sentences with optional embeddings."
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/v1/chunk/sdpm": {
-            "post": {
-                "summary": "SDPM Chunker",
-                "description": "Extends semantic chunking using a double-pass merging approach (Semantic Double-Pass Merging). Connects related content even if not consecutive.",
-                "operationId": "get_sdpm_chunks_v1_chunk_sdpm_post",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "multipart/form-data": {
-                            "schema": {
-                                "type": "object",
-                                "properties": {
-                                    "file": {
-                                        "type": "string",
-                                        "format": "binary",
-                                        "description": "The file to chunk."
-                                    },
-                                    "embedding_model": {
-                                        "type": "string",
-                                        "title": "Embedding Model",
-                                        "default": "minishlab/potion-base-8M",
-                                        "description": "Model identifier or embedding model instance to use for semantic analysis."
-                                    },
-                                    "threshold": {
-                                        "anyOf": [
-                                            {
-                                                "type": "string",
-                                                "const": "auto"
-                                            },
-                                            {
-                                                "type": "number"
-                                            },
-                                            {
-                                                "type": "integer"
-                                            }
-                                        ],
-                                        "title": "Threshold",
-                                        "default": "auto",
-                                        "description": "Similarity threshold for grouping sentences. Can be a float [0,1] for direct threshold, int (1,100] for percentile, or 'auto' for automatic calculation."
-                                    },
-                                    "mode": {
-                                        "type": "string",
-                                        "title": "Mode",
-                                        "default": "window",
-                                        "description": "Mode for grouping sentences, either 'cumulative' or 'window'."
-                                    },
-                                    "chunk_size": {
-                                        "type": "integer",
-                                        "title": "Chunk Size",
-                                        "default": 512,
-                                        "description": "Maximum tokens per chunk."
-                                    },
-                                    "similarity_window": {
-                                        "type": "integer",
-                                        "title": "Similarity Window",
-                                        "default": 1,
-                                        "description": "Number of preceding sentences to consider for similarity comparison."
-                                    },
-                                    "min_sentences": {
-                                        "type": "integer",
-                                        "title": "Min Sentences",
-                                        "default": 1,
-                                        "description": "Minimum number of sentences per chunk."
-                                    },
-                                    "min_characters_per_sentence": {
-                                        "type": "integer",
-                                        "title": "Min Characters Per Sentence",
-                                        "default": 12,
-                                        "description": "Minimum number of characters per sentence."
-                                    },
-                                    "threshold_step": {
-                                        "type": "number",
-                                        "title": "Threshold Step",
-                                        "default": 0.01,
-                                        "description": "Step size used when automatically calculating the similarity threshold."
-                                    },
-                                    "delim": {
-                                        "anyOf": [
-                                            {
-                                                "type": "string"
-                                            },
-                                            {
-                                                "items": {
-                                                    "type": "string"
-                                                },
-                                                "type": "array"
-                                            }
-                                        ],
-                                        "title": "Delim",
-                                        "default": [
-                                            ".",
-                                            "!",
-                                            "?",
-                                            "\n"
-                                        ],
-                                        "description": "Delimiters to split sentences on."
-                                    },
-                                    "include_delim": {
-                                        "anyOf": [
-                                            {
-                                                "type": "string",
-                                                "enum": [
-                                                    "prev",
-                                                    "next"
-                                                ]
-                                            },
-                                            {
-                                                "type": "null"
-                                            }
-                                        ],
-                                        "title": "Include Delim",
-                                        "default": "prev",
-                                        "description": "Include delimiters in the chunk text. If so, specify whether to include the previous or next delimiter."
-                                    },
-                                    "return_type": {
-                                        "type": "string",
-                                        "title": "Return Type",
-                                        "default": "chunks",
-                                        "enum": [
-                                            "texts",
-                                            "chunks"
-                                        ],
-                                        "description": "Return type for the chunking process. If 'chunks', returns a list of `SemanticChunk` objects. If 'texts', returns a list of strings."
-                                    }
-                                }
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Successful Response: A list of `SemanticChunk` objects.",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "title": "SDPMChunkResponse",
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/SemanticChunkSchema"
-                                    },
-                                    "description": "A list containing `SemanticChunk` objects (as SDPM uses semantic chunking), detailing segments and sentences with optional embeddings."
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/v1/chunk/late": {
-            "post": {
-                "summary": "Late Chunker",
-                "description": "Implements the late chunking strategy. Encodes the entire text, then splits recursively, deriving chunk embeddings from the full document embedding.",
-                "operationId": "get_late_chunks_v1_chunk_late_post",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "multipart/form-data": {
-                            "schema": {
-                                "type": "object",
-                                "properties": {
-                                    "file": {
-                                        "type": "string",
-                                        "format": "binary",
-                                        "description": "The file to chunk."
-                                    },
-                                    "embedding_model": {
-                                        "type": "string",
-                                        "title": "Embedding Model",
-                                        "default": "all-MiniLM-L6-v2",
-                                        "description": "SentenceTransformer model identifier to use for embedding."
-                                    },
-                                    "chunk_size": {
-                                        "type": "integer",
-                                        "title": "Chunk Size",
-                                        "default": 512,
-                                        "description": "Maximum number of tokens per chunk."
-                                    },
-                                    "recipe": {
-                                        "type": "string",
-                                        "title": "Recipe",
-                                        "default": "default",
-                                        "description": "Pre-defined recursive rules for splitting. Find all recipes on our [Hugging Face Hub](https://huggingface.co/datasets/chonkie-ai/recipes)."
-                                    },
-                                    "lang": {
-                                        "type": "string",
-                                        "title": "Language",
-                                        "default": "en",
-                                        "description": "Language of the text, used with recipes. Must match the language of the recipe."
-                                    },
-                                    "min_characters_per_chunk": {
-                                        "type": "integer",
-                                        "title": "Min Characters Per Chunk",
-                                        "default": 24,
-                                        "description": "Minimum number of characters per chunk."
-                                    }
-                                }
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Successful Response: A list of `LateChunk` objects.",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "title": "LateChunkResponse",
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/LateChunkSchema"
-                                    },
-                                    "description": "A list containing `LateChunk` objects, detailing segments, sentences, and an optional chunk-level embedding derived from the full document."
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/v1/chunk/code": {
-            "post": {
-                "summary": "Code Chunker",
-                "description": "Splits code into chunks based on its structure, leveraging Abstract Syntax Trees (ASTs) to create contextually relevant segments.",
-                "operationId": "get_code_chunks_v1_chunk_code_post",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "multipart/form-data": {
-                            "schema": {
-                                "type": "object",
-                                "required": [
-                                    "language"
-                                ],
-                                "properties": {
-                                    "file": {
-                                        "type": "string",
-                                        "format": "binary",
-                                        "description": "The file containing code to be chunked."
-                                    },
-                                    "tokenizer_or_token_counter": {
-                                        "type": "string",
-                                        "title": "Tokenizer Or Token Counter",
-                                        "default": "gpt2",
-                                        "description": "Tokenizer or token counting function to use for measuring chunk size."
-                                    },
-                                    "chunk_size": {
-                                        "type": "integer",
-                                        "title": "Chunk Size",
-                                        "default": 1500,
-                                        "description": "Maximum number of tokens per chunk."
-                                    },
-                                    "language": {
-                                        "type": "string",
-                                        "title": "Language",
-                                        "description": "The programming language of the code. Accepts languages supported by `tree-sitter-language-pack`."
-                                    },
-                                    "include_nodes": {
-                                        "type": "boolean",
-                                        "title": "Include Nodes",
-                                        "default": false,
-                                        "description": "Whether to include the list of corresponding AST `Node` objects within each `CodeChunk`."
-                                    },
-                                    "return_type": {
-                                        "type": "string",
-                                        "title": "Return Type",
-                                        "default": "chunks",
-                                        "enum": [
-                                            "texts",
-                                            "chunks"
-                                        ],
-                                        "description": "Whether to return chunks as `CodeChunk` objects or plain text strings."
-                                    }
-                                }
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Successful Response: A list of `CodeChunk` objects.",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "title": "CodeChunkResponse",
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/CodeChunkSchema"
-                                    },
-                                    "description": "A list containing `CodeChunk` objects, each detailing a segment of the original code and optionally the corresponding AST nodes."
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/v1/chunk/neural": {
-            "post": {
-                "summary": "Neural Chunker",
-                "description": "Splits text using a fine-tuned BERT model to detect semantic shifts, creating topic-coherent chunks.",
-                "operationId": "get_neural_chunks_v1_chunk_neural_post",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "multipart/form-data": {
-                            "schema": {
-                                "type": "object",
-                                "properties": {
-                                    "file": {
-                                        "type": "string",
-                                        "format": "binary",
-                                        "description": "The file to chunk."
-                                    },
-                                    "model": {
-                                        "type": "string",
-                                        "title": "Model",
-                                        "default": "mirth/chonky_modernbert_large_1",
-                                        "description": "The identifier of the fine-tuned BERT model to use."
-                                    },
-                                    "min_characters_per_chunk": {
-                                        "type": "integer",
-                                        "title": "Min Characters Per Chunk",
-                                        "default": 10,
-                                        "description": "Minimum number of characters required for a valid chunk."
-                                    },
-                                    "return_type": {
-                                        "type": "string",
-                                        "title": "Return Type",
-                                        "default": "chunks",
-                                        "enum": [
-                                            "texts",
-                                            "chunks"
-                                        ],
-                                        "description": "Whether to return chunks as `Chunk` objects or plain text strings."
-                                    }
-                                }
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Successful Response: A list of `Chunk` objects.",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "title": "NeuralChunkResponse",
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/Chunk"
-                                    },
-                                    "description": "A list containing `Chunk` objects, representing segments split based on semantic shifts detected by the neural model."
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/v1/chunk/slumber": {
-            "post": {
-                "summary": "Slumber Chunker",
-                "description": "Agentic chunking powered by generative models (via Genie interface) for intelligent text splitting.",
-                "operationId": "get_slumber_chunks_v1_chunk_slumber_post",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "multipart/form-data": {
-                            "schema": {
-                                "type": "object",
-                                "properties": {
-                                    "file": {
-                                        "type": "string",
-                                        "format": "binary",
-                                        "description": "The file to chunk."
-                                    },
-                                    "tokenizer_or_token_counter": {
-                                        "type": "string",
-                                        "title": "Tokenizer Or Token Counter",
-                                        "default": "gpt2",
-                                        "description": "Tokenizer used for initial splitting and size estimation."
-                                    },
-                                    "chunk_size": {
-                                        "type": "integer",
-                                        "title": "Chunk Size",
-                                        "default": 1024,
-                                        "description": "Target maximum tokens per chunk for the generative model."
-                                    },
-                                    "candidate_size": {
-                                        "type": "integer",
-                                        "title": "Candidate Size",
-                                        "default": 32,
-                                        "description": "Number of tokens around a potential split point examined by the generative model."
-                                    },
-                                    "min_characters_per_chunk": {
-                                        "type": "integer",
-                                        "title": "Min Characters Per Chunk",
-                                        "default": 12,
-                                        "description": "Minimum number of characters required for a valid chunk."
-                                    },
-                                    "return_type": {
-                                        "type": "string",
-                                        "title": "Return Type",
-                                        "default": "chunks",
-                                        "enum": [
-                                            "texts",
-                                            "chunks"
-                                        ],
-                                        "description": "Whether to return chunks as `Chunk` objects or plain text strings."
-                                    }
-                                }
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Successful Response: A list of `Chunk` objects.",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "title": "SlumberChunkResponse",
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/Chunk"
-                                    },
-                                    "description": "A list containing `Chunk` objects, representing segments intelligently split by the agentic chunker."
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/v1/refine/embeddings": {
-            "post": {
-                "summary": "Embeddings Refinery",
-                "description": "Adds embeddings to a list of provided chunks using a specified embedding model.",
-                "operationId": "refine_embeddings_v1_refine_embeddings_post",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/EmbeddingsRefineryREQ"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Successful Response: A list of `Chunk` objects with added embeddings.",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "title": "EmbeddingsRefineResponse",
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/ChunkWithEmbedding"
-                                    },
-                                    "description": "A list containing `Chunk` objects, each with an added `embedding` field."
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "Validation Error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/HTTPValidationError"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/v1/refine/overlap": {
-            "post": {
-                "summary": "Overlap Refinery",
-                "description": "Adds overlapping context (prefix or suffix) to a list of provided chunks based on specified arguments.",
-                "operationId": "refine_overlap_v1_refine_overlap_post",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/OverlapRefineryREQ"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Successful Response: A list of `Chunk` objects with added overlap context.",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "title": "OverlapRefineResponse",
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/Chunk"
-                                    },
-                                    "description": "A list containing `Chunk` objects, potentially modified to include overlapping text or context."
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "Validation Error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/HTTPValidationError"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    },
     "components": {
         "securitySchemes": {
             "BearerAuth": {
@@ -1029,14 +49,6 @@
                         "type": "integer",
                         "title": "Token Count",
                         "description": "The number of tokens in this specific chunk, according to the tokenizer used."
-                    },
-                    "context": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "title": "Context",
-                        "description": "Chunk context."
                     }
                 }
             },
@@ -1059,11 +71,6 @@
                         "type": "integer",
                         "title": "End Index",
                         "description": "The ending character index (exclusive) of the sentence within the original input text."
-                    },
-                    "token_count": {
-                        "type": "integer",
-                        "title": "Token Count",
-                        "description": "The number of tokens in this specific sentence, according to the tokenizer used."
                     }
                 }
             },
@@ -1093,16 +100,13 @@
                         "description": "The number of tokens in this specific sentence, according to the tokenizer used."
                     },
                     "embedding": {
-                        "type": [
-                            "array",
-                            "null"
-                        ],
+                        "type": "array",
                         "items": {
                             "type": "number",
                             "format": "float"
                         },
                         "title": "Embedding",
-                        "description": "Optional embedding vector (list of floats) for the sentence."
+                        "description": "Embedding vector (list of floats) for the sentence."
                     }
                 }
             },
@@ -1234,16 +238,13 @@
                         "description": "The number of tokens in this specific chunk, according to the tokenizer used."
                     },
                     "embedding": {
-                        "type": [
-                            "array",
-                            "null"
-                        ],
+                        "type": "array",
                         "items": {
                             "type": "number",
                             "format": "float"
                         },
                         "title": "Embedding",
-                        "description": "Optional embedding vector (list of floats) for the entire chunk, derived from the full document embedding."
+                        "description": "Embedding vector (list of floats) for the entire chunk, derived from the full document embedding."
                     }
                 }
             },
@@ -1258,10 +259,7 @@
                         "type": "object",
                         "properties": {
                             "embedding": {
-                                "type": [
-                                    "array",
-                                    "null"
-                                ],
+                                "type": "array",
                                 "items": {
                                     "type": "number",
                                     "format": "float"
@@ -1273,36 +271,9 @@
                     }
                 ]
             },
-            "NodeSchema": {
-                "title": "Node",
-                "description": "Represents a node in the Abstract Syntax Tree (AST) of the code, used by CodeChunker.",
-                "type": "object",
-                "properties": {
-                    "text": {
-                        "type": "string",
-                        "title": "Text",
-                        "description": "The text content of the node."
-                    },
-                    "start_byte": {
-                        "type": "integer",
-                        "title": "Start Byte",
-                        "description": "The starting byte index of the node within the original code text."
-                    },
-                    "end_byte": {
-                        "type": "integer",
-                        "title": "End Byte",
-                        "description": "The ending byte index (exclusive) of the node within the original code text."
-                    },
-                    "type": {
-                        "type": "string",
-                        "title": "Type",
-                        "description": "The type of the AST node (e.g., 'function_definition', 'identifier')."
-                    }
-                }
-            },
             "CodeChunkSchema": {
                 "title": "CodeChunk",
-                "description": "Represents a chunk generated by the Code Chunker, containing a code snippet and optionally corresponding AST nodes.",
+                "description": "Represents a chunk generated by the Code Chunker, containing a code snippet.",
                 "type": "object",
                 "properties": {
                     "text": {
@@ -1324,17 +295,6 @@
                         "type": "integer",
                         "title": "Token Count",
                         "description": "The number of tokens in this specific chunk, according to the tokenizer used."
-                    },
-                    "nodes": {
-                        "type": [
-                            "array",
-                            "null"
-                        ],
-                        "items": {
-                            "$ref": "#/components/schemas/NodeSchema"
-                        },
-                        "title": "Nodes",
-                        "description": "Optional list of AST `Node` objects corresponding to this code chunk (present if `include_nodes` is true)."
                     }
                 }
             },
@@ -1358,7 +318,7 @@
                     "embedding_model": {
                         "type": "string",
                         "title": "Embedding Model",
-                        "description": "Model identifier (e.g., from Hugging Face) or a compatible embedding model instance string representation."
+                        "description": "Embedding model to use"
                     }
                 }
             },
@@ -1386,32 +346,48 @@
                     },
                     "context_size": {
                         "anyOf": [
-                            { "type": "number" },
-                            { "type": "integer" }
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "integer"
+                            }
                         ],
                         "title": "Context Size",
                         "default": 0.25,
-                        "description": "Size of the overlap context (absolute tokens if int, fraction if float)."
+                        "description": "Size of the overlap context. If >=1, absolute number of tokens. If <1, percentage of total chunk size."
                     },
                     "mode": {
                         "type": "string",
-                        "enum": ["token", "recursive"],
+                        "enum": [
+                            "token",
+                            "recursive"
+                        ],
                         "title": "Mode",
                         "default": "token",
                         "description": "Mode for calculating overlap ('token' or 'recursive')."
                     },
                     "method": {
                         "type": "string",
-                        "enum": ["suffix", "prefix"],
+                        "enum": [
+                            "suffix",
+                            "prefix"
+                        ],
                         "title": "Method",
                         "default": "suffix",
                         "description": "Method for adding context ('suffix' from next, 'prefix' from previous)."
                     },
-                    "rules": {
-                        "type": "object",
-                        "title": "Rules",
-                        "default": {},
-                        "description": "Recursive rules definition (object representation) if mode is 'recursive'."
+                    "recipe": {
+                        "type": "string",
+                        "title": "Recipe",
+                        "default": "default",
+                        "description": "Pre-defined rules for chunking. Find all recipes on our [Hugging Face Hub](https://huggingface.co/datasets/chonkie-ai/recipes)."
+                    },
+                    "lang": {
+                        "type": "string",
+                        "title": "Language",
+                        "default": "en",
+                        "description": "Language of the text, used with recipes. Must match the language of the recipe."
                     },
                     "merge": {
                         "type": "boolean",
@@ -2068,6 +1044,1125 @@
                     }
                 },
                 "additionalProperties": false
+            }
+        }
+    },
+    "paths": {
+        "/v1/auth/validate": {
+            "post": {
+                "summary": "Validate API Key",
+                "description": "Validates the provided API key. Use this endpoint to check if your API key is valid and active.",
+                "operationId": "validate_auth_v1_auth_validate_post",
+                "responses": {
+                    "200": {
+                        "description": "API key is valid and active",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Token is valid!"
+                                        },
+                                        "status": {
+                                            "type": "integer",
+                                            "example": 200
+                                        }
+                                    }
+                                },
+                                "example": {
+                                    "message": "Token is valid!",
+                                    "status": 200
+                                }
+                            }
+                        }
+                    }
+                },
+                "x-codeSamples": [
+                    {
+                        "lang": "python",
+                        "label": "Python",
+                        "source": "from chonkie.cloud import Auth\n\nvalidated = Auth.validate(api_key=\"{api_key}\")\n\nif validated: \n    print(\"API key is valid and active\")\nelse: \n    print(\"API key is invalid or expired\")"
+                    }
+                ]
+            }
+        },
+        "/v1/chunk/token": {
+            "post": {
+                "summary": "Token Chunker",
+                "description": "Splits text into chunks based on token count, ensuring each chunk stays within specified token limits.",
+                "operationId": "get_token_chunks_v1_chunk_token_post",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "file": {
+                                        "type": "string",
+                                        "format": "binary",
+                                        "description": "The file to chunk."
+                                    },
+                                    "tokenizer": {
+                                        "type": "string",
+                                        "title": "Tokenizer",
+                                        "default": "gpt2",
+                                        "description": "Tokenizer to use. Can be a string identifier or a tokenizer instance."
+                                    },
+                                    "chunk_size": {
+                                        "type": "integer",
+                                        "title": "Chunk Size",
+                                        "default": 512,
+                                        "description": "Maximum number of tokens per chunk."
+                                    },
+                                    "chunk_overlap": {
+                                        "type": "integer",
+                                        "title": "Chunk Overlap",
+                                        "default": 0,
+                                        "description": "Number or percentage of overlapping tokens between chunks."
+                                    },
+                                    "return_type": {
+                                        "type": "string",
+                                        "title": "Return Type",
+                                        "default": "chunks",
+                                        "enum": [
+                                            "texts",
+                                            "chunks"
+                                        ],
+                                        "description": "Whether to return chunks as `Chunk` objects or plain text strings."
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response: A list of `Chunk` objects.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "title": "TokenChunkResponse",
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Chunk"
+                                    },
+                                    "description": "A list containing `Chunk` objects, each detailing a segment of the original text based on token count."
+                                }
+                            }
+                        }
+                    }
+                },
+                "x-codeSamples": [
+                    {
+                        "lang": "python",
+                        "label": "Python",
+                        "source": "from chonkie.cloud import TokenChunker \n\nchunker = TokenChunker(api_key=\"{api_key}\") \n\nchunks = chunker(text='YOUR_TEXT')"
+                    },
+                    {
+                        "lang": "JavaScript",
+                        "label": "JavaScript",
+                        "source": "import { TokenChunker } from 'chonkie/cloud';\n\nconst chunker = new TokenChunker(apiKey);\n\nconst chunks = await chunker({ text: 'YOUR_TEXT' });"
+                    }
+                ]
+            }
+        },
+        "/v1/chunk/sentence": {
+            "post": {
+                "summary": "Sentence Chunker",
+                "description": "Splits text into chunks while preserving complete sentences, ensuring that each chunk maintains proper sentence boundaries and context.",
+                "operationId": "get_sentence_chunks_v1_chunk_sentence_post",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "file": {
+                                        "type": "string",
+                                        "format": "binary",
+                                        "description": "The file to chunk."
+                                    },
+                                    "tokenizer_or_token_counter": {
+                                        "type": "string",
+                                        "title": "Tokenizer Or Token Counter",
+                                        "default": "gpt2",
+                                        "description": "Tokenizer or token counting function to use. Can be a string identifier or an instance."
+                                    },
+                                    "chunk_size": {
+                                        "type": "integer",
+                                        "title": "Chunk Size",
+                                        "default": 512,
+                                        "description": "Maximum number of tokens per chunk."
+                                    },
+                                    "chunk_overlap": {
+                                        "type": "integer",
+                                        "title": "Chunk Overlap",
+                                        "default": 0,
+                                        "description": "Number of overlapping tokens between chunks."
+                                    },
+                                    "min_sentences_per_chunk": {
+                                        "type": "integer",
+                                        "title": "Min Sentences Per Chunk",
+                                        "default": 1,
+                                        "description": "Minimum number of sentences to include in each chunk."
+                                    },
+                                    "min_characters_per_sentence": {
+                                        "type": "integer",
+                                        "title": "Min Characters Per Sentence",
+                                        "default": 12,
+                                        "description": "Minimum number of characters per sentence."
+                                    },
+                                    "approximate": {
+                                        "type": "boolean",
+                                        "title": "Approximate",
+                                        "default": false,
+                                        "description": "Use approximate token counting for faster processing (deprecated)."
+                                    },
+                                    "delim": {
+                                        "anyOf": [
+                                            {
+                                                "type": "string"
+                                            },
+                                            {
+                                                "items": {
+                                                    "type": "string"
+                                                },
+                                                "type": "array"
+                                            }
+                                        ],
+                                        "title": "Delim",
+                                        "default": [
+                                            ".",
+                                            "!",
+                                            "?",
+                                            "\n"
+                                        ],
+                                        "description": "Delimiters to split sentences on."
+                                    },
+                                    "include_delim": {
+                                        "anyOf": [
+                                            {
+                                                "type": "string",
+                                                "enum": [
+                                                    "prev",
+                                                    "next"
+                                                ]
+                                            },
+                                            {
+                                                "type": "null"
+                                            }
+                                        ],
+                                        "title": "Include Delim",
+                                        "default": "prev",
+                                        "description": "Include delimiters in the chunk text. If so, specify whether to include the previous or next delimiter."
+                                    },
+                                    "return_type": {
+                                        "type": "string",
+                                        "title": "Return Type",
+                                        "default": "chunks",
+                                        "enum": [
+                                            "texts",
+                                            "chunks"
+                                        ],
+                                        "description": "Whether to return chunks as text strings or as `SentenceChunk` objects."
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response: A list of `SentenceChunk` objects.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "title": "SentenceChunkResponse",
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/SentenceChunkSchema"
+                                    },
+                                    "description": "A list containing `SentenceChunk` objects, each detailing a segment of the original text and the sentences within it."
+                                }
+                            }
+                        }
+                    }
+                },
+                "x-codeSamples": [
+                    {
+                        "lang": "python",
+                        "label": "Python",
+                        "source": "from chonkie.cloud import SentenceChunker \n\nchunker = SentenceChunker(api_key=\"{api_key}\") \n\nchunks = chunker(text=\"YOUR_TEXT\")"
+                    },
+                    {
+                        "lang": "JavaScript",
+                        "label": "JavaScript",
+                        "source": "import { SentenceChunker } from 'chonkie/cloud';\n\nconst chunker = new SentenceChunker(apiKey);\n\nconst chunks = await chunker({ text: 'YOUR_TEXT' });"
+                    }
+                ]
+            }
+        },
+        "/v1/chunk/recursive": {
+            "post": {
+                "summary": "Recursive Chunker",
+                "description": "Recursively chunks documents into smaller chunks. It is a good choice for documents that are long but well structured.",
+                "operationId": "get_recursive_chunks_v1_chunk_recursive_post",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "file": {
+                                        "type": "string",
+                                        "format": "binary",
+                                        "description": "The file to chunk."
+                                    },
+                                    "tokenizer_or_token_counter": {
+                                        "type": "string",
+                                        "title": "Tokenizer Or Token Counter",
+                                        "default": "gpt2",
+                                        "description": "Tokenizer or token counting function to use. Can be a string identifier or an instance."
+                                    },
+                                    "chunk_size": {
+                                        "type": "integer",
+                                        "title": "Chunk Size",
+                                        "default": 512,
+                                        "description": "Maximum number of tokens per chunk."
+                                    },
+                                    "recipe": {
+                                        "type": "string",
+                                        "title": "Recipe",
+                                        "default": "default",
+                                        "description": "Pre-defined rules for chunking. Find all recipes on our [Hugging Face Hub](https://huggingface.co/datasets/chonkie-ai/recipes)."
+                                    },
+                                    "lang": {
+                                        "type": "string",
+                                        "title": "Language",
+                                        "default": "en",
+                                        "description": "Language of the text, used with recipes. Must match the language of the recipe."
+                                    },
+                                    "min_characters_per_chunk": {
+                                        "type": "integer",
+                                        "title": "Min Characters Per Chunk",
+                                        "default": 12,
+                                        "description": "Minimum number of characters per chunk."
+                                    },
+                                    "return_type": {
+                                        "type": "string",
+                                        "title": "Return Type",
+                                        "default": "chunks",
+                                        "enum": [
+                                            "texts",
+                                            "chunks"
+                                        ],
+                                        "description": "Whether to return chunks as text strings or as `RecursiveChunk` objects."
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response: A list of `RecursiveChunk` objects.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "title": "RecursiveChunkResponse",
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/RecursiveChunkSchema"
+                                    },
+                                    "description": "A list containing `RecursiveChunk` objects, each detailing a segment of the original text and its level in the recursive tree."
+                                }
+                            }
+                        }
+                    }
+                },
+                "x-codeSamples": [
+                    {
+                        "lang": "python",
+                        "label": "Python",
+                        "source": "from chonkie.cloud import RecursiveChunker \n\nchunker = RecursiveChunker(api_key=\"{api_key}\") \n\nchunks = chunker(text=\"YOUR_TEXT\")"
+                    },
+                    {
+                        "lang": "JavaScript",
+                        "label": "JavaScript",
+                        "source": "import { RecursiveChunker } from 'chonkie/cloud';\n\nconst chunker = new RecursiveChunker(apiKey);\n\nconst chunks = await chunker({ text: 'YOUR_TEXT' });"
+                    }
+                ]
+            }
+        },
+        "/v1/chunk/semantic": {
+            "post": {
+                "summary": "Semantic Chunker",
+                "description": "Splits text into chunks based on semantic similarity, ensuring that related content stays together in the same chunk.",
+                "operationId": "get_semantic_chunks_v1_chunk_semantic_post",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "file": {
+                                        "type": "string",
+                                        "format": "binary",
+                                        "description": "The file to chunk."
+                                    },
+                                    "embedding_model": {
+                                        "type": "string",
+                                        "title": "Embedding Model",
+                                        "default": "minishlab/potion-base-8M",
+                                        "description": "Model identifier or embedding model instance to use for semantic analysis."
+                                    },
+                                    "threshold": {
+                                        "anyOf": [
+                                            {
+                                                "type": "string",
+                                                "const": "auto"
+                                            },
+                                            {
+                                                "type": "number"
+                                            },
+                                            {
+                                                "type": "integer"
+                                            }
+                                        ],
+                                        "title": "Threshold",
+                                        "default": "auto",
+                                        "description": "Similarity threshold for grouping sentences. Can be a float [0,1] for direct threshold, int (1,100] for percentile, or 'auto' for automatic calculation."
+                                    },
+                                    "chunk_size": {
+                                        "type": "integer",
+                                        "title": "Chunk Size",
+                                        "default": 512,
+                                        "description": "Maximum tokens per chunk."
+                                    },
+                                    "similarity_window": {
+                                        "type": "integer",
+                                        "title": "Similarity Window",
+                                        "default": 1,
+                                        "description": "Number of preceding sentences to consider for similarity comparison."
+                                    },
+                                    "min_sentences": {
+                                        "type": "integer",
+                                        "title": "Min Sentences",
+                                        "default": 1,
+                                        "description": "Minimum number of sentences per chunk."
+                                    },
+                                    "min_chunk_size": {
+                                        "type": "integer",
+                                        "title": "Min Chunk Size",
+                                        "default": null,
+                                        "description": "Minimum tokens per chunk (optional)."
+                                    },
+                                    "min_characters_per_sentence": {
+                                        "type": "integer",
+                                        "title": "Min Characters Per Sentence",
+                                        "default": 12,
+                                        "description": "Minimum number of characters per sentence."
+                                    },
+                                    "threshold_step": {
+                                        "type": "number",
+                                        "title": "Threshold Step",
+                                        "default": 0.01,
+                                        "description": "Step size used when automatically calculating the similarity threshold."
+                                    },
+                                    "delim": {
+                                        "anyOf": [
+                                            {
+                                                "type": "string"
+                                            },
+                                            {
+                                                "items": {
+                                                    "type": "string"
+                                                },
+                                                "type": "array"
+                                            }
+                                        ],
+                                        "title": "Delim",
+                                        "default": [
+                                            ".",
+                                            "!",
+                                            "?",
+                                            "\n"
+                                        ],
+                                        "description": "Delimiters to split sentences on."
+                                    },
+                                    "include_delim": {
+                                        "anyOf": [
+                                            {
+                                                "type": "string",
+                                                "enum": [
+                                                    "prev",
+                                                    "next"
+                                                ]
+                                            },
+                                            {
+                                                "type": "null"
+                                            }
+                                        ],
+                                        "title": "Include Delim",
+                                        "default": "prev",
+                                        "description": "Include delimiters in the chunk text. If so, specify whether to include the previous or next delimiter."
+                                    },
+                                    "return_type": {
+                                        "type": "string",
+                                        "title": "Return Type",
+                                        "default": "chunks",
+                                        "enum": [
+                                            "texts",
+                                            "chunks"
+                                        ],
+                                        "description": "Return type for chunking. If 'chunks', returns a list of `SemanticChunk` objects. If 'texts', returns a list of strings."
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response: A list of `SemanticChunk` objects.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "title": "SemanticChunkResponse",
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/SemanticChunkSchema"
+                                    },
+                                    "description": "A list containing `SemanticChunk` objects, detailing segments and sentences with optional embeddings."
+                                }
+                            }
+                        }
+                    }
+                },
+                "x-codeSamples": [
+                    {
+                        "lang": "python",
+                        "label": "Python",
+                        "source": "from chonkie.cloud import SemanticChunker \n\nchunker = SemanticChunker(api_key=\"{api_key}\") \n\nchunks = chunker(text=\"YOUR_TEXT\")"
+                    },
+                    {
+                        "lang": "JavaScript",
+                        "label": "JavaScript",
+                        "source": "import { SemanticChunker } from 'chonkie/cloud';\n\nconst chunker = new SemanticChunker(apiKey);\n\nconst chunks = await chunker({ text: 'YOUR_TEXT' });"
+                    }
+                ]
+            }
+        },
+        "/v1/chunk/sdpm": {
+            "post": {
+                "summary": "SDPM Chunker",
+                "description": "Extends semantic chunking using a double-pass merging approach (Semantic Double-Pass Merging). Connects related content even if not consecutive.",
+                "operationId": "get_sdpm_chunks_v1_chunk_sdpm_post",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "file": {
+                                        "type": "string",
+                                        "format": "binary",
+                                        "description": "The file to chunk."
+                                    },
+                                    "embedding_model": {
+                                        "type": "string",
+                                        "title": "Embedding Model",
+                                        "default": "minishlab/potion-base-8M",
+                                        "description": "Model identifier or embedding model instance to use for semantic analysis."
+                                    },
+                                    "threshold": {
+                                        "anyOf": [
+                                            {
+                                                "type": "string",
+                                                "const": "auto"
+                                            },
+                                            {
+                                                "type": "number"
+                                            },
+                                            {
+                                                "type": "integer"
+                                            }
+                                        ],
+                                        "title": "Threshold",
+                                        "default": "auto",
+                                        "description": "Similarity threshold for grouping sentences. Can be a float [0,1] for direct threshold, int (1,100] for percentile, or 'auto' for automatic calculation."
+                                    },
+                                    "mode": {
+                                        "type": "string",
+                                        "title": "Mode",
+                                        "default": "window",
+                                        "description": "Mode for grouping sentences, either 'cumulative' or 'window'."
+                                    },
+                                    "chunk_size": {
+                                        "type": "integer",
+                                        "title": "Chunk Size",
+                                        "default": 512,
+                                        "description": "Maximum tokens per chunk."
+                                    },
+                                    "similarity_window": {
+                                        "type": "integer",
+                                        "title": "Similarity Window",
+                                        "default": 1,
+                                        "description": "Number of preceding sentences to consider for similarity comparison."
+                                    },
+                                    "min_sentences": {
+                                        "type": "integer",
+                                        "title": "Min Sentences",
+                                        "default": 1,
+                                        "description": "Minimum number of sentences per chunk."
+                                    },
+                                    "min_characters_per_sentence": {
+                                        "type": "integer",
+                                        "title": "Min Characters Per Sentence",
+                                        "default": 12,
+                                        "description": "Minimum number of characters per sentence."
+                                    },
+                                    "threshold_step": {
+                                        "type": "number",
+                                        "title": "Threshold Step",
+                                        "default": 0.01,
+                                        "description": "Step size used when automatically calculating the similarity threshold."
+                                    },
+                                    "delim": {
+                                        "anyOf": [
+                                            {
+                                                "type": "string"
+                                            },
+                                            {
+                                                "items": {
+                                                    "type": "string"
+                                                },
+                                                "type": "array"
+                                            }
+                                        ],
+                                        "title": "Delim",
+                                        "default": [
+                                            ".",
+                                            "!",
+                                            "?",
+                                            "\n"
+                                        ],
+                                        "description": "Delimiters to split sentences on."
+                                    },
+                                    "include_delim": {
+                                        "anyOf": [
+                                            {
+                                                "type": "string",
+                                                "enum": [
+                                                    "prev",
+                                                    "next"
+                                                ]
+                                            },
+                                            {
+                                                "type": "null"
+                                            }
+                                        ],
+                                        "title": "Include Delim",
+                                        "default": "prev",
+                                        "description": "Include delimiters in the chunk text. If so, specify whether to include the previous or next delimiter."
+                                    },
+                                    "return_type": {
+                                        "type": "string",
+                                        "title": "Return Type",
+                                        "default": "chunks",
+                                        "enum": [
+                                            "texts",
+                                            "chunks"
+                                        ],
+                                        "description": "Return type for the chunking process. If 'chunks', returns a list of `SemanticChunk` objects. If 'texts', returns a list of strings."
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response: A list of `SemanticChunk` objects.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "title": "SDPMChunkResponse",
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/SemanticChunkSchema"
+                                    },
+                                    "description": "A list containing `SemanticChunk` objects (as SDPM uses semantic chunking), detailing segments and sentences with optional embeddings."
+                                }
+                            }
+                        }
+                    }
+                },
+                "x-codeSamples": [
+                    {
+                        "lang": "python",
+                        "label": "Python",
+                        "source": "from chonkie.cloud import SDPMChunker \n\nchunker = SDPMChunker(api_key=\"{api_key}\") \n\nchunks = chunker(text=\"YOUR_TEXT\")"
+                    },
+                    {
+                        "lang": "JavaScript",
+                        "label": "JavaScript",
+                        "source": "import { SDPMChunker } from 'chonkie/cloud';\n\nconst chunker = new SDPMChunker(apiKey);\n\nconst chunks = await chunker({ text: 'YOUR_TEXT' });"
+                    }
+                ]
+            }
+        },
+        "/v1/chunk/late": {
+            "post": {
+                "summary": "Late Chunker",
+                "description": "Implements the late chunking strategy. Encodes the entire text, then splits recursively, deriving chunk embeddings from the full document embedding.",
+                "operationId": "get_late_chunks_v1_chunk_late_post",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "file": {
+                                        "type": "string",
+                                        "format": "binary",
+                                        "description": "The file to chunk."
+                                    },
+                                    "embedding_model": {
+                                        "type": "string",
+                                        "title": "Embedding Model",
+                                        "default": "all-MiniLM-L6-v2",
+                                        "description": "SentenceTransformer model identifier to use for embedding."
+                                    },
+                                    "chunk_size": {
+                                        "type": "integer",
+                                        "title": "Chunk Size",
+                                        "default": 512,
+                                        "description": "Maximum number of tokens per chunk."
+                                    },
+                                    "recipe": {
+                                        "type": "string",
+                                        "title": "Recipe",
+                                        "default": "default",
+                                        "description": "Pre-defined recursive rules for splitting. Find all recipes on our [Hugging Face Hub](https://huggingface.co/datasets/chonkie-ai/recipes)."
+                                    },
+                                    "lang": {
+                                        "type": "string",
+                                        "title": "Language",
+                                        "default": "en",
+                                        "description": "Language of the text, used with recipes. Must match the language of the recipe."
+                                    },
+                                    "min_characters_per_chunk": {
+                                        "type": "integer",
+                                        "title": "Min Characters Per Chunk",
+                                        "default": 24,
+                                        "description": "Minimum number of characters per chunk."
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response: A list of `LateChunk` objects.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "title": "LateChunkResponse",
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/LateChunkSchema"
+                                    },
+                                    "description": "A list containing `LateChunk` objects, detailing segments, sentences, and an optional chunk-level embedding derived from the full document."
+                                }
+                            }
+                        }
+                    }
+                },
+                "x-codeSamples": [
+                    {
+                        "lang": "python",
+                        "label": "Python",
+                        "source": "from chonkie.cloud import LateChunker \n\nchunker = LateChunker(api_key=\"{api_key}\") \n\nchunks = chunker(text=\"YOUR_TEXT\")"
+                    },
+                    {
+                        "lang": "JavaScript",
+                        "label": "JavaScript",
+                        "source": "import { LateChunker } from 'chonkie/cloud';\n\nconst chunker = new LateChunker(apiKey);\n\nconst chunks = await chunker({ text: 'YOUR_TEXT' });"
+                    }
+                ]
+            }
+        },
+        "/v1/chunk/code": {
+            "post": {
+                "summary": "Code Chunker",
+                "description": "Splits code into chunks based on its structure, leveraging Abstract Syntax Trees (ASTs) to create contextually relevant segments.",
+                "operationId": "get_code_chunks_v1_chunk_code_post",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "language"
+                                ],
+                                "properties": {
+                                    "file": {
+                                        "type": "string",
+                                        "format": "binary",
+                                        "description": "The file containing code to be chunked."
+                                    },
+                                    "tokenizer_or_token_counter": {
+                                        "type": "string",
+                                        "title": "Tokenizer Or Token Counter",
+                                        "default": "gpt2",
+                                        "description": "Tokenizer or token counting function to use for measuring chunk size."
+                                    },
+                                    "chunk_size": {
+                                        "type": "integer",
+                                        "title": "Chunk Size",
+                                        "default": 1500,
+                                        "description": "Maximum number of tokens per chunk."
+                                    },
+                                    "language": {
+                                        "type": "string",
+                                        "title": "Language",
+                                        "description": "The programming language of the code. Accepts languages supported by `tree-sitter-language-pack`."
+                                    },
+                                    "include_nodes": {
+                                        "type": "boolean",
+                                        "title": "Include Nodes",
+                                        "default": false,
+                                        "description": "Whether to include the list of corresponding AST `Node` objects within each `CodeChunk`."
+                                    },
+                                    "return_type": {
+                                        "type": "string",
+                                        "title": "Return Type",
+                                        "default": "chunks",
+                                        "enum": [
+                                            "texts",
+                                            "chunks"
+                                        ],
+                                        "description": "Whether to return chunks as `CodeChunk` objects or plain text strings."
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response: A list of `CodeChunk` objects.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "title": "CodeChunkResponse",
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/CodeChunkSchema"
+                                    },
+                                    "description": "A list containing `CodeChunk` objects, each detailing a segment of the original code and optionally the corresponding AST nodes."
+                                }
+                            }
+                        }
+                    }
+                },
+                "x-codeSamples": [
+                    {
+                        "lang": "python",
+                        "label": "Python",
+                        "source": "from chonkie.cloud import CodeChunker \n\nchunker = CodeChunker(api_key=\"{api_key}\") \n\nchunks = chunker(text=\"YOUR_TEXT\")"
+                    },
+                    {
+                        "lang": "JavaScript",
+                        "label": "JavaScript",
+                        "source": "import { CodeChunker } from 'chonkie/cloud';\n\nconst chunker = new CodeChunker(apiKey);\n\nconst chunks = await chunker({ text: 'YOUR_TEXT' });"
+                    }
+                ]
+            }
+        },
+        "/v1/chunk/neural": {
+            "post": {
+                "summary": "Neural Chunker",
+                "description": "Splits text using a fine-tuned BERT model to detect semantic shifts, creating topic-coherent chunks.",
+                "operationId": "get_neural_chunks_v1_chunk_neural_post",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "file": {
+                                        "type": "string",
+                                        "format": "binary",
+                                        "description": "The file to chunk."
+                                    },
+                                    "model": {
+                                        "type": "string",
+                                        "title": "Model",
+                                        "default": "mirth/chonky_modernbert_large_1",
+                                        "description": "The identifier of the fine-tuned BERT model to use."
+                                    },
+                                    "min_characters_per_chunk": {
+                                        "type": "integer",
+                                        "title": "Min Characters Per Chunk",
+                                        "default": 10,
+                                        "description": "Minimum number of characters required for a valid chunk."
+                                    },
+                                    "return_type": {
+                                        "type": "string",
+                                        "title": "Return Type",
+                                        "default": "chunks",
+                                        "enum": [
+                                            "texts",
+                                            "chunks"
+                                        ],
+                                        "description": "Whether to return chunks as `Chunk` objects or plain text strings."
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response: A list of `Chunk` objects.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "title": "NeuralChunkResponse",
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Chunk"
+                                    },
+                                    "description": "A list containing `Chunk` objects, representing segments split based on semantic shifts detected by the neural model."
+                                }
+                            }
+                        }
+                    }
+                },
+                "x-codeSamples": [
+                    {
+                        "lang": "python",
+                        "label": "Python",
+                        "source": "from chonkie.cloud import NeuralChunker \n\nchunker = NeuralChunker(api_key=\"{api_key}\") \n\nchunks = chunker(text=\"YOUR_TEXT\")"
+                    },
+                    {
+                        "lang": "JavaScript",
+                        "label": "JavaScript",
+                        "source": "import { NeuralChunker } from 'chonkie/cloud';\n\nconst chunker = new NeuralChunker(apiKey);\n\nconst chunks = await chunker({ text: 'YOUR_TEXT' });"
+                    }
+                ]
+            }
+        },
+        "/v1/chunk/slumber": {
+            "post": {
+                "summary": "Slumber Chunker",
+                "description": "Agentic chunking powered by generative models (via Genie interface) for intelligent text splitting.",
+                "operationId": "get_slumber_chunks_v1_chunk_slumber_post",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "file": {
+                                        "type": "string",
+                                        "format": "binary",
+                                        "description": "The file to chunk."
+                                    },
+                                    "tokenizer_or_token_counter": {
+                                        "type": "string",
+                                        "title": "Tokenizer Or Token Counter",
+                                        "default": "gpt2",
+                                        "description": "Tokenizer used for initial splitting and size estimation."
+                                    },
+                                    "chunk_size": {
+                                        "type": "integer",
+                                        "title": "Chunk Size",
+                                        "default": 1024,
+                                        "description": "Target maximum tokens per chunk for the generative model."
+                                    },
+                                    "candidate_size": {
+                                        "type": "integer",
+                                        "title": "Candidate Size",
+                                        "default": 32,
+                                        "description": "Number of tokens around a potential split point examined by the generative model."
+                                    },
+                                    "min_characters_per_chunk": {
+                                        "type": "integer",
+                                        "title": "Min Characters Per Chunk",
+                                        "default": 12,
+                                        "description": "Minimum number of characters required for a valid chunk."
+                                    },
+                                    "return_type": {
+                                        "type": "string",
+                                        "title": "Return Type",
+                                        "default": "chunks",
+                                        "enum": [
+                                            "texts",
+                                            "chunks"
+                                        ],
+                                        "description": "Whether to return chunks as `Chunk` objects or plain text strings."
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response: A list of `Chunk` objects.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "title": "SlumberChunkResponse",
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Chunk"
+                                    },
+                                    "description": "A list containing `Chunk` objects, representing segments intelligently split by the agentic chunker."
+                                }
+                            }
+                        }
+                    }
+                },
+                "x-codeSamples": [
+                    {
+                        "lang": "python",
+                        "label": "Python",
+                        "source": "from chonkie.cloud import SlumberChunker \n\nchunker = SlumberChunker(api_key=\"{api_key}\") \n\nchunks = chunker(text=\"YOUR_TEXT\")"
+                    },
+                    {
+                        "lang": "JavaScript",
+                        "label": "JavaScript",
+                        "source": "import { SlumberChunker } from 'chonkie/cloud';\n\nconst chunker = new SlumberChunker(apiKey);\n\nconst chunks = await chunker({ text: 'YOUR_TEXT' });"
+                    }
+                ]
+            }
+        },
+        "/v1/refine/embeddings": {
+            "post": {
+                "summary": "Embeddings Refinery",
+                "description": "Adds embeddings to a list of provided chunks using a specified embedding model.",
+                "operationId": "refine_embeddings_v1_refine_embeddings_post",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/EmbeddingsRefineryREQ"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response: A list of `Chunk` objects with added embeddings.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "title": "EmbeddingsRefineResponse",
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/ChunkWithEmbedding"
+                                    },
+                                    "description": "A list containing `Chunk` objects, each with an added `embedding` field."
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "x-codeSamples": [
+                    {
+                        "lang": "python",
+                        "label": "Python",
+                        "source": "from chonkie.cloud import EmbeddingsRefinery \n\nrefinery = EmbeddingsRefinery(api_key=\"{api_key}\") \n\nrefined_chunks = refinery(chunks=[YOUR_CHUNKS])"
+                    },
+                    {
+                        "lang": "JavaScript",
+                        "label": "JavaScript",
+                        "source": "import { EmbeddingsRefinery } from 'chonkie/cloud';\n\nconst refinery = new EmbeddingsRefinery(apiKey);\n\nconst refinedChunks = await refinery.refine([YOUR_CHUNKS]);"
+                    }
+                ]
+            }
+        },
+        "/v1/refine/overlap": {
+            "post": {
+                "summary": "Overlap Refinery",
+                "description": "Adds overlapping context (prefix or suffix) to a list of provided chunks based on specified arguments.",
+                "operationId": "refine_overlap_v1_refine_overlap_post",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/OverlapRefineryREQ"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response: A list of `Chunk` objects with added overlap context.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "title": "OverlapRefineResponse",
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Chunk"
+                                    },
+                                    "description": "A list containing `Chunk` objects, potentially modified to include overlapping text or context."
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "x-codeSamples": [
+                    {
+                        "lang": "python",
+                        "label": "Python",
+                        "source": "from chonkie.cloud import OverlapRefinery \n\nrefinery = OverlapRefinery(api_key=\"{api_key}\") \n\nrefined_chunks = refinery(chunks=[YOUR_CHUNKS])"
+                    },
+                    {
+                        "lang": "JavaScript",
+                        "label": "JavaScript",
+                        "source": "import { OverlapRefinery } from 'chonkie/cloud';\n\nconst refinery = new OverlapRefinery(apiKey);\n\nconst refinedChunks = await refinery.refine([YOUR_CHUNKS]);"
+                    }
+                ]
             }
         }
     }

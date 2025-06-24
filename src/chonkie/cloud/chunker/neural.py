@@ -1,9 +1,11 @@
 """Neural Chunking for Chonkie API."""
 
 import os
-from typing import Dict, List, Literal, Optional, Union, cast
+from typing import Dict, List, Optional, Union, cast
 
 import requests
+
+from chonkie.types import Chunk
 
 from .base import CloudChunker
 
@@ -13,7 +15,7 @@ class NeuralChunker(CloudChunker):
 
     BASE_URL = "https://api.chonkie.ai"
     VERSION = "v1"
-    DEFAULT_MODEL = "mirth/chonky_distilbert_base_uncased_1"
+    DEFAULT_MODEL = "mirth/chonky_modernbert_large_1"
 
     SUPPORTED_MODELS = [
         "mirth/chonky_distilbert_base_uncased_1",
@@ -32,7 +34,6 @@ class NeuralChunker(CloudChunker):
         model: str = DEFAULT_MODEL,
         min_characters_per_chunk: int = 10,
         stride: Optional[int] = None,
-        return_type: Literal["texts", "chunks"] = "chunks",
         api_key: Optional[str] = None,
     ) -> None:
         """Initialize the NeuralChunker."""
@@ -49,13 +50,10 @@ class NeuralChunker(CloudChunker):
             )
         if min_characters_per_chunk < 1:
             raise ValueError("Minimum characters per chunk must be greater than 0.")
-        if return_type not in ["texts", "chunks"]:
-            raise ValueError("Return type must be either 'texts' or 'chunks'.")
 
         self.model = model
         self.min_characters_per_chunk = min_characters_per_chunk
-        self.stride = stride if stride is not None else self.SUPPORTED_MODEL_STRIDES[model]
-        self.return_type = return_type
+        self.stride = stride
 
         # Check if the Chonkie API is reachable
         try:
@@ -71,7 +69,7 @@ class NeuralChunker(CloudChunker):
                 + "If the issue persists, please contact support at support@chonkie.ai."
             ) from error
 
-    def chunk(self, text: Union[str, List[str]]) -> List[Dict]:
+    def chunk(self, text: Union[str, List[str]]) -> Union[List[Chunk], List[List[Chunk]]]:
         """Chunk the text into a list of chunks."""
         # Create the payload
         payload = {
@@ -79,7 +77,6 @@ class NeuralChunker(CloudChunker):
             "model": self.model,
             "min_characters_per_chunk": self.min_characters_per_chunk,
             "stride": self.stride,
-            "return_type": self.return_type,
         }
         
         # Send the request to the Chonkie API
@@ -89,14 +86,25 @@ class NeuralChunker(CloudChunker):
                 json=payload,
                 headers={"Authorization": f"Bearer {self.api_key}"},
             )
-            result: List[Dict] = cast(List[Dict], response.json())
+            if isinstance(text, list):
+                batch_result: List[List[Dict]] = cast(List[List[Dict]], response.json())
+                batch_chunks: List[List[Chunk]] = []
+                for chunk_list in batch_result:
+                    curr_chunks = []
+                    for chunk in chunk_list:
+                        curr_chunks.append(Chunk.from_dict(chunk))
+                    batch_chunks.append(curr_chunks)
+                return batch_chunks
+            else:
+                single_result: List[Dict] = cast(List[Dict], response.json())
+                single_chunks: List[Chunk] = [Chunk.from_dict(chunk) for chunk in single_result]
+                return single_chunks
         except Exception as error:
             raise ValueError(
                 "Oh no! The Chonkie API returned an invalid response. Please ensure your input is correct and try again. "
                 + "If the problem continues, contact support at support@chonkie.ai."
             ) from error
-        return result
 
-    def __call__(self, text: Union[str, List[str]]) -> List[Dict]:
+    def __call__(self, text: Union[str, List[str]]) -> Union[List[Chunk], List[List[Chunk]]]:
         """Call the NeuralChunker."""
         return self.chunk(text)

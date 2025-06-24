@@ -53,3 +53,20 @@ class CodeChunk(Chunk):
   node_type: Optional[str] = None
   start_line: Optional[int] = None
   end_line: Optional[int] = None
+
+  def to_dict(self) -> dict:
+    """Return the Chunk as a dictionary."""
+    result = super().to_dict()
+    result["language"] = self.language
+    result["nodes"] = self.nodes
+    result["node_type"] = self.node_type
+    result["start_line"] = self.start_line
+    result["end_line"] = self.end_line
+    return result
+
+  @classmethod
+  def from_dict(cls, data: dict) -> "CodeChunk":
+    """Create a Chunk object from a dictionary."""
+    if "language" not in data and "lang" in data:
+      data["language"] = data.pop("lang") # Compatibility with old versions
+    return cls(**data)

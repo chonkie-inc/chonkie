@@ -1,11 +1,11 @@
 """Test for the Chonkie Cloud Sentence Chunker class."""
 
-import os
 from unittest.mock import Mock, patch
 
 import pytest
 
 from chonkie.cloud import SentenceChunker
+from chonkie.types import SentenceChunk
 
 
 @pytest.fixture
@@ -110,16 +110,6 @@ def test_cloud_sentence_chunker_initialization(mock_requests_get) -> None:
             api_key="test_key"
         )
 
-    # Check if the return_type is not a string
-    with pytest.raises(ValueError):
-        SentenceChunker(
-            tokenizer_or_token_counter="gpt2",
-            chunk_size=512,
-            chunk_overlap=0,
-            return_type="not_a_string",
-            api_key="test_key"
-        )
-
     # Finally, check if the attributes are set correctly
     chunker = SentenceChunker(
         tokenizer_or_token_counter="gpt2", chunk_size=512, chunk_overlap=0, api_key="test_key"
@@ -130,9 +120,8 @@ def test_cloud_sentence_chunker_initialization(mock_requests_get) -> None:
     assert chunker.min_sentences_per_chunk == 1
     assert chunker.min_characters_per_sentence == 12
     assert chunker.approximate == True
-    assert chunker.delim == [".", "!", "?", "\n"]
+    assert chunker.delim == [". ", "! ", "? ", "\n"]
     assert chunker.include_delim == "prev"
-    assert chunker.return_type == "chunks"
 
 
 def test_cloud_sentence_chunker_simple(mock_requests_get, mock_requests_post, mock_api_response) -> None:
@@ -154,11 +143,11 @@ def test_cloud_sentence_chunker_simple(mock_requests_get, mock_requests_post, mo
     result = sentence_chunker(text)
 
     # Check the result
-    assert isinstance(result, list) and isinstance(result[0], dict) and len(result) == 1
-    assert result[0]["text"] == "Hello, world!"
-    assert result[0]["token_count"] == 2  # Based on simple word split
-    assert result[0]["start_index"] == 0
-    assert result[0]["end_index"] == 13
+    assert isinstance(result, list) and isinstance(result[0], SentenceChunk) and len(result) == 1
+    assert result[0].text == "Hello, world!"
+    assert result[0].token_count == 2  # Based on simple word split
+    assert result[0].start_index == 0
+    assert result[0].end_index == 13
 
 
 def test_cloud_sentence_chunker_multiple_sentences(mock_requests_get, mock_requests_post, mock_api_response) -> None:
@@ -203,11 +192,11 @@ def test_cloud_sentence_chunker_multiple_sentences(mock_requests_get, mock_reque
     # Check the result
     assert len(result) > 1
     assert isinstance(result, list)
-    assert all(isinstance(item, dict) for item in result)
-    assert all(isinstance(item["text"], str) for item in result)
-    assert all(isinstance(item["token_count"], int) for item in result)
-    assert all(isinstance(item["start_index"], int) for item in result)
-    assert all(isinstance(item["end_index"], int) for item in result)
+    assert all(isinstance(item, SentenceChunk) for item in result)
+    assert all(isinstance(item.text, str) for item in result)
+    assert all(isinstance(item.token_count, int) for item in result)
+    assert all(isinstance(item.start_index, int) for item in result)
+    assert all(isinstance(item.end_index, int) for item in result)
 
 
 def test_cloud_sentence_chunker_batch(mock_requests_get, mock_requests_post, mock_api_response) -> None:
@@ -232,8 +221,8 @@ def test_cloud_sentence_chunker_batch(mock_requests_get, mock_requests_post, moc
     assert len(result) == len(texts)
     assert isinstance(result, list)
     assert all(isinstance(item, list) for item in result)
-    assert all(isinstance(item, dict) for item in result[0])
-    assert all(isinstance(item["text"], str) for item in result[0])
-    assert all(isinstance(item["token_count"], int) for item in result[0])
-    assert all(isinstance(item["start_index"], int) for item in result[0])
-    assert all(isinstance(item["end_index"], int) for item in result[0])
+    assert all(isinstance(item, SentenceChunk) for item in result[0])
+    assert all(isinstance(item.text, str) for item in result[0])
+    assert all(isinstance(item.token_count, int) for item in result[0])
+    assert all(isinstance(item.start_index, int) for item in result[0])
+    assert all(isinstance(item.end_index, int) for item in result[0])

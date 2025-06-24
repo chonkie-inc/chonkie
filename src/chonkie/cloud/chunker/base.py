@@ -1,7 +1,7 @@
 """Base class for all cloud chunking algorithms."""
 
 from abc import ABC, abstractmethod
-from typing import Dict, List, Union
+from typing import Any, List, Union
 
 
 class CloudChunker(ABC):
@@ -11,10 +11,10 @@ class CloudChunker(ABC):
     VERSION = "v1"
 
     @abstractmethod
-    def chunk(self, text: Union[str, List[str]]) -> List[Dict]:
+    def chunk(self, text: Union[str, List[str]]) -> Any:
         """Chunk the text into a list of chunks."""
         pass
 
-    def __call__(self, text: Union[str, List[str]]) -> List[Dict]:
+    def __call__(self, text: Union[str, List[str]]) -> Any:
         """Call the chunker."""
         return self.chunk(text)

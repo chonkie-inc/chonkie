@@ -7,7 +7,7 @@ import pytest
 from pytest import MonkeyPatch
 
 from chonkie.cloud import SlumberChunker
-from chonkie.types import RecursiveLevel, RecursiveRules
+from chonkie.types import Chunk
 
 
 @pytest.fixture
@@ -89,42 +89,12 @@ def test_cloud_slumber_chunker_initialization(mock_requests_get) -> None:
             api_key="test_key"
         )
 
-    # Check if return_type is not "texts" or "chunks" raises an error
-    with pytest.raises(ValueError, match="Return type must be either 'texts' or 'chunks'."):
-        SlumberChunker(
-            tokenizer_or_token_counter="gpt2",
-            chunk_size=1024,
-            return_type="not_a_valid_type",
-            api_key="test_key"
-        )
-
     # Check default initialization
     chunker = SlumberChunker(api_key="test_key")
     assert chunker.tokenizer_or_token_counter == "gpt2"
     assert chunker.chunk_size == 1024  # Default is 1024, not 512
     assert chunker.candidate_size == 128  # Default is 128, not 512
     assert chunker.min_characters_per_chunk == 24  # Default is 24, not 10
-    assert chunker.return_type == "chunks"
-    assert isinstance(chunker.rules, RecursiveRules)
-
-    # Check initialization with custom parameters
-    custom_levels = [RecursiveLevel(delimiters=["\n\n", "\n", ". "])]
-    custom_rules = RecursiveRules(levels=custom_levels)
-    custom_chunker = SlumberChunker(
-        tokenizer_or_token_counter="cl100k_base",
-        chunk_size=1024,
-        candidate_size=1024,
-        min_characters_per_chunk=20,
-        return_type="texts",
-        rules=custom_rules,
-        api_key="test_key"
-    )
-    assert custom_chunker.tokenizer_or_token_counter == "cl100k_base"
-    assert custom_chunker.chunk_size == 1024
-    assert custom_chunker.candidate_size == 1024
-    assert custom_chunker.min_characters_per_chunk == 20
-    assert custom_chunker.return_type == "texts"
-    assert custom_chunker.rules == custom_rules
 
 
 def test_cloud_slumber_chunker_single_sentence(mock_requests_get, mock_requests_post, mock_api_response) -> None:
@@ -146,15 +116,11 @@ def test_cloud_slumber_chunker_single_sentence(mock_requests_get, mock_requests_
 
     assert isinstance(result, list)
     assert len(result) >= 1
-    assert isinstance(result[0], dict)
-    assert "text" in result[0]
-    assert "token_count" in result[0]
-    assert "start_index" in result[0]
-    assert "end_index" in result[0]
-    assert isinstance(result[0]["text"], str)
-    assert isinstance(result[0]["token_count"], int)
-    assert isinstance(result[0]["start_index"], int)
-    assert isinstance(result[0]["end_index"], int)
+    assert isinstance(result[0], Chunk)
+    assert isinstance(result[0].text, str)
+    assert isinstance(result[0].token_count, int)
+    assert isinstance(result[0].start_index, int)
+    assert isinstance(result[0].end_index, int)
 
 
 def test_cloud_slumber_chunker_batch(mock_requests_get, mock_requests_post, mock_api_response) -> None:
@@ -185,11 +151,11 @@ def test_cloud_slumber_chunker_batch(mock_requests_get, mock_requests_post, mock
         assert isinstance(text_result, list)
         assert len(text_result) >= 1
         for chunk in text_result:
-            assert isinstance(chunk, dict)
-            assert "text" in chunk
-            assert "token_count" in chunk
-            assert "start_index" in chunk
-            assert "end_index" in chunk
+            assert isinstance(chunk, Chunk)
+            assert isinstance(chunk.text, str)
+            assert isinstance(chunk.token_count, int)
+            assert isinstance(chunk.start_index, int)
+            assert isinstance(chunk.end_index, int)
 
 
 def test_cloud_slumber_chunker_from_recipe() -> None:
@@ -201,57 +167,10 @@ def test_cloud_slumber_chunker_from_recipe() -> None:
     # If it exists, test it
     sample_recipe_path = "tests/samples/recipe.json"
     if os.path.exists(sample_recipe_path):
-        slumber_chunker = SlumberChunker.from_recipe(sample_recipe_path, api_key="test_key")
+        slumber_chunker = SlumberChunker(recipe=sample_recipe_path, api_key="test_key")
         assert slumber_chunker is not None
     else:
         pytest.skip("Sample recipe file not found")
-
-
-def test_cloud_slumber_chunker_return_type_texts(mock_requests_get, mock_requests_post) -> None:
-    """Test that the Slumber Chunker works with return_type='texts'."""
-    text = "This is a test for return type texts."
-    
-    # Mock the post request response for text return type
-    mock_response = Mock()
-    mock_response.status_code = 200
-    mock_response.json.return_value = [text]  # Return type texts returns list of strings
-    mock_requests_post.return_value = mock_response
-    
-    slumber_chunker = SlumberChunker(
-        tokenizer_or_token_counter="gpt2",
-        chunk_size=512,
-        return_type="texts",
-        api_key="test_key"
-    )
-    result = slumber_chunker(text)
-
-    assert isinstance(result, list)
-    assert all(isinstance(item, str) for item in result)
-
-
-def test_cloud_slumber_chunker_return_type_texts_batch(mock_requests_get, mock_requests_post) -> None:
-    """Test that the Slumber Chunker works with return_type='texts' for batch processing."""
-    texts = [
-        "First text for batch processing.",
-        "Second text for batch processing.",
-    ]
-    
-    # Mock the post request response for batch text return type
-    mock_response = Mock()
-    mock_response.status_code = 200
-    mock_response.json.return_value = [texts[0], texts[1]]  # Flat list for texts return type
-    mock_requests_post.return_value = mock_response
-    
-    slumber_chunker = SlumberChunker(
-        tokenizer_or_token_counter="gpt2",
-        chunk_size=512,
-        return_type="texts",
-        api_key="test_key"
-    )
-    result = slumber_chunker(texts)
-
-    assert isinstance(result, list)
-    assert all(isinstance(item, str) for item in result)
 
 
 def test_cloud_slumber_chunker_empty_text(mock_requests_get, mock_requests_post) -> None:
@@ -308,9 +227,11 @@ def test_cloud_slumber_chunker_long_text(mock_requests_get, mock_requests_post, 
     assert isinstance(result, list)
     assert len(result) >= 2  # Should be split into multiple chunks
     for chunk in result:
-        assert isinstance(chunk, dict)
-        assert "text" in chunk
-        assert "token_count" in chunk
+        assert isinstance(chunk, Chunk)
+        assert isinstance(chunk.text, str)
+        assert isinstance(chunk.token_count, int)
+        assert isinstance(chunk.start_index, int)
+        assert isinstance(chunk.end_index, int)
 
 
 def test_cloud_slumber_chunker_real_api(mock_requests_get, mock_requests_post, mock_api_response) -> None:
@@ -330,8 +251,10 @@ def test_cloud_slumber_chunker_real_api(mock_requests_get, mock_requests_post, m
     )
     result = slumber_chunker(text)
 
-    assert isinstance(result, list)
-    assert len(result) >= 1
-    assert isinstance(result[0], dict)
-    assert "text" in result[0]
-    assert "token_count" in result[0]
+    assert isinstance(result, list) and len(result) >= 1
+    assert isinstance(result[0], Chunk)
+    assert isinstance(result[0].text, str)
+    assert isinstance(result[0].token_count, int)
+    assert isinstance(result[0].start_index, int)
+    assert isinstance(result[0].end_index, int)
+    

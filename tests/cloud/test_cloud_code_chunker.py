@@ -1,12 +1,12 @@
 """Test for the Chonkie Cloud Code Chunker class."""
 
-import os
 from typing import Any, Callable, Dict, List, Union
 from unittest.mock import Mock, patch
 
 import pytest
 
 from chonkie.cloud import CodeChunker
+from chonkie.types import CodeChunk
 
 
 @pytest.fixture
@@ -150,15 +150,6 @@ def test_cloud_code_chunker_initialization(mock_requests_get: Any) -> None:
     with pytest.raises(ValueError):
         CodeChunker(tokenizer_or_token_counter="gpt2", chunk_size=0, api_key="test_key")
 
-    # Check if the return_type is not "texts" or "chunks" raises an error
-    with pytest.raises(ValueError):
-        CodeChunker(
-            tokenizer_or_token_counter="gpt2",
-            chunk_size=512,
-            return_type="bad_return_type",
-            api_key="test_key"
-        )
-
     # Finally, check if the attributes are set correctly
     chunker = CodeChunker(
         tokenizer_or_token_counter="gpt2", 
@@ -169,7 +160,6 @@ def test_cloud_code_chunker_initialization(mock_requests_get: Any) -> None:
     assert chunker.tokenizer_or_token_counter == "gpt2"
     assert chunker.chunk_size == 512
     assert chunker.language == "python"
-    assert chunker.return_type == "chunks"
 
 
 def test_cloud_code_chunker_simple(mock_requests_get: Any, mock_requests_post: Any, mock_api_response: Any) -> None:
@@ -192,15 +182,15 @@ def test_cloud_code_chunker_simple(mock_requests_get: Any, mock_requests_post: A
 
     # Check the result
     assert isinstance(result, list) and len(result) >= 1
-    assert isinstance(result[0], dict)
-    assert "text" in result[0]
-    assert "token_count" in result[0]
-    assert "start_index" in result[0]
-    assert "end_index" in result[0]
-    assert isinstance(result[0]["text"], str)
-    assert isinstance(result[0]["token_count"], int)
-    assert isinstance(result[0]["start_index"], int)
-    assert isinstance(result[0]["end_index"], int)
+    assert isinstance(result[0], CodeChunk)
+    assert result[0].text
+    assert result[0].token_count
+    assert result[0].start_index is not None
+    assert result[0].end_index is not None
+    assert isinstance(result[0].text, str)
+    assert isinstance(result[0].token_count, int)
+    assert isinstance(result[0].start_index, int)
+    assert isinstance(result[0].end_index, int)
 
 
 def test_cloud_code_chunker_python_complex(mock_requests_get: Any, mock_requests_post: Any, mock_api_response: Any, python_code: str) -> None:
@@ -222,14 +212,14 @@ def test_cloud_code_chunker_python_complex(mock_requests_get: Any, mock_requests
     # Check the result
     assert isinstance(result, list)
     assert len(result) > 1  # Should be split into multiple chunks
-    assert all(isinstance(item, dict) for item in result)
-    assert all(isinstance(item["text"], str) for item in result)
-    assert all(isinstance(item["token_count"], int) for item in result)
-    assert all(isinstance(item["start_index"], int) for item in result)
-    assert all(isinstance(item["end_index"], int) for item in result)
+    assert all(isinstance(item, CodeChunk) for item in result)
+    assert all(isinstance(item.text, str) for item in result)
+    assert all(isinstance(item.token_count, int) for item in result)
+    assert all(isinstance(item.start_index, int) for item in result)
+    assert all(isinstance(item.end_index, int) for item in result)
 
     # Check that chunks can be reconstructed
-    reconstructed = "".join(chunk["text"] for chunk in result)
+    reconstructed = "".join(chunk.text for chunk in result)
     assert reconstructed == python_code
 
 
@@ -252,12 +242,12 @@ def test_cloud_code_chunker_javascript(mock_requests_get: Any, mock_requests_pos
     # Check the result
     assert isinstance(result, list)
     assert len(result) > 1  # Should be split into multiple chunks
-    assert all(isinstance(item, dict) for item in result)
-    assert all(isinstance(item["text"], str) for item in result)
-    assert all(isinstance(item["token_count"], int) for item in result)
+    assert all(isinstance(item, CodeChunk) for item in result)
+    assert all(isinstance(item.text, str) for item in result)
+    assert all(isinstance(item.token_count, int) for item in result)
 
     # Check that chunks can be reconstructed
-    reconstructed = "".join(chunk["text"] for chunk in result)
+    reconstructed = "".join(chunk.text for chunk in result)
     assert reconstructed == js_code
 
 
@@ -280,11 +270,11 @@ def test_cloud_code_chunker_auto_language(mock_requests_get: Any, mock_requests_
     # Check the result
     assert isinstance(result, list)
     assert len(result) >= 1
-    assert all(isinstance(item, dict) for item in result)
-    assert all(isinstance(item["text"], str) for item in result)
+    assert all(isinstance(item, CodeChunk) for item in result)
+    assert all(isinstance(item.text, str) for item in result)
 
     # Check that chunks can be reconstructed
-    reconstructed = "".join(chunk["text"] for chunk in result)
+    reconstructed = "".join(chunk.text for chunk in result)
     assert reconstructed == python_code
 
 
@@ -308,8 +298,8 @@ def test_cloud_code_chunker_no_nodes_support(mock_requests_get: Any, mock_reques
 
     # Check the result - should not contain nodes since API doesn't support them
     assert isinstance(result, list) and len(result) >= 1
-    assert isinstance(result[0], dict)
-    assert "text" in result[0]
+    assert isinstance(result[0], CodeChunk)
+    assert result[0].text
     # API doesn't support tree-sitter nodes, so they shouldn't be in response
 
 
@@ -337,39 +327,15 @@ def test_cloud_code_chunker_batch(mock_requests_get: Any, mock_requests_post: An
     assert all(isinstance(item, list) for item in result), (
         f"Expected a list of lists, got {type(result)}"
     )
-    assert all(isinstance(chunk, dict) for batch in result for chunk in batch), (
-        "Expected lists of dictionaries"
+    assert all(isinstance(chunk, CodeChunk) for batch in result for chunk in batch), (
+        "Expected lists of CodeChunks"
     )
-    assert all(isinstance(chunk["text"], str) for batch in result for chunk in batch), (
+    assert all(isinstance(chunk.text, str) for batch in result for chunk in batch), (
         "Expected chunks with text field"
     )
-    assert all(isinstance(chunk["token_count"], int) for batch in result for chunk in batch), (
+    assert all(isinstance(chunk.token_count, int) for batch in result for chunk in batch), (
         "Expected chunks with token_count field"
     )
-
-
-def test_cloud_code_chunker_return_type_texts(mock_requests_get: Any, mock_requests_post: Any) -> None:
-    """Test that the code chunker works with return_type='texts'."""
-    simple_code = "def hello():\n    print('Hello, world!')"
-    
-    # Mock the post request response for texts return type
-    mock_response = Mock()
-    mock_response.status_code = 200
-    mock_response.json.return_value = [simple_code]  # Return type texts returns list of strings
-    mock_requests_post.return_value = mock_response
-    
-    code_chunker = CodeChunker(
-        tokenizer_or_token_counter="gpt2",
-        chunk_size=512,
-        language="python",
-        return_type="texts",
-        api_key="test_key"
-    )
-    result = code_chunker(simple_code)
-
-    # Check the result
-    assert isinstance(result, list)
-    assert all(isinstance(item, str) for item in result)
 
 
 def test_cloud_code_chunker_empty_text(mock_requests_get: Any, mock_requests_post: Any) -> None:
@@ -434,11 +400,11 @@ def test_cloud_code_chunker_chunk_size_adherence(mock_requests_get: Any, mock_re
 
     # Most chunks should be close to or under chunk_size (with some tolerance for code boundaries)
     for i, chunk in enumerate(result[:-1]):  # Check all but last chunk
-        assert chunk["token_count"] <= chunk_size + 20, f"Chunk {i} exceeds size limit: {chunk['token_count']}"
+        assert chunk.token_count <= chunk_size + 20, f"Chunk {i} exceeds size limit: {chunk.token_count}"
     
     # Last chunk should have some content
     if result:
-        assert result[-1]["token_count"] > 0
+        assert result[-1].token_count > 0
 
 
 def test_cloud_code_chunker_indices_continuity(mock_requests_get: Any, mock_requests_post: Any, mock_api_response: Any, python_code: str) -> None:
@@ -460,9 +426,9 @@ def test_cloud_code_chunker_indices_continuity(mock_requests_get: Any, mock_requ
     # Check indices are continuous
     current_index = 0
     for chunk in result:
-        assert chunk["start_index"] == current_index
-        assert chunk["end_index"] > chunk["start_index"]
-        current_index = chunk["end_index"]
+        assert chunk.start_index == current_index
+        assert chunk.end_index > chunk.start_index
+        current_index = chunk.end_index
     
     # Final index should match original text length
     assert current_index == len(python_code)
@@ -492,8 +458,8 @@ def test_cloud_code_chunker_different_tokenizers(mock_requests_get: Any, mock_re
         
         assert isinstance(result, list)
         assert len(result) >= 1
-        assert all(isinstance(chunk, dict) for chunk in result)
-        assert all("text" in chunk for chunk in result)
+        assert all(isinstance(chunk, CodeChunk) for chunk in result)
+        assert all(chunk.text for chunk in result)
 
 
 def test_cloud_code_chunker_real_api(mock_requests_get: Any, mock_requests_post: Any, mock_api_response: Any) -> None:
@@ -516,6 +482,6 @@ def test_cloud_code_chunker_real_api(mock_requests_get: Any, mock_requests_post:
 
     # Check the result
     assert isinstance(result, list) and len(result) >= 1
-    assert isinstance(result[0], dict)
-    assert "text" in result[0]
-    assert "token_count" in result[0]
+    assert isinstance(result[0], CodeChunk)
+    assert result[0].text
+    assert result[0].token_count

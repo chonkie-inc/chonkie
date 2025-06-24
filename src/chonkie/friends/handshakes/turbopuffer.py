@@ -1,7 +1,7 @@
 """Turbopuffer Handshake to export Chonkie's Chunks into a Turbopuffer database."""
 import importlib.util as importutil
 import os
-from typing import TYPE_CHECKING, Literal, Optional, Sequence, Union
+from typing import TYPE_CHECKING, Any, Literal, Optional, Sequence, Union
 from uuid import NAMESPACE_OID, uuid5
 
 from chonkie.embeddings import AutoEmbeddings, BaseEmbeddings
@@ -11,14 +11,14 @@ from .base import BaseHandshake
 from .utils import generate_random_collection_name
 
 if TYPE_CHECKING:
-    import turbopuffer as tpuf
+    pass
 
 
 class TurbopufferHandshake(BaseHandshake):
     """Turbopuffer Handshake to export Chonkie's Chunks into a Turbopuffer database."""
 
     def __init__(self, 
-                 namespace: Optional["tpuf.Namespace"] = None,
+                 namespace: Optional[Any] = None,  # Will be tpuf.Namespace at runtime
                  namespace_name: Union[str, Literal["random"]] = "random", 
                  embedding_model: Union[str, BaseEmbeddings] = "minishlab/potion-retrieval-32M", 
                  api_key: Optional[str] = None,
@@ -35,7 +35,7 @@ class TurbopufferHandshake(BaseHandshake):
         super().__init__()
 
         # Lazy import the dependencies
-        self._import_dependencies()
+        self.tpuf = self._import_dependencies()
 
         # Check for the API Key
         api_key = api_key or os.getenv("TURBOPUFFER_API_KEY")
@@ -43,10 +43,10 @@ class TurbopufferHandshake(BaseHandshake):
             raise ValueError("Turbopuffer API key not found. Please provide an API key or set the TURBOPUFFER_API_KEY environment variable.")
 
         # Setting the tpuf api key
-        tpuf.api_key = api_key
+        self.tpuf.api_key = api_key  # type: ignore[attr-defined]
 
         # Get a list of namespaces
-        namespaces = [ns.name for ns in tpuf.namespaces()]
+        namespaces = [ns.name for ns in self.tpuf.namespaces()]  # type: ignore[attr-defined]
 
         # If the namespace is not provided, generate a random one
         if namespace is None:
@@ -56,8 +56,8 @@ class TurbopufferHandshake(BaseHandshake):
                     namespace_name = generate_random_collection_name()
                     if namespace_name not in namespaces:
                         break
-            self.namespace = tpuf.Namespace(namespace_name)
-            print(f"🦛 Chonkie has created a new namespace: {self.namespace.name}")
+            self.namespace = self.tpuf.Namespace(namespace_name)  # type: ignore[attr-defined]
+            print(f"🦛 Chonkie has created a new namespace: {self.namespace.name}")  # type: ignore[attr-defined]
         else:
             self.namespace = namespace
 
@@ -68,18 +68,20 @@ class TurbopufferHandshake(BaseHandshake):
         """Check if Turbopuffer is available."""
         return importutil.find_spec("turbopuffer") is not None
 
-    def _import_dependencies(self) -> None:
+    def _import_dependencies(self) -> Any:
         """Import the dependencies for Turbopuffer."""
         if self._is_available():
-            global tpuf
             import turbopuffer as tpuf
+            return tpuf
+        else:
+            raise ImportError("Turbopuffer is not available. Please install it with `pip install turbopuffer`.")
 
     def _generate_id(self, index: int, chunk: Chunk) -> str:
         """Generate a unique ID for the chunk."""
         return str(
             uuid5(
                 NAMESPACE_OID, 
-                f"{self.namespace.name}::chunk-{index}:{chunk.text}"
+                f"{self.namespace.name}::chunk-{index}:{chunk.text}"  # type: ignore[attr-defined]
             )
         )
 
@@ -97,7 +99,7 @@ class TurbopufferHandshake(BaseHandshake):
         token_counts = [chunk.token_count for chunk in chunks]
 
         # Write the chunks to the database
-        self.namespace.write(
+        self.namespace.write(  # type: ignore[attr-defined]
             upsert_columns={
                 "id": ids,
                 "vector": embeddings,
@@ -108,8 +110,8 @@ class TurbopufferHandshake(BaseHandshake):
             }
         )
         
-        print(f"🦛 Chonkie has written {len(chunks)} chunks to the namespace: {self.namespace.name}")
+        print(f"🦛 Chonkie has written {len(chunks)} chunks to the namespace: {self.namespace.name}")  # type: ignore[attr-defined]
 
     def __repr__(self) -> str:
         """Return the representation of the Turbopuffer Handshake."""
-        return f"TurbopufferHandshake(namespace={self.namespace.name})"
+        return f"TurbopufferHandshake(namespace={self.namespace.name})"  # type: ignore[attr-defined]

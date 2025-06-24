@@ -26,8 +26,12 @@ if TYPE_CHECKING:
         from qdrant_client.http.models import Distance, VectorParams
     except ImportError:
         class VectorParams:  # type: ignore
+            """Stub class for qdrant_client VectorParams when not available."""
+
             pass
         class Distance:  # type: ignore
+            """Stub class for qdrant_client Distance when not available."""
+
             pass
 
 class QdrantHandshake(BaseHandshake):

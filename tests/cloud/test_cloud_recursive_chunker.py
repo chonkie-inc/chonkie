@@ -1,12 +1,10 @@
 """Test the Chonkie Cloud Recursive Chunker."""
 
-import os
 from unittest.mock import Mock, patch
 
 import pytest
 
 from chonkie.cloud import RecursiveChunker
-from chonkie.types import RecursiveRules
 
 
 @pytest.fixture
@@ -72,22 +70,11 @@ def test_cloud_recursive_chunker_initialization(mock_requests_get) -> None:
             api_key="test_key"
         )
 
-    # Check if the return_type is not "texts" or "chunks" raises an error
-    with pytest.raises(ValueError):
-        RecursiveChunker(
-            tokenizer_or_token_counter="gpt2",
-            chunk_size=512,
-            return_type="not_a_string",
-            api_key="test_key"
-        )
-
     # Finally, check if the attributes are set correctly
     chunker = RecursiveChunker(tokenizer_or_token_counter="gpt2", chunk_size=512, api_key="test_key")
     assert chunker.tokenizer_or_token_counter == "gpt2"
     assert chunker.chunk_size == 512
     assert chunker.min_characters_per_chunk == 12
-    assert chunker.return_type == "chunks"
-    assert isinstance(chunker.rules, RecursiveRules)
 
 
 def test_cloud_recursive_chunker_single_sentence(mock_requests_get, mock_requests_post, mock_api_response) -> None:
@@ -108,10 +95,10 @@ def test_cloud_recursive_chunker_single_sentence(mock_requests_get, mock_request
 
     result = recursive_chunker(text)
     assert len(result) == 1
-    assert result[0]["text"] == "Hello, world!"
-    assert result[0]["token_count"] == 2  # Mocked value based on word count
-    assert result[0]["start_index"] == 0
-    assert result[0]["end_index"] == 13
+    assert result[0].text == "Hello, world!"
+    assert result[0].token_count == 2  # Mocked value based on word count
+    assert result[0].start_index == 0
+    assert result[0].end_index == 13
 
 
 def test_cloud_recursive_chunker_batch(mock_requests_get, mock_requests_post, mock_api_response) -> None:
@@ -136,10 +123,10 @@ def test_cloud_recursive_chunker_batch(mock_requests_get, mock_requests_post, mo
 
     result = recursive_chunker(texts)
     assert len(result) == 3
-    assert result[0][0]["text"] == "Hello, world!"
-    assert result[0][0]["token_count"] == 2
-    assert result[0][0]["start_index"] == 0
-    assert result[0][0]["end_index"] == 13
+    assert result[0][0].text == "Hello, world!"
+    assert result[0][0].token_count == 2
+    assert result[0][0].start_index == 0
+    assert result[0][0].end_index == 13
 
 
 def test_cloud_recursive_chunker_empty_text(mock_requests_get, mock_requests_post, mock_api_response) -> None:
@@ -178,4 +165,4 @@ def test_cloud_recursive_chunker_real_api(mock_requests_get, mock_requests_post,
 
     result = recursive_chunker(text)
     assert len(result) >= 1
-    assert result[0]["text"] == "Hello, world!"
+    assert result[0].text == "Hello, world!"

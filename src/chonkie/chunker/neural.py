@@ -17,8 +17,11 @@ if TYPE_CHECKING:
         from transformers import PreTrainedTokenizerFast, pipeline
     except ImportError:
         class PreTrainedTokenizerFast:  # type: ignore
+            """Stub class for transformers PreTrainedTokenizerFast when not available."""
+
             pass
         def pipeline(*args, **kwargs):  # type: ignore
+            """Stub function for transformers pipeline when not available."""
             pass
 
 # TODO: Add a check to see if the model is supported

@@ -367,7 +367,7 @@ def test_semantic_chunker_from_recipe_default() -> None:
     chunker = SemanticChunker.from_recipe()
 
     assert chunker is not None
-    assert chunker.delim == [".", "!", "?", "\n"]
+    assert chunker.delim == [". ", "! ", "? ", "\n"]
     assert chunker.include_delim == "prev"
 
 def test_semantic_chunker_from_recipe_custom_params(embedding_model: BaseEmbeddings) -> None:
@@ -382,7 +382,7 @@ def test_semantic_chunker_from_recipe_custom_params(embedding_model: BaseEmbeddi
     )
 
     assert chunker is not None
-    assert chunker.delim == [".", "!", "?", "\n"]
+    assert chunker.delim == [". ", "! ", "? ", "\n"]
     assert chunker.include_delim == "prev"
     assert chunker.chunk_size == 256
     assert chunker.threshold == 0.9

@@ -160,6 +160,11 @@
       }
     ]
   },
+  "api": {
+    "playground": {
+      "display": "none"
+    }
+  },
   "seo": {
     "metatags": {
       "og:site_map": "Chonkie Documentation",

@@ -1,11 +1,11 @@
 """Test for the Chonkie Cloud Token Chunker class."""
 
-import os
 from unittest.mock import Mock, patch
 
 import pytest
 
 from chonkie.cloud import TokenChunker
+from chonkie.types import Chunk
 
 
 @pytest.fixture
@@ -66,22 +66,11 @@ def test_cloud_token_chunker_initialization(mock_requests_get) -> None:
     with pytest.raises(ValueError):
         TokenChunker(tokenizer="gpt2", chunk_size=512, chunk_overlap=-1, api_key="test_key")
 
-    # Check if the return_type is not "texts" or "chunks" raises an error
-    with pytest.raises(ValueError):
-        TokenChunker(
-            tokenizer="gpt2",
-            chunk_size=512,
-            chunk_overlap=0,
-            return_type="bad_return_type",
-            api_key="test_key"
-        )
-
     # Finally, check if the attributes are set correctly
     chunker = TokenChunker(tokenizer="gpt2", chunk_size=512, chunk_overlap=0, api_key="test_key")
     assert chunker.tokenizer == "gpt2"
     assert chunker.chunk_size == 512
     assert chunker.chunk_overlap == 0
-    assert chunker.return_type == "chunks"
 
 
 def test_cloud_token_chunker_simple(mock_requests_get, mock_requests_post, mock_api_response) -> None:
@@ -103,11 +92,11 @@ def test_cloud_token_chunker_simple(mock_requests_get, mock_requests_post, mock_
     result = token_chunker(text)
 
     # Check the result
-    assert isinstance(result, list) and isinstance(result[0], dict) and len(result) == 1
-    assert result[0]["text"] == "Hello, world!"
-    assert result[0]["token_count"] == 2  # Based on simple word split
-    assert result[0]["start_index"] == 0
-    assert result[0]["end_index"] == 13
+    assert isinstance(result, list) and isinstance(result[0], Chunk) and len(result) == 1
+    assert result[0].text == "Hello, world!"
+    assert result[0].token_count == 2  # Based on simple word split
+    assert result[0].start_index == 0
+    assert result[0].end_index == 13
 
 
 def test_cloud_token_chunker_multiple_sentences(mock_requests_get, mock_requests_post, mock_api_response) -> None:
@@ -158,11 +147,11 @@ def test_cloud_token_chunker_multiple_sentences(mock_requests_get, mock_requests
     # Check the result
     assert len(result) > 1
     assert isinstance(result, list)
-    assert all(isinstance(item, dict) for item in result)
-    assert all(isinstance(item["text"], str) for item in result)
-    assert all(isinstance(item["token_count"], int) for item in result)
-    assert all(isinstance(item["start_index"], int) for item in result)
-    assert all(isinstance(item["end_index"], int) for item in result)
+    assert all(isinstance(item, Chunk) for item in result)
+    assert all(isinstance(item.text, str) for item in result)
+    assert all(isinstance(item.token_count, int) for item in result)
+    assert all(isinstance(item.start_index, int) for item in result)
+    assert all(isinstance(item.end_index, int) for item in result)
 
 
 def test_cloud_token_chunker_batch(mock_requests_get, mock_requests_post, mock_api_response) -> None:
@@ -189,42 +178,18 @@ def test_cloud_token_chunker_batch(mock_requests_get, mock_requests_post, mock_a
     assert all(isinstance(item, list) for item in result), (
         f"Expected a list of lists, got {type(result)}"
     )
-    assert all(isinstance(item, dict) for item in result[0]), (
+    assert all(isinstance(item, Chunk) for item in result[0]), (
         f"Expected a list of dictionaries, got {type(result[0])}"
     )
-    assert all(isinstance(item["text"], str) for item in result[0]), (
+    assert all(isinstance(item.text, str) for item in result[0]), (
         f"Expected a list of dictionaries with a 'text' key, got {type(result[0])}"
     )
-    assert all(isinstance(item["token_count"], int) for item in result[0]), (
+    assert all(isinstance(item.token_count, int) for item in result[0]), (
         f"Expected a list of dictionaries with a 'token_count' key, got {type(result[0])}"
     )
-    assert all(isinstance(item["start_index"], int) for item in result[0]), (
+    assert all(isinstance(item.start_index, int) for item in result[0]), (
         f"Expected a list of dictionaries with a 'start_index' key, got {type(result[0])}"
     )
-    assert all(isinstance(item["end_index"], int) for item in result[0]), (
+    assert all(isinstance(item.end_index, int) for item in result[0]), (
         f"Expected a list of dictionaries with a 'end_index' key, got {type(result[0])}"
     )
-
-
-def test_cloud_token_chunker_return_type(mock_requests_get, mock_requests_post) -> None:
-    """Test that the token chunker works with a return type."""
-    text = "Hello, world!"
-    
-    # Mock the post request response for text return type
-    mock_response = Mock()
-    mock_response.status_code = 200
-    mock_response.json.return_value = [text]  # Return type texts returns list of strings
-    mock_requests_post.return_value = mock_response
-    
-    token_chunker = TokenChunker(
-        tokenizer="gpt2",
-        chunk_size=512,
-        chunk_overlap=0,
-        return_type="texts",
-        api_key="test_key"
-    )
-    result = token_chunker(text)
-
-    # Check the result
-    assert isinstance(result, list)
-    assert all(isinstance(item, str) for item in result)

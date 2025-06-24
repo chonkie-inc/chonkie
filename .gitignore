@@ -56,3 +56,4 @@ CLAUDE.md
 chroma/*
 .chaider/*
 .chaiderignore
+test-env/*

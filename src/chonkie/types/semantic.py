@@ -1,7 +1,7 @@
 """Semantic types for Chonkie."""
 
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any, List, Optional, cast
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from chonkie.types.sentence import Sentence, SentenceChunk
 
@@ -26,21 +26,39 @@ class SemanticSentence(Sentence):
 
     embedding: Optional["np.ndarray"] = field(default=None)
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> Dict[str, Any]:
         """Return the SemanticSentence as a dictionary."""
-        result = cast(dict[str, Any], super().to_dict())
-        result["embedding"] = (
-            self.embedding.tolist() if self.embedding is not None else None
-        )
+        result: Dict[str, Any] = super().to_dict()
+        if self.embedding is not None:
+            try:
+                result["embedding"] = self.embedding.tolist()
+            except AttributeError:
+                result["embedding"] = self.embedding
+        else:
+            result["embedding"] = None
         return result
 
     @classmethod
     def from_dict(cls, data: dict) -> "SemanticSentence":
-        """Create a SemanticSentence object from a dictionary."""
+        """Create a SemanticSentence object from a dictionary.
+
+        NOTE: If numpy is available, `.embedding` will be a numpy array.
+        If not, it will be a list.
+        """
         embedding_list = data.pop("embedding", None)
-        # NOTE: We can't use np.array() here because we don't import numpy in this file,
-        # and we don't want add 50MiB to the package size.
-        embedding = embedding_list if embedding_list is not None else None
+        # If numpy is available, we will use it.
+        # If not, skip and keep it as a list.
+        if embedding_list is not None:
+            try:
+                import numpy as np
+                if isinstance(embedding_list, list):
+                    embedding = np.array(embedding_list)
+                else:
+                    embedding = embedding_list
+            except ImportError:
+                embedding = embedding_list
+        else:
+            embedding = None
         return cls(**data, embedding=embedding)
 
     def __repr__(self) -> str:
@@ -76,7 +94,7 @@ class SemanticChunk(SentenceChunk):
     @classmethod
     def from_dict(cls, data: dict) -> "SemanticChunk":
         """Create a SemanticChunk object from a dictionary."""
-        sentences_dict = data.pop("sentences")
+        sentences_dict = data.pop("sentences", [])
         sentences = [SemanticSentence.from_dict(sentence) for sentence in sentences_dict]
         return cls(**data, sentences=sentences)
 

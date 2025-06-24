@@ -1,11 +1,11 @@
 """Test the Chonkie Cloud SDPM Chunker."""
 
-import os
 from unittest.mock import Mock, patch
 
 import pytest
 
 from chonkie.cloud import SDPMChunker
+from chonkie.types import SemanticChunk
 
 
 @pytest.fixture
@@ -100,10 +100,6 @@ def test_cloud_sdpm_chunker_initialization(mock_requests_get) -> None:
     with pytest.raises(ValueError):
         SDPMChunker(skip_window=-1, api_key="test_key")
 
-    # Check if the return_type is not "chunks" or "texts"
-    with pytest.raises(ValueError):
-        SDPMChunker(return_type="not_valid", api_key="test_key")
-
     # Check if the embedding_model is not a string
     with pytest.raises(ValueError):
         SDPMChunker(embedding_model=123, api_key="test_key") # type: ignore
@@ -122,7 +118,6 @@ def test_cloud_sdpm_chunker_initialization(mock_requests_get) -> None:
     assert chunker.delim == [". ", "! ", "? ", "\n"]
     assert chunker.include_delim == "prev"
     assert chunker.skip_window == 1
-    assert chunker.return_type == "chunks"
     assert chunker.api_key == "test_key"
 
 
@@ -177,16 +172,16 @@ def test_cloud_sdpm_chunker_batch(mock_requests_get, mock_requests_post, mock_ap
     result = sdpm_chunker(texts)
     assert len(result) == len(texts)
     for i in range(len(texts)):
-        assert isinstance(result[i], list) # API returns a list of lists for batch
+        assert isinstance(result[i], list)
         if len(result[i]) > 0:
-            assert "text" in result[i][0] 
-            assert isinstance(result[i][0]["text"], str)
-            assert "token_count" in result[i][0]
-            assert isinstance(result[i][0]["token_count"], int)
-            assert "start_index" in result[i][0]
-            assert isinstance(result[i][0]["start_index"], int)
-            assert "end_index" in result[i][0]
-            assert isinstance(result[i][0]["end_index"], int)
+            assert result[i][0].text 
+            assert isinstance(result[i][0].text, str)
+            assert result[i][0].token_count
+            assert isinstance(result[i][0].token_count, int)
+            assert result[i][0].start_index is not None
+            assert isinstance(result[i][0].start_index, int)
+            assert result[i][0].end_index is not None
+            assert isinstance(result[i][0].end_index, int)
 
 
 def test_cloud_sdpm_chunker_empty_text(mock_requests_get, mock_requests_post, mock_api_response) -> None:
@@ -203,9 +198,6 @@ def test_cloud_sdpm_chunker_empty_text(mock_requests_get, mock_requests_post, mo
     )
 
     result = sdpm_chunker("")
-    # The API might return an empty list or a list with an empty chunk object
-    # Depending on the API's behavior, this assertion might need adjustment.
-    # Based on SemanticChunker tests, an empty list is expected.
     assert len(result) == 0
 
 
@@ -224,6 +216,6 @@ def test_cloud_sdpm_chunker_real_api(mock_requests_get, mock_requests_post, mock
     assert isinstance(result, list)
     if result:
         for chunk in result:
-            assert isinstance(chunk, dict)
-            assert "text" in chunk
-            assert "token_count" in chunk
+            assert isinstance(chunk, SemanticChunk)
+            assert chunk.text
+            assert chunk.token_count
