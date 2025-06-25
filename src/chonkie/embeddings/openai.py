@@ -5,6 +5,14 @@ import os
 import warnings
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
+from openai import APIError, RateLimitError, Timeout
+from tenacity import (
+    retry,
+    retry_if_exception_type,
+    stop_after_attempt,
+    wait_exponential,
+)
+
 from .base import BaseEmbeddings
 
 if TYPE_CHECKING:
@@ -100,6 +108,11 @@ class OpenAIEmbeddings(BaseEmbeddings):
                 "OpenAI API key not found. Either pass it as api_key or set OPENAI_API_KEY environment variable."
             )
 
+    @retry(
+        stop=stop_after_attempt(5),
+        wait=wait_exponential(multiplier=2, max=60),
+        retry=retry_if_exception_type((RateLimitError, APIError, Timeout))
+    )
     def embed(self, text: str) -> "np.ndarray":
         """Get embeddings for a single text."""
         response = self.client.embeddings.create(
@@ -120,15 +133,7 @@ class OpenAIEmbeddings(BaseEmbeddings):
         for i in range(0, len(texts), self._batch_size):
             batch = texts[i : i + self._batch_size]
             try:
-                response = self.client.embeddings.create(
-                    model=self.model,
-                    input=batch,
-                )
-                # Sort embeddings by index as OpenAI might return them in different order
-                sorted_embeddings = sorted(response.data, key=lambda x: x.index)
-                embeddings = [
-                    np.array(e.embedding, dtype=np.float32) for e in sorted_embeddings
-                ]
+                embeddings = self._embed_batch_with_retry(batch)
                 all_embeddings.extend(embeddings)
 
             except Exception as e:
@@ -143,6 +148,24 @@ class OpenAIEmbeddings(BaseEmbeddings):
                     raise e
 
         return all_embeddings
+
+    @retry(
+        stop=stop_after_attempt(5),
+        wait=wait_exponential(multiplier=2, max=60),
+        retry=retry_if_exception_type((RateLimitError, APIError, Timeout))
+    )
+    def _embed_batch_with_retry(self, batch: List[str]) -> List["np.ndarray"]:
+        """Embed a batch with retry logic."""
+        response = self.client.embeddings.create(
+            model=self.model,
+            input=batch,
+        )
+        # Sort embeddings by index as OpenAI might return them in different order
+        sorted_embeddings = sorted(response.data, key=lambda x: x.index)
+        embeddings = [
+            np.array(e.embedding, dtype=np.float32) for e in sorted_embeddings
+        ]
+        return embeddings
 
     def similarity(self, u: "np.ndarray", v: "np.ndarray") -> "np.float32":
         """Compute cosine similarity between two embeddings."""
