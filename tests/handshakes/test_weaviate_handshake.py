@@ -69,6 +69,8 @@ def mock_weaviate_client():
         
         # Set up batch properties
         mock_batch.failed_objects = []
+        # Set number_errors to 0 by default for all tests
+        mock_batch.number_errors = 0
         
         # Mock exists method
         mock_collections.exists.return_value = False
@@ -283,6 +285,7 @@ def test_weaviate_handshake_batch_error_handling(mock_weaviate_client) -> None:
     mock_failed_object = Mock()
     mock_failed_object.error = "Test error"
     mock_batch.failed_objects = [mock_failed_object] * 11  # More than max_errors
+    mock_batch.number_errors = 11  # Set number_errors to match failed_objects count
     
     # Call write method and expect RuntimeError
     with pytest.raises(RuntimeError):
