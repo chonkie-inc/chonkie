@@ -45,6 +45,7 @@ from .friends import (
     PineconeHandshake,
     QdrantHandshake,
     TurbopufferHandshake,
+    WeaviateHandshake,
 )
 from .genie import (
     BaseGenie,
@@ -195,6 +196,7 @@ __all__ += [
     "PgvectorHandshake",
     "PineconeHandshake",
     "QdrantHandshake",
+    "WeaviateHandshake",
     "TurbopufferHandshake",
 ]
 

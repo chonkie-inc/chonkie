@@ -6,6 +6,7 @@ from .pgvector import PgvectorHandshake
 from .pinecone import PineconeHandshake
 from .qdrant import QdrantHandshake
 from .turbopuffer import TurbopufferHandshake
+from .weaviate import WeaviateHandshake
 
 __all__ = [
     "BaseHandshake",
@@ -14,4 +15,5 @@ __all__ = [
     "PineconeHandshake",
     "QdrantHandshake",
     "TurbopufferHandshake",
+    "WeaviateHandshake",
 ]
