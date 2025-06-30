@@ -56,7 +56,10 @@ class WeaviateHandshake(BaseHandshake):
         batch_dynamic: bool = True,
         batch_timeout_retries: int = 3,
         additional_headers: Optional[Dict[str, str]] = None,
-        **kwargs: Dict[str, Any]
+        http_secure: bool = False,
+        grpc_host: Optional[str] = None,
+        grpc_port: int = 50051,
+        grpc_secure: bool = False
     ) -> None:
         """Initialize the Weaviate Handshake.
         
@@ -71,7 +74,10 @@ class WeaviateHandshake(BaseHandshake):
             batch_dynamic: bool: Whether to use dynamic batching. Defaults to True.
             batch_timeout_retries: int: Number of retries for batch timeouts. Defaults to 3.
             additional_headers: Optional[Dict[str, str]]: Additional headers for the Weaviate client.
-            **kwargs: Additional keyword arguments to pass to the Weaviate client.
+            http_secure: bool: Whether to use HTTPS for HTTP connections. Defaults to False.
+            grpc_host: Optional[str]: The host for gRPC connections. Defaults to the same as HTTP host.
+            grpc_port: int: The port for gRPC connections. Defaults to 50051.
+            grpc_secure: bool: Whether to use a secure channel for gRPC connections. Defaults to False.
 
         """
         super().__init__()
@@ -95,10 +101,16 @@ class WeaviateHandshake(BaseHandshake):
             elif auth_config is not None:
                 auth_credentials = weaviate.auth.Auth.client_credentials(**auth_config)
                 
-            # 使用connect_to_local连接到本地Weaviate实例
-            self.client = weaviate.connect_to_local(
-                host=host,
-                port=port,
+            # Use provided grpc_host or default to HTTP host
+            actual_grpc_host = grpc_host if grpc_host is not None else host
+            
+            self.client = weaviate.connect_to_custom(
+                http_host=host,
+                http_port=port,
+                http_secure=http_secure,
+                grpc_host=actual_grpc_host,
+                grpc_port=grpc_port,
+                grpc_secure=grpc_secure,
                 auth_credentials=auth_credentials,
                 headers=additional_headers
             )
@@ -171,18 +183,19 @@ class WeaviateHandshake(BaseHandshake):
 
         """
         try:
-            return self.client.collections.exists(collection_name)
-        except weaviate.exceptions.WeaviateBaseError as e:
+            exists = self.client.collections.exists(collection_name)
+            return exists
+        except Exception as e:
             print(f"Warning: Failed to check for collection '{collection_name}': {e}")
             return False
             
     def _create_collection(self) -> None:
         """Create a new collection in Weaviate."""
-        # Import necessary classes
         from weaviate.collections.classes.config import Configure, DataType, Property
-        
-        # Define the collection schema
-        self.client.collections.create(
+
+        try:
+            # Define the collection schema
+            self.client.collections.create(
             name=self.collection_name,
             vector_index_config=Configure.VectorIndex.hnsw(),
             properties=[
@@ -214,7 +227,9 @@ class WeaviateHandshake(BaseHandshake):
             ]
         )
         
-        print(f"🦛 Created Weaviate collection: {self.collection_name}")
+            print(f"🦛 Created Weaviate collection: {self.collection_name}")
+        except Exception:
+            raise
         
     def _generate_id(self, index: int, chunk: Chunk) -> str:
         """Generate a unique ID for the chunk.
@@ -277,7 +292,6 @@ class WeaviateHandshake(BaseHandshake):
             RuntimeError: If there are too many errors during batch processing.
 
         """
-        # 确保 chunks 是一个列表
         if isinstance(chunks, Chunk):
             chunks = [chunks]
         elif not isinstance(chunks, list):
@@ -299,7 +313,6 @@ class WeaviateHandshake(BaseHandshake):
                     error_msg = f"Too many errors during batch processing ({batch.number_errors}). Aborting."
                     print(f"🦛 Error: {error_msg}")
                     
-                    # 批处理完成后再获取失败对象信息
                     raise RuntimeError(error_msg)
                 
                 try:
@@ -310,7 +323,6 @@ class WeaviateHandshake(BaseHandshake):
                     # Generate embedding
                     embedding = self.embedding_model.embed(chunk.text)
                     
-                    # 确保 embedding 是列表类型
                     vector = embedding.tolist() if hasattr(embedding, 'tolist') else list(embedding)
                     
                     # Add to batch
@@ -329,7 +341,6 @@ class WeaviateHandshake(BaseHandshake):
             if batch.number_errors > 0:
                 print(f"🦛 Completed with {batch.number_errors} errors")
                     
-        # 批处理完成后获取失败对象
         failed_objects = collection.batch.failed_objects
         if failed_objects:
             print(f"Number of failed imports: {len(failed_objects)}")

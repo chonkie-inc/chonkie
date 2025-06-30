@@ -45,7 +45,7 @@ def mock_embeddings():
 @pytest.fixture(autouse=True)
 def mock_weaviate_client():
     """Mock Weaviate client to avoid needing a real Weaviate instance."""
-    with patch('weaviate.connect_to_local') as mock_connect:
+    with patch('weaviate.connect_to_custom', autospec=True) as mock_connect:
         # Create a mock client
         mock_client = Mock()
         
@@ -131,6 +131,38 @@ def test_weaviate_handshake_is_available(mock_weaviate_client) -> None:
     """Test the _is_available check."""
     handshake = WeaviateHandshake(client=mock_weaviate_client)
     assert handshake._is_available() is True
+
+
+def test_weaviate_handshake_custom_connection_params(mock_weaviate_client) -> None:
+    """Test WeaviateHandshake initialization with custom connection parameters."""
+    # Reset mock to clear previous call records
+    mock_weaviate_client.reset_mock()
+    
+    # Get the mock object for connect_to_custom
+    from unittest.mock import patch
+    
+    # Use patch context manager to temporarily replace weaviate.connect_to_custom
+    with patch('weaviate.connect_to_custom', return_value=mock_weaviate_client) as mock_connect:
+        # Test with custom HTTP and gRPC parameters
+        WeaviateHandshake(
+            url="https://example.com:8443",
+            http_secure=True,
+            grpc_host="grpc.example.com",
+            grpc_port=50052,
+            grpc_secure=True
+        )
+        
+        # Check that connect_to_custom was called with the correct parameters
+        mock_connect.assert_called_once()
+        
+        call_kwargs = mock_connect.call_args.kwargs
+        
+        assert call_kwargs["http_host"] == "example.com"
+        assert call_kwargs["http_port"] == 8443
+        assert call_kwargs["http_secure"] is True
+        assert call_kwargs["grpc_host"] == "grpc.example.com"
+        assert call_kwargs["grpc_port"] == 50052
+        assert call_kwargs["grpc_secure"] is True
 
 
 def test_weaviate_handshake_generate_id(mock_weaviate_client) -> None:
@@ -290,3 +322,63 @@ def test_weaviate_handshake_batch_error_handling(mock_weaviate_client) -> None:
     # Call write method and expect RuntimeError
     with pytest.raises(RuntimeError):
         handshake.write(SAMPLE_CHUNKS)
+
+
+def test_weaviate_handshake_generate_properties_with_optional_fields(mock_weaviate_client) -> None:
+    """Test the _generate_properties method with optional fields."""
+    handshake = WeaviateHandshake(client=mock_weaviate_client)
+    
+    # Create a chunk with optional properties
+    chunk = SAMPLE_CHUNKS[0]
+    
+    # Add optional properties
+    chunk.sentences = ["This is a sentence."]
+    chunk.words = ["This", "is", "a", "sentence"]
+    chunk.language = "en"
+    
+    # Generate properties
+    properties = handshake._generate_properties(chunk)
+    
+    # Verify basic properties
+    assert properties["text"] == chunk.text
+    assert properties["start_index"] == chunk.start_index
+    assert properties["end_index"] == chunk.end_index
+    assert properties["token_count"] == chunk.token_count
+    assert properties["chunk_type"] == type(chunk).__name__
+    
+    # Verify optional properties
+    assert properties["sentence_count"] == len(chunk.sentences)
+    assert properties["word_count"] == len(chunk.words)
+    assert properties["language"] == chunk.language
+
+
+def test_weaviate_handshake_close(mock_weaviate_client) -> None:
+    """Test the close method."""
+    handshake = WeaviateHandshake(client=mock_weaviate_client)
+    handshake.close()
+    mock_weaviate_client.close.assert_called_once()
+
+
+def test_weaviate_handshake_call(mock_weaviate_client) -> None:
+    """Test the __call__ method."""
+    handshake = WeaviateHandshake(client=mock_weaviate_client)
+    
+    # Mock the write method
+    from unittest.mock import Mock
+    handshake.write = Mock(return_value=["id1", "id2", "id3"])
+    
+    # Call the __call__ method
+    result = handshake(SAMPLE_CHUNKS)
+    
+    # Verify write method was called
+    handshake.write.assert_called_once_with(SAMPLE_CHUNKS)
+    assert result == ["id1", "id2", "id3"]
+    
+    # Test with a single Chunk
+    handshake.write.reset_mock()
+    result = handshake(SAMPLE_CHUNKS[0])
+    handshake.write.assert_called_once_with(SAMPLE_CHUNKS[0])
+    
+    # Test with invalid input
+    with pytest.raises(TypeError):
+        handshake(123)  # Not a Chunk or Sequence[Chunk]
