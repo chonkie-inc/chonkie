@@ -215,6 +215,7 @@ EmbeddingsRegistry.register_model("jina-embeddings-v2-base-es", JinaEmbeddings)
 EmbeddingsRegistry.register_model("jina-embeddings-v2-base-de", JinaEmbeddings)
 EmbeddingsRegistry.register_model("jina-embeddings-v2-base-zh", JinaEmbeddings)
 EmbeddingsRegistry.register_model("jina-embeddings-v2-base-code", JinaEmbeddings)
+EmbeddingsRegistry.register_model("jina-embeddings-v4", JinaEmbeddings)
 
 # Register Voyage embeddings
 EmbeddingsRegistry.register_provider("voyageai", VoyageAIEmbeddings)
