@@ -29,14 +29,14 @@ class TestJinaEmbeddingsInitialization:
     def test_initialization_with_api_key(self) -> None:
         """Test JinaEmbeddings initialization with explicit API key."""
         embeddings = JinaEmbeddings(api_key="test_key")
-        assert embeddings.model == "jina-embeddings-v3"
+        assert embeddings.model == "jina-embeddings-v4"
         assert embeddings.task == "text-matching"
         assert embeddings.late_chunking is False
         assert embeddings.embedding_type == "float"
         assert embeddings.api_key == "test_key"
         assert embeddings.headers["Authorization"] == "Bearer test_key"
         assert embeddings.url == "https://api.jina.ai/v1/embeddings"
-        assert embeddings.dimension == 1024
+        assert embeddings.dimension == 2048
 
     def test_initialization_with_env_key(self) -> None:
         """Test JinaEmbeddings initialization using environment API key."""
@@ -86,7 +86,7 @@ class TestJinaEmbeddingsInitialization:
             mock_tokenizer.return_value = "mock_tokenizer"
             embeddings = JinaEmbeddings(api_key="test_key")
             assert embeddings._tokenizer == "mock_tokenizer"
-            mock_tokenizer.assert_called_once_with("jinaai/jina-embeddings-v3")
+            mock_tokenizer.assert_called_once_with("jinaai/jina-embeddings-v4")
 
     def test_tokenizer_initialization_failure(self) -> None:
         """Test tokenizer initialization failure handling."""
@@ -99,7 +99,7 @@ class TestJinaEmbeddingsInitialization:
         """Test the __repr__ method."""
         embeddings = JinaEmbeddings(api_key="test_key")
         repr_str = repr(embeddings)
-        assert repr_str == "JinaEmbeddings(model=jina-embeddings-v3, dimensions=1024)"
+        assert repr_str == "JinaEmbeddings(model=jina-embeddings-v4, dimensions=2048)"
 
 
 class TestJinaEmbeddingsProperties:
@@ -112,7 +112,7 @@ class TestJinaEmbeddingsProperties:
 
     def test_dimension_property(self, embeddings: JinaEmbeddings) -> None:
         """Test the dimension property returns correct value."""
-        assert embeddings.dimension == 1024
+        assert embeddings.dimension == 2048
         assert isinstance(embeddings.dimension, int)
 
     def test_get_tokenizer_or_token_counter(self, embeddings: JinaEmbeddings) -> None:
@@ -132,7 +132,8 @@ class TestJinaEmbeddingsProperties:
             "jina-embeddings-v2-base-de",
             "jina-embeddings-v2-base-zh",
             "jina-embeddings-v2-base-code",
-            "jina-embeddings-b-en-v1"
+            "jina-embeddings-b-en-v1",
+            "jina-embeddings-v4"
         ]
         for model in expected_models:
             assert model in JinaEmbeddings.AVAILABLE_MODELS
@@ -172,10 +173,10 @@ class TestJinaEmbeddingsAPIMocking:
                 {
                     "object": "embedding",
                     "index": 0,
-                    "embedding": [0.1] * 1024  # Mock 1024-dimensional embedding
+                    "embedding": [0.1] * 2048  # Mock 2048-dimensional embedding
                 }
             ],
-            "model": "jina-embeddings-v3",
+            "model": "jina-embeddings-v4",
             "usage": {
                 "total_tokens": 10,
                 "prompt_tokens": 10
@@ -191,20 +192,20 @@ class TestJinaEmbeddingsAPIMocking:
                 {
                     "object": "embedding",
                     "index": 0,
-                    "embedding": [0.1] * 1024
+                    "embedding": [0.1] * 2048
                 },
                 {
                     "object": "embedding", 
                     "index": 1,
-                    "embedding": [0.2] * 1024
+                    "embedding": [0.2] * 2048
                 },
                 {
                     "object": "embedding",
                     "index": 2,
-                    "embedding": [0.3] * 1024
+                    "embedding": [0.3] * 2048
                 }
             ],
-            "model": "jina-embeddings-v3",
+            "model": "jina-embeddings-v4",
             "usage": {
                 "total_tokens": 30,
                 "prompt_tokens": 30
@@ -226,15 +227,15 @@ class TestJinaEmbeddingsAPIMocking:
             result = embeddings.embed("Test text")
             
             assert isinstance(result, np.ndarray)
-            assert result.shape == (1024,)
+            assert result.shape == (2048,)
             assert result.dtype == np.float32
-            np.testing.assert_array_equal(result, np.array([0.1] * 1024, dtype=np.float32))
-            
+            np.testing.assert_array_equal(result, np.array([0.1] * 2048, dtype=np.float32))
+
             # Verify API call
             mock_post.assert_called_once()
             call_args = mock_post.call_args
             assert call_args[1]['json']['input'] == ["Test text"]
-            assert call_args[1]['json']['model'] == "jina-embeddings-v3"
+            assert call_args[1]['json']['model'] == "jina-embeddings-v4"
 
     def test_embed_empty_text_raises_error(self, embeddings: JinaEmbeddings) -> None:
         """Test that embedding empty text raises ValueError."""
@@ -281,11 +282,11 @@ class TestJinaEmbeddingsAPIMocking:
             assert len(results) == 3
             for i, result in enumerate(results):
                 assert isinstance(result, np.ndarray)
-                assert result.shape == (1024,)
+                assert result.shape == (2048,)
                 assert result.dtype == np.float32
                 expected_value = [0.1, 0.2, 0.3][i]
-                np.testing.assert_array_equal(result, np.array([expected_value] * 1024, dtype=np.float32))
-            
+                np.testing.assert_array_equal(result, np.array([expected_value] * 2048, dtype=np.float32))
+
             # Verify API call
             mock_post.assert_called_once()
             call_args = mock_post.call_args
@@ -325,7 +326,7 @@ class TestJinaEmbeddingsAPIMocking:
                 assert len(results) == 2
                 for result in results:
                     assert isinstance(result, np.ndarray)
-                    assert result.shape == (1024,)
+                    assert result.shape == (2048,)
                 
                 # Should have warned about batch failure
                 mock_warn.assert_called_once()
@@ -352,10 +353,10 @@ class TestJinaEmbeddingsAPIMocking:
             response_data = {
                 "object": "list",
                 "data": [
-                    {"object": "embedding", "index": i, "embedding": [0.1 + i * 0.1] * 1024}
+                    {"object": "embedding", "index": i, "embedding": [0.1 + i * 0.1] * 2048}
                     for i in range(batch_size)
                 ],
-                "model": "jina-embeddings-v3",
+                "model": "jina-embeddings-v4",
                 "usage": {"total_tokens": batch_size * 10, "prompt_tokens": batch_size * 10}
             }
             mock_response._content = json.dumps(response_data).encode()
@@ -404,7 +405,7 @@ class TestJinaEmbeddingsErrorHandling:
             success_response = requests.Response()
             success_response.status_code = 200
             success_response._content = json.dumps({
-                "data": [{"embedding": [0.1] * 1024}]
+                "data": [{"embedding": [0.1] * 2048}]
             }).encode()
             
             mock_post.side_effect = [
@@ -530,13 +531,13 @@ class TestJinaEmbeddingsEdgeCases:
             mock_response = requests.Response()
             mock_response.status_code = 200
             mock_response._content = json.dumps({
-                "data": [{"embedding": [0.1] * 1024}]
+                "data": [{"embedding": [0.1] * 2048}]
             }).encode()
             mock_post.return_value = mock_response
 
             result = embeddings.embed(long_text)
             assert isinstance(result, np.ndarray)
-            assert result.shape == (1024,)
+            assert result.shape == (2048,)
 
     def test_embed_unicode_text(self, embeddings: JinaEmbeddings) -> None:
         """Test embedding text with unicode characters."""
@@ -546,7 +547,7 @@ class TestJinaEmbeddingsEdgeCases:
             mock_response = requests.Response()
             mock_response.status_code = 200
             mock_response._content = json.dumps({
-                "data": [{"embedding": [0.1] * 1024}]
+                "data": [{"embedding": [0.1] * 2048}]
             }).encode()
             mock_post.return_value = mock_response
 
@@ -570,9 +571,9 @@ class TestJinaEmbeddingsEdgeCases:
             mock_response.status_code = 200
             response_data = {
                 "data": [
-                    {"embedding": [0.1] * 1024},
-                    {"embedding": [0.2] * 1024},
-                    {"embedding": [0.3] * 1024}
+                    {"embedding": [0.1] * 2048},
+                    {"embedding": [0.2] * 2048},
+                    {"embedding": [0.3] * 2048}
                 ]
             }
             mock_response._content = json.dumps(response_data).encode()
@@ -582,7 +583,7 @@ class TestJinaEmbeddingsEdgeCases:
             assert len(results) == 3
             for result in results:
                 assert isinstance(result, np.ndarray)
-                assert result.shape == (1024,)
+                assert result.shape == (2048,)
 
     def test_custom_batch_size_configuration(self) -> None:
         """Test that custom batch size is respected."""
@@ -595,7 +596,7 @@ class TestJinaEmbeddingsEdgeCases:
             mock_response = requests.Response()
             mock_response.status_code = 200
             response_data = {
-                "data": [{"embedding": [0.1] * 1024}] * 5  # Max 5 per batch
+                "data": [{"embedding": [0.1] * 2048}] * 5  # Max 5 per batch
             }
             mock_response._content = json.dumps(response_data).encode()
             mock_post.return_value = mock_response
