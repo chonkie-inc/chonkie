@@ -30,7 +30,7 @@ class JinaEmbeddings(BaseEmbeddings):
 
     def __init__(
             self,
-            model: str = "jina-embeddings-v3",
+            model: str = "jina-embeddings-v4",
             task: str = "text-matching",
             batch_size: int = 32,
             max_retries: int = 3,
