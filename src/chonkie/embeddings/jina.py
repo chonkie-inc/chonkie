@@ -24,6 +24,7 @@ class JinaEmbeddings(BaseEmbeddings):
         "jina-embeddings-v2-base-de": 768,
         "jina-embeddings-v2-base-zh": 768,   
         "jina-embeddings-v2-base-code": 768,
+        "jina-embeddings-b-en-v1": 768,
         "jina-embeddings-v4": 2048,
     }   
 
