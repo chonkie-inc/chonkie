@@ -266,49 +266,87 @@ class Tokenizer:
         "transformers.PreTrainedTokenizerFast",
         Callable[[str], int],
     ]:
-        """Load the tokenizer based on the identifier."""
+        """Load the tokenizer based on the identifier.
+        
+        This method implements a fallback strategy:
+        1. First tries built-in tokenizers (character, word)
+        2. Then tries optional tokenizer libraries if available
+        3. Provides clear error messages for missing dependencies
+        """
+        # Built-in tokenizers (always available)
         if tokenizer == "character":
             return CharacterTokenizer()
         elif tokenizer == "word":
             return WordTokenizer()
 
-        # Try tokenizers first
+        # Try to determine which library to use based on tokenizer name patterns
+        # This helps route to the correct library and provide better error messages
+        
+        # Common tiktoken tokenizer names
+        tiktoken_names = {
+            "cl100k_base", "p50k_base", "r50k_base", "gpt2", "gpt3", "gpt4"
+        }
+        
+        # Common transformers tokenizer names (usually model names)
+        transformers_names = {
+            "bert-base-uncased", "bert-base-cased", "roberta-base", "distilbert-base-uncased",
+            "gpt2", "gpt2-medium", "gpt2-large", "gpt2-xl"
+        }
+        
+        # Try tiktoken library for specific tokenizer names
+        if tokenizer in tiktoken_names:
+            if importlib.util.find_spec("tiktoken") is not None:
+                try:
+                    from tiktoken import get_encoding
+                    return get_encoding(tokenizer)
+                except Exception as e:
+                    raise ImportError(
+                        f"Failed to load tokenizer '{tokenizer}' with tiktoken library: {e}. "
+                        "Please ensure the tokenizer name is correct or install the required model."
+                    ) from e
+            else:
+                # tiktoken library not available
+                raise ImportError(
+                    f"Tokenizer '{tokenizer}' requires the 'tiktoken' library which is not installed. "
+                    "Please install it with: pip install chonkie[tiktoken]"
+                )
+
+        # Try transformers library for model-based tokenizers
+        if tokenizer in transformers_names or "/" in tokenizer:
+            if importlib.util.find_spec("transformers") is not None:
+                try:
+                    from transformers import AutoTokenizer
+                    return AutoTokenizer.from_pretrained(tokenizer)
+                except Exception as e:
+                    raise ImportError(
+                        f"Failed to load tokenizer '{tokenizer}' with transformers library: {e}. "
+                        "Please ensure the tokenizer name is correct or install the required model."
+                    ) from e
+            else:
+                # transformers library not available
+                raise ImportError(
+                    f"Tokenizer '{tokenizer}' requires the 'transformers' library which is not installed. "
+                    "Please install it with: pip install chonkie[transformers]"
+                )
+
+        # Try tokenizers library as the default fallback (for most HuggingFace tokenizers)
         if importlib.util.find_spec("tokenizers") is not None:
             try:
                 from tokenizers import Tokenizer
-
                 return Tokenizer.from_pretrained(tokenizer)
-            except Exception:
-                warnings.warn(
-                    "Could not load tokenizer with 'tokenizers'. Falling back to 'tiktoken'."
-                )
+            except Exception as e:
+                # If tokenizers is installed but fails to load the specific tokenizer,
+                # provide a helpful error message
+                raise ImportError(
+                    f"Failed to load tokenizer '{tokenizer}' with tokenizers library: {e}. "
+                    "Please ensure the tokenizer name is correct or install the required model."
+                ) from e
         else:
-            warnings.warn("'tokenizers' library not found. Falling back to 'tiktoken'.")
-
-        # Try tiktoken
-        if importlib.util.find_spec("tiktoken") is not None:
-            try:
-                from tiktoken import get_encoding
-
-                return get_encoding(tokenizer)
-            except Exception:
-                warnings.warn(
-                    "Could not load tokenizer with 'tiktoken'. Falling back to 'transformers'."
-                )
-        else:
-            warnings.warn("'tiktoken' library not found. Falling back to 'transformers'.")
-
-        # Try transformers as last resort
-        if importlib.util.find_spec("transformers") is not None:
-            try:
-                from transformers import AutoTokenizer
-
-                return AutoTokenizer.from_pretrained(tokenizer)
-            except Exception:
-                raise ValueError(
-                    "Tokenizer not found in transformers, tokenizers, or tiktoken"
-                )
-        raise ValueError("Tokenizer not found in transformers, tokenizers, or tiktoken")
+            # tokenizers library not available
+            raise ImportError(
+                f"Tokenizer '{tokenizer}' requires the 'tokenizers' library which is not installed. "
+                "Please install it with: pip install chonkie[tokenizers]"
+            )
 
     def _get_backend(self) -> str:
         """Get the tokenizer instance based on the identifier."""

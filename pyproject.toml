@@ -60,6 +60,7 @@ viz = ["rich>=13.0.0"]
 # Optional dependencies for tokenizers
 tokenizers = ["tokenizers>=0.16.0"]
 tiktoken = ["tiktoken>=0.5.0"]
+transformers = ["transformers>=4.0.0"]
 
 # Optional dependencies for the chunkers
 code = ["tree-sitter>=0.20.0", "tree-sitter-language-pack>=0.7.0", "magika>=0.6.0, <0.7.0"]
@@ -88,6 +89,7 @@ genie = ["pydantic>=2.0.0", "google-genai>=1.0.0"]
 all = [
     "tokenizers>=0.16.0",
     "tiktoken>=0.5.0",
+    "transformers>=4.0.0",
     "rich>=13.0.0",
     "tree-sitter>=0.20.0",
     "tree-sitter-language-pack>=0.7.0",
@@ -102,7 +104,6 @@ all = [
     "jsonschema>=4.23.0",
     "pydantic>=2.0.0",
     "google-genai>=1.0.0",
-    "transformers>=4.0.0",
     "torch>=2.0.0, <3.0",
     "chromadb>=1.0.0",
     "qdrant-client>=1.0.0",

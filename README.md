@@ -51,6 +51,12 @@ Have a favorite chunker? Read our [docs](https://docs.chonkie.ai) to install onl
 Don't want to think about it? Simply install `all` (Not recommended for production environments)
 
 ```bash
+# For advanced tokenization (optional)
+pip install chonkie[tokenizers]  # HuggingFace tokenizers
+pip install chonkie[tiktoken]    # OpenAI tiktoken
+pip install chonkie[transformers] # HuggingFace transformers
+
+# For everything (not recommended for production)
 pip install chonkie[all]
 ```
 
@@ -127,7 +133,7 @@ Choose from supported tokenizers or provide your own custom token counting funct
 |----------------|----------------------------------------------------------------|--------------------|
 | `character`    | Basic character-level tokenizer. **Default tokenizer.**       | `default`          |
 | `word`         | Basic word-level tokenizer.                                    | `default`          |
-| `tokenizers`   | Load any tokenizer from the Hugging Face `tokenizers` library. | `default`          |
+| `tokenizers`   | Load any tokenizer from the Hugging Face `tokenizers` library. | `chonkie[tokenizers]` |
 | `tiktoken`     | Use OpenAI's `tiktoken` library (e.g., for `gpt-4`).           | `chonkie[tiktoken]`|
 | `transformers` | Load tokenizers via `AutoTokenizer` from HF `transformers`.    | `chonkie[transformers]`|
 
@@ -222,7 +228,7 @@ Chonkie is not just cute, it's also fast and efficient! Here's how it stacks up 
 
 **Size**📦
 
-- **Default Install:** 15MB (vs 80-171MB for alternatives)
+- **Default Install:** <1MB (vs 80-171MB for alternatives)
 - **With Semantic:** Still 10x lighter than the closest competition!
 
 **Speed**⚡
