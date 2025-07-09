@@ -78,8 +78,8 @@ class TestOptionalDependencies:
         with pytest.raises(ImportError) as exc_info:
             Tokenizer("gpt2")
         
-        assert "tokenizers" in str(exc_info.value)
-        assert "pip install chonkie[tokenizers]" in str(exc_info.value)
+        assert "transformers" in str(exc_info.value)
+        assert "pip install chonkie[transformers]" in str(exc_info.value)
 
     @patch('importlib.util.find_spec')
     def test_tiktoken_not_installed(self, mock_find_spec):
@@ -178,7 +178,7 @@ class TestErrorMessages:
         
         error_msg = str(exc_info.value)
         assert "invalid-tokenizer-name" in error_msg
-        assert "pip install" in error_msg
+        assert "Failed to load tokenizer" in error_msg
 
     def test_unsupported_backend(self):
         """Test error message for unsupported backend."""

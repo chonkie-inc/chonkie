@@ -12,6 +12,11 @@ if TYPE_CHECKING:
     import tokenizers
     import transformers
 
+try:
+    import requests
+except ImportError:
+    requests = None
+
 
 class BaseTokenizer(ABC):
     """Base class for Character and Word tokenizers."""
@@ -282,9 +287,9 @@ class Tokenizer:
         # Try to determine which library to use based on tokenizer name patterns
         # This helps route to the correct library and provide better error messages
         
-        # Common tiktoken tokenizer names
+        # Common tiktoken tokenizer names (exclusive to tiktoken)
         tiktoken_names = {
-            "cl100k_base", "p50k_base", "r50k_base", "gpt2", "gpt3", "gpt4"
+            "cl100k_base", "p50k_base", "r50k_base"
         }
         
         # Common transformers tokenizer names (usually model names)
@@ -299,7 +304,7 @@ class Tokenizer:
                 try:
                     from tiktoken import get_encoding
                     return get_encoding(tokenizer)
-                except Exception as e:
+                except (ValueError, KeyError) as e:
                     raise ImportError(
                         f"Failed to load tokenizer '{tokenizer}' with tiktoken library: {e}. "
                         "Please ensure the tokenizer name is correct or install the required model."
@@ -317,7 +322,7 @@ class Tokenizer:
                 try:
                     from transformers import AutoTokenizer
                     return AutoTokenizer.from_pretrained(tokenizer)
-                except Exception as e:
+                except (OSError, ValueError) as e:
                     raise ImportError(
                         f"Failed to load tokenizer '{tokenizer}' with transformers library: {e}. "
                         "Please ensure the tokenizer name is correct or install the required model."
@@ -334,7 +339,7 @@ class Tokenizer:
             try:
                 from tokenizers import Tokenizer
                 return Tokenizer.from_pretrained(tokenizer)
-            except Exception as e:
+            except (OSError, ValueError, Exception) as e:
                 # If tokenizers is installed but fails to load the specific tokenizer,
                 # provide a helpful error message
                 raise ImportError(

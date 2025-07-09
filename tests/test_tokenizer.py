@@ -778,7 +778,7 @@ def test_tokenizer_fallback_warnings() -> None:
         try:
             # This should trigger warning fallbacks
             Tokenizer("non_existent_model_12345")
-        except ValueError:
+        except ImportError:
             # Expected to fail eventually, but should generate warnings
             pass
         
@@ -1028,7 +1028,7 @@ def test_tokenizer_chonkie_backend_paths() -> None:
 def test_tokenizer_error_paths_comprehensive() -> None:
     """Test various error paths in tokenizer methods."""
     # Test invalid tokenizer creation with non-existent model
-    with pytest.raises(ValueError, match="Tokenizer not found"):
+    with pytest.raises(ImportError, match="Failed to load tokenizer"):
         # This should try all backends and fail
         Tokenizer("definitely_not_a_real_model_name_12345_xyz")
 
