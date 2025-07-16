@@ -482,10 +482,9 @@ def test_recursive_chunker_pattern_split_mode() -> None:
     assert len(chunks) >= 3
     assert all(isinstance(chunk, Chunk) for chunk in chunks)
     
-    # Check that Roman numerals are included at the start of chunks (except first)
-    for i, chunk in enumerate(chunks):
-        if i > 0:  # Skip first chunk
-            assert chunk.text.strip().startswith(("I.", "II.", "III."))
+    # Check that Roman numerals are included at the start of chunks
+    for chunk in chunks:
+        assert chunk.text.strip().startswith(("I.", "II.", "III."))
 
 
 def test_recursive_chunker_pattern_split_mode_prev() -> None:

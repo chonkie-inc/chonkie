@@ -147,7 +147,7 @@ class RecursiveChunker(BaseChunker):
         if current:
             merged.append(current)
         
-        return merged if merged else splits
+        return merged
 
     def _split_text(self, text: str, recursive_level: RecursiveLevel) -> list[str]:
         """Split the text into chunks using the delimiters."""
@@ -213,12 +213,9 @@ class RecursiveChunker(BaseChunker):
                     # Simple split without delimiter inclusion
                     splits = [split for split in pattern.split(text) if split.strip()]
                     
-            elif recursive_level.pattern_mode == "extract":
+            else:  # pattern_mode == "extract"
                 # Extract all matches of the pattern
                 splits = pattern.findall(text)
-            else:
-                # Fallback to simple split
-                splits = [split for split in pattern.split(text) if split.strip()]
             
             # Filter out empty splits and merge short ones
             splits = [split for split in splits if split]
