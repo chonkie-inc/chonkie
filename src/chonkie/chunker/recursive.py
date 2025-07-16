@@ -3,6 +3,7 @@
 Splits text into smaller chunks recursively. Express chunking logic through RecursiveLevel objects.
 """
 
+import re
 from bisect import bisect_left
 from functools import lru_cache
 from itertools import accumulate
@@ -121,6 +122,33 @@ class RecursiveChunker(BaseChunker):
         # The estimate was only used as an optimization hint
         return self.tokenizer.count_tokens(text)
 
+    def _merge_short_splits(self, splits: List[str]) -> List[str]:
+        """Merge splits that are shorter than min_characters_per_chunk."""
+        if not splits:
+            return splits
+        
+        merged = []
+        current = ""
+        
+        for split in splits:
+            if len(split) < self.min_characters_per_chunk:
+                current += split
+            else:
+                if current:
+                    merged.append(current + split)
+                    current = ""
+                else:
+                    merged.append(split)
+            
+            if len(current) >= self.min_characters_per_chunk:
+                merged.append(current)
+                current = ""
+        
+        if current:
+            merged.append(current)
+        
+        return merged if merged else splits
+
     def _split_text(self, text: str, recursive_level: RecursiveLevel) -> list[str]:
         """Split the text into chunks using the delimiters."""
         if SPLIT_AVAILABLE and recursive_level.delimiters:
@@ -133,6 +161,69 @@ class RecursiveChunker(BaseChunker):
                 whitespace_mode=False,
                 character_fallback=False
             ))
+        elif recursive_level.pattern:
+            # Optimized pattern handling
+            pattern = re.compile(recursive_level.pattern, re.MULTILINE)
+            
+            if recursive_level.pattern_mode == "split":
+                if recursive_level.include_delim in ["prev", "next"]:
+                    matches = list(pattern.finditer(text))
+                    if not matches:
+                        return [text] if text else []
+                    
+                    splits = []
+                    last_pos = 0
+                    
+                    if recursive_level.include_delim == "prev":
+                        for match in matches:
+                            before_match = text[last_pos:match.start()]
+                            match_text = match.group()
+                            
+                            if before_match:
+                                splits.append(before_match + match_text)
+                            elif match_text:  # Handle case where match is at the beginning
+                                splits.append(match_text)
+                            
+                            last_pos = match.end()
+                        
+                        # Add remaining text
+                        if last_pos < len(text):
+                            splits.append(text[last_pos:])
+                            
+                    elif recursive_level.include_delim == "next":
+                        for i, match in enumerate(matches):
+                            # Add text before delimiter
+                            if last_pos < match.start():
+                                splits.append(text[last_pos:match.start()])
+                            
+                            # Determine end position for this segment
+                            if i < len(matches) - 1:
+                                end_pos = matches[i + 1].start()
+                            else:
+                                end_pos = len(text)
+                            
+                            # Add delimiter + following text
+                            if match.start() < end_pos:
+                                splits.append(text[match.start():end_pos])
+                            
+                            last_pos = end_pos
+                    
+                    splits = [split for split in splits if split]
+                else:
+                    # Simple split without delimiter inclusion
+                    splits = [split for split in pattern.split(text) if split.strip()]
+                    
+            elif recursive_level.pattern_mode == "extract":
+                # Extract all matches of the pattern
+                splits = pattern.findall(text)
+            else:
+                # Fallback to simple split
+                splits = [split for split in pattern.split(text) if split.strip()]
+            
+            # Filter out empty splits and merge short ones
+            splits = [split for split in splits if split]
+            return self._merge_short_splits(splits)
+            
         else:
             # Fallback to original implementation
             if recursive_level.whitespace:
@@ -151,26 +242,7 @@ class RecursiveChunker(BaseChunker):
                 splits = [split for split in text.split(self.sep) if split != ""]
 
                 # Merge short splits
-                current = ""
-                merged = []
-                for split in splits:
-                    if len(split) < self.min_characters_per_chunk:
-                        current += split
-                    elif current:
-                        current += split
-                        merged.append(current)
-                        current = ""
-                    else:
-                        merged.append(split)
-
-                    if len(current) >= self.min_characters_per_chunk:
-                        merged.append(current)
-                        current = ""
-
-                if current:
-                    merged.append(current)
-
-                splits = merged
+                splits = self._merge_short_splits(splits)
             else:
                 # Encode, Split, and Decode
                 encoded = self.tokenizer.encode(text)

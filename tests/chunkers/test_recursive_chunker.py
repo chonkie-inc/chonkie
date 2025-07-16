@@ -461,3 +461,162 @@ def test_recursive_chunker_from_recipe_nonexistent() -> None:
 
     with pytest.raises(ValueError):
         RecursiveChunker.from_recipe(name="default", lang="invalid")
+
+
+def test_recursive_chunker_pattern_split_mode() -> None:
+    """Test pattern-based splitting in split mode."""
+    text = "I. First section\nSome content here.\n\nII. Second section\nMore content.\n\nIII. Third section\nFinal content."
+    
+    # Test with include_delim="next"
+    rules = RecursiveRules([
+        RecursiveLevel(
+            pattern=r"^(?:I{1,3}|IV|V|VI{1,3}|IX|X)\.\s",
+            pattern_mode="split",
+            include_delim="next"
+        )
+    ])
+    
+    chunker = RecursiveChunker(rules=rules, chunk_size=512, min_characters_per_chunk=10)
+    chunks = chunker.chunk(text)
+    
+    assert len(chunks) >= 3
+    assert all(isinstance(chunk, Chunk) for chunk in chunks)
+    
+    # Check that Roman numerals are included at the start of chunks (except first)
+    for i, chunk in enumerate(chunks):
+        if i > 0:  # Skip first chunk
+            assert chunk.text.strip().startswith(("I.", "II.", "III."))
+
+
+def test_recursive_chunker_pattern_split_mode_prev() -> None:
+    """Test pattern-based splitting in split mode with include_delim='prev'."""
+    text = "Content before\nI. First section\nSome content here.\n\nII. Second section\nMore content."
+    
+    rules = RecursiveRules([
+        RecursiveLevel(
+            pattern=r"^(?:I{1,3}|IV|V|VI{1,3}|IX|X)\.\s",
+            pattern_mode="split",
+            include_delim="prev"
+        )
+    ])
+    
+    chunker = RecursiveChunker(rules=rules, chunk_size=512, min_characters_per_chunk=10)
+    chunks = chunker.chunk(text)
+    
+    assert len(chunks) >= 2
+    assert all(isinstance(chunk, Chunk) for chunk in chunks)
+    
+    # Check that Roman numerals are included at the end of chunks (except last)
+    for i, chunk in enumerate(chunks):
+        if i < len(chunks) - 1:  # Skip last chunk
+            assert "I." in chunk.text or "II." in chunk.text
+
+
+def test_recursive_chunker_pattern_split_mode_no_delim() -> None:
+    """Test pattern-based splitting in split mode without delimiter inclusion."""
+    text = "I. First section\nSome content here.\n\nII. Second section\nMore content."
+    
+    rules = RecursiveRules([
+        RecursiveLevel(
+            pattern=r"^(?:I{1,3}|IV|V|VI{1,3}|IX|X)\.\s",
+            pattern_mode="split",
+            include_delim=None
+        )
+    ])
+    
+    chunker = RecursiveChunker(rules=rules, chunk_size=512, min_characters_per_chunk=10)
+    chunks = chunker.chunk(text)
+    
+    assert len(chunks) >= 2
+    assert all(isinstance(chunk, Chunk) for chunk in chunks)
+    
+    # Check that Roman numerals are not included in the chunks
+    for chunk in chunks:
+        assert not chunk.text.strip().startswith(("I.", "II.", "III."))
+
+
+def test_recursive_chunker_pattern_extract_mode() -> None:
+    """Test pattern-based splitting in extract mode."""
+    text = "I. First section\nSome content here.\n\nII. Second section\nMore content.\n\nIII. Third section\nFinal content."
+    
+    rules = RecursiveRules([
+        RecursiveLevel(
+            pattern=r"^(?:I{1,3}|IV|V|VI{1,3}|IX|X)\.\s[^\n]*",
+            pattern_mode="extract",
+            include_delim="prev"
+        )
+    ])
+    
+    chunker = RecursiveChunker(rules=rules, chunk_size=512, min_characters_per_chunk=5)
+    chunks = chunker.chunk(text)
+    
+    assert len(chunks) >= 3
+    assert all(isinstance(chunk, Chunk) for chunk in chunks)
+    
+    # Check that only the extracted patterns are in the chunks
+    for chunk in chunks:
+        assert chunk.text.strip().startswith(("I.", "II.", "III."))
+
+
+def test_recursive_chunker_pattern_no_matches() -> None:
+    """Test pattern-based splitting when no matches are found."""
+    text = "This is some text without any Roman numerals."
+    
+    rules = RecursiveRules([
+        RecursiveLevel(
+            pattern=r"^(?:I{1,3}|IV|V|VI{1,3}|IX|X)\.\s",
+            pattern_mode="split",
+            include_delim="next"
+        )
+    ])
+    
+    chunker = RecursiveChunker(rules=rules, chunk_size=512, min_characters_per_chunk=10)
+    chunks = chunker.chunk(text)
+    
+    assert len(chunks) == 1
+    assert chunks[0].text == text
+
+
+def test_recursive_chunker_pattern_multiline_support() -> None:
+    """Test that pattern matching works correctly with multiline text."""
+    text = "Start of document\n\nI. First section\nContent here.\n\nII. Second section\nMore content.\n\nEnd of document"
+    
+    rules = RecursiveRules([
+        RecursiveLevel(
+            pattern=r"^(?:I{1,3}|IV|V|VI{1,3}|IX|X)\.\s",
+            pattern_mode="split",
+            include_delim="next"
+        )
+    ])
+    
+    chunker = RecursiveChunker(rules=rules, chunk_size=512, min_characters_per_chunk=10)
+    chunks = chunker.chunk(text)
+    
+    assert len(chunks) >= 2
+    
+    # Verify that text can be reconstructed
+    reconstructed = "".join(chunk.text for chunk in chunks)
+    assert reconstructed == text
+
+
+def test_recursive_chunker_pattern_with_short_merge() -> None:
+    """Test pattern-based splitting with short split merging."""
+    text = "I. A\nII. B\nIII. C\nIV. D\nV. E"
+    
+    rules = RecursiveRules([
+        RecursiveLevel(
+            pattern=r"^(?:I{1,3}|IV|V|VI{1,3}|IX|X)\.\s",
+            pattern_mode="split",
+            include_delim="next"
+        )
+    ])
+    
+    chunker = RecursiveChunker(rules=rules, chunk_size=512, min_characters_per_chunk=10)
+    chunks = chunker.chunk(text)
+    
+    assert len(chunks) >= 1
+    assert all(isinstance(chunk, Chunk) for chunk in chunks)
+    
+    # Check that short splits are merged to meet minimum character requirement
+    for chunk in chunks:
+        assert len(chunk.text) >= chunker.min_characters_per_chunk or chunk == chunks[-1]  # Last chunk can be shorter
