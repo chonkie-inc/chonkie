@@ -26,11 +26,10 @@ Find more information about the rules in the [Additional Information](#additiona
 from chonkie import RecursiveChunker, RecursiveRules
 
 chunker = RecursiveChunker(
-    tokenizer_or_token_counter: Union[str, Callable, Any] = "gpt2",
-    chunk_size: int = 512,
+    tokenizer_or_token_counter: Union[str, Callable, Any] = "character",
+    chunk_size: int = 2048,
     rules: RecursiveRules = RecursiveRules(),
     min_characters_per_chunk: int = 24,
-    return_type: Literal["texts", "chunks"] = "chunks",
 )
 ```
 
@@ -51,7 +50,7 @@ chunker = RecursiveChunker.from_recipe(lang="hi")
 <ParamField
     path="tokenizer_or_token_counter"
     type="Union[str, Callable, Any]"
-    default="gpt2"
+    default="character"
 >
     Tokenizer to use. Can be a string identifier or a tokenizer instance
 </ParamField>
@@ -59,7 +58,7 @@ chunker = RecursiveChunker.from_recipe(lang="hi")
 <ParamField
     path="chunk_size"
     type="int"
-    default="512"
+    default="2048"
 >
     Maximum number of tokens per chunk
 </ParamField>

@@ -30,7 +30,6 @@ class SDPMChunker(SemanticChunker):
         delim: The delimiters to use.
         include_delim: Whether to include delimiters in chunks.
         skip_window: The skip window to use.
-        return_type: The return type to use.
         **kwargs: Additional keyword arguments.
 
     """
@@ -38,7 +37,7 @@ class SDPMChunker(SemanticChunker):
     def __init__(
         self,
         embedding_model: Union[str, BaseEmbeddings] = "minishlab/potion-base-8M",
-        chunk_size: int = 512,
+        chunk_size: int = 2048,
         mode: str = "window",
         threshold: Union[str, float, int] = "auto",
         similarity_window: int = 1,
@@ -49,7 +48,6 @@ class SDPMChunker(SemanticChunker):
         delim: Union[str, List[str]] = [". ", "! ", "? ", "\n"],
         include_delim: Optional[Literal["prev", "next"]] = "prev",
         skip_window: int = 1,
-        return_type: Literal["chunks", "texts"] = "chunks",
         **kwargs: Dict[str, Any],
     ) -> None:  # type: ignore
         """Initialize the SDPMChunker.
@@ -67,7 +65,6 @@ class SDPMChunker(SemanticChunker):
             delim: The delimiters to use.
             include_delim: Whether to include delimiters.
             skip_window: The skip window to use.
-            return_type: The return type to use.
             **kwargs: Additional keyword arguments.
 
         """
@@ -83,7 +80,6 @@ class SDPMChunker(SemanticChunker):
             threshold_step=threshold_step,
             delim=delim,
             include_delim=include_delim,
-            return_type=return_type,
             **kwargs,
         )
 
@@ -101,14 +97,13 @@ class SDPMChunker(SemanticChunker):
                     embedding_model: Union[str, BaseEmbeddings] = "minishlab/potion-base-8M",
                     mode: str = "window",
                     threshold: Union[str, float, int] = "auto",
-                    chunk_size: int = 512,
+                    chunk_size: int = 2048,
                     similarity_window: int = 1,
                     min_sentences: int = 1,
                     min_chunk_size: int = 2,
                     min_characters_per_sentence: int = 12,
                     threshold_step: float = 0.01,
                     skip_window: int = 1,
-                    return_type: Literal["chunks", "texts"] = "chunks",
                     **kwargs: Dict[str, Any]) -> "SDPMChunker":  # type: ignore
         """Create a SDPMChunker from a recipe.
 
@@ -126,7 +121,6 @@ class SDPMChunker(SemanticChunker):
             min_characters_per_sentence: The minimum number of characters per sentence to use.
             threshold_step: The threshold step to use.
             skip_window: The skip window to use.
-            return_type: The return type to use.
             **kwargs: Additional keyword arguments.
 
         Returns:
@@ -152,7 +146,6 @@ class SDPMChunker(SemanticChunker):
             delim=recipe["recipe"]["delimiters"],
             include_delim=recipe["recipe"]["include_delim"],
             skip_window=skip_window,
-            return_type=return_type,
             **kwargs,
         )
 
@@ -262,6 +255,5 @@ class SDPMChunker(SemanticChunker):
             f"threshold_step={self.threshold_step}, "
             f"delim={self.delim}, "
             f"include_delim={self.include_delim}, "
-            f"skip_window={self.skip_window}, "
-            f"return_type={self.return_type})"
+            f"skip_window={self.skip_window})"
         )

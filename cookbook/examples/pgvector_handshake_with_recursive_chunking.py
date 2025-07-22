@@ -25,14 +25,13 @@ Date: 2025
 
 """
 
+import importlib.util
 import os
 import sys
 import time
 from typing import Dict, Union
 
-try:
-    import vecs
-except ImportError:
+if importlib.util.find_spec("vecs") is None:
     print("❌ Required dependencies not found!")
     print("Install with: pip install 'chonkie[pgvector]'")
     sys.exit(1)

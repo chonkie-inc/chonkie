@@ -66,7 +66,6 @@ def test_sentence_chunker_initialization(tokenizer: Tokenizer) -> None:
     assert chunker.approximate == False
     assert chunker.delim == [".", "!", "?", "\n"]
     assert chunker.include_delim == "prev"
-    assert chunker.return_type == "chunks"
 
 
 def test_sentence_chunker_chunking(tokenizer: Tokenizer, sample_text: str) -> None:
@@ -145,8 +144,7 @@ def test_sentence_chunker_repr(tokenizer: Tokenizer) -> None:
         f"min_characters_per_sentence={chunker.min_characters_per_sentence}, "
         f"approximate={chunker.approximate}, "
         f"delim={chunker.delim}, "
-        f"include_delim={chunker.include_delim}, "
-        f"return_type={chunker.return_type})"
+        f"include_delim={chunker.include_delim})"
     )
 
 
@@ -242,16 +240,15 @@ def test_sentence_chunker_token_counts(tokenizer: Tokenizer, sample_text: str) -
 
 
 def test_sentence_chunker_return_type(tokenizer: Tokenizer, sample_text: str) -> None:
-    """Test that SentenceChunker's return type is correctly set."""
+    """Test that SentenceChunker returns Chunk objects by default."""
     chunker = SentenceChunker(
         tokenizer_or_token_counter=tokenizer,
         chunk_size=512,
         chunk_overlap=128,
-        return_type="texts",
     )
     chunks = chunker.chunk(sample_text)
-    assert all([type(chunk) is str for chunk in chunks])
-    assert all([len(tokenizer.encode(chunk)) <= 512 for chunk in chunks])
+    assert all([hasattr(chunk, 'text') for chunk in chunks])
+    assert all([len(tokenizer.encode(chunk.text)) <= 512 for chunk in chunks])
 
 
 def test_sentence_chunker_min_sentences_per_chunk(tokenizer: Tokenizer, sample_text: str) -> None:
@@ -296,14 +293,12 @@ def test_sentence_chunker_from_recipe_custom_params() -> None:
         name="default",
         lang="en",
         chunk_size=256,
-        min_characters_per_sentence=32,
-        return_type="texts"
+        min_characters_per_sentence=32
     )
 
     assert chunker is not None
     assert chunker.chunk_size == 256
     assert chunker.min_characters_per_sentence == 32
-    assert chunker.return_type == "texts"
     assert chunker.delim == [". ", "! ", "? ", "\n"]
     assert chunker.include_delim == "prev"
 
@@ -315,13 +310,11 @@ def test_sentence_chunker_from_recipe_custom_lang() -> None:
             lang="hi",
             chunk_size=512,
             min_characters_per_sentence=12,
-            return_type="chunks",
         )
 
         assert chunker is not None
         assert chunker.chunk_size == 512
         assert chunker.min_characters_per_sentence == 12
-        assert chunker.return_type == "chunks"
         assert chunker.delim is not None
         assert chunker.include_delim is not None
     except (OSError, ValueError, ConnectionError, Exception) as e:

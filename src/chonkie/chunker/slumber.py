@@ -2,7 +2,7 @@
 
 from bisect import bisect_left
 from itertools import accumulate
-from typing import Any, Callable, List, Literal, Optional, Union
+from typing import Any, Callable, List, Optional, Union
 
 from tqdm import tqdm
 
@@ -58,12 +58,11 @@ class SlumberChunker(BaseChunker):
 
     def __init__(self,
                  genie: Optional[BaseGenie] = None, 
-                 tokenizer_or_token_counter: Union[str, Callable, Any] = "gpt2",
-                 chunk_size: int = 1024,
+                 tokenizer_or_token_counter: Union[str, Callable, Any] = "character",
+                 chunk_size: int = 2048,
                  rules: RecursiveRules = RecursiveRules(),
                  candidate_size: int = 128,
                  min_characters_per_chunk: int = 24,
-                 return_type: Literal["chunks", "texts"] = "chunks", 
                  verbose: bool = True):
         """Initialize the SlumberChunker.
 
@@ -74,7 +73,6 @@ class SlumberChunker(BaseChunker):
             rules (RecursiveRules): The rules to use to split the candidate chunks.
             candidate_size (int): The size of the candidate splits that the chunker will consider.
             min_characters_per_chunk (int): The minimum number of characters per chunk.
-            return_type (Literal["chunks", "texts"]): The type of output to return.
             verbose (bool): Whether to print verbose output.
 
         """
@@ -94,7 +92,6 @@ class SlumberChunker(BaseChunker):
         self.candidate_size = candidate_size
         self.rules = rules
         self.min_characters_per_chunk = min_characters_per_chunk
-        self.return_type = return_type
         self.verbose = verbose
 
         # Set the parameters for the defualt prompt template
@@ -318,6 +315,5 @@ class SlumberChunker(BaseChunker):
                 f"tokenizer_or_token_counter={self.tokenizer}, " +
                 f"chunk_size={self.chunk_size}, " +
                 f"candidate_size={self.candidate_size}, " +
-                f"min_characters_per_chunk={self.min_characters_per_chunk}, " +
-                f"return_type={self.return_type})" # type: ignore
+                f"min_characters_per_chunk={self.min_characters_per_chunk})" # type: ignore
             )

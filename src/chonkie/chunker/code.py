@@ -32,16 +32,14 @@ class CodeChunker(BaseChunker):
         chunk_size: The size of the chunks to create.
         language: The language of the code to parse. Accepts any of the languages supported by tree-sitter-language-pack.
         include_nodes: Whether to include the nodes in the returned chunks.
-        return_type: The type of the return value.
 
     """
 
     def __init__(self,
-                 tokenizer_or_token_counter: Union[str, List, Any] = "gpt2",
-                 chunk_size: int = 512,
+                 tokenizer_or_token_counter: Union[str, List, Any] = "character",
+                 chunk_size: int = 2048,
                  language: Union[Literal["auto"], Any] = "auto",
-                 include_nodes: bool = False,
-                 return_type: Literal["chunks", "texts"] = "chunks") -> None:
+                 include_nodes: bool = False) -> None:
         """Initialize a CodeChunker object.
         
         Args:
@@ -49,7 +47,6 @@ class CodeChunker(BaseChunker):
             chunk_size: The size of the chunks to create.
             language: The language of the code to parse. Accepts any of the languages supported by tree-sitter-language-pack.
             include_nodes: Whether to include the nodes in the returned chunks.
-            return_type: The type of the return value.
 
         Raises:
             ImportError: If tree-sitter and tree-sitter-language-pack are not installed.
@@ -62,7 +59,6 @@ class CodeChunker(BaseChunker):
         # Initialize all the values
         self.tokenizer = Tokenizer(tokenizer_or_token_counter)
         self.chunk_size = chunk_size
-        self.return_type = return_type
         self.include_nodes = include_nodes
 
         # TODO: Figure out a way to check if the language is supported by tree-sitter-language-pack
@@ -318,7 +314,7 @@ class CodeChunker(BaseChunker):
             current_index += len(text)
         return chunks
         
-    def chunk(self, text: str) -> Union[List[CodeChunk], List[str]]:
+    def chunk(self, text: str) -> List[CodeChunk]:
         """Recursively chunks the code based on context from tree-sitter."""
         if not text.strip(): # Handle empty or whitespace-only input
             return []
@@ -345,15 +341,11 @@ class CodeChunker(BaseChunker):
                 del tree, root_node
                 node_groups = []
 
-        if self.return_type == "texts":
-            return texts
-        else:
-            chunks = self._create_chunks(texts, token_counts, node_groups)
-            return chunks 
+        chunks = self._create_chunks(texts, token_counts, node_groups)
+        return chunks 
         
     def __repr__(self) -> str:
         """Return the string representation of the CodeChunker."""
         return (f"CodeChunker(tokenizer_or_token_counter={self.tokenizer},"
                 f"chunk_size={self.chunk_size},"
-                f"language={self.language},"
-                f"return_type={self.return_type})")
+                f"language={self.language})")

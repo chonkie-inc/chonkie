@@ -7,10 +7,10 @@
 [![PyPI version](https://img.shields.io/pypi/v/chonkie.svg)](https://pypi.org/project/chonkie/)
 [![License](https://img.shields.io/github/license/chonkie-inc/chonkie.svg)](https://github.com/chonkie-inc/chonkie/blob/main/LICENSE)
 [![Documentation](https://img.shields.io/badge/docs-chonkie.ai-blue.svg)](https://docs.chonkie.ai)
-[![Package size](https://img.shields.io/badge/size-15MB-blue)](https://github.com/chonkie-inc/chonkie/blob/main/README.md#installation)
+[![Package size](https://img.shields.io/badge/size-450KB-blue)](https://github.com/chonkie-inc/chonkie/blob/main/README.md#installation)
 [![codecov](https://codecov.io/gh/chonkie-inc/chonkie/graph/badge.svg?token=V4EWIJWREZ)](https://codecov.io/gh/chonkie-inc/chonkie)
 [![Downloads](https://static.pepy.tech/badge/chonkie)](https://pepy.tech/project/chonkie)
-[![Discord](https://dcbadge.limes.pink/api/server/https://discord.gg/rYYp6DC4cv?style=flat)](https://discord.gg/rYYp6DC4cv)
+[![Discord](https://dcbadge.limes.pink/api/server/https://discord.gg/vH3SkRqmUz?style=flat)](https://discord.gg/vH3SkRqmUz)
 [![GitHub stars](https://img.shields.io/github/stars/chonkie-inc/chonkie.svg)](https://github.com/chonkie-inc/chonkie/stargazers)
 
 _The no-nonsense ultra-light and lightning-fast chunking library that's ready to CHONK your texts!_
@@ -31,7 +31,7 @@ Tired of making your gazillionth chunker? Sick of the overhead of large librarie
 **⚡ Fast**: CHONK at the speed of light! zooooom </br>
 **🪶 Light-weight**: No bloat, just CHONK </br>
 **🌏 Wide support**: CHONKie [integrates](#integrations) with your favorite tokenizer, embedding model and APIs! </br>
-**💬 ️Multilingual**: Out-of-the-box support for 56 languages (more coming 🔜) </br>
+**💬 ️Multilingual**: Out-of-the-box support for 56 languages </br>
 **☁️ Cloud-Ready**: CHONK locally or in the [Chonkie Cloud](https://cloud.chonkie.ai) </br>
 **🦛 Cute CHONK mascot**: psst it's a pygmy hippo btw </br>
 **❤️ [Moto Moto](#acknowledgements)'s favorite python library** </br>
@@ -86,13 +86,13 @@ Here's a conceptual overview of the pipeline, as illustrated in the diagram:
 
 The main stages are:
 
-1. 📄 Document: The starting point – your input text data. It can be in any format!
-2. 👨‍🍳 Chef: This stage handles initial text preprocessing. It might involve cleaning, normalization, or other preparatory steps to get the text ready for chunking. While this is optional, it is recommended to use the `Chef` stage to clean your text before chunking.
-3. 🦛 Chunker: The core component you select (e.g., RecursiveChunker, SentenceChunker). It applies its specific logic to split the preprocessed text into initial chunks based on the chosen strategy and parameters.
-4. 🏭 Refinery: After initial chunking, the Refinery performs post-processing. This can include merging small chunks based on overlap, adding embeddings, or adding additional context to the chunks. It helps ensure the quality and consistency of the output. You can have multiple `Refineries` to apply different post-processing steps. 
-5. 🤗 Friends: The pipeline's produces the final results which can be either exported to be saved or ingested into your vector database. Chonkie offers `Porters` to export the chunks and `Handshakes` to ingest the chunks into your vector database.
-   - 🐴 Porters: Porters can save the chunks to a file or a database. Currently, only `JSON` is supported for exporting the chunks.
-   - 🤝 Handshakes: Handshakes provide a unified interface for ingesting the chunks into your preferred vector databases.
+1. **📄 Document**: The starting point – your input text data. It can be in any format!
+2. **👨‍🍳 Chef**: This stage handles initial text preprocessing. It might involve cleaning, normalization, or other preparatory steps to get the text ready for chunking. While this is optional, it is recommended to use the `Chef` stage to clean your text before chunking.
+3. **🦛 Chunker**: The core component you select (e.g., RecursiveChunker, SentenceChunker). It applies its specific logic to split the preprocessed text into initial chunks based on the chosen strategy and parameters.
+4. **🏭 Refinery**: After initial chunking, the Refinery performs post-processing. This can include merging small chunks based on overlap, adding embeddings, or adding additional context to the chunks. It helps ensure the quality and consistency of the output. You can have multiple `Refineries` to apply different post-processing steps.
+5. **🤗 Friends**: The pipeline's produces the final results which can be either exported to be saved or ingested into your vector database. Chonkie offers `Porters` to export the chunks and `Handshakes` to ingest the chunks into your vector database.
+   - **🐴 Porters**: Porters can save the chunks to a file or a database. Currently, only `JSON` is supported for exporting the chunks.
+   - **🤝 Handshakes**: Handshakes provide a unified interface for ingesting the chunks into your preferred vector databases.
 
 This modular pipeline allows Chonkie to be both powerful and easy to configure for various text chunking needs.
 
@@ -125,8 +125,8 @@ Choose from supported tokenizers or provide your own custom token counting funct
 
 | Name           | Description                                                    | Optional Install   |
 |----------------|----------------------------------------------------------------|--------------------|
-| `character`    | Basic character-level tokenizer.                               | `default`          |
-| `word`         | Basic word-level tokenizer.                                    | `default`          | 
+| `character`    | Basic character-level tokenizer. **Default tokenizer.**       | `default`          |
+| `word`         | Basic word-level tokenizer.                                    | `default`          |
 | `tokenizers`   | Load any tokenizer from the Hugging Face `tokenizers` library. | `default`          |
 | `tiktoken`     | Use OpenAI's `tiktoken` library (e.g., for `gpt-4`).           | `chonkie[tiktoken]`|
 | `transformers` | Load tokenizers via `AutoTokenizer` from HF `transformers`.    | `chonkie[transformers]`|

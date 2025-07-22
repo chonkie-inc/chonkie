@@ -90,10 +90,9 @@ class TestSlumberChunkerInitialization:
         chunker = SlumberChunker(genie=mock_genie)
         
         assert chunker.genie == mock_genie
-        assert chunker.chunk_size == 1024
+        assert chunker.chunk_size == 2048
         assert chunker.candidate_size == 128
         assert chunker.min_characters_per_chunk == 24
-        assert chunker.return_type == "chunks"
         assert chunker.verbose is True
         assert isinstance(chunker.rules, RecursiveRules)
         assert chunker.template is not None
@@ -115,7 +114,6 @@ class TestSlumberChunkerInitialization:
             rules=custom_rules,
             candidate_size=256,
             min_characters_per_chunk=50,
-            return_type="texts",
             verbose=False
         )
         
@@ -123,7 +121,6 @@ class TestSlumberChunkerInitialization:
         assert chunker.chunk_size == 2048
         assert chunker.candidate_size == 256
         assert chunker.min_characters_per_chunk == 50
-        assert chunker.return_type == "texts"
         assert chunker.verbose is False
         assert chunker.rules == custom_rules
     
@@ -530,8 +527,7 @@ class TestSlumberChunkerRepresentation:
             genie=mock_genie,
             chunk_size=2048,
             candidate_size=256,
-            min_characters_per_chunk=50,
-            return_type="texts"
+            min_characters_per_chunk=50
         )
         
         repr_str = repr(chunker)
@@ -541,7 +537,6 @@ class TestSlumberChunkerRepresentation:
         assert "chunk_size=2048" in repr_str
         assert "candidate_size=256" in repr_str
         assert "min_characters_per_chunk=50" in repr_str
-        assert "return_type=texts" in repr_str
     
     def test_repr_default_values(self, mock_genie: MockGenie) -> None:
         """Test __repr__ with default values."""
@@ -549,10 +544,9 @@ class TestSlumberChunkerRepresentation:
         
         repr_str = repr(chunker)
         
-        assert "chunk_size=1024" in repr_str
+        assert "chunk_size=2048" in repr_str
         assert "candidate_size=128" in repr_str
         assert "min_characters_per_chunk=24" in repr_str
-        assert "return_type=chunks" in repr_str
 
 
 class TestSlumberChunkerIntegration:

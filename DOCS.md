@@ -154,16 +154,15 @@ The `TokenChunker` is the most basic type of chunker. It simply splits the text 
 
 **Parameters:**
 
-- `tokenizer (Union[str, Any])`: The tokenizer to use. Defaults to `gpt2` with `tokenizers.Tokenizer`. You can also pass `character` or `word` to use the character or word tokenizer respectively. More details mentioned in the [Tokenizers](#tokenizers) section.
+- `tokenizer (Union[str, Any])`: The tokenizer to use. Defaults to `character` tokenizer. You can also pass `word` to use the word tokenizer, or any string identifier like `gpt2` to use the `tokenizers.Tokenizer` library. More details mentioned in the [Tokenizers](#tokenizers) section.
 - `chunk_size (int)`: The number of tokens to chunk the text into. Defaults to `512`.
 - `overlap (int)`: The number of tokens to overlap between chunks. Defaults to `0`.
-- `return_type (Literal["texts", "chunks"])`: Whether to return the chunks as a list of texts or a list of `Chunk` objects. Defaults to `"chunks"`.
 
 **Methods:**
 
-- `chunk(text: str) -> Union[List[Chunk], List[str]]`: Chunks a string into a list of `Chunk` objects or a list of strings.
-- `chunk_batch(texts: List[str]) -> Union[List[List[Chunk]], List[List[str]]]`: Chunks a list of strings into a list of lists of `Chunk` objects or a list of lists of strings.
-- `__call__(text: str) -> Union[List[Chunk], List[str], List[List[Chunk]], List[List[str]]]`: Chunks a string into a list of `Chunk` objects or a list of strings.
+- `chunk(text: str) -> List[Chunk]`: Chunks a string into a list of `Chunk` objects.
+- `chunk_batch(texts: List[str]) -> List[List[Chunk]]`: Chunks a list of strings into a list of lists of `Chunk` objects.
+- `__call__(text: str) -> Union[List[Chunk], List[List[Chunk]]]`: Chunks a string or list of strings into chunk objects.
 
 **Examples:**
 
@@ -194,7 +193,7 @@ for chunk in chunks:
 ```python
 from chonkie import TokenChunker
 
-chunker = TokenChunker(tokenizer="gpt2")
+chunker = TokenChunker(tokenizer="gpt2")  # Or use default: TokenChunker()
 chunks = chunker("Hello, world!")
 ```
 
@@ -247,14 +246,13 @@ The `SentenceChunker` is a chunker that splits the text into sentences and then 
 - `approximate (bool)`: [DEPRECATED] Whether to use approximate token counting. Defaults to `False`.
 - `delim (Union[str, List[str]])`: Delimiters to split sentences on. Defaults to `[". ", "! ", "? ", "\n"]`.
 - `include_delim (Optional[Literal["prev", "next"]])`: Whether to include delimiters in the current chunk (`"prev"`), the next chunk (`"next"`), or not at all (`None`). Defaults to `"prev"`.
-- `return_type (Literal["texts", "chunks"])`: Whether to return the chunks as a list of texts or a list of `Chunk` objects. Defaults to `"chunks"`.
 
 **Methods:**
 
-- `chunk(text: str) -> Union[List[Chunk], List[str]]`: Chunks a string into a list of `SentenceChunk` objects or a list of strings.
-- `chunk_batch(texts: List[str]) -> Union[List[List[Chunk]], List[List[str]]]`: Chunks a list of strings into a list of lists of `SentenceChunk` objects or a list of lists of strings. (Inherited)
+- `chunk(text: str) -> List[SentenceChunk]`: Chunks a string into a list of `SentenceChunk` objects.
+- `chunk_batch(texts: List[str]) -> List[List[SentenceChunk]]`: Chunks a list of strings into a list of lists of `SentenceChunk` objects. (Inherited)
 - `from_recipe(name: str, lang: str, **kwargs) -> SentenceChunker`: Creates a `SentenceChunker` instance using pre-defined recipes from the [Chonkie Recipe Store](https://huggingface.co/datasets/chonkie-ai/recipes). This allows easy configuration for specific languages or splitting behaviors.
-- `__call__(text: str) -> Union[List[Chunk], List[str], List[List[Chunk]], List[List[str]]]`: Chunks a string or list of strings. Calls `chunk` or `chunk_batch` depending on input type. (Inherited)
+- `__call__(text: str) -> Union[List[SentenceChunk], List[List[SentenceChunk]]]`: Chunks a string or list of strings. Calls `chunk` or `chunk_batch` depending on input type. (Inherited)
 
 **Examples:**
 
@@ -266,7 +264,7 @@ Here are a couple of examples on how to use the `SentenceChunker` in practice.
 ```python
 from chonkie import SentenceChunker
 
-# Initialize with default settings (gpt2 tokenizer, chunk_size 512)
+# Initialize with default settings (character tokenizer, chunk_size 512)
 chunker = SentenceChunker()
 
 text = "This is the first sentence. This is the second sentence, which is a bit longer. And finally, the third sentence!"
@@ -372,14 +370,13 @@ For both of the above strategies, in `auto` mode, we determine the `threshold` v
 - `threshold_step (float)`: Step size used in the binary search when `threshold="auto"`. Defaults to `0.01`.
 - `delim (Union[str, List[str]])`: Delimiters used to split the text into initial sentences. Defaults to `[". ", "! ", "? ", "\n"]`.
 - `include_delim (Optional[Literal["prev", "next"]])`: Whether to include the delimiter with the preceding sentence (`"prev"`), the succeeding sentence (`"next"`), or not at all (`None`). Defaults to `"prev"`.
-- `return_type (Literal["texts", "chunks"])`: Whether to return the chunks as a list of strings (`"texts"`) or a list of `SemanticChunk` objects (`"chunks"`). Defaults to `"chunks"`.
 
 **Methods:**
 
-- `chunk(text: str) -> Union[List[SemanticChunk], List[str]]`: Chunks a single string into a list of `SemanticChunk` objects or strings based on `return_type`.
-- `chunk_batch(texts: List[str]) -> Union[List[List[SemanticChunk]], List[List[str]]]`: Chunks a list of strings. (Inherited)
+- `chunk(text: str) -> List[SemanticChunk]`: Chunks a single string into a list of `SemanticChunk` objects.
+- `chunk_batch(texts: List[str]) -> List[List[SemanticChunk]]`: Chunks a list of strings. (Inherited)
 - `from_recipe(name: str, lang: str, **kwargs) -> SemanticChunker`: Creates a `SemanticChunker` using pre-defined recipes (delimiters, etc.) from the [Chonkie Recipe Store](https://huggingface.co/datasets/chonkie-ai/recipes), simplifying setup for specific languages. Requires `chonkie[hub]`.
-- `__call__(text: Union[str, List[str]]) -> Union[List[SemanticChunk], List[str], List[List[SemanticChunk]], List[List[str]]]`: Convenience method calling `chunk` or `chunk_batch` depending on input type. (Inherited)
+- `__call__(text: Union[str, List[str]]) -> Union[List[SemanticChunk], List[List[SemanticChunk]]]`: Convenience method calling `chunk` or `chunk_batch` depending on input type. (Inherited)
 
 **Examples:**
 
@@ -677,7 +674,7 @@ The `Tokenizer` class is a wrapper that holds the `tokenizer` engine object and 
 
 **Available Tokenizers:**
 
-- `character`: Character tokenizer that encodes characters.
+- `character`: Character tokenizer that encodes characters. **This is the default tokenizer.**
 - `word`: Word tokenizer that encodes words.
 - `tokenizers`: Allows loading any tokenizer from the Hugging Face `tokenizers` library.
 - `tiktoken`: Allows using the `tiktoken` tokenizer from OpenAI.
@@ -690,6 +687,11 @@ You can initialize a `Tokenizer` object with a string that maps to the desired t
 ```python
 from chonkie import Tokenizer
 
+# Uses character tokenizer by default
+tokenizer = Tokenizer()
+# Or explicitly specify:
+tokenizer = Tokenizer("character")
+# Or use a different tokenizer:
 tokenizer = Tokenizer("gpt2")
 ```
 
@@ -720,7 +722,8 @@ tokenizer = Tokenizer(tokenizer=encoding)
 ```python
 from chonkie import Tokenizer
 
-tokenizer = Tokenizer("gpt2")
+# Uses character tokenizer by default
+tokenizer = Tokenizer()
 
 tokens = tokenizer.encode("Hello, world!")
 print(tokens)

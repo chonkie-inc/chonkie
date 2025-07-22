@@ -22,8 +22,8 @@ from chonkie import SentenceChunker
 
 # Basic initialization with default parameters
 chunker = SentenceChunker(
-    tokenizer_or_token_counter="gpt2",                # Supports string identifiers
-    chunk_size=512,                  # Maximum tokens per chunk
+    tokenizer_or_token_counter="character",  # Default tokenizer (or use "gpt2", etc.)
+    chunk_size=2048,                  # Maximum tokens per chunk
     chunk_overlap=128,               # Overlap between chunks
     min_sentences_per_chunk=1        # Minimum sentences in each chunk
 )
@@ -34,15 +34,15 @@ chunker = SentenceChunker(
 <ParamField
     path="tokenizer_or_token_counter"
     type="Union[str, Callable, Any]"
-    default="gpt2"
+    default="character"
 >
-    Tokenizer to use. Can be a string identifier or a tokenizer instance
+    Tokenizer to use. Can be a string identifier ("character", "word", "gpt2", etc.) or a tokenizer instance
 </ParamField>
 
 <ParamField
     path="chunk_size"
     type="int"
-    default="512"
+    default="2048"
 >
     Maximum number of tokens per chunk
 </ParamField>
@@ -96,13 +96,6 @@ chunker = SentenceChunker(
     Include delimiters in the chunk text. If so, specify whether to include the previous or next delimiter.
 </ParamField>
 
-<ParamField
-    path="return_type"
-    type="Literal['texts', 'chunks']"
-    default="chunks"
->
-    Whether to return chunks as text strings or as `SentenceChunk` objects.
-</ParamField>
 
 ## Usage
 

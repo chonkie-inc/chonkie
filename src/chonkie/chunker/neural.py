@@ -6,7 +6,7 @@ It trains an encoder style model on the task of token-classification (think: NER
 """
 
 import importlib.util as importutil
-from typing import TYPE_CHECKING, Any, Dict, List, Literal, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
 from chonkie.types import Chunk
 
@@ -46,7 +46,6 @@ class NeuralChunker(BaseChunker):
     model: The model to use for the chunker.
     device: The device to use for the chunker.
     min_characters_per_chunk: The minimum number of characters per chunk.
-    return_type: The type of return value.
 
   """
 
@@ -69,8 +68,7 @@ class NeuralChunker(BaseChunker):
                tokenizer: Optional[Union[str, Any]] = None,
                device_map: str = "auto", 
                min_characters_per_chunk: int = 10, 
-               stride: Optional[int] = None,
-               return_type: Literal["chunks", "texts"] = "chunks") -> None:
+               stride: Optional[int] = None) -> None:
     """Initialize the NeuralChunker object.
     
     Args:
@@ -79,7 +77,6 @@ class NeuralChunker(BaseChunker):
       device_map: The device to use for the chunker.
       min_characters_per_chunk: The minimum number of characters per chunk.
       stride: The stride to use for the chunker.
-      return_type: The type of return value.
 
     """
     # Lazily load the dependencies
@@ -123,7 +120,6 @@ class NeuralChunker(BaseChunker):
 
     # Set the attributes
     self.min_characters_per_chunk = min_characters_per_chunk
-    self.return_type = return_type
 
     # Initialize the pipeline
     try:
@@ -204,14 +200,14 @@ class NeuralChunker(BaseChunker):
       current_index += len(split)
     return chunks
 
-  def chunk(self, text: str) -> Union[List[Chunk], List[str]]:
+  def chunk(self, text: str) -> List[Chunk]:
     """Chunk the text into a list of chunks.
     
     Args:
       text: The text to chunk.
 
     Returns:
-      A list of chunks or a list of strings.
+      A list of chunks.
 
     """
     # Get the spans
@@ -224,16 +220,12 @@ class NeuralChunker(BaseChunker):
     # Get the splits from the merged spans
     splits = self._get_splits(merged_spans, text)
 
-    # Return the chunks or the texts
-    if self.return_type == "texts":
-      return splits
-    else:
-      chunks = self._get_chunks_from_splits(splits)
-      return chunks
+    # Return the chunks
+    chunks = self._get_chunks_from_splits(splits)
+    return chunks
 
   def __repr__(self) -> str:
     """Return the string representation of the object."""
     return (f"NeuralChunker(model={self.model},"
             f"tokenizer={self.tokenizer}, "
-            f"min_characters_per_chunk={self.min_characters_per_chunk}, "
-            f"return_type={self.return_type})")
+            f"min_characters_per_chunk={self.min_characters_per_chunk})")

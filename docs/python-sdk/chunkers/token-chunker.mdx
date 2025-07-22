@@ -22,8 +22,8 @@ from chonkie import TokenChunker
 
 # Basic initialization with default parameters
 chunker = TokenChunker(
-    tokenizer="gpt2",  # Supports string identifiers
-    chunk_size=512,    # Maximum tokens per chunk
+    tokenizer="character",  # Default tokenizer (or use "gpt2", etc.)
+    chunk_size=2048,    # Maximum tokens per chunk
     chunk_overlap=128  # Overlap between chunks
 )
 
@@ -32,7 +32,7 @@ from tokenizers import Tokenizer
 custom_tokenizer = Tokenizer.from_pretrained("your-tokenizer")
 chunker = TokenChunker(
     tokenizer=custom_tokenizer,
-    chunk_size=512,
+    chunk_size=2048,
     chunk_overlap=128
 )
 ```
@@ -42,15 +42,15 @@ chunker = TokenChunker(
 <ParamField
     path="tokenizer"
     type="Union[str, Any]"
-    default="gpt2"
+    default="character"
 >
-    Tokenizer to use. Can be a string identifier or a tokenizer instance
+    Tokenizer to use. Can be a string identifier ("character", "word", "gpt2", etc.) or a tokenizer instance
 </ParamField>
 
 <ParamField
     path="chunk_size"
     type="int"
-    default="512"
+    default="2048"
 >
     Maximum number of tokens per chunk
 </ParamField>
@@ -64,13 +64,6 @@ chunker = TokenChunker(
     Number or percentage of overlapping tokens between chunks
 </ParamField>
 
-<ParamField
-    path="return_type"
-    type="Literal['chunks', 'texts']"
-    default="chunks"
->
-    Whether to return chunks as `Chunk` objects or plain text strings
-</ParamField>
 
 ## Usage
 

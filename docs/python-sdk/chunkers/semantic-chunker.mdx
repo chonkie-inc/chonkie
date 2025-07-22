@@ -28,7 +28,7 @@ from chonkie import SemanticChunker
 chunker = SemanticChunker(
     embedding_model="minishlab/potion-base-8M",  # Default model
     threshold=0.5,                               # Similarity threshold (0-1) or (1-100) or "auto"
-    chunk_size=512,                              # Maximum tokens per chunk
+    chunk_size=2048,                              # Maximum tokens per chunk
     min_sentences=1                              # Initial sentences per chunk
 )
 ```
@@ -64,7 +64,7 @@ chunker = SemanticChunker(
 <ParamField
     path="chunk_size"
     type="int"
-    default="512"
+    default="2048"
 >
     Maximum tokens per chunk
 </ParamField>
@@ -125,13 +125,6 @@ chunker = SemanticChunker(
     Include delimiters in the chunk text. If so, specify whether to include the previous or next delimiter.
 </ParamField>
 
-<ParamField
-    path="return_type"
-    type="Literal['texts', 'chunks']"
-    default="'chunks'"
->
-    Return type for chunking. If "chunks", returns a list of `SemanticChunk` objects. If "texts", returns a list of strings.
-</ParamField>
 
 ## Usage
 

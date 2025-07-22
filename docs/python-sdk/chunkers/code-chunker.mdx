@@ -27,8 +27,8 @@ from chonkie import CodeChunker
 # Basic initialization with default parameters
 chunker = CodeChunker(
     language="python",                 # Specify the programming language
-    tokenizer_or_token_counter="gpt2", # Tokenizer to use
-    chunk_size=512,                    # Maximum tokens per chunk
+    tokenizer_or_token_counter="character", # Default tokenizer (or use "gpt2", etc.)
+    chunk_size=2048,                    # Maximum tokens per chunk
     include_nodes=False                # Optionally include AST nodes in output
 )
 
@@ -38,7 +38,7 @@ custom_tokenizer = Tokenizer.from_pretrained("your-tokenizer")
 chunker = CodeChunker(
     language="javascript",
     tokenizer_or_token_counter=custom_tokenizer,
-    chunk_size=512
+    chunk_size=2048
 )
 ```
 
@@ -55,7 +55,7 @@ chunker = CodeChunker(
 <ParamField
     path="tokenizer_or_token_counter"
     type="Union[str, Callable, Any]"
-    default="gpt2"
+    default="character"
 >
     Tokenizer or token counting function to use for measuring chunk size.
 </ParamField>
@@ -63,7 +63,7 @@ chunker = CodeChunker(
 <ParamField
     path="chunk_size"
     type="int"
-    default="512"
+    default="2048"
 >
     Maximum number of tokens per chunk.
 </ParamField>
@@ -76,13 +76,6 @@ chunker = CodeChunker(
     Whether to include the list of corresponding AST `Node` objects within each `CodeChunk`.
 </ParamField>
 
-<ParamField
-    path="return_type"
-    type="Literal['chunks', 'texts']"
-    default="chunks"
->
-    Whether to return chunks as `CodeChunk` objects or plain text strings.
-</ParamField>
 
 ## Usage
 

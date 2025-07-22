@@ -55,7 +55,7 @@ class TestSDPMChunkerInitialization:
         """Test initialization with default parameters."""
         chunker = SDPMChunker(embedding_model=embedding_model)
         
-        assert chunker.chunk_size == 512
+        assert chunker.chunk_size == 2048
         assert chunker.threshold == "auto"
         assert chunker.similarity_window == 1
         assert chunker.min_sentences == 1
@@ -85,7 +85,7 @@ class TestSDPMChunkerInitialization:
         """Test initialization with string embedding model."""
         chunker = SDPMChunker(embedding_model="minishlab/potion-base-8M")
         
-        assert chunker.chunk_size == 512
+        assert chunker.chunk_size == 2048
         assert chunker.threshold == "auto"
         assert hasattr(chunker, 'embedding_model')
 
@@ -311,7 +311,7 @@ class TestSDPMChunkerRepresentation:
         
         repr_str = repr(chunker)
         assert "SDPMChunker" in repr_str
-        assert "chunk_size=512" in repr_str
+        assert "chunk_size=2048" in repr_str
         assert "mode=window" in repr_str
         assert "threshold=auto" in repr_str
         assert "skip_window=1" in repr_str
@@ -444,22 +444,18 @@ class TestSDPMChunkerParameterVariations:
             assert chunker.min_chunk_size == min_size
 
     def test_return_type_parameter(self, embedding_model, sample_text):
-        """Test with different return types."""
-        # Test chunks return type
-        chunker_chunks = SDPMChunker(
-            embedding_model=embedding_model,
-            return_type="chunks"
+        """Test that chunker returns SemanticChunk objects by default."""
+        # Test default return type (chunks)
+        chunker = SDPMChunker(
+            embedding_model=embedding_model
         )
-        result_chunks = chunker_chunks.chunk(sample_text)
-        assert all(isinstance(item, SemanticChunk) for item in result_chunks)
+        result = chunker.chunk(sample_text)
+        assert all(isinstance(item, SemanticChunk) for item in result)
         
-        # Test texts return type
-        chunker_texts = SDPMChunker(
-            embedding_model=embedding_model,
-            return_type="texts"
-        )
-        result_texts = chunker_texts.chunk(sample_text)
-        assert all(isinstance(item, str) for item in result_texts)
+        # Test that text content is accessible via .text property
+        for chunk in result:
+            assert isinstance(chunk.text, str)
+            assert len(chunk.text) > 0
 
 
 class TestSDPMChunkerRecipeFeature:
@@ -472,7 +468,7 @@ class TestSDPMChunkerRecipeFeature:
                 embedding_model=embedding_model
             )
             assert isinstance(chunker, SDPMChunker)
-            assert chunker.chunk_size == 512
+            assert chunker.chunk_size == 2048
         except Exception:
             # Skip if recipe system is not available or configured
             pytest.skip("Recipe system not available")

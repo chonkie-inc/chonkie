@@ -18,7 +18,7 @@ import { TokenChunker } from "chonkie";
 // Basic initialization with default parameters (async)
 const chunker = await TokenChunker.create({
   tokenizer: "Xenova/gpt2", // Supports string identifiers or Tokenizer instance
-  chunkSize: 512,            // Maximum tokens per chunk
+  chunkSize: 2048,            // Maximum tokens per chunk
   chunkOverlap: 128          // Overlap between chunks
 });
 
@@ -27,7 +27,7 @@ import { Tokenizer } from "@huggingface/transformers";
 const customTokenizer = await Tokenizer.from_pretrained("your-tokenizer");
 const chunker = await TokenChunker.create({
   tokenizer: customTokenizer,
-  chunkSize: 512,
+  chunkSize: 2048,
   chunkOverlap: 128
 });
 ```
@@ -45,7 +45,7 @@ const chunker = await TokenChunker.create({
 <ParamField
     path="chunkSize"
     type="number"
-    default="512"
+    default="2048"
 >
     Maximum number of tokens per chunk.
 </ParamField>

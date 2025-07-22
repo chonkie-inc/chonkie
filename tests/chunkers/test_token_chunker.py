@@ -233,8 +233,7 @@ def test_token_chunker_repr(tiktokenizer: Encoding) -> None:
     assert repr(chunker) == (
         f"TokenChunker(tokenizer={chunker.tokenizer}, "
         f"chunk_size={chunker.chunk_size}, "
-        f"chunk_overlap={chunker.chunk_overlap}, "
-        f"return_type={chunker.return_type})"
+        f"chunk_overlap={chunker.chunk_overlap})"
     )
 
 
@@ -269,18 +268,16 @@ def verify_chunk_indices(chunks: List[Chunk], original_text: str):
         )
 
 
-def test_token_chunker_indices(tiktokenizer: Encoding, sample_text: str) -> None:
+def test_token_chunker_indices(sample_text: str) -> None:
     """Test that TokenChunker's indices correctly map to original text."""
-    tokenizer = Tokenizer.from_pretrained("gpt2")
-    chunker = TokenChunker(tokenizer=tokenizer, chunk_size=512, chunk_overlap=128)
+    chunker = TokenChunker(tokenizer="character", chunk_size=512, chunk_overlap=128)
     chunks = chunker.chunk(sample_text)
     verify_chunk_indices(chunks, sample_text)
 
 
 def test_token_chunker_indices_complex_md(sample_complex_markdown_text: str) -> None:
     """Test that TokenChunker's indices correctly map to original text."""
-    tokenizer = Tokenizer.from_pretrained("gpt2")
-    chunker = TokenChunker(tokenizer=tokenizer, chunk_size=512, chunk_overlap=128)
+    chunker = TokenChunker(tokenizer="character", chunk_size=512, chunk_overlap=128)
     chunks = chunker.chunk(sample_complex_markdown_text)
     verify_chunk_indices(chunks, sample_complex_markdown_text)
 
@@ -311,13 +308,12 @@ def test_token_chunker_indices_batch(tiktokenizer: Encoding, sample_text: str) -
 
 
 def test_token_chunker_return_type(tiktokenizer: Encoding, sample_text: str) -> None:
-    """Test that TokenChunker's return type is correctly set."""
+    """Test that TokenChunker returns Chunk objects by default."""
     chunker = TokenChunker(
         tokenizer=tiktokenizer,
         chunk_size=512,
         chunk_overlap=128,
-        return_type="texts",
     ) 
     chunks = chunker.chunk(sample_text)
-    assert all([type(chunk) is str for chunk in chunks])
-    assert all([len(tiktokenizer.encode(chunk)) <= 512 for chunk in chunks])
+    assert all([type(chunk) is Chunk for chunk in chunks])
+    assert all([len(tiktokenizer.encode(chunk.text)) <= 512 for chunk in chunks])

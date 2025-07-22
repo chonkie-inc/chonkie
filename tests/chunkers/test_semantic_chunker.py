@@ -230,8 +230,7 @@ def test_semantic_chunker_repr(embedding_model: BaseEmbeddings) -> None:
         f"threshold={chunker.threshold}, "
         f"similarity_window={chunker.similarity_window}, "
         f"min_sentences={chunker.min_sentences}, "
-        f"min_chunk_size={chunker.min_chunk_size}, "
-        f"return_type={chunker.return_type})"
+        f"min_chunk_size={chunker.min_chunk_size})"
     )
     assert repr(chunker) == expected
 
@@ -349,17 +348,16 @@ def test_semantic_chunker_reconstruction_batch(embedding_model: BaseEmbeddings, 
 
 
 def test_semantic_chunker_return_type(embedding_model: BaseEmbeddings, sample_text: str) -> None:
-    """Test that SemanticChunker's return type is correctly set."""
+    """Test that SemanticChunker returns SemanticChunk objects by default."""
     chunker = SemanticChunker(
         embedding_model=embedding_model,
         chunk_size=512,
         threshold=0.5,
-        return_type="texts",
     )
     chunks = chunker.chunk(sample_text)
     tokenizer = embedding_model.get_tokenizer_or_token_counter()
-    assert all([type(chunk) is str for chunk in chunks])
-    assert all([len(tokenizer.encode(chunk)) <= 512 for chunk in chunks])
+    assert all([hasattr(chunk, 'text') for chunk in chunks])
+    assert all([len(tokenizer.encode(chunk.text)) <= 512 for chunk in chunks])
 
 
 def test_semantic_chunker_from_recipe_default() -> None:
@@ -378,7 +376,6 @@ def test_semantic_chunker_from_recipe_custom_params(embedding_model: BaseEmbeddi
         embedding_model=embedding_model,
         chunk_size=256,
         threshold=0.9,
-        return_type="texts",
     )
 
     assert chunker is not None
@@ -386,7 +383,6 @@ def test_semantic_chunker_from_recipe_custom_params(embedding_model: BaseEmbeddi
     assert chunker.include_delim == "prev"
     assert chunker.chunk_size == 256
     assert chunker.threshold == 0.9
-    assert chunker.return_type == "texts"
 
 def test_semantic_chunker_from_recipe_nonexistent() -> None:
     """Test that SemanticChunker.from_recipe raises an error if the recipe does not exist."""
@@ -475,10 +471,6 @@ class TestSemanticChunkerParameterValidation:
         with pytest.raises(ValueError, match="delim must be a string or list of strings"):
             SemanticChunker(embedding_model=embedding_model, delim=123)
 
-    def test_invalid_return_type(self, embedding_model: BaseEmbeddings) -> None:
-        """Test that SemanticChunker raises error for invalid return_type."""
-        with pytest.raises(ValueError, match="Invalid return_type. Must be either 'chunks' or 'texts'."):
-            SemanticChunker(embedding_model=embedding_model, return_type="invalid")
 
     def test_invalid_embedding_model_type(self) -> None:
         """Test that SemanticChunker raises error for invalid embedding model type."""
@@ -698,27 +690,17 @@ class TestSemanticChunkerInternalMethods:
         with pytest.raises(ValueError, match="Cannot create chunk from empty sentence list"):
             chunker._create_chunk([])
 
-    def test_create_chunk_with_texts_return_type(self, embedding_model: BaseEmbeddings) -> None:
-        """Test _create_chunk with return_type='texts'."""
+    def test_create_chunk_with_default_return_type(self, embedding_model: BaseEmbeddings) -> None:
+        """Test _create_chunk with default return_type (chunks)."""
         chunker = SemanticChunker(
-            embedding_model=embedding_model, 
-            return_type="texts"
+            embedding_model=embedding_model
         )
         sentences = chunker._prepare_sentences("This is a test sentence.")
         
         if sentences:
             result = chunker._create_chunk(sentences)
-            assert isinstance(result, str)
+            assert hasattr(result, 'text')
 
-    def test_create_chunk_invalid_return_type(self, embedding_model: BaseEmbeddings) -> None:
-        """Test _create_chunk with invalid return_type."""
-        chunker = SemanticChunker(embedding_model=embedding_model)
-        chunker.return_type = "invalid"  # Force invalid return type
-        sentences = chunker._prepare_sentences("This is a test sentence.")
-        
-        if sentences:
-            with pytest.raises(ValueError, match="Invalid return_type. Must be either 'chunks' or 'texts'."):
-                chunker._create_chunk(sentences)
 
 
 class TestSemanticChunkerThresholdCalculation:

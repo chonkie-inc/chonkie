@@ -37,7 +37,7 @@ from chonkie import LateChunker
 
 chunker = LateChunker(
     embedding_model="all-MiniLM-L6-v2",
-    chunk_size=512,
+    chunk_size=2048,
     rules=RecursiveRules(),
     min_characters_per_chunk=24,
 )
@@ -69,7 +69,7 @@ chunker = LateChunker.from_recipe(lang="hi")
 <ParamField
     path="chunk_size"
     type="int"
-    default="512"
+    default="2048"
 >
     Maximum number of tokens per chunk
 </ParamField>

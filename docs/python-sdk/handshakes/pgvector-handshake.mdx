@@ -69,7 +69,7 @@ handshake = PgvectorHandshake(
 )
 
 # Create some chunks
-chunker = RecursiveChunker(chunk_size=512)
+chunker = RecursiveChunker(chunk_size=2048)
 chunks = chunker.chunk("Chonkie makes PostgreSQL vector search easy!")
 
 # Write chunks to PostgreSQL

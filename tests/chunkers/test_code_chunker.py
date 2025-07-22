@@ -54,7 +54,6 @@ def test_code_chunker_initialization() -> None:
     """Test CodeChunker initialization."""
     chunker = CodeChunker(language="python", chunk_size=128)
     assert chunker.chunk_size == 128
-    assert chunker.return_type == "chunks"
     assert chunker.parser is not None
 
 
@@ -104,14 +103,14 @@ def test_code_chunker_indices_python(python_code: str) -> None:
     assert current_index == len(python_code)
 
 
-def test_code_chunker_return_type_texts(python_code: str) -> None:
-    """Test return_type='texts'."""
-    chunker = CodeChunker(language="python", chunk_size=50, return_type="texts")
-    texts = chunker.chunk(python_code)
-    assert isinstance(texts, list)
-    assert len(texts) > 0
-    assert all(isinstance(text, str) for text in texts)
-    reconstructed_text = "".join(texts)
+def test_code_chunker_return_type_chunks(python_code: str) -> None:
+    """Test that chunker returns CodeChunk objects by default."""
+    chunker = CodeChunker(language="python", chunk_size=50)
+    chunks = chunker.chunk(python_code)
+    assert isinstance(chunks, list)
+    assert len(chunks) > 0
+    assert all(isinstance(chunk, CodeChunk) for chunk in chunks)
+    reconstructed_text = "".join(chunk.text for chunk in chunks)
     assert reconstructed_text == python_code
 
 
@@ -121,10 +120,10 @@ def test_code_chunker_empty_input() -> None:
     chunks = chunker.chunk("")
     assert chunks == []
 
-    # Test return_type='texts'
-    chunker = CodeChunker(language="python", return_type="texts")
-    texts = chunker.chunk("")
-    assert texts == []
+    # Test with default chunker (returns chunks)
+    chunker_default = CodeChunker(language="python")
+    chunks_default = chunker_default.chunk("")
+    assert chunks_default == []
 
 
 def test_code_chunker_whitespace_input() -> None:
@@ -133,10 +132,10 @@ def test_code_chunker_whitespace_input() -> None:
     chunks = chunker.chunk("   \n\t\n  ")
     assert chunks == []
 
-    # Test return_type='texts'
-    chunker = CodeChunker(language="python", return_type="texts")
-    texts = chunker.chunk("   \n\t\n  ")
-    assert texts == []
+    # Test with default chunker (returns chunks)
+    chunker_default = CodeChunker(language="python")
+    chunks_default = chunker_default.chunk("   \n\t\n  ")
+    assert chunks_default == []
 
 
 def test_code_chunker_chunking_javascript(js_code: str) -> None:

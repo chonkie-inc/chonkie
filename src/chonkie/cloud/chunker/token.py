@@ -1,7 +1,7 @@
 """Cloud Token Chunking for Chonkie API."""
 
 import os
-from typing import Dict, List, Literal, Optional, Union, cast
+from typing import Dict, List, Optional, Union, cast
 
 import requests
 
@@ -21,7 +21,6 @@ class TokenChunker(CloudChunker):
         tokenizer: str = "gpt2",
         chunk_size: int = 512,
         chunk_overlap: int = 0,
-        return_type: Literal["texts", "chunks"] = "chunks",
         api_key: Optional[str] = None,
     ) -> None:
         """Initialize the Cloud TokenChunker."""
@@ -39,15 +38,10 @@ class TokenChunker(CloudChunker):
         if chunk_overlap < 0:
             raise ValueError("Chunk overlap must be greater than or equal to 0.")
 
-        # Check if return_type is valid
-        if return_type not in ["texts", "chunks"]:
-            raise ValueError("Return type must be either 'texts' or 'chunks'.")
-
         # Assign all the attributes to the instance
         self.tokenizer = tokenizer
         self.chunk_size = chunk_size
         self.chunk_overlap = chunk_overlap
-        self.return_type = return_type
 
         # Check if the API is up right now
         response = requests.get(f"{self.BASE_URL}/")
@@ -66,7 +60,7 @@ class TokenChunker(CloudChunker):
             "tokenizer": self.tokenizer,
             "chunk_size": self.chunk_size,
             "chunk_overlap": self.chunk_overlap,
-            "return_type": self.return_type,
+            "return_type": "chunks",  # Always request chunks to maintain consistency
         }
         # Make the request to the Chonkie API
         response = requests.post(

@@ -47,7 +47,7 @@ genie = GeminiGenie("gemini-2.5-flash-preview-04-17")
 # Basic initialization
 chunker = SlumberChunker(
     genie=genie,                        # Genie interface to use
-    tokenizer_or_token_counter="gpt2",  # Tokenizer or token counter to use
+    tokenizer_or_token_counter="character",  # Default tokenizer (or use "gpt2", etc.)
     chunk_size=1024,                    # Maximum chunk size
     candidate_size=128,                 # How many tokens Genie looks at for potential splits
     min_characters_per_chunk=24,        # Minimum number of characters per chunk
@@ -71,7 +71,7 @@ chunker = SlumberChunker(
 <ParamField
     path="tokenizer_or_token_counter"
     type="Union[str, Callable, Any]"
-    default="gpt2"
+    default="character"
 >
     Tokenizer or token counting function used for initial splitting and size estimation.
 </ParamField>
@@ -108,13 +108,6 @@ chunker = SlumberChunker(
     Minimum number of characters required for a chunk to be considered valid.
 </ParamField>
 
-<ParamField
-    path="return_type"
-    type="Literal['chunks', 'texts']"
-    default="chunks"
->
-    Whether to return chunks as `SlumberChunk` objects or plain text strings.
-</ParamField>
 
 <ParamField
     path="verbose"

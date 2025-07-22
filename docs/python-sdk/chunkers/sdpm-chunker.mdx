@@ -28,7 +28,7 @@ from chonkie import SDPMChunker
 chunker = SDPMChunker(
     embedding_model="minishlab/potion-base-8M",  # Default model
     threshold=0.5,                              # Similarity threshold (0-1)
-    chunk_size=512,                             # Maximum tokens per chunk
+    chunk_size=2048,                             # Maximum tokens per chunk
     min_sentences=1,                            # Initial sentences per chunk
     skip_window=1                               # Number of chunks to skip when looking for similarities
 )
@@ -47,7 +47,7 @@ chunker = SDPMChunker(
 <ParamField
     path="chunk_size"
     type="int"
-    default="512"
+    default="2048"
 >
     Maximum tokens per chunk
 </ParamField>
@@ -134,13 +134,6 @@ chunker = SDPMChunker(
     Number of chunks to skip when looking for similarities
 </ParamField>
 
-<ParamField
-    path="return_type"
-    type="Literal['chunks', 'texts']"
-    default="chunks"
->
-    Return type for the chunking process. If "chunks", returns a list of `SemanticChunk` objects. If "texts", returns a list of strings.
-</ParamField>
 
 ## Usage
 

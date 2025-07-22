@@ -11,7 +11,6 @@ from bisect import bisect_left
 from itertools import accumulate
 from typing import Any, Callable, List, Literal, Optional, Sequence, Union
 
-from chonkie.types.base import Chunk
 from chonkie.types.sentence import Sentence, SentenceChunk
 from chonkie.utils import Hubbie
 
@@ -44,7 +43,6 @@ class SentenceChunker(BaseChunker):
         approximate: Whether to use approximate token counting (defaults to False) [DEPRECATED]
         delim: Delimiters to split sentences on
         include_delim: Whether to include delimiters in current chunk, next chunk or not at all (defaults to "prev")
-        return_type: Whether to return chunks or texts
 
     Raises:
         ValueError: If parameters are invalid
@@ -53,30 +51,28 @@ class SentenceChunker(BaseChunker):
 
     def __init__(
         self,
-        tokenizer_or_token_counter: Union[str, Callable, Any] = "gpt2",
-        chunk_size: int = 512,
+        tokenizer_or_token_counter: Union[str, Callable, Any] = "character",
+        chunk_size: int = 2048,
         chunk_overlap: int = 0,
         min_sentences_per_chunk: int = 1,
         min_characters_per_sentence: int = 12,
         approximate: bool = False,
         delim: Union[str, List[str]] = [". ", "! ", "? ", "\n"],
         include_delim: Optional[Literal["prev", "next"]] = "prev",
-        return_type: Literal["chunks", "texts"] = "chunks",
     ):
         """Initialize the SentenceChunker with configuration parameters.
 
         SentenceChunker splits the sentences in a text based on token limits and sentence boundaries.
 
         Args:
-            tokenizer_or_token_counter: The tokenizer instance to use for encoding/decoding (defaults to "gpt2")
-            chunk_size: Maximum number of tokens per chunk (defaults to 512)
+            tokenizer_or_token_counter: The tokenizer instance to use for encoding/decoding (defaults to "character")
+            chunk_size: Maximum number of tokens per chunk (defaults to 2048)
             chunk_overlap: Number of tokens to overlap between chunks (defaults to 0)
             min_sentences_per_chunk: Minimum number of sentences per chunk (defaults to 1)
             min_characters_per_sentence: Minimum number of characters per sentence (defaults to 12)
             approximate: Whether to use approximate token counting (defaults to False)
             delim: Delimiters to split sentences on (defaults to [". ", "! ", "? ", "newline"])
             include_delim: Whether to include delimiters in current chunk, next chunk or not at all (defaults to "prev")
-            return_type: Whether to return chunks or texts (defaults to "chunks")
 
         Raises:
             ValueError: If parameters are invalid
@@ -96,8 +92,6 @@ class SentenceChunker(BaseChunker):
             raise ValueError("delim must be a list of strings or a string")
         if include_delim not in ["prev", "next", None]:
             raise ValueError("include_delim must be 'prev', 'next' or None")
-        if return_type not in ["chunks", "texts"]:
-            raise ValueError("Invalid return_type. Must be either 'chunks' or 'texts'.")
         if approximate:
             warnings.warn("Approximate has been deprecated and will be removed from next version onwards!")
 
@@ -110,30 +104,28 @@ class SentenceChunker(BaseChunker):
         self.delim = delim
         self.include_delim = include_delim
         self.sep = "✄"
-        self.return_type = return_type
-    
+
     @classmethod
-    def from_recipe(cls, 
-        name: Optional[str] = "default", 
-        lang: Optional[str] = "en", 
-        path: Optional[str] = None, 
-        tokenizer_or_token_counter: Union[str, Callable, Any] = "gpt2",
-        chunk_size: int = 512,
+    def from_recipe(cls,
+        name: Optional[str] = "default",
+        lang: Optional[str] = "en",
+        path: Optional[str] = None,
+        tokenizer_or_token_counter: Union[str, Callable, Any] = "character",
+        chunk_size: int = 2048,
         chunk_overlap: int = 0,
         min_sentences_per_chunk: int = 1,
         min_characters_per_sentence: int = 12,
         approximate: bool = False,
-        return_type: Literal["chunks", "texts"] = "chunks",
         ) -> "SentenceChunker":
         """Create a SentenceChunker from a recipe.
 
         Takes the `delim` and `include_delim` from the recipe and passes the rest of the parameters to the constructor.
 
         The recipes are registered in the [Chonkie Recipe Store](https://huggingface.co/datasets/chonkie-ai/recipes). If the recipe is not there, you can create your own recipe and share it with the community!
-        
+
         Args:
             name: The name of the recipe to use.
-            lang: The language that the recipe should support. 
+            lang: The language that the recipe should support.
             path: The path to the recipe to use.
             tokenizer_or_token_counter: The tokenizer or token counter to use.
             chunk_size: The chunk size to use.
@@ -141,8 +133,7 @@ class SentenceChunker(BaseChunker):
             min_sentences_per_chunk: The minimum number of sentences per chunk to use.
             min_characters_per_sentence: The minimum number of characters per sentence to use.
             approximate: Whether to use approximate token counting.
-            return_type: Whether to return chunks or texts.
-            
+
         Returns:
             SentenceChunker: The created SentenceChunker.
 
@@ -161,7 +152,6 @@ class SentenceChunker(BaseChunker):
             min_characters_per_sentence=min_characters_per_sentence,
             delim=recipe["recipe"]["delimiters"],
             include_delim=recipe["recipe"]["include_delim"],
-            return_type=return_type,
         )
 
 
@@ -265,7 +255,7 @@ class SentenceChunker(BaseChunker):
             for sent, pos, count in zip(sentence_texts, positions, token_counts)
         ]
 
-    def _create_chunk(self, sentences: List[Sentence]) -> Union[Chunk, str]:
+    def _create_chunk(self, sentences: List[Sentence]) -> SentenceChunk:
         """Create a chunk from a list of sentences.
 
         Args:
@@ -276,25 +266,21 @@ class SentenceChunker(BaseChunker):
 
         """
         chunk_text = "".join([sentence.text for sentence in sentences])
-        if self.return_type == "texts":
-            return chunk_text
-        else:
+        
+        # We calculate the token count here, as sum of the token counts of the sentences
+        # does not match the token count of the chunk as a whole for some reason. That's to
+        # say that the tokenizer encodes the text differently when the text is joined together.
+        token_count = self.tokenizer.count_tokens(chunk_text)
 
-            # We calculate the token count here, as sum of the token counts of the sentences
-            # does not match the token count of the chunk as a whole for some reason. That's to 
-            # say that the tokenizer encodes the text differently when the text is joined together.
-            # This is where time savings can be made when getting only the texts. 
-            token_count = self.tokenizer.count_tokens(chunk_text)
+        return SentenceChunk(
+            text=chunk_text,
+            start_index=sentences[0].start_index,
+            end_index=sentences[-1].end_index,
+            token_count=token_count,
+            sentences=sentences,
+        )
 
-            return SentenceChunk(
-                text=chunk_text,
-                start_index=sentences[0].start_index,
-                end_index=sentences[-1].end_index,
-                token_count=token_count,
-                sentences=sentences,
-            )
-
-    def chunk(self, text: str) -> Union[Sequence[Chunk], Sequence[str]]:
+    def chunk(self, text: str) -> Sequence[SentenceChunk]:
         """Split text into overlapping chunks based on sentences while respecting token limits.
 
         Args:
@@ -364,7 +350,7 @@ class SentenceChunker(BaseChunker):
             chunk_sentences = sentences[pos:split_idx]
             chunks.append(self._create_chunk(chunk_sentences))
 
-            # TODO: This would also get deprecated when we have OverlapRefinery in the future. 
+            # TODO: This would also get deprecated when we have OverlapRefinery in the future.
             # Calculate next position with overlap
             if self.chunk_overlap > 0 and split_idx < len(sentences):
                 # Calculate how many sentences we need for overlap
@@ -384,7 +370,7 @@ class SentenceChunker(BaseChunker):
             else:
                 pos = split_idx
 
-        return chunks # type: ignore
+        return chunks
 
     def __repr__(self) -> str:
         """Return a string representation of the SentenceChunker."""
@@ -395,6 +381,5 @@ class SentenceChunker(BaseChunker):
             f"min_sentences_per_chunk={self.min_sentences_per_chunk}, "
             f"min_characters_per_sentence={self.min_characters_per_sentence}, "
             f"approximate={self.approximate}, delim={self.delim}, "
-            f"include_delim={self.include_delim}, "
-            f"return_type={self.return_type})"
+            f"include_delim={self.include_delim})"
         )

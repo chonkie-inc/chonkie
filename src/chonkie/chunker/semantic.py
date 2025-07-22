@@ -35,7 +35,6 @@ class SemanticChunker(BaseChunker):
         threshold_step: Step size for similarity threshold calculation
         delim: Delimiters to split sentences on
         include_delim: Whether to include the delimiters in the sentences
-        return_type: Whether to return chunks or texts
 
     Raises:
         ValueError: If parameters are invalid
@@ -47,15 +46,14 @@ class SemanticChunker(BaseChunker):
         embedding_model: Union[str, BaseEmbeddings] = "minishlab/potion-base-8M",
         mode: str = "window",
         threshold: Union[str, float, int] = "auto",
-        chunk_size: int = 512,
+        chunk_size: int = 2048,
         similarity_window: int = 1,
         min_sentences: int = 1,
         min_chunk_size: int = 2,
         min_characters_per_sentence: int = 12,
         threshold_step: float = 0.01,
         delim: Union[str, List[str]] = [". ", "! ", "? ", "\n"],
-        include_delim: Union[Literal["prev", "next"], None] = "prev",
-        return_type: Literal["chunks", "texts"] = "chunks",
+        include_delim: Optional[Literal["prev", "next"]] = "prev",
         **kwargs: Dict[str, Any],
     ) -> None:  # type: ignore
         """Initialize the SemanticChunker.
@@ -74,7 +72,6 @@ class SemanticChunker(BaseChunker):
             threshold_step: Step size for similarity threshold calculation
             delim: Delimiters to split sentences on
             include_delim: Whether to include the delimiters in the sentences
-            return_type: Whether to return chunks or texts
             **kwargs: Additional keyword arguments
 
         Raises:
@@ -104,8 +101,6 @@ class SemanticChunker(BaseChunker):
             raise ValueError("threshold (float) must be between 0 and 1")
         elif type(threshold) == int and (threshold < 1 or threshold > 100):
             raise ValueError("threshold (int) must be between 1 and 100")
-        if return_type not in ["chunks", "texts"]:
-            raise ValueError("Invalid return_type. Must be either 'chunks' or 'texts'.")
 
         # Lazy import dependencies to avoid importing them when not needed
         self._import_dependencies()
@@ -121,7 +116,6 @@ class SemanticChunker(BaseChunker):
         self.delim = delim
         self.include_delim = include_delim
         self.sep = "✄"
-        self.return_type = return_type
 
         # Initialize with type annotations
         self.similarity_threshold: Optional[float]
@@ -170,13 +164,12 @@ class SemanticChunker(BaseChunker):
                     embedding_model: Union[str, BaseEmbeddings] = "minishlab/potion-base-8M",
                     mode: str = "window",
                     threshold: Union[str, float, int] = "auto",
-                    chunk_size: int = 512,
+                    chunk_size: int = 2048,
                     similarity_window: int = 1,
                     min_sentences: int = 1,
                     min_chunk_size: int = 2,
                     min_characters_per_sentence: int = 12,
                     threshold_step: float = 0.01,
-                    return_type: Literal["chunks", "texts"] = "chunks",
                     **kwargs: Dict[str, Any]    
                     ) -> "SemanticChunker":
         """Create a SemanticChunker from a recipe.
@@ -194,7 +187,6 @@ class SemanticChunker(BaseChunker):
             min_chunk_size: The minimum number of tokens per chunk.
             min_characters_per_sentence: The minimum number of characters per sentence.
             threshold_step: The step size for similarity threshold calculation.
-            return_type: Whether to return chunks or texts.
             **kwargs: Additional keyword arguments.
 
         Returns:
@@ -219,7 +211,6 @@ class SemanticChunker(BaseChunker):
             threshold_step=threshold_step,
             delim=recipe["recipe"]["delimiters"],
             include_delim=recipe["recipe"]["include_delim"],
-            return_type=return_type,
             **kwargs,
         ) 
 
@@ -606,29 +597,25 @@ class SemanticChunker(BaseChunker):
         else:
             return self._group_sentences_window(sentences)
 
-    def _create_chunk(self, sentences: List[SemanticSentence]) -> Union[SemanticChunk, str]:
+    def _create_chunk(self, sentences: List[SemanticSentence]) -> SemanticChunk:
         """Create a chunk from a list of sentences."""
         if not sentences:
             raise ValueError("Cannot create chunk from empty sentence list")
-        if self.return_type == "chunks":
-            # Compute chunk text and token count from sentences
-            text = "".join(sent.text for sent in sentences)
-            token_count = sum(sent.token_count for sent in sentences)
-            return SemanticChunk(
-                text=text,
-                start_index=sentences[0].start_index,
-                end_index=sentences[-1].end_index,
-                token_count=token_count,
-                sentences=sentences,
-            )
-        elif self.return_type == "texts":
-            return "".join(sent.text for sent in sentences)
-        else:
-            raise ValueError("Invalid return_type. Must be either 'chunks' or 'texts'.")
+        
+        # Compute chunk text and token count from sentences
+        text = "".join(sent.text for sent in sentences)
+        token_count = sum(sent.token_count for sent in sentences)
+        return SemanticChunk(
+            text=text,
+            start_index=sentences[0].start_index,
+            end_index=sentences[-1].end_index,
+            token_count=token_count,
+            sentences=sentences,
+        )
 
     def _split_chunks(
         self, sentence_groups: List[List[SemanticSentence]]
-    ) -> Union[List[SemanticChunk], List[str]]:
+    ) -> List[SemanticChunk]:
         """Split sentence groups into chunks that respect chunk_size.
 
         Args:
@@ -638,7 +625,7 @@ class SemanticChunker(BaseChunker):
             List of SemanticChunk objects
 
         """
-        chunks: List[Union[SemanticChunk, str]] = []
+        chunks: List[SemanticChunk] = []
 
         for group in sentence_groups:
             current_chunk_sentences: List[SemanticSentence] = []
@@ -668,13 +655,9 @@ class SemanticChunker(BaseChunker):
             if current_chunk_sentences:
                 chunks.append(self._create_chunk(current_chunk_sentences))
 
-        # Type narrowing based on return_type
-        if self.return_type == "chunks":
-            return [chunk for chunk in chunks if isinstance(chunk, SemanticChunk)]
-        else:
-            return [chunk for chunk in chunks if isinstance(chunk, str)]
+        return chunks
 
-    def chunk(self, text: str) -> Union[Sequence[SemanticChunk], Sequence[str]]:
+    def chunk(self, text: str) -> Sequence[SemanticChunk]:
         """Split text into semantically coherent chunks using two-pass approach.
 
         First groups sentences by semantic similarity, then splits groups to respect
@@ -694,10 +677,7 @@ class SemanticChunker(BaseChunker):
         sentences = self._prepare_sentences(text)
         if len(sentences) <= self.min_sentences:
             chunk_result = self._create_chunk(sentences)
-            if self.return_type == "chunks":
-                return [chunk_result]  # type: ignore[return-value]
-            else:
-                return [chunk_result]  # type: ignore[return-value]
+            return [chunk_result]
 
         # Calculate similarity threshold
         self.similarity_threshold = self._calculate_similarity_threshold(sentences)
@@ -733,6 +713,5 @@ class SemanticChunker(BaseChunker):
             f"threshold={self.threshold}, "
             f"similarity_window={self.similarity_window}, "
             f"min_sentences={self.min_sentences}, "
-            f"min_chunk_size={self.min_chunk_size}, "
-            f"return_type={self.return_type})"
+            f"min_chunk_size={self.min_chunk_size})"
         )

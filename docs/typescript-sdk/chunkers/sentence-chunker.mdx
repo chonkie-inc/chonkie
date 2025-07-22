@@ -18,7 +18,7 @@ import { SentenceChunker } from "chonkie";
 // Basic initialization with default parameters (async)
 const chunker = await SentenceChunker.create({
   tokenizer: "Xenova/gpt2", // Supports string identifiers or Tokenizer instance
-  chunkSize: 512,            // Maximum tokens per chunk
+  chunkSize: 2048,            // Maximum tokens per chunk
   chunkOverlap: 128,         // Overlap between chunks
   minSentencesPerChunk: 1    // Minimum sentences per chunk
 });
@@ -28,7 +28,7 @@ import { Tokenizer } from "@huggingface/transformers";
 const customTokenizer = await Tokenizer.from_pretrained("your-tokenizer");
 const chunker = await SentenceChunker.create({
   tokenizer: customTokenizer,
-  chunkSize: 512,
+  chunkSize: 2048,
   chunkOverlap: 128
 });
 ```
@@ -46,7 +46,7 @@ const chunker = await SentenceChunker.create({
 <ParamField
     path="chunkSize"
     type="number"
-    default="512"
+    default="2048"
 >
     Maximum number of tokens per chunk.
 </ParamField>

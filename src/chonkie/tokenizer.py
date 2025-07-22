@@ -246,7 +246,7 @@ class Tokenizer:
 
     """
 
-    def __init__(self, tokenizer: Union[str, Callable, Any] = "gpt2"):
+    def __init__(self, tokenizer: Union[str, Callable, Any] = "character"):
         """Initialize the Tokenizer with a specified tokenizer."""
         if isinstance(tokenizer, str):
             self.tokenizer = self._load_tokenizer(tokenizer)
@@ -280,10 +280,10 @@ class Tokenizer:
                 return Tokenizer.from_pretrained(tokenizer)
             except Exception:
                 warnings.warn(
-                    "Could not find 'tokenizers'. Falling back to 'tiktoken'."
+                    "Could not load tokenizer with 'tokenizers'. Falling back to 'tiktoken'."
                 )
         else:
-            warnings.warn("Could not find 'tokenizers'. Falling back to 'tiktoken'.")
+            warnings.warn("'tokenizers' library not found. Falling back to 'tiktoken'.")
 
         # Try tiktoken
         if importlib.util.find_spec("tiktoken") is not None:
@@ -293,10 +293,10 @@ class Tokenizer:
                 return get_encoding(tokenizer)
             except Exception:
                 warnings.warn(
-                    "Could not find 'tiktoken'. Falling back to 'transformers'."
+                    "Could not load tokenizer with 'tiktoken'. Falling back to 'transformers'."
                 )
         else:
-            warnings.warn("Could not find 'tiktoken'. Falling back to 'transformers'.")
+            warnings.warn("'tiktoken' library not found. Falling back to 'transformers'.")
 
         # Try transformers as last resort
         if importlib.util.find_spec("transformers") is not None:

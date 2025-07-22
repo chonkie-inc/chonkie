@@ -30,7 +30,6 @@ chunker = NeuralChunker(
     model="mirth/chonky_modernbert_base_1",  # Default model
     device_map="cpu",                        # Device to run the model on ('cpu', 'cuda', etc.)
     min_characters_per_chunk=10,             # Minimum characters for a chunk
-    return_type="chunks"                     # Output type
 )
 
 # Specify a different model or device
@@ -66,13 +65,6 @@ chunker = NeuralChunker(
     The minimum number of characters required for a text segment to be considered a valid chunk.
 </ParamField>
 
-<ParamField
-    path="return_type"
-    type="Literal['chunks', 'texts']"
-    default="chunks"
->
-    Whether to return chunks as `NeuralChunk` objects or plain text strings.
-</ParamField>
 
 ## Usage
 
