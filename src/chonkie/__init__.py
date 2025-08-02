@@ -1,5 +1,9 @@
 """Main package for Chonkie."""
 
+from .chef import (
+    BaseChef,
+    TextChef,
+)
 from .chunker import (
     BaseChunker,
     CodeChunker,
@@ -22,6 +26,10 @@ from .embeddings import (
     OpenAIEmbeddings,
     SentenceTransformerEmbeddings,
     VoyageAIEmbeddings,
+)
+from .fetcher import (
+    BaseFetcher,
+    FileFetcher,
 )
 from .friends import (
     BaseHandshake,
@@ -69,7 +77,7 @@ from .utils import (
 )
 
 # This hippo grows with every release 🦛✨~
-__version__ = "1.1.0"
+__version__ = "1.1.1"
 __name__ = "chonkie"
 __author__ = "🦛 Chonkie Inc"
 
@@ -161,4 +169,16 @@ __all__ += [
     "PgvectorHandshake",
     "QdrantHandshake",
     "TurbopufferHandshake",
+]
+
+# Add all the chefs to __all__
+__all__ += [
+    "BaseChef",
+    "TextChef",
+]
+
+# Add all the fetchers to __all__
+__all__ += [
+    "BaseFetcher",
+    "FileFetcher",
 ]

@@ -16,8 +16,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        # Start with just Linux and one macOS to test
-        os: [ubuntu-latest, macos-13]
+        # Linux, macOS, and Windows wheels
+        os: [ubuntu-latest, macos-13, windows-latest]
 
     steps:
       - uses: actions/checkout@v4
@@ -38,6 +38,8 @@ jobs:
           CIBW_SKIP: "*-win32 *-manylinux_i686 *-musllinux*"
           CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_28
           CIBW_MANYLINUX_AARCH64_IMAGE: manylinux_2_28
+          # Ensure Cython extensions work properly on Windows
+          CIBW_ENVIRONMENT_WINDOWS: "PIP_PREFER_BINARY=1"
 
       - uses: actions/upload-artifact@v4
         with:
