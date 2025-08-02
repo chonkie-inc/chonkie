@@ -24,12 +24,13 @@ class JinaEmbeddings(BaseEmbeddings):
         "jina-embeddings-v2-base-de": 768,
         "jina-embeddings-v2-base-zh": 768,   
         "jina-embeddings-v2-base-code": 768,
-        "jina-embeddings-b-en-v1": 768
+        "jina-embeddings-b-en-v1": 768,
+        "jina-embeddings-v4": 2048,
     }   
 
     def __init__(
             self,
-            model: str = "jina-embeddings-v3",
+            model: str = "jina-embeddings-v4",
             task: str = "text-matching",
             batch_size: int = 32,
             max_retries: int = 3,
