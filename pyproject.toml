@@ -71,13 +71,13 @@ code = [
 neural = ["transformers>=4.0.0", "torch>=2.0.0, <3.0"]
 
 # Optional dependencies for the embeddings
-model2vec = ["model2vec>=0.3.0", "numpy>=2.0.0, <3.0"]
-st = ["sentence-transformers>=3.0.0", "numpy>=2.0.0, <3.0", "accelerate>=1.6.0"]
-openai = ["openai>=1.0.0", "numpy>=2.0.0, <3.0", "pydantic>=2.0.0"]
-voyageai = ["voyageai>=0.3.2", "numpy>=2.0.0, <3.0"]
-cohere = ["cohere>=5.13.0", "numpy>=2.0.0, <3.0"]
-jina = ["numpy>=2.0.0, <3.0"]
-semantic = ["model2vec>=0.3.0", "numpy>=2.0.0, <3.0"]
+model2vec = ["tokenizers>=0.16.0", "model2vec>=0.3.0", "numpy>=2.0.0, <3.0"]
+st = ["tokenizers>=0.16.0", "sentence-transformers>=3.0.0", "numpy>=2.0.0, <3.0", "accelerate>=1.6.0"]
+openai = ["tiktoken>=0.5.0", "openai>=1.0.0", "numpy>=2.0.0, <3.0", "pydantic>=2.0.0"]
+voyageai = ["tokenizers>=0.16.0", "voyageai>=0.3.2", "numpy>=2.0.0, <3.0"]
+cohere = ["tokenizers>=0.16.0", "cohere>=5.13.0", "numpy>=2.0.0, <3.0"]
+jina = ["tokenizers>=0.16.0", "numpy>=2.0.0, <3.0"]
+semantic = ["tokenizers>=0.16.0", "model2vec>=0.3.0", "numpy>=2.0.0, <3.0"]
 gemini = ["pydantic>=2.0.0", "google-genai>=1.0.0"]
 
 # optional dependencies for the friends
