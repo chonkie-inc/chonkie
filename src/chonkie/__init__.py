@@ -107,7 +107,7 @@ __all__ += [
     "CohereEmbeddings",
     "AutoEmbeddings",
     "JinaEmbeddings",
-    "InfinityEmbeddings"
+    "InfinityEmbeddings",
 ]
 
 # Add all refinery classes to __all__

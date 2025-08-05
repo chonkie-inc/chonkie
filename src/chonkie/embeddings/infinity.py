@@ -51,6 +51,9 @@ class InfinityEmbeddings(BaseEmbeddings):
         if not infinity_api_url or len(infinity_api_url) < 5:
             raise ValueError("`infinity_api_url` must be a valid URL.")
 
+        if batch_size <= 0:
+            raise ValueError("`batch_size` must be a positive integer.")
+
         self.model: str = model
         self.timeout: float = timeout
         self._dimension: int = self.AVAILABLE_MODELS[model]

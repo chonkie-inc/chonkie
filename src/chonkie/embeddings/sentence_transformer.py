@@ -3,7 +3,7 @@
 import importlib.util as importutil
 from typing import TYPE_CHECKING, List, Union
 
-from .base import BaseEmbeddings
+from chonkie.embeddings.base import BaseEmbeddings
 
 if TYPE_CHECKING:
     import numpy as np

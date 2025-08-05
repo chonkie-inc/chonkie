@@ -66,7 +66,7 @@ def test_embed_batch_texts(embedding_model: InfinityEmbeddings, sample_texts: li
      reason="Skipping test because INFINITY_API_URL is not defined",
 )
 def test_embed_empty_list(embedding_model: InfinityEmbeddings) -> None:
-    """"Test that InfinityEmbeddings correctly handles an empty list."""
+    """Test that InfinityEmbeddings correctly handles an empty list."""
     embeddings = embedding_model.embed_batch([])
     assert embeddings == []
 
@@ -76,7 +76,7 @@ def test_embed_empty_list(embedding_model: InfinityEmbeddings) -> None:
 )
 @pytest.mark.anyio
 async def test_aembed_single_text(embedding_model: InfinityEmbeddings, sample_text: str) -> None:
-    """"Test that InfinityEmbeddings correctly embeds a single text asynchronously."""
+    """Test that InfinityEmbeddings correctly embeds a single text asynchronously."""
     embedding = await embedding_model.aembed(sample_text)
     assert isinstance(embedding, np.ndarray)
     assert embedding.shape == (embedding_model.dimension,)
@@ -131,7 +131,7 @@ def test_sync_request(embedding_model: InfinityEmbeddings, sample_texts: list[st
 )
 @pytest.mark.anyio
 async def test_async_request(embedding_model: InfinityEmbeddings, sample_texts: list[str]) -> None:
-    """"Test that InfinityEmbeddings correctly handles asynchronous requests."""
+    """Test that InfinityEmbeddings correctly handles asynchronous requests."""
     async with aiohttp.ClientSession() as session:
         response = await embedding_model._async_request(session, sample_texts)
         assert isinstance(response, list)

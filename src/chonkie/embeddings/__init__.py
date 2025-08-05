@@ -18,5 +18,5 @@ __all__ = [
     "CohereEmbeddings",
     "AutoEmbeddings",
     "JinaEmbeddings",
-    "InfinityEmbeddings"
+    "InfinityEmbeddings",
 ]
