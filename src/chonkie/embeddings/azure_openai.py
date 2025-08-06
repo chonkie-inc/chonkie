@@ -8,6 +8,8 @@ from .base import BaseEmbeddings
 
 if TYPE_CHECKING:
     import numpy as np
+    import tiktoken
+    from openai import AzureOpenAI
 
 
 class AzureOpenAIEmbeddings(BaseEmbeddings):
@@ -78,7 +80,7 @@ class AzureOpenAIEmbeddings(BaseEmbeddings):
 
         # Initialize Azure client
         if azure_api_key:
-            self.client = AzureOpenAI(
+            self.client = AzureOpenAI(  # type: ignore
                 api_key=azure_api_key,
                 azure_endpoint=azure_endpoint,
                 api_version=api_version,
@@ -92,7 +94,7 @@ class AzureOpenAIEmbeddings(BaseEmbeddings):
             token_provider = get_bearer_token_provider(
                 DefaultAzureCredential(), "https://cognitiveservices.azure.com/.default"
             )
-            self.client = AzureOpenAI(
+            self.client = AzureOpenAI(  # type: ignore
                 azure_endpoint=azure_endpoint,
                 azure_ad_token_provider=token_provider,
                 api_version=api_version,
@@ -105,7 +107,7 @@ class AzureOpenAIEmbeddings(BaseEmbeddings):
         if tokenizer is not None:
             self._tokenizer = tokenizer
         elif model in self.AVAILABLE_MODELS:
-            self._tokenizer = tiktoken.encoding_for_model(model)
+            self._tokenizer = tiktoken.encoding_for_model(model)  # type: ignore
         else:
             raise ValueError(f"Tokenizer not available for model '{model}'.")
 
@@ -165,7 +167,7 @@ class AzureOpenAIEmbeddings(BaseEmbeddings):
 
     def get_tokenizer_or_token_counter(self) -> "tiktoken.Encoding":
         """Return a tiktoken tokenizer object."""
-        return self._tokenizer  # type: ignore[return-value]
+        return self._tokenizer  # type: ignore
 
     def _is_available(self) -> bool:
         """Check if the required dependencies are available."""
