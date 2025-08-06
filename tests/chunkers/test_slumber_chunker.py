@@ -127,8 +127,8 @@ class TestSlumberChunkerInitialization:
     def test_default_genie_initialization(self) -> None:
         """Test that default GeminiGenie is created when none provided."""
         # Import the specific local slumber module
-        import sys
         import os
+        import sys
         sys.path.insert(0, os.path.join(os.getcwd(), 'src'))
         
         # Clear any cached imports
@@ -332,8 +332,8 @@ class TestSlumberChunkerChunking:
         chunker = SlumberChunker(genie=mock_genie, verbose=True)
         
         # Import the specific local slumber module
-        import sys
         import os
+        import sys
         sys.path.insert(0, os.path.join(os.getcwd(), 'src'))
         
         # Import the local slumber module directly
