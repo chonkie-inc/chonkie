@@ -126,7 +126,7 @@ class TestSlumberChunkerInitialization:
     
     def test_default_genie_initialization(self) -> None:
         """Test that default GeminiGenie is created when none provided."""
-        with patch('chonkie.chunker.slumber.GeminiGenie') as mock_gemini:
+        with patch('chonkie.genie.gemini.GeminiGenie') as mock_gemini:
             mock_gemini.return_value = Mock()
             SlumberChunker()  # Create chunker to trigger genie initialization
             assert mock_gemini.called
@@ -319,7 +319,8 @@ class TestSlumberChunkerChunking:
         mock_genie = MockGenie([1])
         chunker = SlumberChunker(genie=mock_genie, verbose=True)
         
-        with patch('chonkie.chunker.slumber.tqdm') as mock_tqdm:
+        # Patch tqdm from the actual tqdm package, not from slumber.py
+        with patch('tqdm.tqdm') as mock_tqdm:
             mock_progress = Mock()
             mock_progress.n = 0  # Set the n attribute that's used in the update calculation
             mock_tqdm.return_value = mock_progress

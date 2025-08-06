@@ -27,10 +27,10 @@ class TestAzureAIGenieErrorHandling:
     """Test AzureOpenAIGenie error handling."""
 
     def test_missing_endpoint(self):
-        """Test AzureOpenAIGenie raises error without endpoint."""
+        """Test AzureOpenAIGenie raises error when endpoint is None or empty."""
         with patch.object(AzureOpenAIGenie, "_is_available", return_value=True):
             with pytest.raises(ValueError, match="`azure_endpoint` is required"):
-                AzureOpenAIGenie(deployment="x", api_version="2024-02-15-preview")
+                AzureOpenAIGenie(azure_endpoint=None, deployment="x", api_version="2024-02-15-preview")
 
     def test_missing_dependencies(self):
         """Test AzureOpenAIGenie raises error without dependencies."""
