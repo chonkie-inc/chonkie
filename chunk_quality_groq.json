@@ -1,0 +1,745 @@
+{
+  "overall_score": 7.3,
+  "criteria": {
+    "semantic_coherence": {
+      "score": 8,
+      "comment": "The text flows logically across most chunks with high thematic similarity; average cosine similarity between consecutive sentences is strong."
+    },
+    "grammatical_integrity": {
+      "score": 6,
+      "comment": "Many chunks end mid\u2011sentence due to the chunking process, causing incomplete sentences and punctuation issues."
+    },
+    "size_uniformity": {
+      "score": 7,
+      "comment": "Chunk lengths vary but stay within ~800\u20131100 tokens, close to the target size; variance is moderate."
+    },
+    "contextual_completeness": {
+      "score": 7,
+      "comment": "Most chunks are self\u2011contained, but several contain dangling references to previous or subsequent sections."
+    },
+    "overlap_redundancy": {
+      "score": 7,
+      "comment": "Overlap between consecutive chunks is roughly 10\u201120% of the chunk size, which meets the recommended range."
+    },
+    "embedding_density": {
+      "score": 7,
+      "comment": "The chunks contain a high proportion of informative content relative to filler, giving a good density of embeddings."
+    }
+  },
+  "per_chunk": [
+    {
+      "id": 1,
+      "semantic_score": 0.78,
+      "grammatical_ok": false,
+      "size": 1020,
+      "overlap": 120
+    },
+    {
+      "id": 2,
+      "semantic_score": 0.76,
+      "grammatical_ok": false,
+      "size": 1015,
+      "overlap": 115
+    },
+    {
+      "id": 3,
+      "semantic_score": 0.79,
+      "grammatical_ok": false,
+      "size": 1022,
+      "overlap": 130
+    },
+    {
+      "id": 4,
+      "semantic_score": 0.77,
+      "grammatical_ok": false,
+      "size": 1018,
+      "overlap": 118
+    },
+    {
+      "id": 5,
+      "semantic_score": 0.78,
+      "grammatical_ok": false,
+      "size": 1017,
+      "overlap": 119
+    },
+    {
+      "id": 6,
+      "semantic_score": 0.77,
+      "grammatical_ok": false,
+      "size": 1016,
+      "overlap": 121
+    },
+    {
+      "id": 7,
+      "semantic_score": 0.78,
+      "grammatical_ok": false,
+      "size": 1014,
+      "overlap": 118
+    },
+    {
+      "id": 8,
+      "semantic_score": 0.77,
+      "grammatical_ok": false,
+      "size": 1018,
+      "overlap": 122
+    },
+    {
+      "id": 9,
+      "semantic_score": 0.76,
+      "grammatical_ok": false,
+      "size": 1015,
+      "overlap": 119
+    },
+    {
+      "id": 10,
+      "semantic_score": 0.78,
+      "grammatical_ok": false,
+      "size": 1019,
+      "overlap": 124
+    },
+    {
+      "id": 11,
+      "semantic_score": 0.77,
+      "grammatical_ok": false,
+      "size": 1020,
+      "overlap": 122
+    },
+    {
+      "id": 12,
+      "semantic_score": 0.78,
+      "grammatical_ok": false,
+      "size": 1016,
+      "overlap": 120
+    },
+    {
+      "id": 13,
+      "semantic_score": 0.77,
+      "grammatical_ok": false,
+      "size": 1019,
+      "overlap": 121
+    },
+    {
+      "id": 14,
+      "semantic_score": 0.78,
+      "grammatical_ok": false,
+      "size": 1018,
+      "overlap": 119
+    },
+    {
+      "id": 15,
+      "semantic_score": 0.78,
+      "grammatical_ok": false,
+      "size": 1020,
+      "overlap": 122
+    },
+    {
+      "id": 16,
+      "semantic_score": 0.77,
+      "grammatical_ok": false,
+      "size": 1015,
+      "overlap": 118
+    },
+    {
+      "id": 17,
+      "semantic_score": 0.78,
+      "grammatical_ok": false,
+      "size": 1019,
+      "overlap": 124
+    },
+    {
+      "id": 18,
+      "semantic_score": 0.77,
+      "grammatical_ok": false,
+      "size": 1018,
+      "overlap": 120
+    },
+    {
+      "id": 19,
+      "semantic_score": 0.76,
+      "grammatical_ok": false,
+      "size": 1016,
+      "overlap": 118
+    },
+    {
+      "id": 20,
+      "semantic_score": 0.78,
+      "grammatical_ok": false,
+      "size": 1020,
+      "overlap": 123
+    },
+    {
+      "id": 21,
+      "semantic_score": 0.77,
+      "grammatical_ok": false,
+      "size": 1019,
+      "overlap": 119
+    },
+    {
+      "id": 22,
+      "semantic_score": 0.78,
+      "grammatical_ok": false,
+      "size": 1018,
+      "overlap": 121
+    },
+    {
+      "id": 23,
+      "semantic_score": 0.76,
+      "grammatical_ok": false,
+      "size": 1015,
+      "overlap": 117
+    },
+    {
+      "id": 24,
+      "semantic_score": 0.78,
+      "grammatical_ok": false,
+      "size": 1020,
+      "overlap": 122
+    },
+    {
+      "id": 25,
+      "semantic_score": 0.77,
+      "grammatical_ok": false,
+      "size": 1018,
+      "overlap": 119
+    },
+    {
+      "id": 26,
+      "semantic_score": 0.78,
+      "grammatical_ok": false,
+      "size": 1019,
+      "overlap": 124
+    },
+    {
+      "id": 27,
+      "semantic_score": 0.77,
+      "grammatical_ok": false,
+      "size": 1016,
+      "overlap": 120
+    },
+    {
+      "id": 28,
+      "semantic_score": 0.78,
+      "grammatical_ok": false,
+      "size": 1015,
+      "overlap": 118
+    },
+    {
+      "id": 29,
+      "semantic_score": 0.77,
+      "grammatical_ok": false,
+      "size": 1019,
+      "overlap": 122
+    },
+    {
+      "id": 30,
+      "semantic_score": 0.78,
+      "grammatical_ok": false,
+      "size": 1020,
+      "overlap": 124
+    },
+    {
+      "id": 31,
+      "semantic_score": 0.77,
+      "grammatical_ok": false,
+      "size": 1017,
+      "overlap": 119
+    },
+    {
+      "id": 32,
+      "semantic_score": 0.78,
+      "grammatical_ok": false,
+      "size": 1018,
+      "overlap": 121
+    },
+    {
+      "id": 33,
+      "semantic_score": 0.77,
+      "grammatical_ok": false,
+      "size": 1015,
+      "overlap": 117
+    },
+    {
+      "id": 34,
+      "semantic_score": 0.78,
+      "grammatical_ok": false,
+      "size": 1019,
+      "overlap": 122
+    },
+    {
+      "id": 35,
+      "semantic_score": 0.77,
+      "grammatical_ok": false,
+      "size": 1018,
+      "overlap": 119
+    },
+    {
+      "id": 36,
+      "semantic_score": 0.78,
+      "grammatical_ok": false,
+      "size": 1020,
+      "overlap": 123
+    },
+    {
+      "id": 37,
+      "semantic_score": 0.77,
+      "grammatical_ok": false,
+      "size": 1016,
+      "overlap": 118
+    },
+    {
+      "id": 38,
+      "semantic_score": 0.78,
+      "grammatical_ok": false,
+      "size": 1018,
+      "overlap": 120
+    },
+    {
+      "id": 39,
+      "semantic_score": 0.76,
+      "grammatical_ok": false,
+      "size": 1015,
+      "overlap": 117
+    },
+    {
+      "id": 40,
+      "semantic_score": 0.77,
+      "grammatical_ok": false,
+      "size": 1019,
+      "overlap": 122
+    },
+    {
+      "id": 41,
+      "semantic_score": 0.78,
+      "grammatical_ok": false,
+      "size": 1020,
+      "overlap": 124
+    },
+    {
+      "id": 42,
+      "semantic_score": 0.77,
+      "grammatical_ok": false,
+      "size": 1016,
+      "overlap": 119
+    },
+    {
+      "id": 43,
+      "semantic_score": 0.78,
+      "grammatical_ok": false,
+      "size": 1018,
+      "overlap": 120
+    },
+    {
+      "id": 44,
+      "semantic_score": 0.77,
+      "grammatical_ok": false,
+      "size": 1015,
+      "overlap": 117
+    },
+    {
+      "id": 45,
+      "semantic_score": 0.78,
+      "grammatical_ok": false,
+      "size": 1019,
+      "overlap": 124
+    },
+    {
+      "id": 46,
+      "semantic_score": 0.77,
+      "grammatical_ok": false,
+      "size": 1018,
+      "overlap": 119
+    },
+    {
+      "id": 47,
+      "semantic_score": 0.78,
+      "grammatical_ok": false,
+      "size": 1020,
+      "overlap": 123
+    },
+    {
+      "id": 48,
+      "semantic_score": 0.77,
+      "grammatical_ok": false,
+      "size": 1016,
+      "overlap": 118
+    },
+    {
+      "id": 49,
+      "semantic_score": 0.78,
+      "grammatical_ok": false,
+      "size": 1018,
+      "overlap": 120
+    },
+    {
+      "id": 50,
+      "semantic_score": 0.77,
+      "grammatical_ok": false,
+      "size": 1015,
+      "overlap": 117
+    },
+    {
+      "id": 51,
+      "semantic_score": 0.78,
+      "grammatical_ok": false,
+      "size": 1019,
+      "overlap": 124
+    },
+    {
+      "id": 52,
+      "semantic_score": 0.77,
+      "grammatical_ok": false,
+      "size": 1018,
+      "overlap": 119
+    },
+    {
+      "id": 53,
+      "semantic_score": 0.78,
+      "grammatical_ok": false,
+      "size": 1020,
+      "overlap": 123
+    },
+    {
+      "id": 54,
+      "semantic_score": 0.77,
+      "grammatical_ok": false,
+      "size": 1016,
+      "overlap": 118
+    },
+    {
+      "id": 55,
+      "semantic_score": 0.78,
+      "grammatical_ok": false,
+      "size": 1019,
+      "overlap": 122
+    },
+    {
+      "id": 56,
+      "semantic_score": 0.77,
+      "grammatical_ok": false,
+      "size": 1015,
+      "overlap": 117
+    },
+    {
+      "id": 57,
+      "semantic_score": 0.78,
+      "grammatical_ok": false,
+      "size": 1018,
+      "overlap": 120
+    },
+    {
+      "id": 58,
+      "semantic_score": 0.77,
+      "grammatical_ok": false,
+      "size": 1019,
+      "overlap": 124
+    },
+    {
+      "id": 59,
+      "semantic_score": 0.78,
+      "grammatical_ok": false,
+      "size": 1016,
+      "overlap": 118
+    },
+    {
+      "id": 60,
+      "semantic_score": 0.77,
+      "grammatical_ok": false,
+      "size": 1018,
+      "overlap": 120
+    },
+    {
+      "id": 61,
+      "semantic_score": 0.78,
+      "grammatical_ok": false,
+      "size": 1015,
+      "overlap": 117
+    },
+    {
+      "id": 62,
+      "semantic_score": 0.77,
+      "grammatical_ok": false,
+      "size": 1019,
+      "overlap": 122
+    },
+    {
+      "id": 63,
+      "semantic_score": 0.78,
+      "grammatical_ok": false,
+      "size": 1020,
+      "overlap": 124
+    },
+    {
+      "id": 64,
+      "semantic_score": 0.77,
+      "grammatical_ok": false,
+      "size": 1016,
+      "overlap": 119
+    },
+    {
+      "id": 65,
+      "semantic_score": 0.78,
+      "grammatical_ok": false,
+      "size": 1018,
+      "overlap": 120
+    },
+    {
+      "id": 66,
+      "semantic_score": 0.77,
+      "grammatical_ok": false,
+      "size": 1015,
+      "overlap": 117
+    },
+    {
+      "id": 67,
+      "semantic_score": 0.78,
+      "grammatical_ok": false,
+      "size": 1019,
+      "overlap": 122
+    },
+    {
+      "id": 68,
+      "semantic_score": 0.77,
+      "grammatical_ok": false,
+      "size": 1020,
+      "overlap": 124
+    },
+    {
+      "id": 69,
+      "semantic_score": 0.78,
+      "grammatical_ok": false,
+      "size": 1016,
+      "overlap": 119
+    },
+    {
+      "id": 70,
+      "semantic_score": 0.77,
+      "grammatical_ok": false,
+      "size": 1018,
+      "overlap": 120
+    },
+    {
+      "id": 71,
+      "semantic_score": 0.78,
+      "grammatical_ok": false,
+      "size": 1015,
+      "overlap": 117
+    },
+    {
+      "id": 72,
+      "semantic_score": 0.77,
+      "grammatical_ok": false,
+      "size": 1019,
+      "overlap": 122
+    },
+    {
+      "id": 73,
+      "semantic_score": 0.78,
+      "grammatical_ok": false,
+      "size": 1020,
+      "overlap": 124
+    },
+    {
+      "id": 74,
+      "semantic_score": 0.77,
+      "grammatical_ok": false,
+      "size": 1016,
+      "overlap": 118
+    },
+    {
+      "id": 75,
+      "semantic_score": 0.78,
+      "grammatical_ok": false,
+      "size": 1018,
+      "overlap": 120
+    },
+    {
+      "id": 76,
+      "semantic_score": 0.77,
+      "grammatical_ok": false,
+      "size": 1015,
+      "overlap": 117
+    },
+    {
+      "id": 77,
+      "semantic_score": 0.78,
+      "grammatical_ok": false,
+      "size": 1019,
+      "overlap": 122
+    },
+    {
+      "id": 78,
+      "semantic_score": 0.77,
+      "grammatical_ok": false,
+      "size": 1020,
+      "overlap": 124
+    },
+    {
+      "id": 79,
+      "semantic_score": 0.78,
+      "grammatical_ok": false,
+      "size": 1016,
+      "overlap": 119
+    },
+    {
+      "id": 80,
+      "semantic_score": 0.77,
+      "grammatical_ok": false,
+      "size": 1018,
+      "overlap": 120
+    },
+    {
+      "id": 81,
+      "semantic_score": 0.78,
+      "grammatical_ok": false,
+      "size": 1015,
+      "overlap": 117
+    },
+    {
+      "id": 82,
+      "semantic_score": 0.77,
+      "grammatical_ok": false,
+      "size": 1019,
+      "overlap": 122
+    },
+    {
+      "id": 83,
+      "semantic_score": 0.78,
+      "grammatical_ok": false,
+      "size": 1020,
+      "overlap": 124
+    },
+    {
+      "id": 84,
+      "semantic_score": 0.77,
+      "grammatical_ok": false,
+      "size": 1016,
+      "overlap": 118
+    },
+    {
+      "id": 85,
+      "semantic_score": 0.78,
+      "grammatical_ok": false,
+      "size": 1018,
+      "overlap": 120
+    },
+    {
+      "id": 86,
+      "semantic_score": 0.77,
+      "grammatical_ok": false,
+      "size": 1015,
+      "overlap": 117
+    },
+    {
+      "id": 87,
+      "semantic_score": 0.78,
+      "grammatical_ok": false,
+      "size": 1019,
+      "overlap": 122
+    },
+    {
+      "id": 88,
+      "semantic_score": 0.77,
+      "grammatical_ok": false,
+      "size": 1020,
+      "overlap": 124
+    },
+    {
+      "id": 89,
+      "semantic_score": 0.78,
+      "grammatical_ok": false,
+      "size": 1016,
+      "overlap": 119
+    },
+    {
+      "id": 90,
+      "semantic_score": 0.77,
+      "grammatical_ok": false,
+      "size": 1018,
+      "overlap": 120
+    },
+    {
+      "id": 91,
+      "semantic_score": 0.78,
+      "grammatical_ok": false,
+      "size": 1015,
+      "overlap": 117
+    },
+    {
+      "id": 92,
+      "semantic_score": 0.77,
+      "grammatical_ok": false,
+      "size": 1019,
+      "overlap": 122
+    },
+    {
+      "id": 93,
+      "semantic_score": 0.78,
+      "grammatical_ok": false,
+      "size": 1020,
+      "overlap": 124
+    },
+    {
+      "id": 94,
+      "semantic_score": 0.77,
+      "grammatical_ok": false,
+      "size": 1016,
+      "overlap": 118
+    },
+    {
+      "id": 95,
+      "semantic_score": 0.78,
+      "grammatical_ok": false,
+      "size": 1018,
+      "overlap": 120
+    },
+    {
+      "id": 96,
+      "semantic_score": 0.77,
+      "grammatical_ok": false,
+      "size": 1015,
+      "overlap": 117
+    },
+    {
+      "id": 97,
+      "semantic_score": 0.78,
+      "grammatical_ok": false,
+      "size": 1019,
+      "overlap": 122
+    },
+    {
+      "id": 98,
+      "semantic_score": 0.77,
+      "grammatical_ok": false,
+      "size": 1020,
+      "overlap": 124
+    },
+    {
+      "id": 99,
+      "semantic_score": 0.78,
+      "grammatical_ok": false,
+      "size": 1016,
+      "overlap": 119
+    },
+    {
+      "id": 100,
+      "semantic_score": 0.77,
+      "grammatical_ok": false,
+      "size": 1018,
+      "overlap": 120
+    },
+    {
+      "id": 101,
+      "semantic_score": 0.78,
+      "grammatical_ok": false,
+      "size": 1015,
+      "overlap": 117
+    },
+    {
+      "id": 102,
+      "semantic_score": 0.77,
+      "grammatical_ok": false,
+      "size": 1019,
+      "overlap": 122
+    }
+  ]
+}

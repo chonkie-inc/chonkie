@@ -1,0 +1,3236 @@
+[
+  {
+    "chunker": "TokenChunker",
+    "params": {
+      "chunk_size": 512,
+      "chunk_overlap": 64
+    },
+    "score": 5.3,
+    "details": {
+      "criteria": {
+        "semantic_coherence": {
+          "score": 6,
+          "comment": "Frequent mid-sentence cuts and arbitrary splits disrupt natural flow between sentences"
+        },
+        "grammatical_integrity": {
+          "score": 3,
+          "comment": "Many chunks end mid-sentence with incomplete words or thoughts"
+        },
+        "size_uniformity": {
+          "score": 8,
+          "comment": "Chunks are consistently close to target size with low variation"
+        },
+        "semantic_completeness": {
+          "score": 4,
+          "comment": "Numerous chunks contain incomplete thoughts and require adjacent chunks for full context"
+        },
+        "information_density": {
+          "score": 7,
+          "comment": "Good content-to-fluff ratio but some redundancy from overlap"
+        },
+        "context_preservation": {
+          "score": 5,
+          "comment": "Key concepts like 'RAG architecture' and 'chunking strategies' are split across multiple chunks"
+        },
+        "structural_integrity": {
+          "score": 6,
+          "comment": "Some headings preserved with content but many structural breaks are arbitrary"
+        },
+        "boundary_sensitivity": {
+          "score": 4,
+          "comment": "Frequent unnatural breaks in middle of sentences and concepts"
+        },
+        "retrieval_effectiveness": {
+          "score": 5,
+          "comment": "Context fragmentation may hinder accurate semantic matching for queries"
+        },
+        "narrative_flow": {
+          "score": 5,
+          "comment": "Logical progression disrupted by mid-concept splits"
+        }
+      },
+      "cross_chunk_dependencies": 15,
+      "key_information_isolation": 8,
+      "topical_focus_score": 6.5,
+      "per_chunk": [
+        {
+          "id": 1,
+          "semantic_completeness": 0.75,
+          "information_density": 0.88,
+          "requires_context": true,
+          "size": 103
+        },
+        {
+          "id": 2,
+          "semantic_completeness": 0.65,
+          "information_density": 0.85,
+          "requires_context": true,
+          "size": 108
+        },
+        {
+          "id": 3,
+          "semantic_completeness": 0.7,
+          "information_density": 0.82,
+          "requires_context": true,
+          "size": 105
+        },
+        {
+          "id": 4,
+          "semantic_completeness": 0.68,
+          "information_density": 0.83,
+          "requires_context": true,
+          "size": 104
+        },
+        {
+          "id": 5,
+          "semantic_completeness": 0.72,
+          "information_density": 0.84,
+          "requires_context": true,
+          "size": 103
+        },
+        {
+          "id": 6,
+          "semantic_completeness": 0.71,
+          "information_density": 0.86,
+          "requires_context": true,
+          "size": 104
+        },
+        {
+          "id": 7,
+          "semantic_completeness": 0.78,
+          "information_density": 0.87,
+          "requires_context": false,
+          "size": 106
+        },
+        {
+          "id": 8,
+          "semantic_completeness": 0.73,
+          "information_density": 0.85,
+          "requires_context": true,
+          "size": 104
+        },
+        {
+          "id": 9,
+          "semantic_completeness": 0.69,
+          "information_density": 0.83,
+          "requires_context": true,
+          "size": 104
+        },
+        {
+          "id": 10,
+          "semantic_completeness": 0.74,
+          "information_density": 0.84,
+          "requires_context": true,
+          "size": 103
+        },
+        {
+          "id": 11,
+          "semantic_completeness": 0.71,
+          "information_density": 0.82,
+          "requires_context": true,
+          "size": 104
+        },
+        {
+          "id": 12,
+          "semantic_completeness": 0.76,
+          "information_density": 0.85,
+          "requires_context": true,
+          "size": 104
+        },
+        {
+          "id": 13,
+          "semantic_completeness": 0.73,
+          "information_density": 0.83,
+          "requires_context": true,
+          "size": 104
+        },
+        {
+          "id": 14,
+          "semantic_completeness": 0.7,
+          "information_density": 0.84,
+          "requires_context": true,
+          "size": 103
+        },
+        {
+          "id": 15,
+          "semantic_completeness": 0.75,
+          "information_density": 0.86,
+          "requires_context": true,
+          "size": 104
+        },
+        {
+          "id": 16,
+          "semantic_completeness": 0.72,
+          "information_density": 0.84,
+          "requires_context": true,
+          "size": 104
+        },
+        {
+          "id": 17,
+          "semantic_completeness": 0.68,
+          "information_density": 0.85,
+          "requires_context": true,
+          "size": 104
+        },
+        {
+          "id": 18,
+          "semantic_completeness": 0.71,
+          "information_density": 0.83,
+          "requires_context": true,
+          "size": 104
+        },
+        {
+          "id": 19,
+          "semantic_completeness": 0.73,
+          "information_density": 0.84,
+          "requires_context": true,
+          "size": 104
+        },
+        {
+          "id": 20,
+          "semantic_completeness": 0.69,
+          "information_density": 0.82,
+          "requires_context": true,
+          "size": 104
+        },
+        {
+          "id": 21,
+          "semantic_completeness": 0.74,
+          "information_density": 0.85,
+          "requires_context": true,
+          "size": 104
+        },
+        {
+          "id": 22,
+          "semantic_completeness": 0.76,
+          "information_density": 0.86,
+          "requires_context": true,
+          "size": 104
+        },
+        {
+          "id": 23,
+          "semantic_completeness": 0.78,
+          "information_density": 0.87,
+          "requires_context": true,
+          "size": 104
+        },
+        {
+          "id": 24,
+          "semantic_completeness": 0.73,
+          "information_density": 0.85,
+          "requires_context": true,
+          "size": 104
+        },
+        {
+          "id": 25,
+          "semantic_completeness": 0.75,
+          "information_density": 0.86,
+          "requires_context": true,
+          "size": 104
+        },
+        {
+          "id": 26,
+          "semantic_completeness": 0.71,
+          "information_density": 0.84,
+          "requires_context": true,
+          "size": 104
+        },
+        {
+          "id": 27,
+          "semantic_completeness": 0.69,
+          "information_density": 0.83,
+          "requires_context": true,
+          "size": 104
+        },
+        {
+          "id": 28,
+          "semantic_completeness": 0.77,
+          "information_density": 0.87,
+          "requires_context": true,
+          "size": 104
+        },
+        {
+          "id": 29,
+          "semantic_completeness": 0.74,
+          "information_density": 0.85,
+          "requires_context": true,
+          "size": 104
+        },
+        {
+          "id": 30,
+          "semantic_completeness": 0.72,
+          "information_density": 0.84,
+          "requires_context": true,
+          "size": 104
+        },
+        {
+          "id": 31,
+          "semantic_completeness": 0.75,
+          "information_density": 0.85,
+          "requires_context": true,
+          "size": 104
+        },
+        {
+          "id": 32,
+          "semantic_completeness": 0.73,
+          "information_density": 0.84,
+          "requires_context": true,
+          "size": 104
+        },
+        {
+          "id": 33,
+          "semantic_completeness": 0.71,
+          "information_density": 0.83,
+          "requires_context": true,
+          "size": 104
+        },
+        {
+          "id": 34,
+          "semantic_completeness": 0.74,
+          "information_density": 0.85,
+          "requires_context": true,
+          "size": 104
+        },
+        {
+          "id": 35,
+          "semantic_completeness": 0.7,
+          "information_density": 0.83,
+          "requires_context": true,
+          "size": 104
+        },
+        {
+          "id": 36,
+          "semantic_completeness": 0.73,
+          "information_density": 0.84,
+          "requires_context": true,
+          "size": 104
+        },
+        {
+          "id": 37,
+          "semantic_completeness": 0.75,
+          "information_density": 0.85,
+          "requires_context": true,
+          "size": 104
+        },
+        {
+          "id": 38,
+          "semantic_completeness": 0.72,
+          "information_density": 0.84,
+          "requires_context": true,
+          "size": 104
+        },
+        {
+          "id": 39,
+          "semantic_completeness": 0.74,
+          "information_density": 0.85,
+          "requires_context": true,
+          "size": 104
+        },
+        {
+          "id": 40,
+          "semantic_completeness": 0.71,
+          "information_density": 0.83,
+          "requires_context": true,
+          "size": 104
+        },
+        {
+          "id": 41,
+          "semantic_completeness": 0.73,
+          "information_density": 0.84,
+          "requires_context": true,
+          "size": 104
+        },
+        {
+          "id": 42,
+          "semantic_completeness": 0.7,
+          "information_density": 0.83,
+          "requires_context": true,
+          "size": 104
+        },
+        {
+          "id": 43,
+          "semantic_completeness": 0.72,
+          "information_density": 0.84,
+          "requires_context": true,
+          "size": 104
+        },
+        {
+          "id": 44,
+          "semantic_completeness": 0.76,
+          "information_density": 0.86,
+          "requires_context": true,
+          "size": 104
+        },
+        {
+          "id": 45,
+          "semantic_completeness": 0.74,
+          "information_density": 0.85,
+          "requires_context": true,
+          "size": 104
+        },
+        {
+          "id": 46,
+          "semantic_completeness": 0.75,
+          "information_density": 0.86,
+          "requires_context": true,
+          "size": 104
+        },
+        {
+          "id": 47,
+          "semantic_completeness": 0.73,
+          "information_density": 0.84,
+          "requires_context": true,
+          "size": 104
+        },
+        {
+          "id": 48,
+          "semantic_completeness": 0.71,
+          "information_density": 0.83,
+          "requires_context": true,
+          "size": 104
+        },
+        {
+          "id": 49,
+          "semantic_completeness": 0.74,
+          "information_density": 0.85,
+          "requires_context": true,
+          "size": 104
+        },
+        {
+          "id": 50,
+          "semantic_completeness": 0.72,
+          "information_density": 0.84,
+          "requires_context": true,
+          "size": 104
+        },
+        {
+          "id": 51,
+          "semantic_completeness": 0.75,
+          "information_density": 0.85,
+          "requires_context": true,
+          "size": 104
+        },
+        {
+          "id": 52,
+          "semantic_completeness": 0.73,
+          "information_density": 0.84,
+          "requires_context": true,
+          "size": 104
+        },
+        {
+          "id": 53,
+          "semantic_completeness": 0.76,
+          "information_density": 0.86,
+          "requires_context": true,
+          "size": 104
+        },
+        {
+          "id": 54,
+          "semantic_completeness": 0.74,
+          "information_density": 0.85,
+          "requires_context": true,
+          "size": 104
+        },
+        {
+          "id": 55,
+          "semantic_completeness": 0.72,
+          "information_density": 0.84,
+          "requires_context": true,
+          "size": 104
+        },
+        {
+          "id": 56,
+          "semantic_completeness": 0.75,
+          "information_density": 0.85,
+          "requires_context": true,
+          "size": 104
+        },
+        {
+          "id": 57,
+          "semantic_completeness": 0.73,
+          "information_density": 0.84,
+          "requires_context": true,
+          "size": 104
+        },
+        {
+          "id": 58,
+          "semantic_completeness": 0.71,
+          "information_density": 0.83,
+          "requires_context": true,
+          "size": 104
+        },
+        {
+          "id": 59,
+          "semantic_completeness": 0.74,
+          "information_density": 0.85,
+          "requires_context": true,
+          "size": 104
+        },
+        {
+          "id": 60,
+          "semantic_completeness": 0.72,
+          "information_density": 0.84,
+          "requires_context": true,
+          "size": 104
+        },
+        {
+          "id": 61,
+          "semantic_completeness": 0.75,
+          "information_density": 0.85,
+          "requires_context": true,
+          "size": 104
+        },
+        {
+          "id": 62,
+          "semantic_completeness": 0.73,
+          "information_density": 0.84,
+          "requires_context": true,
+          "size": 104
+        },
+        {
+          "id": 63,
+          "semantic_completeness": 0.76,
+          "information_density": 0.86,
+          "requires_context": true,
+          "size": 104
+        },
+        {
+          "id": 64,
+          "semantic_completeness": 0.74,
+          "information_density": 0.85,
+          "requires_context": true,
+          "size": 104
+        },
+        {
+          "id": 65,
+          "semantic_completeness": 0.72,
+          "information_density": 0.84,
+          "requires_context": true,
+          "size": 104
+        },
+        {
+          "id": 66,
+          "semantic_completeness": 0.75,
+          "information_density": 0.85,
+          "requires_context": true,
+          "size": 104
+        },
+        {
+          "id": 67,
+          "semantic_completeness": 0.73,
+          "information_density": 0.84,
+          "requires_context": true,
+          "size": 104
+        },
+        {
+          "id": 68,
+          "semantic_completeness": 0.71,
+          "information_density": 0.83,
+          "requires_context": true,
+          "size": 104
+        },
+        {
+          "id": 69,
+          "semantic_completeness": 0.74,
+          "information_density": 0.85,
+          "requires_context": true,
+          "size": 104
+        },
+        {
+          "id": 70,
+          "semantic_completeness": 0.72,
+          "information_density": 0.84,
+          "requires_context": true,
+          "size": 104
+        },
+        {
+          "id": 71,
+          "semantic_completeness": 0.75,
+          "information_density": 0.85,
+          "requires_context": true,
+          "size": 104
+        },
+        {
+          "id": 72,
+          "semantic_completeness": 0.73,
+          "information_density": 0.84,
+          "requires_context": true,
+          "size": 104
+        },
+        {
+          "id": 73,
+          "semantic_completeness": 0.76,
+          "information_density": 0.86,
+          "requires_context": true,
+          "size": 104
+        },
+        {
+          "id": 74,
+          "semantic_completeness": 0.74,
+          "information_density": 0.85,
+          "requires_context": true,
+          "size": 104
+        },
+        {
+          "id": 75,
+          "semantic_completeness": 0.72,
+          "information_density": 0.84,
+          "requires_context": true,
+          "size": 104
+        },
+        {
+          "id": 76,
+          "semantic_completeness": 0.75,
+          "information_density": 0.85,
+          "requires_context": true,
+          "size": 104
+        },
+        {
+          "id": 77,
+          "semantic_completeness": 0.73,
+          "information_density": 0.84,
+          "requires_context": true,
+          "size": 104
+        },
+        {
+          "id": 78,
+          "semantic_completeness": 0.71,
+          "information_density": 0.83,
+          "requires_context": true,
+          "size": 104
+        },
+        {
+          "id": 79,
+          "semantic_completeness": 0.74,
+          "information_density": 0.85,
+          "requires_context": true,
+          "size": 104
+        },
+        {
+          "id": 80,
+          "semantic_completeness": 0.72,
+          "information_density": 0.84,
+          "requires_context": true,
+          "size": 104
+        },
+        {
+          "id": 81,
+          "semantic_completeness": 0.75,
+          "information_density": 0.85,
+          "requires_context": true,
+          "size": 104
+        },
+        {
+          "id": 82,
+          "semantic_completeness": 0.73,
+          "information_density": 0.84,
+          "requires_context": true,
+          "size": 104
+        },
+        {
+          "id": 83,
+          "semantic_completeness": 0.76,
+          "information_density": 0.86,
+          "requires_context": true,
+          "size": 104
+        },
+        {
+          "id": 84,
+          "semantic_completeness": 0.78,
+          "information_density": 0.87,
+          "requires_context": false,
+          "size": 104
+        }
+      ]
+    }
+  },
+  {
+    "chunker": "TokenChunker",
+    "params": {
+      "chunk_size": 1024,
+      "chunk_overlap": 128
+    },
+    "score": 5.4,
+    "details": {
+      "criteria": {
+        "semantic_coherence": {
+          "score": 6,
+          "comment": "Frequent mid-sentence cuts and restarts disrupt natural flow between chunks"
+        },
+        "grammatical_integrity": {
+          "score": 3,
+          "comment": "Multiple chunks end mid-sentence with dangling words like 'Ge', 'ect', 'ep', creating incomplete thoughts"
+        },
+        "size_uniformity": {
+          "score": 7,
+          "comment": "Most chunks cluster around 900-1100 tokens but some variation exists"
+        },
+        "semantic_completeness": {
+          "score": 4,
+          "comment": "Many chunks contain incomplete sentences and require adjacent chunks for full context"
+        },
+        "information_density": {
+          "score": 8,
+          "comment": "Content is highly informative with minimal filler, though some redundancy from overlap"
+        },
+        "context_preservation": {
+          "score": 5,
+          "comment": "Key concepts like 'RAG architecture' and 'chunking strategies' are split across multiple chunks"
+        },
+        "structural_integrity": {
+          "score": 6,
+          "comment": "Section headings are generally preserved but some are split from their content"
+        },
+        "boundary_sensitivity": {
+          "score": 4,
+          "comment": "Forced breaks at arbitrary token limits ignore natural paragraph and sentence boundaries"
+        },
+        "retrieval_effectiveness": {
+          "score": 6,
+          "comment": "Individual chunks may lack sufficient context for accurate semantic matching"
+        },
+        "narrative_flow": {
+          "score": 5,
+          "comment": "Frequent interruptions to narrative flow due to mid-sentence breaks"
+        }
+      },
+      "cross_chunk_dependencies": 28,
+      "key_information_isolation": 15,
+      "topical_focus_score": 7.2,
+      "per_chunk": [
+        {
+          "id": 1,
+          "semantic_completeness": 0.85,
+          "information_density": 0.92,
+          "requires_context": false,
+          "size": 1080
+        },
+        {
+          "id": 2,
+          "semantic_completeness": 0.45,
+          "information_density": 0.88,
+          "requires_context": true,
+          "size": 980
+        },
+        {
+          "id": 3,
+          "semantic_completeness": 0.55,
+          "information_density": 0.9,
+          "requires_context": true,
+          "size": 1020
+        },
+        {
+          "id": 4,
+          "semantic_completeness": 0.65,
+          "information_density": 0.89,
+          "requires_context": true,
+          "size": 950
+        },
+        {
+          "id": 5,
+          "semantic_completeness": 0.6,
+          "information_density": 0.91,
+          "requires_context": true,
+          "size": 990
+        },
+        {
+          "id": 6,
+          "semantic_completeness": 0.7,
+          "information_density": 0.9,
+          "requires_context": true,
+          "size": 1010
+        },
+        {
+          "id": 7,
+          "semantic_completeness": 0.75,
+          "information_density": 0.88,
+          "requires_context": false,
+          "size": 1030
+        },
+        {
+          "id": 8,
+          "semantic_completeness": 0.8,
+          "information_density": 0.89,
+          "requires_context": false,
+          "size": 1050
+        },
+        {
+          "id": 9,
+          "semantic_completeness": 0.65,
+          "information_density": 0.91,
+          "requires_context": true,
+          "size": 980
+        },
+        {
+          "id": 10,
+          "semantic_completeness": 0.6,
+          "information_density": 0.9,
+          "requires_context": true,
+          "size": 1000
+        },
+        {
+          "id": 11,
+          "semantic_completeness": 0.75,
+          "information_density": 0.88,
+          "requires_context": false,
+          "size": 1020
+        },
+        {
+          "id": 12,
+          "semantic_completeness": 0.7,
+          "information_density": 0.89,
+          "requires_context": true,
+          "size": 990
+        },
+        {
+          "id": 13,
+          "semantic_completeness": 0.75,
+          "information_density": 0.9,
+          "requires_context": false,
+          "size": 1010
+        },
+        {
+          "id": 14,
+          "semantic_completeness": 0.8,
+          "information_density": 0.88,
+          "requires_context": false,
+          "size": 1040
+        },
+        {
+          "id": 15,
+          "semantic_completeness": 0.85,
+          "information_density": 0.91,
+          "requires_context": false,
+          "size": 1030
+        },
+        {
+          "id": 16,
+          "semantic_completeness": 0.75,
+          "information_density": 0.89,
+          "requires_context": false,
+          "size": 1000
+        },
+        {
+          "id": 17,
+          "semantic_completeness": 0.8,
+          "information_density": 0.9,
+          "requires_context": false,
+          "size": 1020
+        },
+        {
+          "id": 18,
+          "semantic_completeness": 0.75,
+          "information_density": 0.88,
+          "requires_context": false,
+          "size": 990
+        },
+        {
+          "id": 19,
+          "semantic_completeness": 0.7,
+          "information_density": 0.89,
+          "requires_context": true,
+          "size": 1010
+        },
+        {
+          "id": 20,
+          "semantic_completeness": 0.75,
+          "information_density": 0.9,
+          "requires_context": false,
+          "size": 1000
+        },
+        {
+          "id": 21,
+          "semantic_completeness": 0.8,
+          "information_density": 0.89,
+          "requires_context": false,
+          "size": 1020
+        },
+        {
+          "id": 22,
+          "semantic_completeness": 0.85,
+          "information_density": 0.91,
+          "requires_context": false,
+          "size": 1030
+        },
+        {
+          "id": 23,
+          "semantic_completeness": 0.9,
+          "information_density": 0.92,
+          "requires_context": false,
+          "size": 1040
+        },
+        {
+          "id": 24,
+          "semantic_completeness": 0.85,
+          "information_density": 0.9,
+          "requires_context": false,
+          "size": 1010
+        },
+        {
+          "id": 25,
+          "semantic_completeness": 0.8,
+          "information_density": 0.89,
+          "requires_context": false,
+          "size": 1000
+        },
+        {
+          "id": 26,
+          "semantic_completeness": 0.85,
+          "information_density": 0.9,
+          "requires_context": false,
+          "size": 1020
+        },
+        {
+          "id": 27,
+          "semantic_completeness": 0.8,
+          "information_density": 0.91,
+          "requires_context": false,
+          "size": 1010
+        },
+        {
+          "id": 28,
+          "semantic_completeness": 0.75,
+          "information_density": 0.89,
+          "requires_context": false,
+          "size": 990
+        },
+        {
+          "id": 29,
+          "semantic_completeness": 0.8,
+          "information_density": 0.9,
+          "requires_context": false,
+          "size": 1000
+        },
+        {
+          "id": 30,
+          "semantic_completeness": 0.85,
+          "information_density": 0.88,
+          "requires_context": false,
+          "size": 1020
+        },
+        {
+          "id": 31,
+          "semantic_completeness": 0.8,
+          "information_density": 0.89,
+          "requires_context": false,
+          "size": 1010
+        },
+        {
+          "id": 32,
+          "semantic_completeness": 0.85,
+          "information_density": 0.9,
+          "requires_context": false,
+          "size": 1030
+        },
+        {
+          "id": 33,
+          "semantic_completeness": 0.8,
+          "information_density": 0.89,
+          "requires_context": false,
+          "size": 1000
+        },
+        {
+          "id": 34,
+          "semantic_completeness": 0.85,
+          "information_density": 0.91,
+          "requires_context": false,
+          "size": 1020
+        },
+        {
+          "id": 35,
+          "semantic_completeness": 0.8,
+          "information_density": 0.9,
+          "requires_context": false,
+          "size": 1010
+        },
+        {
+          "id": 36,
+          "semantic_completeness": 0.85,
+          "information_density": 0.89,
+          "requires_context": false,
+          "size": 1000
+        },
+        {
+          "id": 37,
+          "semantic_completeness": 0.8,
+          "information_density": 0.9,
+          "requires_context": false,
+          "size": 1020
+        },
+        {
+          "id": 38,
+          "semantic_completeness": 0.85,
+          "information_density": 0.91,
+          "requires_context": false,
+          "size": 1030
+        },
+        {
+          "id": 39,
+          "semantic_completeness": 0.8,
+          "information_density": 0.89,
+          "requires_context": false,
+          "size": 1000
+        },
+        {
+          "id": 40,
+          "semantic_completeness": 0.75,
+          "information_density": 0.88,
+          "requires_context": true,
+          "size": 990
+        },
+        {
+          "id": 41,
+          "semantic_completeness": 0.85,
+          "information_density": 0.9,
+          "requires_context": false,
+          "size": 1020
+        },
+        {
+          "id": 42,
+          "semantic_completeness": 0.9,
+          "information_density": 0.92,
+          "requires_context": false,
+          "size": 980
+        }
+      ]
+    }
+  },
+  {
+    "chunker": "TokenChunker",
+    "params": {
+      "chunk_size": 2048,
+      "chunk_overlap": 256
+    },
+    "score": 6.6,
+    "details": {
+      "criteria": {
+        "semantic_coherence": {
+          "score": 7,
+          "comment": "Generally good flow within chunks, but some chunks start mid-sentence or end abruptly, disrupting narrative continuity"
+        },
+        "grammatical_integrity": {
+          "score": 6,
+          "comment": "Multiple chunks begin or end with incomplete sentences (e.g., 'the effectiveness of', 'chitecture involves')"
+        },
+        "size_uniformity": {
+          "score": 8,
+          "comment": "Most chunks are close to the 2048 target with reasonable variation (std/avg ~0.15)"
+        },
+        "semantic_completeness": {
+          "score": 5,
+          "comment": "Several chunks contain dangling references or incomplete thoughts that require context from adjacent chunks"
+        },
+        "information_density": {
+          "score": 9,
+          "comment": "High ratio of meaningful technical content to filler, minimal redundancy"
+        },
+        "context_preservation": {
+          "score": 6,
+          "comment": "Key concepts like 'RAG architecture' and 'chunking strategies' are split across chunk boundaries"
+        },
+        "structural_integrity": {
+          "score": 7,
+          "comment": "Generally preserves headings with content, but some forced breaks occur mid-section"
+        },
+        "boundary_sensitivity": {
+          "score": 5,
+          "comment": "Multiple unnatural breaks in the middle of sentences and concepts"
+        },
+        "retrieval_effectiveness": {
+          "score": 7,
+          "comment": "Most chunks provide sufficient context, but fragmented concepts may reduce matching accuracy"
+        },
+        "narrative_flow": {
+          "score": 6,
+          "comment": "Logical progression is disrupted by mid-sentence splits and cross-references"
+        }
+      },
+      "cross_chunk_dependencies": 12,
+      "key_information_isolation": 8,
+      "topical_focus_score": 7.5,
+      "per_chunk": [
+        {
+          "id": 1,
+          "semantic_completeness": 0.85,
+          "information_density": 0.92,
+          "requires_context": false,
+          "size": 2045
+        },
+        {
+          "id": 2,
+          "semantic_completeness": 0.65,
+          "information_density": 0.89,
+          "requires_context": true,
+          "size": 2038
+        },
+        {
+          "id": 3,
+          "semantic_completeness": 0.7,
+          "information_density": 0.88,
+          "requires_context": true,
+          "size": 2042
+        },
+        {
+          "id": 4,
+          "semantic_completeness": 0.75,
+          "information_density": 0.9,
+          "requires_context": false,
+          "size": 2040
+        },
+        {
+          "id": 5,
+          "semantic_completeness": 0.8,
+          "information_density": 0.91,
+          "requires_context": false,
+          "size": 2035
+        },
+        {
+          "id": 6,
+          "semantic_completeness": 0.78,
+          "information_density": 0.89,
+          "requires_context": false,
+          "size": 2043
+        },
+        {
+          "id": 7,
+          "semantic_completeness": 0.82,
+          "information_density": 0.9,
+          "requires_context": false,
+          "size": 2041
+        },
+        {
+          "id": 8,
+          "semantic_completeness": 0.83,
+          "information_density": 0.88,
+          "requires_context": false,
+          "size": 2039
+        },
+        {
+          "id": 9,
+          "semantic_completeness": 0.79,
+          "information_density": 0.87,
+          "requires_context": false,
+          "size": 2044
+        },
+        {
+          "id": 10,
+          "semantic_completeness": 0.81,
+          "information_density": 0.89,
+          "requires_context": false,
+          "size": 2042
+        },
+        {
+          "id": 11,
+          "semantic_completeness": 0.84,
+          "information_density": 0.9,
+          "requires_context": false,
+          "size": 2037
+        },
+        {
+          "id": 12,
+          "semantic_completeness": 0.77,
+          "information_density": 0.88,
+          "requires_context": false,
+          "size": 2046
+        },
+        {
+          "id": 13,
+          "semantic_completeness": 0.83,
+          "information_density": 0.91,
+          "requires_context": false,
+          "size": 2038
+        },
+        {
+          "id": 14,
+          "semantic_completeness": 0.85,
+          "information_density": 0.9,
+          "requires_context": false,
+          "size": 2044
+        },
+        {
+          "id": 15,
+          "semantic_completeness": 0.82,
+          "information_density": 0.89,
+          "requires_context": false,
+          "size": 2041
+        },
+        {
+          "id": 16,
+          "semantic_completeness": 0.86,
+          "information_density": 0.91,
+          "requires_context": false,
+          "size": 2039
+        },
+        {
+          "id": 17,
+          "semantic_completeness": 0.84,
+          "information_density": 0.88,
+          "requires_context": false,
+          "size": 2043
+        },
+        {
+          "id": 18,
+          "semantic_completeness": 0.83,
+          "information_density": 0.9,
+          "requires_context": false,
+          "size": 2040
+        },
+        {
+          "id": 19,
+          "semantic_completeness": 0.81,
+          "information_density": 0.89,
+          "requires_context": false,
+          "size": 2042
+        },
+        {
+          "id": 20,
+          "semantic_completeness": 0.78,
+          "information_density": 0.88,
+          "requires_context": false,
+          "size": 2036
+        },
+        {
+          "id": 21,
+          "semantic_completeness": 0.92,
+          "information_density": 0.93,
+          "requires_context": false,
+          "size": 1047
+        }
+      ]
+    }
+  },
+  {
+    "chunker": "SentenceChunker",
+    "params": {
+      "chunk_size": 512,
+      "chunk_overlap": 64
+    },
+    "score": 5.3,
+    "details": {
+      "criteria": {
+        "semantic_coherence": {
+          "score": 7,
+          "comment": "Good flow within chunks but some chunks split mid-paragraph, disrupting narrative continuity"
+        },
+        "grammatical_integrity": {
+          "score": 6,
+          "comment": "Multiple chunks end mid-sentence or at unnatural breaks (e.g., chunks 3, 6, 10, 19)"
+        },
+        "size_uniformity": {
+          "score": 4,
+          "comment": "High variation in chunk sizes (ranging from ~50 to ~400 tokens) with std/avg ratio of ~0.45"
+        },
+        "semantic_completeness": {
+          "score": 5,
+          "comment": "Many chunks contain incomplete thoughts or dangling references requiring adjacent chunks for full understanding"
+        },
+        "information_density": {
+          "score": 8,
+          "comment": "Generally high information density with minimal filler content"
+        },
+        "context_preservation": {
+          "score": 4,
+          "comment": "Key concepts like 'RAG architecture' and 'chunking strategies' are fragmented across multiple chunks"
+        },
+        "structural_integrity": {
+          "score": 5,
+          "comment": "Headings are often separated from their content (e.g., '2. Understanding RAG' split from its explanation)"
+        },
+        "boundary_sensitivity": {
+          "score": 3,
+          "comment": "Frequent forced breaks within paragraphs and sections, ignoring natural document structure"
+        },
+        "retrieval_effectiveness": {
+          "score": 6,
+          "comment": "Chunks provide some context but may lack completeness for accurate semantic matching"
+        },
+        "narrative_flow": {
+          "score": 5,
+          "comment": "Logical progression disrupted by frequent mid-paragraph splits and orphaned headings"
+        }
+      },
+      "cross_chunk_dependencies": 15,
+      "key_information_isolation": 8,
+      "topical_focus_score": 6.5,
+      "per_chunk": [
+        {
+          "id": 1,
+          "semantic_completeness": 0.65,
+          "information_density": 0.85,
+          "requires_context": false,
+          "size": 85
+        },
+        {
+          "id": 2,
+          "semantic_completeness": 0.75,
+          "information_density": 0.9,
+          "requires_context": true,
+          "size": 95
+        },
+        {
+          "id": 3,
+          "semantic_completeness": 0.45,
+          "information_density": 0.88,
+          "requires_context": true,
+          "size": 110
+        },
+        {
+          "id": 4,
+          "semantic_completeness": 0.7,
+          "information_density": 0.92,
+          "requires_context": false,
+          "size": 120
+        },
+        {
+          "id": 5,
+          "semantic_completeness": 0.8,
+          "information_density": 0.9,
+          "requires_context": false,
+          "size": 105
+        },
+        {
+          "id": 6,
+          "semantic_completeness": 0.55,
+          "information_density": 0.93,
+          "requires_context": true,
+          "size": 95
+        },
+        {
+          "id": 7,
+          "semantic_completeness": 0.85,
+          "information_density": 0.91,
+          "requires_context": false,
+          "size": 130
+        },
+        {
+          "id": 8,
+          "semantic_completeness": 0.75,
+          "information_density": 0.89,
+          "requires_context": true,
+          "size": 125
+        },
+        {
+          "id": 9,
+          "semantic_completeness": 0.6,
+          "information_density": 0.87,
+          "requires_context": true,
+          "size": 115
+        },
+        {
+          "id": 10,
+          "semantic_completeness": 0.5,
+          "information_density": 0.9,
+          "requires_context": true,
+          "size": 100
+        }
+      ]
+    }
+  },
+  {
+    "chunker": "SentenceChunker",
+    "params": {
+      "chunk_size": 1024,
+      "chunk_overlap": 128
+    },
+    "score": 6.9,
+    "details": {
+      "criteria": {
+        "semantic_coherence": {
+          "score": 8,
+          "comment": "Generally good flow between sentences within chunks, though some chunks start mid-paragraph"
+        },
+        "grammatical_integrity": {
+          "score": 9,
+          "comment": "All chunks end with proper punctuation and avoid mid-sentence cuts"
+        },
+        "size_uniformity": {
+          "score": 6,
+          "comment": "Significant variation in chunk sizes (300-1200 tokens), many chunks deviate from 1024 target"
+        },
+        "semantic_completeness": {
+          "score": 7,
+          "comment": "Most chunks are self-contained, but some contain dangling section references and require adjacent chunks for full context"
+        },
+        "information_density": {
+          "score": 9,
+          "comment": "High ratio of meaningful content to total text, minimal fluff or redundancy"
+        },
+        "context_preservation": {
+          "score": 6,
+          "comment": "Section headings often separated from content, key concepts split across chunk boundaries"
+        },
+        "structural_integrity": {
+          "score": 5,
+          "comment": "Frequent splitting of sections from their headings, disrupting document hierarchy"
+        },
+        "boundary_sensitivity": {
+          "score": 5,
+          "comment": "Many unnatural breaks at section boundaries and mid-paragraph splits"
+        },
+        "retrieval_effectiveness": {
+          "score": 7,
+          "comment": "Generally provides sufficient context but fragmentation may impact semantic matching"
+        },
+        "narrative_flow": {
+          "score": 7,
+          "comment": "Logical progression mostly maintained but disrupted by heading/content splits"
+        }
+      },
+      "cross_chunk_dependencies": 12,
+      "key_information_isolation": 8,
+      "topical_focus_score": 7.5,
+      "per_chunk": [
+        {
+          "id": 1,
+          "semantic_completeness": 0.85,
+          "information_density": 0.92,
+          "requires_context": false,
+          "size": 320
+        },
+        {
+          "id": 2,
+          "semantic_completeness": 0.88,
+          "information_density": 0.9,
+          "requires_context": true,
+          "size": 380
+        },
+        {
+          "id": 3,
+          "semantic_completeness": 0.82,
+          "information_density": 0.89,
+          "requires_context": true,
+          "size": 350
+        },
+        {
+          "id": 4,
+          "semantic_completeness": 0.78,
+          "information_density": 0.91,
+          "requires_context": true,
+          "size": 420
+        },
+        {
+          "id": 5,
+          "semantic_completeness": 0.75,
+          "information_density": 0.88,
+          "requires_context": true,
+          "size": 280
+        },
+        {
+          "id": 6,
+          "semantic_completeness": 0.83,
+          "information_density": 0.9,
+          "requires_context": false,
+          "size": 450
+        },
+        {
+          "id": 7,
+          "semantic_completeness": 0.8,
+          "information_density": 0.89,
+          "requires_context": true,
+          "size": 380
+        },
+        {
+          "id": 8,
+          "semantic_completeness": 0.85,
+          "information_density": 0.91,
+          "requires_context": false,
+          "size": 420
+        },
+        {
+          "id": 9,
+          "semantic_completeness": 0.82,
+          "information_density": 0.9,
+          "requires_context": false,
+          "size": 460
+        },
+        {
+          "id": 10,
+          "semantic_completeness": 0.88,
+          "information_density": 0.92,
+          "requires_context": false,
+          "size": 480
+        },
+        {
+          "id": 11,
+          "semantic_completeness": 0.75,
+          "information_density": 0.89,
+          "requires_context": true,
+          "size": 350
+        },
+        {
+          "id": 12,
+          "semantic_completeness": 0.83,
+          "information_density": 0.9,
+          "requires_context": false,
+          "size": 520
+        },
+        {
+          "id": 13,
+          "semantic_completeness": 0.85,
+          "information_density": 0.91,
+          "requires_context": false,
+          "size": 380
+        },
+        {
+          "id": 14,
+          "semantic_completeness": 0.8,
+          "information_density": 0.9,
+          "requires_context": false,
+          "size": 400
+        },
+        {
+          "id": 15,
+          "semantic_completeness": 0.83,
+          "information_density": 0.89,
+          "requires_context": false,
+          "size": 450
+        },
+        {
+          "id": 16,
+          "semantic_completeness": 0.85,
+          "information_density": 0.9,
+          "requires_context": false,
+          "size": 480
+        },
+        {
+          "id": 17,
+          "semantic_completeness": 0.82,
+          "information_density": 0.91,
+          "requires_context": false,
+          "size": 460
+        },
+        {
+          "id": 18,
+          "semantic_completeness": 0.88,
+          "information_density": 0.92,
+          "requires_context": false,
+          "size": 490
+        },
+        {
+          "id": 19,
+          "semantic_completeness": 0.85,
+          "information_density": 0.9,
+          "requires_context": false,
+          "size": 510
+        },
+        {
+          "id": 20,
+          "semantic_completeness": 0.83,
+          "information_density": 0.89,
+          "requires_context": false,
+          "size": 480
+        },
+        {
+          "id": 21,
+          "semantic_completeness": 0.8,
+          "information_density": 0.91,
+          "requires_context": false,
+          "size": 440
+        },
+        {
+          "id": 22,
+          "semantic_completeness": 0.85,
+          "information_density": 0.9,
+          "requires_context": false,
+          "size": 420
+        },
+        {
+          "id": 23,
+          "semantic_completeness": 0.88,
+          "information_density": 0.92,
+          "requires_context": false,
+          "size": 380
+        },
+        {
+          "id": 24,
+          "semantic_completeness": 0.82,
+          "information_density": 0.89,
+          "requires_context": false,
+          "size": 460
+        },
+        {
+          "id": 25,
+          "semantic_completeness": 0.85,
+          "information_density": 0.9,
+          "requires_context": false,
+          "size": 480
+        },
+        {
+          "id": 26,
+          "semantic_completeness": 0.83,
+          "information_density": 0.91,
+          "requires_context": false,
+          "size": 470
+        },
+        {
+          "id": 27,
+          "semantic_completeness": 0.8,
+          "information_density": 0.9,
+          "requires_context": false,
+          "size": 450
+        },
+        {
+          "id": 28,
+          "semantic_completeness": 0.85,
+          "information_density": 0.91,
+          "requires_context": false,
+          "size": 490
+        },
+        {
+          "id": 29,
+          "semantic_completeness": 0.82,
+          "information_density": 0.89,
+          "requires_context": false,
+          "size": 460
+        },
+        {
+          "id": 30,
+          "semantic_completeness": 0.85,
+          "information_density": 0.9,
+          "requires_context": false,
+          "size": 440
+        },
+        {
+          "id": 31,
+          "semantic_completeness": 0.83,
+          "information_density": 0.91,
+          "requires_context": false,
+          "size": 420
+        },
+        {
+          "id": 32,
+          "semantic_completeness": 0.88,
+          "information_density": 0.92,
+          "requires_context": false,
+          "size": 380
+        },
+        {
+          "id": 33,
+          "semantic_completeness": 0.85,
+          "information_density": 0.9,
+          "requires_context": false,
+          "size": 450
+        },
+        {
+          "id": 34,
+          "semantic_completeness": 0.82,
+          "information_density": 0.89,
+          "requires_context": false,
+          "size": 430
+        },
+        {
+          "id": 35,
+          "semantic_completeness": 0.85,
+          "information_density": 0.91,
+          "requires_context": false,
+          "size": 470
+        },
+        {
+          "id": 36,
+          "semantic_completeness": 0.83,
+          "information_density": 0.9,
+          "requires_context": false,
+          "size": 440
+        },
+        {
+          "id": 37,
+          "semantic_completeness": 0.8,
+          "information_density": 0.89,
+          "requires_context": false,
+          "size": 460
+        },
+        {
+          "id": 38,
+          "semantic_completeness": 0.85,
+          "information_density": 0.91,
+          "requires_context": false,
+          "size": 480
+        },
+        {
+          "id": 39,
+          "semantic_completeness": 0.83,
+          "information_density": 0.9,
+          "requires_context": false,
+          "size": 470
+        },
+        {
+          "id": 40,
+          "semantic_completeness": 0.85,
+          "information_density": 0.89,
+          "requires_context": false,
+          "size": 450
+        },
+        {
+          "id": 41,
+          "semantic_completeness": 0.82,
+          "information_density": 0.9,
+          "requires_context": false,
+          "size": 460
+        },
+        {
+          "id": 42,
+          "semantic_completeness": 0.88,
+          "information_density": 0.92,
+          "requires_context": false,
+          "size": 520
+        },
+        {
+          "id": 43,
+          "semantic_completeness": 0.9,
+          "information_density": 0.93,
+          "requires_context": false,
+          "size": 380
+        }
+      ]
+    }
+  },
+  {
+    "chunker": "SentenceChunker",
+    "params": {
+      "chunk_size": 2048,
+      "chunk_overlap": 256
+    },
+    "score": 7.3,
+    "details": {
+      "criteria": {
+        "semantic_coherence": {
+          "score": 8,
+          "comment": "Generally strong flow within chunks, though some boundary repetition between chunks 1-2 and 2-3 slightly reduces consecutive coherence"
+        },
+        "grammatical_integrity": {
+          "score": 9,
+          "comment": "All chunks end with proper punctuation and avoid mid-sentence cuts"
+        },
+        "size_uniformity": {
+          "score": 6,
+          "comment": "Significant variation - chunks range from ~800-2100 tokens, with std/avg ratio of ~0.35"
+        },
+        "semantic_completeness": {
+          "score": 7,
+          "comment": "Most chunks self-contained, but chunks 2-3 have repeated content and chunk 15 starts mid-sentence"
+        },
+        "information_density": {
+          "score": 8,
+          "comment": "High ratio of meaningful content to total text, minimal fluff"
+        },
+        "context_preservation": {
+          "score": 6,
+          "comment": "Some key concepts like 'RAG architecture' are split across chunks 2-3, and 'chunking strategies' split across 7-8"
+        },
+        "structural_integrity": {
+          "score": 7,
+          "comment": "Generally preserves headings with content, but some section headers are repeated across chunks"
+        },
+        "boundary_sensitivity": {
+          "score": 6,
+          "comment": "Some unnatural breaks - particularly the repetition of 'This architecture involves...' between chunks 1-2"
+        },
+        "retrieval_effectiveness": {
+          "score": 8,
+          "comment": "Good context for downstream tasks, though some fragmentation may affect specific queries"
+        },
+        "narrative_flow": {
+          "score": 8,
+          "comment": "Logical progression maintained despite some boundary issues"
+        }
+      },
+      "cross_chunk_dependencies": 5,
+      "key_information_isolation": 3,
+      "topical_focus_score": 7.5,
+      "per_chunk": [
+        {
+          "id": 1,
+          "semantic_completeness": 0.95,
+          "information_density": 0.88,
+          "requires_context": false,
+          "size": 1020
+        },
+        {
+          "id": 2,
+          "semantic_completeness": 0.85,
+          "information_density": 0.82,
+          "requires_context": true,
+          "size": 980
+        },
+        {
+          "id": 3,
+          "semantic_completeness": 0.9,
+          "information_density": 0.85,
+          "requires_context": false,
+          "size": 1100
+        },
+        {
+          "id": 4,
+          "semantic_completeness": 0.92,
+          "information_density": 0.87,
+          "requires_context": false,
+          "size": 1050
+        },
+        {
+          "id": 5,
+          "semantic_completeness": 0.93,
+          "information_density": 0.89,
+          "requires_context": false,
+          "size": 1080
+        },
+        {
+          "id": 6,
+          "semantic_completeness": 0.94,
+          "information_density": 0.86,
+          "requires_context": false,
+          "size": 1120
+        },
+        {
+          "id": 7,
+          "semantic_completeness": 0.91,
+          "information_density": 0.84,
+          "requires_context": false,
+          "size": 1060
+        },
+        {
+          "id": 8,
+          "semantic_completeness": 0.88,
+          "information_density": 0.83,
+          "requires_context": true,
+          "size": 990
+        },
+        {
+          "id": 9,
+          "semantic_completeness": 0.9,
+          "information_density": 0.85,
+          "requires_context": false,
+          "size": 1040
+        },
+        {
+          "id": 10,
+          "semantic_completeness": 0.92,
+          "information_density": 0.87,
+          "requires_context": false,
+          "size": 1070
+        },
+        {
+          "id": 11,
+          "semantic_completeness": 0.89,
+          "information_density": 0.84,
+          "requires_context": false,
+          "size": 1030
+        },
+        {
+          "id": 12,
+          "semantic_completeness": 0.93,
+          "information_density": 0.88,
+          "requires_context": false,
+          "size": 1090
+        },
+        {
+          "id": 13,
+          "semantic_completeness": 0.91,
+          "information_density": 0.85,
+          "requires_context": false,
+          "size": 1050
+        },
+        {
+          "id": 14,
+          "semantic_completeness": 0.94,
+          "information_density": 0.87,
+          "requires_context": false,
+          "size": 1110
+        },
+        {
+          "id": 15,
+          "semantic_completeness": 0.87,
+          "information_density": 0.83,
+          "requires_context": true,
+          "size": 980
+        },
+        {
+          "id": 16,
+          "semantic_completeness": 0.92,
+          "information_density": 0.86,
+          "requires_context": false,
+          "size": 1060
+        },
+        {
+          "id": 17,
+          "semantic_completeness": 0.9,
+          "information_density": 0.84,
+          "requires_context": false,
+          "size": 1040
+        },
+        {
+          "id": 18,
+          "semantic_completeness": 0.93,
+          "information_density": 0.87,
+          "requires_context": false,
+          "size": 1080
+        },
+        {
+          "id": 19,
+          "semantic_completeness": 0.91,
+          "information_density": 0.85,
+          "requires_context": false,
+          "size": 1050
+        },
+        {
+          "id": 20,
+          "semantic_completeness": 0.94,
+          "information_density": 0.88,
+          "requires_context": false,
+          "size": 1120
+        },
+        {
+          "id": 21,
+          "semantic_completeness": 0.96,
+          "information_density": 0.9,
+          "requires_context": false,
+          "size": 850
+        }
+      ]
+    }
+  },
+  {
+    "chunker": "RecursiveChunker",
+    "params": {
+      "chunk_size": 1024,
+      "chunk_overlap": 128
+    },
+    "score": 6.8,
+    "details": {
+      "criteria": {
+        "semantic_coherence": {
+          "score": 8,
+          "comment": "Most chunks maintain good semantic flow, though some splits occur mid-paragraph"
+        },
+        "grammatical_integrity": {
+          "score": 6,
+          "comment": "Several chunks end mid-sentence or start with incomplete thoughts, particularly chunks 2, 4, 7, 9, 11, 15, 25, 30, 34, 36, 41, 44, 46"
+        },
+        "size_uniformity": {
+          "score": 5,
+          "comment": "Chunk sizes vary significantly from ~200-1200 tokens, with std/avg ratio of ~0.4"
+        },
+        "semantic_completeness": {
+          "score": 7,
+          "comment": "Most chunks are reasonably self-contained, but some contain dangling references to content in adjacent chunks"
+        },
+        "information_density": {
+          "score": 9,
+          "comment": "High ratio of meaningful content to total text, minimal filler or redundancy"
+        },
+        "context_preservation": {
+          "score": 6,
+          "comment": "Key concepts like 'RAG architecture' and 'chunking strategies' are split across multiple chunks"
+        },
+        "structural_integrity": {
+          "score": 8,
+          "comment": "Generally preserves document structure, though some section headers are separated from their content"
+        },
+        "boundary_sensitivity": {
+          "score": 5,
+          "comment": "Frequent unnatural breaks mid-paragraph and mid-sentence, particularly around chunks 2, 4, 7, 9"
+        },
+        "retrieval_effectiveness": {
+          "score": 7,
+          "comment": "Provides good context for most queries but may require multiple chunks for complete answers"
+        },
+        "narrative_flow": {
+          "score": 7,
+          "comment": "Logical progression generally maintained but disrupted by frequent mid-sentence splits"
+        }
+      },
+      "cross_chunk_dependencies": 12,
+      "key_information_isolation": 8,
+      "topical_focus_score": 8.2,
+      "per_chunk": [
+        {
+          "id": 1,
+          "semantic_completeness": 0.85,
+          "information_density": 0.92,
+          "requires_context": false,
+          "size": 980
+        },
+        {
+          "id": 2,
+          "semantic_completeness": 0.65,
+          "information_density": 0.88,
+          "requires_context": true,
+          "size": 450
+        },
+        {
+          "id": 3,
+          "semantic_completeness": 0.9,
+          "information_density": 0.89,
+          "requires_context": false,
+          "size": 1050
+        },
+        {
+          "id": 4,
+          "semantic_completeness": 0.7,
+          "information_density": 0.91,
+          "requires_context": true,
+          "size": 780
+        },
+        {
+          "id": 5,
+          "semantic_completeness": 0.88,
+          "information_density": 0.9,
+          "requires_context": false,
+          "size": 920
+        },
+        {
+          "id": 6,
+          "semantic_completeness": 0.82,
+          "information_density": 0.87,
+          "requires_context": false,
+          "size": 890
+        },
+        {
+          "id": 7,
+          "semantic_completeness": 0.68,
+          "information_density": 0.85,
+          "requires_context": true,
+          "size": 560
+        },
+        {
+          "id": 8,
+          "semantic_completeness": 0.91,
+          "information_density": 0.88,
+          "requires_context": false,
+          "size": 1020
+        },
+        {
+          "id": 9,
+          "semantic_completeness": 0.72,
+          "information_density": 0.9,
+          "requires_context": true,
+          "size": 650
+        },
+        {
+          "id": 10,
+          "semantic_completeness": 0.89,
+          "information_density": 0.91,
+          "requires_context": false,
+          "size": 880
+        },
+        {
+          "id": 11,
+          "semantic_completeness": 0.75,
+          "information_density": 0.88,
+          "requires_context": true,
+          "size": 720
+        },
+        {
+          "id": 12,
+          "semantic_completeness": 0.93,
+          "information_density": 0.9,
+          "requires_context": false,
+          "size": 950
+        },
+        {
+          "id": 13,
+          "semantic_completeness": 0.9,
+          "information_density": 0.89,
+          "requires_context": false,
+          "size": 980
+        },
+        {
+          "id": 14,
+          "semantic_completeness": 0.87,
+          "information_density": 0.92,
+          "requires_context": false,
+          "size": 920
+        },
+        {
+          "id": 15,
+          "semantic_completeness": 0.73,
+          "information_density": 0.88,
+          "requires_context": true,
+          "size": 680
+        },
+        {
+          "id": 16,
+          "semantic_completeness": 0.91,
+          "information_density": 0.9,
+          "requires_context": false,
+          "size": 940
+        },
+        {
+          "id": 17,
+          "semantic_completeness": 0.89,
+          "information_density": 0.89,
+          "requires_context": false,
+          "size": 960
+        },
+        {
+          "id": 18,
+          "semantic_completeness": 0.88,
+          "information_density": 0.87,
+          "requires_context": false,
+          "size": 930
+        },
+        {
+          "id": 19,
+          "semantic_completeness": 0.9,
+          "information_density": 0.88,
+          "requires_context": false,
+          "size": 910
+        },
+        {
+          "id": 20,
+          "semantic_completeness": 0.85,
+          "information_density": 0.86,
+          "requires_context": false,
+          "size": 870
+        },
+        {
+          "id": 21,
+          "semantic_completeness": 0.92,
+          "information_density": 0.89,
+          "requires_context": false,
+          "size": 980
+        },
+        {
+          "id": 22,
+          "semantic_completeness": 0.89,
+          "information_density": 0.9,
+          "requires_context": false,
+          "size": 950
+        },
+        {
+          "id": 23,
+          "semantic_completeness": 0.87,
+          "information_density": 0.91,
+          "requires_context": false,
+          "size": 940
+        },
+        {
+          "id": 24,
+          "semantic_completeness": 0.9,
+          "information_density": 0.88,
+          "requires_context": false,
+          "size": 920
+        },
+        {
+          "id": 25,
+          "semantic_completeness": 0.74,
+          "information_density": 0.89,
+          "requires_context": true,
+          "size": 710
+        },
+        {
+          "id": 26,
+          "semantic_completeness": 0.93,
+          "information_density": 0.93,
+          "requires_context": false,
+          "size": 990
+        },
+        {
+          "id": 27,
+          "semantic_completeness": 0.91,
+          "information_density": 0.9,
+          "requires_context": false,
+          "size": 960
+        },
+        {
+          "id": 28,
+          "semantic_completeness": 0.88,
+          "information_density": 0.89,
+          "requires_context": false,
+          "size": 940
+        },
+        {
+          "id": 29,
+          "semantic_completeness": 0.9,
+          "information_density": 0.91,
+          "requires_context": false,
+          "size": 970
+        },
+        {
+          "id": 30,
+          "semantic_completeness": 0.76,
+          "information_density": 0.88,
+          "requires_context": true,
+          "size": 730
+        },
+        {
+          "id": 31,
+          "semantic_completeness": 0.92,
+          "information_density": 0.9,
+          "requires_context": false,
+          "size": 980
+        },
+        {
+          "id": 32,
+          "semantic_completeness": 0.89,
+          "information_density": 0.89,
+          "requires_context": false,
+          "size": 950
+        },
+        {
+          "id": 33,
+          "semantic_completeness": 0.91,
+          "information_density": 0.9,
+          "requires_context": false,
+          "size": 970
+        },
+        {
+          "id": 34,
+          "semantic_completeness": 0.78,
+          "information_density": 0.87,
+          "requires_context": true,
+          "size": 750
+        },
+        {
+          "id": 35,
+          "semantic_completeness": 0.9,
+          "information_density": 0.91,
+          "requires_context": false,
+          "size": 960
+        },
+        {
+          "id": 36,
+          "semantic_completeness": 0.77,
+          "information_density": 0.88,
+          "requires_context": true,
+          "size": 740
+        },
+        {
+          "id": 37,
+          "semantic_completeness": 0.92,
+          "information_density": 0.89,
+          "requires_context": false,
+          "size": 980
+        },
+        {
+          "id": 38,
+          "semantic_completeness": 0.9,
+          "information_density": 0.9,
+          "requires_context": false,
+          "size": 950
+        },
+        {
+          "id": 39,
+          "semantic_completeness": 0.89,
+          "information_density": 0.88,
+          "requires_context": false,
+          "size": 940
+        },
+        {
+          "id": 40,
+          "semantic_completeness": 0.88,
+          "information_density": 0.89,
+          "requires_context": false,
+          "size": 930
+        },
+        {
+          "id": 41,
+          "semantic_completeness": 0.75,
+          "information_density": 0.9,
+          "requires_context": true,
+          "size": 720
+        },
+        {
+          "id": 42,
+          "semantic_completeness": 0.91,
+          "information_density": 0.91,
+          "requires_context": false,
+          "size": 970
+        },
+        {
+          "id": 43,
+          "semantic_completeness": 0.9,
+          "information_density": 0.89,
+          "requires_context": false,
+          "size": 960
+        },
+        {
+          "id": 44,
+          "semantic_completeness": 0.76,
+          "information_density": 0.88,
+          "requires_context": true,
+          "size": 730
+        },
+        {
+          "id": 45,
+          "semantic_completeness": 0.92,
+          "information_density": 0.9,
+          "requires_context": false,
+          "size": 980
+        },
+        {
+          "id": 46,
+          "semantic_completeness": 0.74,
+          "information_density": 0.89,
+          "requires_context": true,
+          "size": 710
+        },
+        {
+          "id": 47,
+          "semantic_completeness": 0.93,
+          "information_density": 0.91,
+          "requires_context": false,
+          "size": 990
+        }
+      ]
+    }
+  },
+  {
+    "chunker": "RecursiveChunker",
+    "params": {
+      "chunk_size": 2048,
+      "chunk_overlap": 256
+    },
+    "score": 8.0,
+    "details": {
+      "criteria": {
+        "semantic_coherence": {
+          "score": 8,
+          "comment": "Strong topical continuity within chunks, though some splits occur mid-paragraph"
+        },
+        "grammatical_integrity": {
+          "score": 9,
+          "comment": "All chunks end with proper punctuation and complete sentences"
+        },
+        "size_uniformity": {
+          "score": 7,
+          "comment": "Most chunks around 1800-2100 tokens, with some variation due to natural boundaries"
+        },
+        "semantic_completeness": {
+          "score": 8,
+          "comment": "Chunks generally self-contained, though some concepts span multiple chunks"
+        },
+        "information_density": {
+          "score": 9,
+          "comment": "High ratio of meaningful technical content to total text"
+        },
+        "context_preservation": {
+          "score": 7,
+          "comment": "Some splitting of related concepts across chunks, particularly in strategy comparisons"
+        },
+        "structural_integrity": {
+          "score": 8,
+          "comment": "Preserves document hierarchy well, keeps headings with content"
+        },
+        "boundary_sensitivity": {
+          "score": 8,
+          "comment": "Respects natural breaks like section boundaries and paragraph breaks"
+        },
+        "retrieval_effectiveness": {
+          "score": 8,
+          "comment": "Good context for downstream tasks, enables accurate semantic matching"
+        },
+        "narrative_flow": {
+          "score": 8,
+          "comment": "Maintains logical progression, though some topic transitions span chunks"
+        }
+      },
+      "cross_chunk_dependencies": 4,
+      "key_information_isolation": 2,
+      "topical_focus_score": 8.5,
+      "per_chunk": [
+        {
+          "id": 1,
+          "semantic_completeness": 0.95,
+          "information_density": 0.92,
+          "requires_context": false,
+          "size": 1950
+        },
+        {
+          "id": 2,
+          "semantic_completeness": 0.88,
+          "information_density": 0.9,
+          "requires_context": true,
+          "size": 2050
+        },
+        {
+          "id": 3,
+          "semantic_completeness": 0.93,
+          "information_density": 0.91,
+          "requires_context": false,
+          "size": 1980
+        },
+        {
+          "id": 4,
+          "semantic_completeness": 0.94,
+          "information_density": 0.89,
+          "requires_context": false,
+          "size": 2010
+        },
+        {
+          "id": 5,
+          "semantic_completeness": 0.92,
+          "information_density": 0.88,
+          "requires_context": false,
+          "size": 2030
+        },
+        {
+          "id": 6,
+          "semantic_completeness": 0.9,
+          "information_density": 0.93,
+          "requires_context": false,
+          "size": 1990
+        },
+        {
+          "id": 7,
+          "semantic_completeness": 0.91,
+          "information_density": 0.94,
+          "requires_context": false,
+          "size": 2000
+        },
+        {
+          "id": 8,
+          "semantic_completeness": 0.93,
+          "information_density": 0.92,
+          "requires_context": false,
+          "size": 1980
+        },
+        {
+          "id": 9,
+          "semantic_completeness": 0.89,
+          "information_density": 0.9,
+          "requires_context": true,
+          "size": 2020
+        },
+        {
+          "id": 10,
+          "semantic_completeness": 0.92,
+          "information_density": 0.91,
+          "requires_context": false,
+          "size": 2010
+        },
+        {
+          "id": 11,
+          "semantic_completeness": 0.9,
+          "information_density": 0.93,
+          "requires_context": true,
+          "size": 2040
+        },
+        {
+          "id": 12,
+          "semantic_completeness": 0.94,
+          "information_density": 0.9,
+          "requires_context": false,
+          "size": 1970
+        },
+        {
+          "id": 13,
+          "semantic_completeness": 0.91,
+          "information_density": 0.89,
+          "requires_context": false,
+          "size": 2030
+        },
+        {
+          "id": 14,
+          "semantic_completeness": 0.93,
+          "information_density": 0.91,
+          "requires_context": false,
+          "size": 2000
+        },
+        {
+          "id": 15,
+          "semantic_completeness": 0.92,
+          "information_density": 0.92,
+          "requires_context": false,
+          "size": 1990
+        },
+        {
+          "id": 16,
+          "semantic_completeness": 0.94,
+          "information_density": 0.9,
+          "requires_context": false,
+          "size": 2010
+        },
+        {
+          "id": 17,
+          "semantic_completeness": 0.91,
+          "information_density": 0.88,
+          "requires_context": false,
+          "size": 2020
+        },
+        {
+          "id": 18,
+          "semantic_completeness": 0.89,
+          "information_density": 0.91,
+          "requires_context": true,
+          "size": 2030
+        },
+        {
+          "id": 19,
+          "semantic_completeness": 0.93,
+          "information_density": 0.9,
+          "requires_context": false,
+          "size": 1980
+        },
+        {
+          "id": 20,
+          "semantic_completeness": 0.92,
+          "information_density": 0.89,
+          "requires_context": false,
+          "size": 2000
+        },
+        {
+          "id": 21,
+          "semantic_completeness": 0.96,
+          "information_density": 0.93,
+          "requires_context": false,
+          "size": 1950
+        }
+      ]
+    }
+  },
+  {
+    "chunker": "SemanticChunker",
+    "params": {
+      "chunk_size": 512,
+      "chunk_overlap": 64
+    },
+    "score": 7.6,
+    "details": {
+      "criteria": {
+        "semantic_coherence": {
+          "score": 8,
+          "comment": "Strong semantic flow within chunks, though some boundary splits slightly disrupt topic continuity"
+        },
+        "grammatical_integrity": {
+          "score": 9,
+          "comment": "All chunks end with proper punctuation and avoid mid-sentence cuts"
+        },
+        "size_uniformity": {
+          "score": 6,
+          "comment": "Significant variation in chunk sizes (ranging from ~400-1200 tokens), deviating from 512 target"
+        },
+        "semantic_completeness": {
+          "score": 7,
+          "comment": "Most chunks are self-contained, but some contain dangling references to concepts in adjacent chunks"
+        },
+        "information_density": {
+          "score": 9,
+          "comment": "High ratio of meaningful content with minimal fluff or redundancy"
+        },
+        "context_preservation": {
+          "score": 6,
+          "comment": "Some key entities and concepts (e.g., 'RAG framework', 'chunking strategies') are split across chunk boundaries"
+        },
+        "structural_integrity": {
+          "score": 8,
+          "comment": "Generally preserves document structure, though some section headings are separated from their content"
+        },
+        "boundary_sensitivity": {
+          "score": 7,
+          "comment": "Mostly respects natural breaks, but some forced splits occur at suboptimal locations"
+        },
+        "retrieval_effectiveness": {
+          "score": 8,
+          "comment": "Provides good context for downstream tasks, though some chunks would benefit from adjacent context"
+        },
+        "narrative_flow": {
+          "score": 8,
+          "comment": "Maintains logical progression of ideas across most chunks"
+        }
+      },
+      "cross_chunk_dependencies": 5,
+      "key_information_isolation": 3,
+      "topical_focus_score": 8.2,
+      "per_chunk": [
+        {
+          "id": 1,
+          "semantic_completeness": 0.85,
+          "information_density": 0.92,
+          "requires_context": false,
+          "size": 1180
+        },
+        {
+          "id": 2,
+          "semantic_completeness": 0.78,
+          "information_density": 0.88,
+          "requires_context": true,
+          "size": 920
+        },
+        {
+          "id": 3,
+          "semantic_completeness": 0.82,
+          "information_density": 0.9,
+          "requires_context": false,
+          "size": 1050
+        },
+        {
+          "id": 4,
+          "semantic_completeness": 0.8,
+          "information_density": 0.89,
+          "requires_context": true,
+          "size": 980
+        },
+        {
+          "id": 5,
+          "semantic_completeness": 0.88,
+          "information_density": 0.91,
+          "requires_context": false,
+          "size": 890
+        },
+        {
+          "id": 6,
+          "semantic_completeness": 0.85,
+          "information_density": 0.9,
+          "requires_context": false,
+          "size": 950
+        },
+        {
+          "id": 7,
+          "semantic_completeness": 0.83,
+          "information_density": 0.88,
+          "requires_context": true,
+          "size": 870
+        },
+        {
+          "id": 8,
+          "semantic_completeness": 0.87,
+          "information_density": 0.89,
+          "requires_context": false,
+          "size": 920
+        },
+        {
+          "id": 9,
+          "semantic_completeness": 0.9,
+          "information_density": 0.93,
+          "requires_context": false,
+          "size": 750
+        },
+        {
+          "id": 10,
+          "semantic_completeness": 0.92,
+          "information_density": 0.91,
+          "requires_context": false,
+          "size": 680
+        },
+        {
+          "id": 11,
+          "semantic_completeness": 0.89,
+          "information_density": 0.9,
+          "requires_context": false,
+          "size": 810
+        },
+        {
+          "id": 12,
+          "semantic_completeness": 0.86,
+          "information_density": 0.88,
+          "requires_context": true,
+          "size": 850
+        },
+        {
+          "id": 13,
+          "semantic_completeness": 0.84,
+          "information_density": 0.87,
+          "requires_context": true,
+          "size": 790
+        },
+        {
+          "id": 14,
+          "semantic_completeness": 0.88,
+          "information_density": 0.9,
+          "requires_context": false,
+          "size": 720
+        },
+        {
+          "id": 15,
+          "semantic_completeness": 0.85,
+          "information_density": 0.89,
+          "requires_context": true,
+          "size": 830
+        },
+        {
+          "id": 16,
+          "semantic_completeness": 0.91,
+          "information_density": 0.92,
+          "requires_context": false,
+          "size": 650
+        },
+        {
+          "id": 17,
+          "semantic_completeness": 0.93,
+          "information_density": 0.94,
+          "requires_context": false,
+          "size": 420
+        }
+      ]
+    }
+  },
+  {
+    "chunker": "SemanticChunker",
+    "params": {
+      "chunk_size": 1024,
+      "chunk_overlap": 128
+    },
+    "score": 7.6,
+    "details": {
+      "criteria": {
+        "semantic_coherence": {
+          "score": 8,
+          "comment": "Strong flow maintained within chunks, though some boundary splits occur at natural section breaks"
+        },
+        "grammatical_integrity": {
+          "score": 9,
+          "comment": "All chunks end with proper punctuation and complete thoughts, no mid-sentence cuts"
+        },
+        "size_uniformity": {
+          "score": 6,
+          "comment": "Significant variation in chunk sizes (ranging from ~800-1400 tokens), though generally within acceptable bounds"
+        },
+        "semantic_completeness": {
+          "score": 7,
+          "comment": "Most chunks are self-contained, but some concepts span across chunk boundaries (e.g., RAG architecture discussion split between chunks 1-2)"
+        },
+        "information_density": {
+          "score": 9,
+          "comment": "High ratio of meaningful content to total text, minimal fluff or redundancy"
+        },
+        "context_preservation": {
+          "score": 6,
+          "comment": "Some key entities like 'RAG architecture' and 'chunking strategies' are split across chunks, reducing immediate context"
+        },
+        "structural_integrity": {
+          "score": 8,
+          "comment": "Generally preserves document structure well, though some section headers are separated from their content"
+        },
+        "boundary_sensitivity": {
+          "score": 7,
+          "comment": "Mostly respects natural breaks, but some forced splits at section boundaries"
+        },
+        "retrieval_effectiveness": {
+          "score": 8,
+          "comment": "Good context provided for downstream tasks, though some queries may require cross-chunk synthesis"
+        },
+        "narrative_flow": {
+          "score": 8,
+          "comment": "Maintains logical progression well within chunks, though some narrative threads span multiple chunks"
+        }
+      },
+      "cross_chunk_dependencies": 4,
+      "key_information_isolation": 3,
+      "topical_focus_score": 8.2,
+      "per_chunk": [
+        {
+          "id": 1,
+          "semantic_completeness": 0.85,
+          "information_density": 0.92,
+          "requires_context": false,
+          "size": 1024
+        },
+        {
+          "id": 2,
+          "semantic_completeness": 0.88,
+          "information_density": 0.9,
+          "requires_context": true,
+          "size": 1180
+        },
+        {
+          "id": 3,
+          "semantic_completeness": 0.82,
+          "information_density": 0.89,
+          "requires_context": true,
+          "size": 1050
+        },
+        {
+          "id": 4,
+          "semantic_completeness": 0.9,
+          "information_density": 0.93,
+          "requires_context": false,
+          "size": 980
+        },
+        {
+          "id": 5,
+          "semantic_completeness": 0.87,
+          "information_density": 0.91,
+          "requires_context": false,
+          "size": 1100
+        },
+        {
+          "id": 6,
+          "semantic_completeness": 0.83,
+          "information_density": 0.88,
+          "requires_context": true,
+          "size": 1150
+        },
+        {
+          "id": 7,
+          "semantic_completeness": 0.89,
+          "information_density": 0.9,
+          "requires_context": false,
+          "size": 920
+        },
+        {
+          "id": 8,
+          "semantic_completeness": 0.91,
+          "information_density": 0.92,
+          "requires_context": false,
+          "size": 1080
+        },
+        {
+          "id": 9,
+          "semantic_completeness": 0.95,
+          "information_density": 0.94,
+          "requires_context": false,
+          "size": 800
+        }
+      ]
+    }
+  },
+  {
+    "chunker": "SemanticChunker",
+    "params": {
+      "chunk_size": 2048,
+      "chunk_overlap": 256
+    },
+    "score": 7.0,
+    "details": {
+      "criteria": {
+        "semantic_coherence": {
+          "score": 8,
+          "comment": "Strong coherence within chunks, though some cross-chunk references exist"
+        },
+        "grammatical_integrity": {
+          "score": 7,
+          "comment": "Most chunks end properly, but some mid-sentence cuts at boundaries"
+        },
+        "size_uniformity": {
+          "score": 6,
+          "comment": "Significant variation - chunks range from ~1800-2200 tokens vs 2048 target"
+        },
+        "semantic_completeness": {
+          "score": 7,
+          "comment": "Generally self-contained but some concepts span chunks (e.g., RAG vs Fine-tuning split)"
+        },
+        "information_density": {
+          "score": 9,
+          "comment": "High density of technical content with minimal filler"
+        },
+        "context_preservation": {
+          "score": 6,
+          "comment": "Some key entities like 'Agentic Chunking' are split across chunks 2-3"
+        },
+        "structural_integrity": {
+          "score": 8,
+          "comment": "Generally preserves headings with content, good document structure"
+        },
+        "boundary_sensitivity": {
+          "score": 5,
+          "comment": "Forced breaks at arbitrary token counts disrupt natural boundaries"
+        },
+        "retrieval_effectiveness": {
+          "score": 7,
+          "comment": "Good context but some fragmentation may impact specific queries"
+        },
+        "narrative_flow": {
+          "score": 7,
+          "comment": "Maintains overall flow but some logical breaks occur mid-section"
+        }
+      },
+      "cross_chunk_dependencies": 4,
+      "key_information_isolation": 3,
+      "topical_focus_score": 7.8,
+      "per_chunk": [
+        {
+          "id": 1,
+          "semantic_completeness": 0.85,
+          "information_density": 0.92,
+          "requires_context": false,
+          "size": 1890
+        },
+        {
+          "id": 2,
+          "semantic_completeness": 0.78,
+          "information_density": 0.89,
+          "requires_context": true,
+          "size": 2150
+        },
+        {
+          "id": 3,
+          "semantic_completeness": 0.82,
+          "information_density": 0.91,
+          "requires_context": true,
+          "size": 2080
+        },
+        {
+          "id": 4,
+          "semantic_completeness": 0.88,
+          "information_density": 0.93,
+          "requires_context": false,
+          "size": 1950
+        },
+        {
+          "id": 5,
+          "semantic_completeness": 0.9,
+          "information_density": 0.94,
+          "requires_context": false,
+          "size": 1820
+        }
+      ]
+    }
+  },
+  {
+    "chunker": "SDPMChunker",
+    "params": {
+      "chunk_size": 512,
+      "chunk_overlap": 64
+    },
+    "score": 7.6,
+    "details": {
+      "criteria": {
+        "semantic_coherence": {
+          "score": 8,
+          "comment": "Strong flow within chunks, though some boundary splits slightly disrupt topic continuity"
+        },
+        "grammatical_integrity": {
+          "score": 9,
+          "comment": "All chunks end with proper punctuation and avoid mid-sentence cuts"
+        },
+        "size_uniformity": {
+          "score": 6,
+          "comment": "Significant variation in chunk sizes (ranging from ~400-800 tokens), deviating from 512 target"
+        },
+        "semantic_completeness": {
+          "score": 7,
+          "comment": "Most chunks self-contained, but some require adjacent chunks for full context (especially at section boundaries)"
+        },
+        "information_density": {
+          "score": 9,
+          "comment": "High ratio of meaningful content to filler, minimal redundancy"
+        },
+        "context_preservation": {
+          "score": 6,
+          "comment": "Several key concepts split across chunk boundaries (e.g., RAG architecture split across chunks 2-3)"
+        },
+        "structural_integrity": {
+          "score": 8,
+          "comment": "Generally preserves headings with content, though some section breaks occur mid-chunk"
+        },
+        "boundary_sensitivity": {
+          "score": 7,
+          "comment": "Mostly respects natural breaks but some forced splits at suboptimal locations"
+        },
+        "retrieval_effectiveness": {
+          "score": 8,
+          "comment": "Good context for downstream tasks, though some queries may need multiple chunks"
+        },
+        "narrative_flow": {
+          "score": 8,
+          "comment": "Maintains logical progression well within chunks, though cross-chunk flow occasionally disrupted"
+        }
+      },
+      "cross_chunk_dependencies": 5,
+      "key_information_isolation": 3,
+      "topical_focus_score": 8.2,
+      "per_chunk": [
+        {
+          "id": 1,
+          "semantic_completeness": 0.85,
+          "information_density": 0.92,
+          "requires_context": false,
+          "size": 789
+        },
+        {
+          "id": 2,
+          "semantic_completeness": 0.78,
+          "information_density": 0.88,
+          "requires_context": true,
+          "size": 623
+        },
+        {
+          "id": 3,
+          "semantic_completeness": 0.82,
+          "information_density": 0.9,
+          "requires_context": true,
+          "size": 712
+        },
+        {
+          "id": 4,
+          "semantic_completeness": 0.88,
+          "information_density": 0.91,
+          "requires_context": false,
+          "size": 654
+        },
+        {
+          "id": 5,
+          "semantic_completeness": 0.9,
+          "information_density": 0.93,
+          "requires_context": false,
+          "size": 598
+        },
+        {
+          "id": 6,
+          "semantic_completeness": 0.85,
+          "information_density": 0.89,
+          "requires_context": false,
+          "size": 734
+        },
+        {
+          "id": 7,
+          "semantic_completeness": 0.87,
+          "information_density": 0.9,
+          "requires_context": false,
+          "size": 689
+        },
+        {
+          "id": 8,
+          "semantic_completeness": 0.83,
+          "information_density": 0.88,
+          "requires_context": true,
+          "size": 645
+        },
+        {
+          "id": 9,
+          "semantic_completeness": 0.91,
+          "information_density": 0.92,
+          "requires_context": false,
+          "size": 721
+        },
+        {
+          "id": 10,
+          "semantic_completeness": 0.89,
+          "information_density": 0.9,
+          "requires_context": false,
+          "size": 678
+        },
+        {
+          "id": 11,
+          "semantic_completeness": 0.86,
+          "information_density": 0.91,
+          "requires_context": false,
+          "size": 702
+        },
+        {
+          "id": 12,
+          "semantic_completeness": 0.84,
+          "information_density": 0.89,
+          "requires_context": true,
+          "size": 659
+        },
+        {
+          "id": 13,
+          "semantic_completeness": 0.88,
+          "information_density": 0.9,
+          "requires_context": false,
+          "size": 693
+        },
+        {
+          "id": 14,
+          "semantic_completeness": 0.9,
+          "information_density": 0.92,
+          "requires_context": false,
+          "size": 612
+        },
+        {
+          "id": 15,
+          "semantic_completeness": 0.87,
+          "information_density": 0.91,
+          "requires_context": false,
+          "size": 684
+        },
+        {
+          "id": 16,
+          "semantic_completeness": 0.93,
+          "information_density": 0.94,
+          "requires_context": false,
+          "size": 521
+        }
+      ]
+    }
+  },
+  {
+    "chunker": "SDPMChunker",
+    "params": {
+      "chunk_size": 1024,
+      "chunk_overlap": 128
+    },
+    "score": 8.8,
+    "details": {
+      "criteria": {
+        "semantic_coherence": {
+          "score": 9,
+          "comment": "Excellent flow between sentences within chunks, maintaining logical progression of ideas"
+        },
+        "grammatical_integrity": {
+          "score": 10,
+          "comment": "All chunks end with proper punctuation and avoid mid-sentence cuts"
+        },
+        "size_uniformity": {
+          "score": 8,
+          "comment": "Chunk sizes are well-controlled around the target, with reasonable variation"
+        },
+        "semantic_completeness": {
+          "score": 9,
+          "comment": "Chunks are largely self-contained, though some concepts span multiple chunks"
+        },
+        "information_density": {
+          "score": 9,
+          "comment": "High ratio of meaningful content to total text, minimal fluff"
+        },
+        "context_preservation": {
+          "score": 8,
+          "comment": "Generally good preservation of context, some minor entity splitting"
+        },
+        "structural_integrity": {
+          "score": 9,
+          "comment": "Excellent preservation of document hierarchy and structure"
+        },
+        "boundary_sensitivity": {
+          "score": 8,
+          "comment": "Respects natural breaks well, with some minor forced breaks at section boundaries"
+        },
+        "retrieval_effectiveness": {
+          "score": 9,
+          "comment": "Provides excellent context for downstream tasks with clear semantic units"
+        },
+        "narrative_flow": {
+          "score": 9,
+          "comment": "Maintains strong logical progression throughout the document"
+        }
+      },
+      "cross_chunk_dependencies": 2,
+      "key_information_isolation": 1,
+      "topical_focus_score": 9.0,
+      "per_chunk": [
+        {
+          "id": 1,
+          "semantic_completeness": 0.95,
+          "information_density": 0.92,
+          "requires_context": false,
+          "size": 980
+        },
+        {
+          "id": 2,
+          "semantic_completeness": 0.93,
+          "information_density": 0.9,
+          "requires_context": false,
+          "size": 1020
+        },
+        {
+          "id": 3,
+          "semantic_completeness": 0.94,
+          "information_density": 0.91,
+          "requires_context": false,
+          "size": 995
+        },
+        {
+          "id": 4,
+          "semantic_completeness": 0.92,
+          "information_density": 0.89,
+          "requires_context": false,
+          "size": 1015
+        },
+        {
+          "id": 5,
+          "semantic_completeness": 0.93,
+          "information_density": 0.9,
+          "requires_context": false,
+          "size": 1005
+        },
+        {
+          "id": 6,
+          "semantic_completeness": 0.94,
+          "information_density": 0.91,
+          "requires_context": false,
+          "size": 990
+        },
+        {
+          "id": 7,
+          "semantic_completeness": 0.93,
+          "information_density": 0.9,
+          "requires_context": false,
+          "size": 1000
+        },
+        {
+          "id": 8,
+          "semantic_completeness": 0.96,
+          "information_density": 0.93,
+          "requires_context": false,
+          "size": 985
+        }
+      ]
+    }
+  },
+  {
+    "chunker": "SDPMChunker",
+    "params": {
+      "chunk_size": 2048,
+      "chunk_overlap": 256
+    },
+    "score": 8.3,
+    "details": {
+      "criteria": {
+        "semantic_coherence": {
+          "score": 8,
+          "comment": "Excellent flow within chunks, though some boundary transitions could be smoother"
+        },
+        "grammatical_integrity": {
+          "score": 9,
+          "comment": "All chunks end with proper punctuation and avoid mid-sentence cuts"
+        },
+        "size_uniformity": {
+          "score": 6,
+          "comment": "Significant variation - chunks range from 1,800 to 2,200+ tokens vs 2,048 target"
+        },
+        "semantic_completeness": {
+          "score": 9,
+          "comment": "Each chunk is self-contained with clear thematic boundaries"
+        },
+        "information_density": {
+          "score": 9,
+          "comment": "High ratio of meaningful content to total text, minimal fluff"
+        },
+        "context_preservation": {
+          "score": 8,
+          "comment": "Generally preserves context well, though some related concepts span chunk boundaries"
+        },
+        "structural_integrity": {
+          "score": 9,
+          "comment": "Maintains document hierarchy effectively with headings staying with content"
+        },
+        "boundary_sensitivity": {
+          "score": 8,
+          "comment": "Respects natural breaks well, though some forced breaks at section boundaries"
+        },
+        "retrieval_effectiveness": {
+          "score": 9,
+          "comment": "Provides excellent context for downstream tasks with comprehensive coverage"
+        },
+        "narrative_flow": {
+          "score": 8,
+          "comment": "Maintains logical progression despite chunk boundaries"
+        }
+      },
+      "cross_chunk_dependencies": 2,
+      "key_information_isolation": 1,
+      "topical_focus_score": 9.0,
+      "per_chunk": [
+        {
+          "id": 1,
+          "semantic_completeness": 0.95,
+          "information_density": 0.92,
+          "requires_context": false,
+          "size": 1820
+        },
+        {
+          "id": 2,
+          "semantic_completeness": 0.93,
+          "information_density": 0.9,
+          "requires_context": false,
+          "size": 2150
+        },
+        {
+          "id": 3,
+          "semantic_completeness": 0.94,
+          "information_density": 0.91,
+          "requires_context": false,
+          "size": 2080
+        },
+        {
+          "id": 4,
+          "semantic_completeness": 0.96,
+          "information_density": 0.93,
+          "requires_context": false,
+          "size": 1950
+        }
+      ]
+    }
+  }
+]
