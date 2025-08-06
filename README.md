@@ -1,6 +1,6 @@
 <div align='center'>
 
-![Chonkie Logo](./assets/chonkie_logo_br_transparent_bg.png)
+![Chonkie Logo](https://github.com/chonkie-inc/chonkie/blob/main/assets/chonkie_logo_br_transparent_bg.png?raw=true)
 
 # 🦛 Chonkie ✨
 
