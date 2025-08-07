@@ -116,7 +116,7 @@ More on these methods and the approaches taken inside the [docs](https://docs.ch
 
 ## Integrations
 
-Chonkie boasts 19+ integrations across tokenizers, embedding providers, LLMs, porters, and vector databases, ensuring it fits seamlessly into your existing workflow.
+Chonkie boasts 24+ integrations across tokenizers, embedding providers, LLMs, refineries, porters, vector databases, and utilities, ensuring it fits seamlessly into your existing workflow.
 
 <details>
 <summary><strong>🪓 Slice 'n' Dice! Chonkie supports 5+ ways to tokenize! </strong></summary>
@@ -127,9 +127,9 @@ Choose from supported tokenizers or provide your own custom token counting funct
 |----------------|----------------------------------------------------------------|--------------------|
 | `character`    | Basic character-level tokenizer. **Default tokenizer.**       | `default`          |
 | `word`         | Basic word-level tokenizer.                                    | `default`          |
-| `tokenizers`   | Load any tokenizer from the Hugging Face `tokenizers` library. | `default`          |
+| `tokenizers`   | Load any tokenizer from the Hugging Face `tokenizers` library. | `chonkie[tokenizers]`          |
 | `tiktoken`     | Use OpenAI's `tiktoken` library (e.g., for `gpt-4`).           | `chonkie[tiktoken]`|
-| `transformers` | Load tokenizers via `AutoTokenizer` from HF `transformers`.    | `chonkie[transformers]`|
+| `transformers` | Load tokenizers via `AutoTokenizer` from HF `transformers`.    | `chonkie[neural]`  |
 
 `default` indicates that the feature is available with the default `pip install chonkie`.
 
@@ -147,31 +147,33 @@ You can use this to extend Chonkie to support any tokenization scheme you want!
 </details>
 
 <details>
-<summary><strong>🧠 Embed like a boss! Chonkie links up with 7+ embedding pals!</strong></summary>
+<summary><strong>🧠 Embed like a boss! Chonkie links up with 8+ embedding pals!</strong></summary>
 
 Seamlessly works with various embedding model providers. Bring your favorite embeddings to the CHONK party! Use `AutoEmbeddings` to load models easily.
 
-| Provider / Alias        | Class                           | Description                                  | Optional Install  |
-|-------------------------|---------------------------------|----------------------------------------------|-------------------|
+| Provider / Alias        | Class                           | Description                                  | Optional Install     |
+|-------------------------|---------------------------------|----------------------------------------------|----------------------|
 | `model2vec`             | `Model2VecEmbeddings`           | Use `Model2Vec` models.                      | `chonkie[model2vec]` |
-| `sentence-transformers` | `SentenceTransformerEmbeddings` | Use any `sentence-transformers` model.       | `chonkie[st]`       |
-| `openai`                | `OpenAIEmbeddings`              | Use OpenAI's embedding API.                  | `chonkie[openai]`   |
-| `cohere`                | `CohereEmbeddings`              | Use Cohere's embedding API.                  | `chonkie[cohere]`   |
-| `gemini`                | `GeminiEmbeddings`              | Use Google's Gemini embedding API.           | `chonkie[gemini]`   |
-| `jina`                  | `JinaEmbeddings`                | Use Jina AI's embedding API.                 | `chonkie[jina]`     |
-| `voyageai`              | `VoyageAIEmbeddings`            | Use Voyage AI's embedding API.               | `chonkie[voyageai]` |
+| `sentence-transformers` | `SentenceTransformerEmbeddings` | Use any `sentence-transformers` model.       | `chonkie[st]`        |
+| `openai`                | `OpenAIEmbeddings`              | Use OpenAI's embedding API.                  | `chonkie[openai]`    |
+| `azure-openai`          | `AzureOpenAIEmbeddings`         | Use Azure OpenAI embedding service.          | `chonkie[azure-openai]` |
+| `cohere`                | `CohereEmbeddings`              | Use Cohere's embedding API.                  | `chonkie[cohere]`    |
+| `gemini`                | `GeminiEmbeddings`              | Use Google's Gemini embedding API.           | `chonkie[gemini]`    |
+| `jina`                  | `JinaEmbeddings`                | Use Jina AI's embedding API.                 | `chonkie[jina]`      |
+| `voyageai`              | `VoyageAIEmbeddings`            | Use Voyage AI's embedding API.               | `chonkie[voyageai]`  |
 
 </details>
 
 <details>
-<summary><strong>🧞‍♂️ Power Up with Genies! Chonkie supports 2+ LLM providers!</strong></summary>
+<summary><strong>🧞‍♂️ Power Up with Genies! Chonkie supports 3+ LLM providers!</strong></summary>
 
 Genies provide interfaces to interact with Large Language Models (LLMs) for advanced chunking strategies or other tasks within the pipeline.
 
-| Genie Name   | Class         | Description                      | Optional Install     |
-|--------------|---------------|----------------------------------|----------------------|
-| `gemini`     | `GeminiGenie` | Interact with Google Gemini APIs. | `chonkie[gemini]`    |
-| `openai`     | `OpenAIGenie` | Interact with OpenAI APIs.       | `chonkie[openai]`    |
+| Genie Name     | Class              | Description                      | Optional Install        |
+|----------------|--------------------|----------------------------------|-------------------------|
+| `gemini`       | `GeminiGenie`      | Interact with Google Gemini APIs. | `chonkie[gemini]`       |
+| `openai`       | `OpenAIGenie`      | Interact with OpenAI APIs.       | `chonkie[openai]`       |
+| `azure-openai` | `AzureOpenAIGenie` | Interact with Azure OpenAI APIs. | `chonkie[azure-openai]` |
 
 You can also use the `OpenAIGenie` to interact with any LLM provider that supports the OpenAI API format, by simply changing the `model`, `base_url`, and `api_key` parameters. For example, here's how to use the `OpenAIGenie` to interact with the `Llama-4-Maverick` model via OpenRouter:
 
@@ -186,13 +188,26 @@ genie = OpenAIGenie(model="meta-llama/llama-4-maverick",
 </details>
 
 <details>
-<summary><strong>🐴 Exporting CHONKs! Chonkie supports 1+ Porter!</strong></summary>
+<summary><strong>🏭 Refine your CHONKs! Chonkie supports 2+ refineries!</strong></summary>
+
+Refineries help you post-process and enhance your chunks after initial chunking.
+
+| Refinery Name | Class                | Description                                    | Optional Install |
+|---------------|----------------------|------------------------------------------------|------------------|
+| `overlap`     | `OverlapRefinery`    | Merge overlapping chunks based on similarity.  | `default`        |
+| `embeddings`  | `EmbeddingsRefinery` | Add embeddings to chunks using any provider.   | `chonkie[semantic]` |
+
+</details>
+
+<details>
+<summary><strong>🐴 Exporting CHONKs! Chonkie supports 2+ Porters!</strong></summary>
 
 Porters help you save your chunks easily.
 
-| Porter Name | Class        | Description                 | Optional Install |
-|-------------|--------------|-----------------------------|-----------------|
-| `json`      | `JSONPorter` | Export chunks to a JSON file. | `default`        |
+| Porter Name | Class           | Description                              | Optional Install    |
+|-------------|-----------------|------------------------------------------|---------------------|
+| `json`      | `JSONPorter`    | Export chunks to a JSON file.            | `default`           |
+| `datasets`  | `DatasetsPorter`| Export chunks to HuggingFace datasets.   | `chonkie[datasets]` |
 
 </details>
 
@@ -206,11 +221,33 @@ Handshakes provide a unified interface to ingest chunks directly into your favor
 | `chroma`       | `ChromaHandshake`     | Ingest chunks into ChromaDB.            | `chonkie[chroma]`         |
 | `qdrant`       | `QdrantHandshake`     | Ingest chunks into Qdrant.              | `chonkie[qdrant]`         |
 | `pgvector`     | `PgvectorHandshake`   | Ingest chunks into PostgreSQL with pgvector. | `chonkie[pgvector]`   |
-| `turbopuffer`  | `TurbopufferHandshake`| Ingest chunks into Turbopuffer.         | `chonkie[turbopuffer]`    |
+| `turbopuffer`  | `TurbopufferHandshake`| Ingest chunks into Turbopuffer.         | `chonkie[tpuf]`           |
 
 </details>
 
+<details>
+<summary><strong>🛠️ Utilities & Helpers! Chonkie includes handy tools!</strong></summary>
 
+Additional utilities to enhance your chunking workflow.
+
+| Utility Name | Class        | Description                                    | Optional Install |
+|--------------|--------------|------------------------------------------------|------------------|
+| `hub`        | `Hubbie`     | Simple wrapper for HuggingFace Hub operations. | `chonkie[hub]`   |
+| `viz`        | `Visualizer` | Rich console visualizations for chunks.        | `chonkie[viz]`   |
+
+</details>
+
+<details>
+<summary><strong>👨‍🍳 Chefs & 📁 Fetchers! Text preprocessing and data loading!</strong></summary>
+
+Chefs handle text preprocessing, while Fetchers load data from various sources.
+
+| Component | Class        | Description                              | Optional Install |
+|-----------|--------------|------------------------------------------|------------------|
+| `chef`    | `TextChef`   | Text preprocessing and cleaning.          | `default`        |
+| `fetcher` | `FileFetcher`| Load text from files and directories.    | `default`        |
+
+</details>
 
 With Chonkie's wide range of integrations, you can easily plug it into your existing infrastructure and start CHONKING!
 
