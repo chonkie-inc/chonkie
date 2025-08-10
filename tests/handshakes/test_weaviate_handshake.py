@@ -1,9 +1,11 @@
 """Test the WeaviateHandshake class."""
 import uuid
-from typing import List
+from typing import List, Sequence
 from unittest.mock import Mock, patch
 
 import pytest
+
+from chonkie.friends.handshakes.utils import normalize_chunks
 
 # Try to import weaviate, skip tests if unavailable
 try:
@@ -387,3 +389,86 @@ def test_weaviate_handshake_call(mock_weaviate_client) -> None:
     
     with pytest.raises(TypeError):
         test_handshake(any)  # type: ignore
+
+
+def test_normalize_chunks_single_chunk() -> None:
+    """Test normalize_chunks with a single Chunk."""
+    chunk = SAMPLE_CHUNKS[0]
+    result = normalize_chunks(chunk)
+    
+    assert isinstance(result, list)
+    assert len(result) == 1
+    assert result[0] == chunk
+
+
+def test_normalize_chunks_sequence() -> None:
+    """Test normalize_chunks with a sequence of Chunks."""
+    result = normalize_chunks(SAMPLE_CHUNKS)
+    
+    assert isinstance(result, list)
+    assert len(result) == len(SAMPLE_CHUNKS)
+    assert result == SAMPLE_CHUNKS
+
+
+def test_normalize_chunks_nested_sequence() -> None:
+    """Test normalize_chunks with a nested sequence of Chunks."""
+    nested_chunks = [
+        [SAMPLE_CHUNKS[0], SAMPLE_CHUNKS[1]],
+        [SAMPLE_CHUNKS[2]]
+    ]
+    
+    result = normalize_chunks(nested_chunks)
+    
+    assert isinstance(result, list)
+    assert len(result) == len(SAMPLE_CHUNKS)
+    assert result == SAMPLE_CHUNKS
+
+
+def test_normalize_chunks_empty_sequence() -> None:
+    """Test normalize_chunks with an empty sequence."""
+    empty_seq: List[Chunk] = []
+    result = normalize_chunks(empty_seq)
+    
+    assert isinstance(result, list)
+    assert len(result) == 0
+
+
+def test_normalize_chunks_mixed_types() -> None:
+    """Test normalize_chunks with a sequence containing non-Chunk items."""
+    # Create a sequence with both Chunk and non-Chunk items
+    mixed_seq = [SAMPLE_CHUNKS[0], "not a chunk", SAMPLE_CHUNKS[1]]
+    
+    result = normalize_chunks(mixed_seq)  # type: ignore
+    
+    assert isinstance(result, list)
+    assert len(result) == 2  # Only the Chunk items should be included
+    assert result[0] == SAMPLE_CHUNKS[0]
+    assert result[1] == SAMPLE_CHUNKS[1]
+
+
+def test_weaviate_handshake_write_nested_chunks(mock_weaviate_client) -> None:
+    """Test writing a nested sequence of Chunks."""
+    handshake = WeaviateHandshake()
+    
+    # Create a nested sequence of Chunks
+    nested_chunks = [
+        [SAMPLE_CHUNKS[0], SAMPLE_CHUNKS[1]],
+        [SAMPLE_CHUNKS[2]]
+    ]
+    
+    # Set up mock batch
+    mock_batch = mock_weaviate_client.collections.get.return_value.batch.fixed_size.return_value.__enter__.return_value
+    
+    # Call write method
+    result = handshake.write(nested_chunks)  # type: ignore
+    
+    # Check that add_object was called for each chunk
+    assert mock_batch.add_object.call_count == len(SAMPLE_CHUNKS)
+    
+    # Check that the result is a list with the right number of IDs
+    assert isinstance(result, list)
+    assert len(result) == len(SAMPLE_CHUNKS)
+    
+    # Check that each ID is a string
+    for id_str in result:
+        assert isinstance(id_str, str)

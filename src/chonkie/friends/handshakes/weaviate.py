@@ -278,11 +278,11 @@ class WeaviateHandshake(BaseHandshake):
             
         return properties
         
-    def write(self, chunks: Union[Chunk, Sequence[Chunk]]) -> List[str]:
+    def write(self, chunks: Union[Chunk, Sequence[Chunk], Sequence[Sequence[Chunk]]]) -> List[str]:
         """Write chunks to the Weaviate collection.
         
         Args:
-            chunks: A single chunk or sequence of chunks to write.
+            chunks: A single chunk, sequence of chunks, or sequence of sequence of chunks to write.
             
         Returns:
             List[str]: List of IDs of the inserted chunks.
@@ -291,10 +291,14 @@ class WeaviateHandshake(BaseHandshake):
             RuntimeError: If there are too many errors during batch processing.
 
         """
-        if isinstance(chunks, Chunk):
-            chunks = [chunks]
-        elif not isinstance(chunks, list):
-            chunks = list(chunks)
+        # Convert to a flat list of Chunks using the utility function
+        from .utils import normalize_chunks
+        
+        chunk_list = normalize_chunks(chunks)
+        
+        # If no valid chunks were found, return an empty list
+        if not chunk_list:
+            return []
             
         # Get the collection
         collection = self.client.collections.get(self.collection_name)
@@ -304,9 +308,9 @@ class WeaviateHandshake(BaseHandshake):
             batch_size=self.batch_size
         ) as batch:
             chunk_ids = []
-            max_errors = min(len(chunks) // 10 + 1, 10)  # Allow up to 10% errors or max 10
+            max_errors = min(len(chunk_list) // 10 + 1, 10)  # Allow up to 10% errors or max 10
             
-            for index, chunk in enumerate(chunks):
+            for index, chunk in enumerate(chunk_list):
                 # Check if we've hit too many errors
                 if batch.number_errors > max_errors:
                     error_msg = f"Too many errors during batch processing ({batch.number_errors}). Aborting."
@@ -349,8 +353,8 @@ class WeaviateHandshake(BaseHandshake):
         # Report success
         successful_chunks = len(chunk_ids)
         print(f"🦛 Chonkie wrote {successful_chunks} chunks to Weaviate collection: {self.collection_name}")
-        if successful_chunks < len(chunks):
-            print(f"🦛 Warning: {len(chunks) - successful_chunks} chunks failed to write")
+        if successful_chunks < len(chunk_list):
+            print(f"🦛 Warning: {len(chunk_list) - successful_chunks} chunks failed to write")
             
         return chunk_ids
         
