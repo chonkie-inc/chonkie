@@ -117,7 +117,7 @@ all = [
     "qdrant-client>=1.0.0",
     "turbopuffer[fast]>=0.2.0",
     "azure-identity>=1.23.0",
-    "weaviate-client>=4.16.0"
+    "weaviate-client>=4.16.0",
 ]
 dev = [
     "datasets>=1.14.0",
