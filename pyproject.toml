@@ -8,8 +8,8 @@ name = "chonkie"
 version = "1.1.2"
 description = "🦛 CHONK your texts with Chonkie ✨ - The no-nonsense chunking library"
 readme = "README.md"
-requires-python = ">=3.9"
-license = { file = "LICENSE" }
+requires-python = ">=3.9,<4.0"
+license = "MIT"
 keywords = [
     "chunking",
     "rag",
@@ -74,7 +74,7 @@ neural = ["transformers>=4.0.0", "torch>=2.0.0, <3.0"]
 model2vec = ["tokenizers>=0.16.0", "model2vec>=0.3.0", "numpy>=2.0.0, <3.0"]
 st = ["tokenizers>=0.16.0", "sentence-transformers>=3.0.0", "numpy>=2.0.0, <3.0", "accelerate>=1.6.0"]
 openai = ["tiktoken>=0.5.0", "openai>=1.0.0", "numpy>=2.0.0, <3.0", "pydantic>=2.0.0"]
-voyageai = ["tokenizers>=0.16.0", "voyageai>=0.3.2", "numpy>=2.0.0, <3.0"]
+voyageai = ["tokenizers>=0.16.0", "voyageai>=0.3.2; python_version < '3.13'", "numpy>=2.0.0, <3.0"]
 cohere = ["tokenizers>=0.16.0", "cohere>=5.13.0", "numpy>=2.0.0, <3.0"]
 jina = ["tokenizers>=0.16.0", "numpy>=2.0.0, <3.0"]
 semantic = ["tokenizers>=0.16.0", "model2vec>=0.3.0", "numpy>=2.0.0, <3.0"]
@@ -88,6 +88,7 @@ tpuf = ["turbopuffer[fast]>=0.2.0"]
 pgvector = ["vecs>=0.4.0"]
 datasets = ["datasets>=4.0.0"]
 pinecone = ["pinecone"]
+weaviate = ["weaviate-client>=4.16.0"]
 
 # Optional dependencies for the genie
 genie = ["pydantic>=2.0.0", "google-genai>=1.0.0"]
@@ -116,6 +117,7 @@ all = [
     "qdrant-client>=1.0.0",
     "turbopuffer[fast]>=0.2.0",
     "azure-identity>=1.23.0",
+    "weaviate-client>=4.16.0"
 ]
 dev = [
     "datasets>=1.14.0",

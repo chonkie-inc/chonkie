@@ -31,10 +31,9 @@ class WeaviateHandshake(BaseHandshake):
     It supports both API key and OAuth authentication methods.
 
     Args:
-        client: Optional[weaviate.Client]: An existing Weaviate client instance.
+        url: str: The URL to the Weaviate server.
         collection_name: Union[str, Literal["random"]]: The name of the collection to use.
         embedding_model: Union[str, BaseEmbeddings]: The embedding model to use.
-        url: Optional[str]: The URL to the Weaviate server.
         api_key: Optional[str]: The API key for authentication.
         auth_config: Optional[Dict[str, Any]]: OAuth configuration for authentication.
         batch_size: int: The batch size for batch operations. Defaults to 100.
@@ -46,28 +45,27 @@ class WeaviateHandshake(BaseHandshake):
 
     def __init__(
         self,
-        client: Optional[Any] = None,  # weaviate.Client
+        url: str = "http://localhost:8080",
         collection_name: Union[str, Literal["random"]] = "random",
         embedding_model: Union[str, BaseEmbeddings] = "minishlab/potion-retrieval-32M",
-        url: Optional[str] = None,
         api_key: Optional[str] = None,
         auth_config: Optional[Dict[str, Any]] = None,
+        http_secure: bool = False,
+        http_port: int = 8080,
+        grpc_host: Optional[str] = None,
+        grpc_port: int = 50051,
+        grpc_secure: bool = False,
         batch_size: int = 100,
         batch_dynamic: bool = True,
         batch_timeout_retries: int = 3,
         additional_headers: Optional[Dict[str, str]] = None,
-        http_secure: bool = False,
-        grpc_host: Optional[str] = None,
-        grpc_port: int = 50051,
-        grpc_secure: bool = False
     ) -> None:
         """Initialize the Weaviate Handshake.
         
         Args:
-            client: Optional[weaviate.Client]: An existing Weaviate client instance.
+            url: str: The URL to the Weaviate server.
             collection_name: Union[str, Literal["random"]]: The name of the collection to use.
             embedding_model: Union[str, BaseEmbeddings]: The embedding model to use.
-            url: Optional[str]: The URL to the Weaviate server.
             api_key: Optional[str]: The API key for authentication.
             auth_config: Optional[Dict[str, Any]]: OAuth configuration for authentication.
             batch_size: int: The batch size for batch operations. Defaults to 100.
@@ -75,6 +73,7 @@ class WeaviateHandshake(BaseHandshake):
             batch_timeout_retries: int: Number of retries for batch timeouts. Defaults to 3.
             additional_headers: Optional[Dict[str, str]]: Additional headers for the Weaviate client.
             http_secure: bool: Whether to use HTTPS for HTTP connections. Defaults to False.
+            http_port: int: The port for HTTP connections. Defaults to 8080.
             grpc_host: Optional[str]: The host for gRPC connections. Defaults to the same as HTTP host.
             grpc_port: int: The port for gRPC connections. Defaults to 50051.
             grpc_secure: bool: Whether to use a secure channel for gRPC connections. Defaults to False.
@@ -85,22 +84,32 @@ class WeaviateHandshake(BaseHandshake):
         # Lazy importing the dependencies
         self._import_dependencies()
         
-        # Initialize the Weaviate client
-        if client is None:
-            if url is None:
-                url = "http://localhost:8080"
-                
+        # Determine connection type based on URL
+        if "weaviate.cloud" in url:
+            # Connect to Weaviate Cloud
+            if api_key is not None:
+                auth_credentials = weaviate.auth.Auth.api_key(api_key=api_key)
+                self.client = weaviate.connect_to_weaviate_cloud(
+                    cluster_url=url,
+                    auth_credentials=auth_credentials,
+                    headers=additional_headers
+                )
+            else:
+                raise ValueError("API key is required for Weaviate Cloud connections")
+        else:
+            # Connect to custom Weaviate instance
             # Parse the URL to get the host and port
             parsed_url = urlparse(url)
             host = parsed_url.hostname or "localhost"
-            port = parsed_url.port or 8080
+            port = parsed_url.port or http_port
             
+            # Prepare auth credentials for custom instance
             auth_credentials = None
             if api_key is not None:
                 auth_credentials = weaviate.auth.Auth.api_key(api_key=api_key)
             elif auth_config is not None:
                 auth_credentials = weaviate.auth.Auth.client_credentials(**auth_config)
-                
+            
             # Use provided grpc_host or default to HTTP host
             actual_grpc_host = grpc_host if grpc_host is not None else host
             
@@ -114,8 +123,6 @@ class WeaviateHandshake(BaseHandshake):
                 auth_credentials=auth_credentials,
                 headers=additional_headers
             )
-        else:
-            self.client = client
             
         # Initialize the embedding model
         if isinstance(embedding_model, str):
@@ -138,11 +145,13 @@ class WeaviateHandshake(BaseHandshake):
         self.batch_dynamic = batch_dynamic
         self.batch_timeout_retries = batch_timeout_retries
         
-        # Initialize the collection
+        self._init_collection(collection_name=collection_name)
+
+    def _init_collection(self, collection_name: str) -> None:
+        """Initialize the collection."""
         if collection_name == "random":
             while True:
                 self.collection_name = generate_random_collection_name(sep='_')
-                # Check if the collection exists
                 if not self._collection_exists(self.collection_name):
                     break
             print(f"🦛 Chonkie created a new collection in Weaviate: {self.collection_name}")
@@ -266,16 +275,6 @@ class WeaviateHandshake(BaseHandshake):
             "token_count": chunk.token_count,
             "chunk_type": type(chunk).__name__,
         }
-        
-        # Add chunk-specific properties
-        if hasattr(chunk, "sentences") and chunk.sentences:
-            properties["sentence_count"] = len(chunk.sentences)
-            
-        if hasattr(chunk, "words") and chunk.words:
-            properties["word_count"] = len(chunk.words)
-            
-        if hasattr(chunk, "language") and chunk.language:
-            properties["language"] = chunk.language
             
         return properties
         
@@ -375,7 +374,7 @@ class WeaviateHandshake(BaseHandshake):
         schema = collection.config.get()
         
         # Get property names list
-        property_names = []
+        property_names: List[str] = []
         default_properties = ["text", "start_index", "end_index", "token_count", "chunk_type"]
         
         if hasattr(schema, 'properties') and schema.properties:
