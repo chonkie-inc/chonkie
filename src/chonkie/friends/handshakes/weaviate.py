@@ -178,7 +178,7 @@ class WeaviateHandshake(BaseHandshake):
         else:
             raise ImportError(
                 "Weaviate client is not installed. "
-                "Please install it with `pip install chonkie[weaviate-client]`."
+                "Please install it with `pip install chonkie[weaviate]`."
             )
             
     def _collection_exists(self, collection_name: str) -> bool:
