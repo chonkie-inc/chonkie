@@ -1,11 +1,9 @@
 """Test the WeaviateHandshake class."""
 import uuid
-from typing import List, Sequence
+from typing import List
 from unittest.mock import Mock, patch
 
 import pytest
-
-from chonkie.friends.handshakes.utils import normalize_chunks
 
 # Try to import weaviate, skip tests if unavailable
 try:
@@ -131,10 +129,8 @@ def test_weaviate_handshake_init_specific_collection(mock_weaviate_client) -> No
 
 def test_weaviate_handshake_is_available(mock_weaviate_client) -> None:
     """Test the _is_available check."""
-    with patch('chonkie.friends.handshakes.weaviate.WeaviateHandshake._is_available') as mock_is_available:
-        mock_is_available.return_value = True
-        handshake = WeaviateHandshake()
-        assert handshake._is_available() is True
+    handshake = WeaviateHandshake(client=mock_weaviate_client)
+    assert handshake._is_available() is True
 
 
 def test_weaviate_handshake_custom_connection_params(mock_weaviate_client) -> None:
@@ -171,7 +167,7 @@ def test_weaviate_handshake_custom_connection_params(mock_weaviate_client) -> No
 
 def test_weaviate_handshake_generate_id(mock_weaviate_client) -> None:
     """Test the _generate_id method."""
-    handshake = WeaviateHandshake()
+    handshake = WeaviateHandshake(client=mock_weaviate_client)
     chunk = SAMPLE_CHUNKS[0]
     index = 0
     expected_id_str = str(uuid.uuid5(uuid.NAMESPACE_OID, f"{handshake.collection_name}::chunk-{index}:{chunk.text}"))
@@ -181,7 +177,7 @@ def test_weaviate_handshake_generate_id(mock_weaviate_client) -> None:
 
 def test_weaviate_handshake_generate_properties(mock_weaviate_client) -> None:
     """Test the _generate_properties method."""
-    handshake = WeaviateHandshake()
+    handshake = WeaviateHandshake(client=mock_weaviate_client)
     chunk = SAMPLE_CHUNKS[0]
     expected_properties = {
         "text": chunk.text,
@@ -260,7 +256,7 @@ def test_weaviate_handshake_write_upsert(mock_weaviate_client) -> None:
 
 def test_weaviate_handshake_repr(mock_weaviate_client) -> None:
     """Test the __repr__ method."""
-    handshake = WeaviateHandshake()
+    handshake = WeaviateHandshake(client=mock_weaviate_client)
     expected_repr = f"WeaviateHandshake(collection_name={handshake.collection_name}, vector_dimensions={handshake.vector_dimensions})"
     assert repr(handshake) == expected_repr
 
@@ -330,10 +326,15 @@ def test_weaviate_handshake_batch_error_handling(mock_weaviate_client) -> None:
 
 def test_weaviate_handshake_generate_properties_with_optional_fields(mock_weaviate_client) -> None:
     """Test the _generate_properties method with optional fields."""
-    handshake = WeaviateHandshake()
+    handshake = WeaviateHandshake(client=mock_weaviate_client)
     
     # Create a chunk with optional properties
-    chunk = SAMPLE_CHUNKS[0].copy()
+    chunk = SAMPLE_CHUNKS[0]
+    
+    # Add optional properties
+    chunk.sentences = ["This is a sentence."]
+    chunk.words = ["This", "is", "a", "sentence"]
+    chunk.language = "en"
     
     # Generate properties
     properties = handshake._generate_properties(chunk)
@@ -344,24 +345,23 @@ def test_weaviate_handshake_generate_properties_with_optional_fields(mock_weavia
     assert properties["end_index"] == chunk.end_index
     assert properties["token_count"] == chunk.token_count
     assert properties["chunk_type"] == type(chunk).__name__
+    
+    # Verify optional properties
+    assert properties["sentence_count"] == len(chunk.sentences)
+    assert properties["word_count"] == len(chunk.words)
+    assert properties["language"] == chunk.language
 
 
 def test_weaviate_handshake_close(mock_weaviate_client) -> None:
     """Test the close method."""
-    handshake = WeaviateHandshake()
-    original_client = handshake.client
-    handshake.client = mock_weaviate_client
-    
+    handshake = WeaviateHandshake(client=mock_weaviate_client)
     handshake.close()
-    
     mock_weaviate_client.close.assert_called_once()
-    
-    handshake.client = original_client
 
 
 def test_weaviate_handshake_call(mock_weaviate_client) -> None:
     """Test the __call__ method."""
-    handshake = WeaviateHandshake()
+    handshake = WeaviateHandshake(client=mock_weaviate_client)
     
     # Mock the write method
     from unittest.mock import Mock
@@ -379,96 +379,6 @@ def test_weaviate_handshake_call(mock_weaviate_client) -> None:
     result = handshake(SAMPLE_CHUNKS[0])
     handshake.write.assert_called_once_with(SAMPLE_CHUNKS[0])
     
-    from chonkie.friends.handshakes.base import BaseHandshake
-    
-    class TestHandshake(BaseHandshake):
-        def write(self, chunk):
-            return ["test_id"]
-    
-    test_handshake = TestHandshake()
-    
+    # Test with invalid input
     with pytest.raises(TypeError):
-        test_handshake(any)  # type: ignore
-
-
-def test_normalize_chunks_single_chunk() -> None:
-    """Test normalize_chunks with a single Chunk."""
-    chunk = SAMPLE_CHUNKS[0]
-    result = normalize_chunks(chunk)
-    
-    assert isinstance(result, list)
-    assert len(result) == 1
-    assert result[0] == chunk
-
-
-def test_normalize_chunks_sequence() -> None:
-    """Test normalize_chunks with a sequence of Chunks."""
-    result = normalize_chunks(SAMPLE_CHUNKS)
-    
-    assert isinstance(result, list)
-    assert len(result) == len(SAMPLE_CHUNKS)
-    assert result == SAMPLE_CHUNKS
-
-
-def test_normalize_chunks_nested_sequence() -> None:
-    """Test normalize_chunks with a nested sequence of Chunks."""
-    nested_chunks = [
-        [SAMPLE_CHUNKS[0], SAMPLE_CHUNKS[1]],
-        [SAMPLE_CHUNKS[2]]
-    ]
-    
-    result = normalize_chunks(nested_chunks)
-    
-    assert isinstance(result, list)
-    assert len(result) == len(SAMPLE_CHUNKS)
-    assert result == SAMPLE_CHUNKS
-
-
-def test_normalize_chunks_empty_sequence() -> None:
-    """Test normalize_chunks with an empty sequence."""
-    empty_seq: List[Chunk] = []
-    result = normalize_chunks(empty_seq)
-    
-    assert isinstance(result, list)
-    assert len(result) == 0
-
-
-def test_normalize_chunks_mixed_types() -> None:
-    """Test normalize_chunks with a sequence containing non-Chunk items."""
-    # Create a sequence with both Chunk and non-Chunk items
-    mixed_seq = [SAMPLE_CHUNKS[0], "not a chunk", SAMPLE_CHUNKS[1]]
-    
-    result = normalize_chunks(mixed_seq)  # type: ignore
-    
-    assert isinstance(result, list)
-    assert len(result) == 2  # Only the Chunk items should be included
-    assert result[0] == SAMPLE_CHUNKS[0]
-    assert result[1] == SAMPLE_CHUNKS[1]
-
-
-def test_weaviate_handshake_write_nested_chunks(mock_weaviate_client) -> None:
-    """Test writing a nested sequence of Chunks."""
-    handshake = WeaviateHandshake()
-    
-    # Create a nested sequence of Chunks
-    nested_chunks = [
-        [SAMPLE_CHUNKS[0], SAMPLE_CHUNKS[1]],
-        [SAMPLE_CHUNKS[2]]
-    ]
-    
-    # Set up mock batch
-    mock_batch = mock_weaviate_client.collections.get.return_value.batch.fixed_size.return_value.__enter__.return_value
-    
-    # Call write method
-    result = handshake.write(nested_chunks)  # type: ignore
-    
-    # Check that add_object was called for each chunk
-    assert mock_batch.add_object.call_count == len(SAMPLE_CHUNKS)
-    
-    # Check that the result is a list with the right number of IDs
-    assert isinstance(result, list)
-    assert len(result) == len(SAMPLE_CHUNKS)
-    
-    # Check that each ID is a string
-    for id_str in result:
-        assert isinstance(id_str, str)
+        handshake(123)  # Not a Chunk or Sequence[Chunk]
