@@ -96,7 +96,7 @@ class WeaviateHandshake(BaseHandshake):
                     cluster_url=url,
                     auth_credentials=weaviate.auth.Auth.api_key(api_key),
                 )
-            except Exception:
+            except Exception as e:
                 # connect to a localhost
                 # Parse the URL to get the host and port
                 parsed_url = urlparse(url)
