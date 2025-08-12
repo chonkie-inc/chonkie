@@ -96,7 +96,7 @@ class WeaviateHandshake(BaseHandshake):
                     cluster_url=url,
                     auth_credentials=weaviate.auth.Auth.api_key(api_key),
                 )
-            except Exception as e:
+            except Exception:
                 # connect to a localhost
                 # Parse the URL to get the host and port
                 parsed_url = urlparse(url)
@@ -184,9 +184,7 @@ class WeaviateHandshake(BaseHandshake):
             global weaviate
             import weaviate
         else:
-            raise ImportError(
-                "Please install it with `pip install chonkie[weaviate]`."
-            )
+            raise ImportError("Please install it with `pip install chonkie[weaviate]`.")
 
     def _collection_exists(self, collection_name: str) -> bool:
         """Check if a collection exists in Weaviate.
