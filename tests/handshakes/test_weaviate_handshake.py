@@ -174,7 +174,7 @@ def test_weaviate_handshake_custom_connection_params(mock_weaviate_client) -> No
 
 def test_weaviate_handshake_cloud_init():
     """Test WeaviateHandshake initialization with cloud parameters (url and api_key)."""
-    from unittest.mock import patch, Mock
+    from unittest.mock import Mock, patch
 
     mock_client = Mock()
     with (
