@@ -94,7 +94,9 @@ class WeaviateHandshake(BaseHandshake):
                 # connect to cloud client
                 self.client = weaviate.connect_to_weaviate_cloud(
                     cluster_url=url,
-                    auth_credentials=weaviate.auth.Auth.api_key(api_key if api_key is not None else ""),
+                    auth_credentials=weaviate.auth.Auth.api_key(
+                        api_key if api_key is not None else ""
+                    ),
                 )
             except Exception:
                 # connect to a localhost
@@ -103,7 +105,7 @@ class WeaviateHandshake(BaseHandshake):
                 host = parsed_url.hostname or "localhost"
                 port = parsed_url.port or 8080
 
-                auth_credentials = None
+                auth_credentials = None  # type: ignore
                 if api_key is not None:
                     auth_credentials = weaviate.auth.Auth.api_key(api_key=api_key)
                 elif auth_config is not None:
@@ -404,7 +406,7 @@ class WeaviateHandshake(BaseHandshake):
         if hasattr(schema, "properties") and schema.properties:
             try:
                 # Handle both real properties and mock objects in tests
-                property_names: list[str] = []
+                property_names = []
                 for prop in schema.properties:
                     # For test mocks, the name attribute might be a Mock itself
                     if hasattr(prop, "name"):
