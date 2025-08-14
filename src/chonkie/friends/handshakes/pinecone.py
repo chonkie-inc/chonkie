@@ -26,6 +26,7 @@ class PineconeHandshake(BaseHandshake):
         embedding_model: Union[str, BaseEmbeddings]: The embedding model to use.
         dimension: Optional[int]: The dimension of the embeddings. If not provided, will infer from embedding_model.
         **kwargs: Additional keyword arguments to pass to the Pinecone client.
+
     """
 
     def __init__(
