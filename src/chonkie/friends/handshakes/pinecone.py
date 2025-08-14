@@ -63,16 +63,16 @@ class PineconeHandshake(BaseHandshake):
         if index_name == "random":
             while True:
                 self.index_name = generate_random_collection_name()
-                if  not self.client.has_index(self.index_name):
+                if not self.client.has_index(self.index_name):
                     break
             print(f"🦛 Chonkie created a new index in Pinecone: {self.index_name}")
         else:
             self.index_name = index_name
 
         # Create the index if it doesn't exist
-        if self.index_name not in pinecone.list_indexes():
-            pinecone.create_index(name=self.index_name, dimension=self.dimension, **kwargs)
-        self.index = pinecone.Index(self.index_name)
+        if not self.client.has_index(self.index_name):
+            self.client.create_index(name=self.index_name, dimension=self.dimension, **kwargs)
+        self.index = self.client.Index(self.index_name)
 
     def _is_available(self) -> bool:
         return importutil.find_spec("pinecone") is not None
