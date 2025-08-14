@@ -63,7 +63,7 @@ class PineconeHandshake(BaseHandshake):
         if index_name == "random":
             while True:
                 self.index_name = generate_random_collection_name()
-                if self.index_name not in self.client.list_indexes().names():
+                if  not self.client.has_index(self.index_name):
                     break
             print(f"🦛 Chonkie created a new index in Pinecone: {self.index_name}")
         else:
