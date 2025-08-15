@@ -66,6 +66,7 @@
               "python-sdk/handshakes/qdrant-handshake",
               "python-sdk/handshakes/weaviate-handshake",
               "python-sdk/handshakes/tubropuffer-handshake",
+              "python-sdk/handshakes/pinecone-handshake",
               "python-sdk/handshakes/pgvector-handshake"
             ]
           },
