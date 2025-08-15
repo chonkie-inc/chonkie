@@ -31,6 +31,7 @@
               "python-sdk/chunkers/token-chunker",
               "python-sdk/chunkers/sentence-chunker",
               "python-sdk/chunkers/recursive-chunker",
+              "python-sdk/chunkers/markdown-chunker",
               "python-sdk/chunkers/code-chunker",
               "python-sdk/chunkers/semantic-chunker",
               "python-sdk/chunkers/sdpm-chunker",
