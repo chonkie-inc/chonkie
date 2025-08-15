@@ -4,6 +4,7 @@
 from .handshakes.base import BaseHandshake
 from .handshakes.chroma import ChromaHandshake
 from .handshakes.pgvector import PgvectorHandshake
+from .handshakes.pinecone import PineconeHandshake
 from .handshakes.qdrant import QdrantHandshake
 from .handshakes.turbopuffer import TurbopufferHandshake
 from .handshakes.weaviate import WeaviateHandshake
@@ -17,6 +18,7 @@ __all__ = [
     "BaseHandshake",
     "ChromaHandshake",
     "PgvectorHandshake",
+    "PineconeHandshake",
     "QdrantHandshake",
     "WeaviateHandshake",
     "TurbopufferHandshake",

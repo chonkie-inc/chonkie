@@ -104,6 +104,7 @@ tpuf = ["turbopuffer[fast]>=0.2.0"]
 pgvector = ["vecs>=0.4.0"]
 weaviate = ["weaviate-client>=4.16.0"]
 datasets = ["datasets>=4.0.0"]
+pinecone = ["pinecone"]
 
 # Optional dependencies for the genie
 genie = ["pydantic>=2.0.0", "google-genai>=1.0.0"]
