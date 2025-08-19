@@ -104,7 +104,7 @@ tpuf = ["turbopuffer[fast]>=0.2.0"]
 pgvector = ["vecs>=0.4.0"]
 datasets = ["datasets>=4.0.0"]
 pinecone = ["pinecone"]
-weaviate = ["weaviate-client>=4.16.0"]
+weaviate = ["weaviate-client>=4.16.7"]
 datasets = ["datasets>=4.0.0"]
 
 # Optional dependencies for the genie
@@ -133,7 +133,7 @@ all = [
     "chromadb>=1.0.0",
     "qdrant-client>=1.0.0",
     "turbopuffer[fast]>=0.2.0",
-    "weaviate-client>=4.16.0",
+    "weaviate-client>=4.16.7",
     "azure-identity>=1.23.0",
 ]
 dev = [

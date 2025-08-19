@@ -36,6 +36,8 @@ jobs:
             ${{ runner.os }}-huggingface-
 
       - name: Run tests
+        env:
+          PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION: python
         run: |
           source .venv/bin/activate
           python -m pytest -n auto -vv --cov=chonkie --cov-branch --cov-report=xml --cov-report=term-missing --junitxml=junit.xml
