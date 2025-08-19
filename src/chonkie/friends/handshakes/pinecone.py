@@ -1,7 +1,7 @@
 """Pinecone Handshake to export Chonkie's Chunks into a Pinecone index."""
 
 import importlib.util as importutil
-from typing import TYPE_CHECKING, Any, Dict, Literal, Optional, Sequence, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Literal, Optional, Sequence, Tuple, Union
 from uuid import NAMESPACE_OID, uuid5
 
 from chonkie.embeddings import AutoEmbeddings, BaseEmbeddings
@@ -34,6 +34,7 @@ class PineconeHandshake(BaseHandshake):
         client: Optional["pinecone.Pinecone"] = None,
         api_key: Optional[str] = None,
         index_name: Union[str, Literal["random"]] = "random",
+        spec: Optional['pinecone.ServerlessSpec'] = None,
         embedding_model: Union[str, BaseEmbeddings] = "minishlab/potion-retrieval-32M",
         dimension: Optional[int] = None,
         **kwargs: Dict[str, Any],
@@ -44,6 +45,7 @@ class PineconeHandshake(BaseHandshake):
             client: Optional[pinecone.Pinecone]: The Pinecone client to use. If None, will create a new client.
             api_key: The Pinecone API key.
             index_name: The name of the index to use, or "random" for auto-generated name.
+            spec: Optional[pinecone.ServerlessSpec]: The spec to use for the index. If not provided, will use the default spec.
             embedding_model: The embedding model to use, either as string or BaseEmbeddings instance.
             dimension: The dimension of the embeddings. If not provided, will infer from embedding_model.
             **kwargs: Additional keyword arguments to pass to the Pinecone client.
@@ -73,15 +75,12 @@ class PineconeHandshake(BaseHandshake):
             self.index_name = index_name
 
         # set default value for specs field if not present
-        kwargs.setdefault(
-            "spec",
-            pinecone.ServerlessSpec(cloud="aws", region="us-east-1"),
-        )
+        self.spec = spec or pinecone.ServerlessSpec(cloud="aws", region="us-east-1") # type: ignore
 
         # Create the index if it doesn't exist
         if not self.client.has_index(self.index_name):
             self.client.create_index(
-                name=self.index_name, dimension=self.dimension, **kwargs
+                name=self.index_name, dimension=self.dimension, spec=self.spec, **kwargs
             )
         self.index = self.client.Index(self.index_name)
 
@@ -110,14 +109,24 @@ class PineconeHandshake(BaseHandshake):
             "token_count": chunk.token_count,
         }
 
-    def _get_vectors(self, chunks: Union[Chunk, Sequence[Chunk]]):
+    def _get_vectors(self, chunks: Union[Chunk, Sequence[Chunk]]) -> List[Tuple[str, List[float], Dict[str, Any]]]:
+        """Generate vectors for the chunks.
+
+        Args:
+            chunks: A single Chunk or sequence of Chunks to generate vectors for.
+
+        Returns:
+            List[Tuple[str, List[float], Dict[str, Any]]]: A list of tuples containing the vector ID, embedding, and metadata.
+
+        """
         if isinstance(chunks, Chunk):
             chunks = [chunks]
         vectors = []
+        embedings = self.embedding_model.embed_batch([chunk.text for chunk in chunks])
         for index, chunk in enumerate(chunks):
             vectors.append((
                 self._generate_id(index, chunk),
-                self.embedding_model.embed(chunk.text).tolist(),
+                embedings[index].tolist(),
                 self._generate_metadata(chunk),
             ))
         return vectors
