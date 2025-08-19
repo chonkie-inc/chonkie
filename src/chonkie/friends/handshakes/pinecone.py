@@ -33,8 +33,9 @@ class PineconeHandshake(BaseHandshake):
         client: Optional[pinecone.Pinecone]: The Pinecone client to use. If None, will create a new client.
         api_key: str: The Pinecone API key.
         index_name: Union[str, Literal["random"]]: The name of the index to use.
+        spec: Optional[pinecone.ServerlessSpec]: The pinecone ServerlessSpec to use for the index. If not provided, will use the default spec.
         embedding_model: Union[str, BaseEmbeddings]: The embedding model to use.
-        dimension: Optional[int]: The dimension of the embeddings. If not provided, will infer from embedding_model.
+        embed: Optional[Dict[str, str]]: The Pinecone integrated embedding model to use. If not provided, will use `embedding_model` to create a new index.
         **kwargs: Additional keyword arguments to pass to the Pinecone client.
 
     """
@@ -46,7 +47,7 @@ class PineconeHandshake(BaseHandshake):
         index_name: Union[str, Literal["random"]] = "random",
         spec: Optional['pinecone.ServerlessSpec'] = None,
         embedding_model: Union[str, BaseEmbeddings] = "minishlab/potion-retrieval-32M",
-        dimension: Optional[int] = None,
+        embed: Optional[Dict[str, str]] = None,
         **kwargs: Dict[str, Any],
     ) -> None:
         """Initialize the Pinecone handshake.
@@ -57,7 +58,7 @@ class PineconeHandshake(BaseHandshake):
             index_name: The name of the index to use, or "random" for auto-generated name.
             spec: Optional[pinecone.ServerlessSpec]: The spec to use for the index. If not provided, will use the default spec.
             embedding_model: The embedding model to use, either as string or BaseEmbeddings instance.
-            dimension: The dimension of the embeddings. If not provided, will infer from embedding_model.
+            embed: The Pinecone integrated embedding model to use. If not provided, will use `embedding_model` to create a new index.
             **kwargs: Additional keyword arguments to pass to the Pinecone client.
 
         """
@@ -68,12 +69,20 @@ class PineconeHandshake(BaseHandshake):
             self.client = client
         else:
             self.client = pinecone.Pinecone(api_key=api_key)
-
-        if isinstance(embedding_model, str):
+        
+        if embed is not None:
+            self.embed = embed
+            self.embedding_model = None
+        elif isinstance(embedding_model, str):
             self.embedding_model = AutoEmbeddings.get_embeddings(embedding_model)
-        else:
+            self.dimension = self.embedding_model.dimension
+            self.metric = "cosine"
+        elif isinstance(embedding_model, BaseEmbeddings):
             self.embedding_model = embedding_model
-        self.dimension = dimension or self.embedding_model.dimension
+            self.dimension = self.embedding_model.dimension
+            self.metric = "cosine"
+        else:
+            raise ValueError(f"Invalid embedding model: {embedding_model}")
 
         if index_name == "random":
             while True:
@@ -89,9 +98,14 @@ class PineconeHandshake(BaseHandshake):
 
         # Create the index if it doesn't exist
         if not self.client.has_index(self.index_name):
-            self.client.create_index(
-                name=self.index_name, dimension=self.dimension, spec=self.spec, **kwargs
-            )
+            if self.embed is not None:
+                self.client.create_index(
+                    name=self.index_name, spec=self.spec, embed=self.embed, **kwargs
+                )
+            else:
+                self.client.create_index(
+                    name=self.index_name, dimension=self.dimension, metric=self.metric, spec=self.spec, **kwargs
+                )
         self.index = self.client.Index(self.index_name)
 
     def _is_available(self) -> bool:
@@ -132,7 +146,7 @@ class PineconeHandshake(BaseHandshake):
         if isinstance(chunks, Chunk):
             chunks = [chunks]
         vectors = []
-        embedings = self.embedding_model.embed_batch([chunk.text for chunk in chunks])
+        embedings = self.embedding_model.embed_batch([chunk.text for chunk in chunks]) # type: ignore
         for index, chunk in enumerate(chunks):
             vectors.append((
                 self._generate_id(index, chunk),
