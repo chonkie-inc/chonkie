@@ -105,7 +105,7 @@ class WeaviateHandshake(BaseHandshake):
                 host = parsed_url.hostname or "localhost"
                 port = parsed_url.port or 8080
 
-                auth_credentials = None  # type: ignore
+                auth_credentials: Optional[Any] = None
                 if api_key is not None:
                     auth_credentials = weaviate.auth.Auth.api_key(api_key=api_key)
                 elif auth_config is not None:
@@ -336,11 +336,11 @@ class WeaviateHandshake(BaseHandshake):
                     # Generate embedding
                     embedding = self.embedding_model.embed(chunk.text)
 
-                    vector = (
-                        embedding.tolist()
-                        if hasattr(embedding, "tolist")
-                        else list(embedding)
-                    )
+                    vector: List[float]
+                    if hasattr(embedding, "tolist"):
+                        vector = embedding.tolist()  # type: ignore[assignment]
+                    else:
+                        vector = list(embedding)  # type: ignore[arg-type]
 
                     # Add to batch
                     batch.add_object(
