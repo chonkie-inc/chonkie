@@ -6,7 +6,6 @@ import warnings
 from functools import lru_cache
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
-
 from .base import BaseEmbeddings
 
 if TYPE_CHECKING:
