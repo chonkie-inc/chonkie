@@ -1,4 +1,5 @@
 """Test the PineconeHandshake class."""
+import os
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -8,6 +9,12 @@ from chonkie.friends.handshakes.pinecone import PineconeHandshake
 from chonkie.types import Chunk
 
 DEFAULT_EMBEDDING_MODEL = "minishlab/potion-retrieval-32M"
+
+# Skip all tests in this module if PINECONE_API_KEY is not set
+pytestmark = pytest.mark.skipif(
+    os.getenv("PINECONE_API_KEY") is None,
+    reason="PINECONE_API_KEY not set"
+)
 
 
 @pytest.fixture(autouse=True)

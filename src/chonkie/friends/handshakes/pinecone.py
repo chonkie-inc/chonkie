@@ -74,16 +74,14 @@ class PineconeHandshake(BaseHandshake):
                 raise ValueError("Pinecone API key is not set. Please provide it as an argument or set the PINECONE_API_KEY environment variable.")
             self.client = pinecone.Pinecone(api_key=api_key)
         
+        self.embed: Optional[Dict[str, str]] = embed
         if embed is not None:
-            self.embed = embed
             self.embedding_model = None
         elif isinstance(embedding_model, str):
-            self.embed = None
             self.embedding_model = AutoEmbeddings.get_embeddings(embedding_model)
             self.dimension = self.embedding_model.dimension
             self.metric = "cosine"
         elif isinstance(embedding_model, BaseEmbeddings):
-            self.embed = None
             self.embedding_model = embedding_model
             self.dimension = self.embedding_model.dimension
             self.metric = "cosine"
@@ -105,7 +103,7 @@ class PineconeHandshake(BaseHandshake):
         # Create the index if it doesn't exist
         if not self.client.has_index(self.index_name):
             if self.embed is not None:
-                self.client.create_index(
+                self.client.create_index(  # type: ignore[call-arg]
                     name=self.index_name, spec=self.spec, embed=self.embed, **kwargs
                 )
             else:
@@ -154,9 +152,15 @@ class PineconeHandshake(BaseHandshake):
         vectors = []
         embedings = self.embedding_model.embed_batch([chunk.text for chunk in chunks]) # type: ignore
         for index, chunk in enumerate(chunks):
+            # Handle both numpy arrays and lists
+            embedding = embedings[index]
+            if hasattr(embedding, 'tolist'):
+                embedding_list: List[float] = embedding.tolist()
+            else:
+                embedding_list = embedding  # type: ignore[assignment]
             vectors.append((
                 self._generate_id(index, chunk),
-                embedings[index].tolist(),
+                embedding_list,
                 self._generate_metadata(chunk),
             ))
         return vectors
