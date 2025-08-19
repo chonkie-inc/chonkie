@@ -97,12 +97,16 @@ class OpenAIEmbeddings(BaseEmbeddings):
             self._dimension = dimension
         elif model in self.AVAILABLE_MODELS:
             self._dimension = self.AVAILABLE_MODELS[model]['dimension']
+        else: 
+            raise ValueError(f"Dimension not found for model {model}. Please provide a dimension.")
 
         # Do something for the max tokens
         if max_tokens is not None:
             self._max_tokens = max_tokens
         elif model in self.AVAILABLE_MODELS:
             self._max_tokens = self.AVAILABLE_MODELS[model]['max_tokens']
+        else:
+            raise ValueError(f"Max tokens not found for model {model}. Please provide a max tokens.")
 
         # Setup OpenAI client
         self.client = OpenAI(               # type: ignore
