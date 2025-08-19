@@ -1,5 +1,6 @@
 """Pinecone Handshake to export Chonkie's Chunks into a Pinecone index."""
 
+import os
 import importlib.util as importutil
 from typing import (
     TYPE_CHECKING,
@@ -68,6 +69,9 @@ class PineconeHandshake(BaseHandshake):
         if client is not None:
             self.client = client
         else:
+            api_key = api_key or os.getenv("PINECONE_API_KEY")
+            if api_key is None:
+                raise ValueError("Pinecone API key is not set. Please provide it as an argument or set the PINECONE_API_KEY environment variable.")
             self.client = pinecone.Pinecone(api_key=api_key)
         
         if embed is not None:
