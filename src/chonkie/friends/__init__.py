@@ -6,6 +6,7 @@ from .handshakes.chroma import ChromaHandshake
 from .handshakes.pgvector import PgvectorHandshake
 from .handshakes.qdrant import QdrantHandshake
 from .handshakes.turbopuffer import TurbopufferHandshake
+from .handshakes.weaviate import WeaviateHandshake
 
 # Add all the porters here.
 from .porters.base import BasePorter
@@ -17,6 +18,7 @@ __all__ = [
     "ChromaHandshake",
     "PgvectorHandshake",
     "QdrantHandshake",
+    "WeaviateHandshake",
     "TurbopufferHandshake",
     "JSONPorter",
 ]

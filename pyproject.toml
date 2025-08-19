@@ -72,20 +72,37 @@ neural = ["transformers>=4.0.0", "torch>=2.0.0, <3.0"]
 
 # Optional dependencies for the embeddings
 model2vec = ["tokenizers>=0.16.0", "model2vec>=0.3.0", "numpy>=2.0.0, <3.0"]
-st = ["tokenizers>=0.16.0", "sentence-transformers>=3.0.0", "numpy>=2.0.0, <3.0", "accelerate>=1.6.0"]
-openai = ["tiktoken>=0.5.0", "openai>=1.0.0", "numpy>=2.0.0, <3.0", "pydantic>=2.0.0"]
+st = [
+    "tokenizers>=0.16.0",
+    "sentence-transformers>=3.0.0",
+    "numpy>=2.0.0, <3.0",
+    "accelerate>=1.6.0",
+]
+openai = [
+    "tiktoken>=0.5.0",
+    "openai>=1.0.0",
+    "numpy>=2.0.0, <3.0",
+    "pydantic>=2.0.0",
+]
+semantic = ["tokenizers>=0.16.0", "model2vec>=0.3.0", "numpy>=2.0.0, <3.0"]
+gemini = ["pydantic>=2.0.0", "google-genai>=1.0.0"]
+azure-openai = [
+    "azure-identity>=1.23.0",
+    "tiktoken>=0.5.0",
+    "openai>=1.0.0",
+    "numpy>=2.0.0, <3.0",
+    "pydantic>=2.0.0",
+]
 voyageai = ["tokenizers>=0.16.0", "voyageai>=0.3.2", "numpy>=2.0.0, <3.0"]
 cohere = ["tokenizers>=0.16.0", "cohere>=5.13.0", "numpy>=2.0.0, <3.0"]
 jina = ["tokenizers>=0.16.0", "numpy>=2.0.0, <3.0"]
-semantic = ["tokenizers>=0.16.0", "model2vec>=0.3.0", "numpy>=2.0.0, <3.0"]
-gemini = ["pydantic>=2.0.0", "google-genai>=1.0.0"]
-azure-openai = ["azure-identity>=1.23.0", "tiktoken>=0.5.0", "openai>=1.0.0", "numpy>=2.0.0, <3.0", "pydantic>=2.0.0"]
 
 # optional dependencies for the friends
 chroma = ["chromadb>=1.0.0"]
 qdrant = ["qdrant-client>=1.0.0"]
 tpuf = ["turbopuffer[fast]>=0.2.0"]
 pgvector = ["vecs>=0.4.0"]
+weaviate = ["weaviate-client>=4.16.7"]
 datasets = ["datasets>=4.0.0"]
 
 # Optional dependencies for the genie
@@ -114,6 +131,7 @@ all = [
     "chromadb>=1.0.0",
     "qdrant-client>=1.0.0",
     "turbopuffer[fast]>=0.2.0",
+    "weaviate-client>=4.16.7",
     "azure-identity>=1.23.0",
 ]
 dev = [
