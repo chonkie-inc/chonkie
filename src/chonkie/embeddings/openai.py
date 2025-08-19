@@ -6,6 +6,7 @@ import warnings
 from functools import lru_cache
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
+
 from .base import BaseEmbeddings
 
 if TYPE_CHECKING:
@@ -130,6 +131,7 @@ class OpenAIEmbeddings(BaseEmbeddings):
         if token_estimate > max_tokens:
           tokens = self._tokenizer.encode(text)
           if len(tokens) > max_tokens:
+              warnings.warn(f"OpenAIEmbeddings encountered a text that is too long. Truncating to {max_tokens} tokens.")
               return self._tokenizer.decode(tokens[:max_tokens])
         return text
 
