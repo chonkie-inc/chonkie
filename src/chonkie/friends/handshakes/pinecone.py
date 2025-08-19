@@ -49,7 +49,7 @@ class PineconeHandshake(BaseHandshake):
         spec: Optional['pinecone.ServerlessSpec'] = None,
         embedding_model: Union[str, BaseEmbeddings] = "minishlab/potion-retrieval-32M",
         embed: Optional[Dict[str, str]] = None,
-        **kwargs: Dict[str, Any],
+        **kwargs: Any,
     ) -> None:
         """Initialize the Pinecone handshake.
 
@@ -78,10 +78,12 @@ class PineconeHandshake(BaseHandshake):
             self.embed = embed
             self.embedding_model = None
         elif isinstance(embedding_model, str):
+            self.embed = None
             self.embedding_model = AutoEmbeddings.get_embeddings(embedding_model)
             self.dimension = self.embedding_model.dimension
             self.metric = "cosine"
         elif isinstance(embedding_model, BaseEmbeddings):
+            self.embed = None
             self.embedding_model = embedding_model
             self.dimension = self.embedding_model.dimension
             self.metric = "cosine"
