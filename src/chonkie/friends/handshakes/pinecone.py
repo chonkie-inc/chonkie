@@ -1,7 +1,7 @@
 """Pinecone Handshake to export Chonkie's Chunks into a Pinecone index."""
 
-import os
 import importlib.util as importutil
+import os
 from typing import (
     TYPE_CHECKING,
     Any,
