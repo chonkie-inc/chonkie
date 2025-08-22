@@ -106,6 +106,7 @@ datasets = ["datasets>=4.0.0"]
 pinecone = ["pinecone"]
 weaviate = ["weaviate-client>=4.16.7"]
 datasets = ["datasets>=4.0.0"]
+mongodb = ["pymongo"]
 
 # Optional dependencies for the genie
 genie = ["pydantic>=2.0.0", "google-genai>=1.0.0"]
