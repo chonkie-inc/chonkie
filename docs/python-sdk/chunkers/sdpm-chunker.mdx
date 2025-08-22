@@ -1,15 +1,16 @@
 ---
-title: 'SDPM Chunker (Legacy)'
-description: 'Semantic Double-Pass Merging chunker - now integrated into SemanticChunker'
-icon: 'layer-group'
+title: "SDPM Chunker (Legacy)"
+description: "Semantic Double-Pass Merging chunker - now integrated into SemanticChunker"
+icon: "layer-group"
 ---
 
 <Warning>
 **Deprecated as of v1.2.0**
 
-The SDPM (Semantic Double-Pass Merging) functionality has been integrated into the main `SemanticChunker`. 
+The SDPM (Semantic Double-Pass Merging) functionality has been integrated into the main `SemanticChunker`.
 
 **Recommended Migration:**
+
 ```python
 # Old way (deprecated)
 from chonkie.legacy import SDPMChunker
@@ -21,6 +22,7 @@ chunker = SemanticChunker(skip_window=1)
 ```
 
 The new SemanticChunker provides all SDPM capabilities plus additional improvements like Savitzky-Golay filtering for better boundary detection.
+
 </Warning>
 
 The `SDPMChunker` extends semantic chunking by using a double-pass merging approach. It first groups content by semantic similarity, then merges similar groups within a skip window, allowing it to connect related content that may not be consecutive in the text.
@@ -28,6 +30,7 @@ The `SDPMChunker` extends semantic chunking by using a double-pass merging appro
 ## Why Use the New SemanticChunker Instead?
 
 The new `SemanticChunker` includes all SDPM functionality plus:
+
 - **Better performance**: Optimized C extensions for faster processing
 - **Smoother boundaries**: Savitzky-Golay filtering for noise reduction
 - **Cleaner API**: Simplified parameter names and improved defaults
@@ -50,7 +53,9 @@ from chonkie.legacy import SDPMChunker
 ## Legacy Usage
 
 <Note>
-This documentation is preserved for users who need to maintain existing code using SDPMChunker. For new projects, please use the main [SemanticChunker](./semantic-chunker).
+  This documentation is preserved for users who need to maintain existing code
+  using SDPMChunker. For new projects, please use the main
+  [SemanticChunker](./semantic-chunker).
 </Note>
 
 ### Basic Initialization
@@ -61,10 +66,10 @@ from chonkie.legacy import SDPMChunker
 # Legacy initialization
 chunker = SDPMChunker(
     embedding_model="minishlab/potion-base-8M",
-    threshold=0.5,                              
-    chunk_size=2048,                             
-    min_sentences=1,                            
-    skip_window=1                               
+    threshold=0.5,
+    chunk_size=2048,
+    min_sentences=1,
+    skip_window=1
 )
 ```
 
@@ -86,6 +91,122 @@ The legacy SDPMChunker uses these parameters (many now renamed in the new Semant
 ### Example Migration
 
 #### Old Code (Legacy)
+
+    embedding_model="minishlab/potion-base-32M",  # Default model
+    threshold=0.5,                              # Similarity threshold (0-1)
+    chunk_size=2048,                             # Maximum tokens per chunk
+    min_sentences=1,                            # Initial sentences per chunk
+    skip_window=1                               # Number of chunks to skip when looking for similarities
+
+)
+
+````
+
+## Parameters
+
+<ParamField
+    path="embedding_model"
+    type="Union[str, BaseEmbeddings]"
+    default="minishlab/potion-base-32M"
+>
+    Model identifier or embedding model instance
+</ParamField>
+
+<ParamField
+    path="chunk_size"
+    type="int"
+    default="2048"
+>
+    Maximum tokens per chunk
+</ParamField>
+
+<ParamField
+    path="mode"
+    type="str"
+    default="window"
+>
+    Mode for grouping sentences, either "cumulative" or "window"
+</ParamField>
+
+<ParamField
+    path="threshold"
+    type="Union[float, int, str]"
+    default="auto"
+>
+    When in the range [0,1], denotes the similarity threshold to consider sentences similar.
+    When in the range (1,100], interprets the given value as a percentile threshold.
+    When set to "auto", the threshold is automatically calculated.
+</ParamField>
+
+<ParamField
+    path="similarity_window"
+    type="int"
+    default="1"
+>
+    Number of sentences to consider for similarity threshold calculation
+</ParamField>
+
+<ParamField
+    path="min_sentences"
+    type="int"
+    default="1"
+>
+    Minimum number of sentences per chunk
+</ParamField>
+
+<ParamField
+    path="min_chunk_size"
+    type="int"
+    default="2"
+>
+    Minimum tokens per chunk
+</ParamField>
+
+<ParamField
+    path="min_characters_per_sentence"
+    type="int"
+    default="12"
+>
+    Minimum number of characters per sentence
+</ParamField>
+
+<ParamField
+    path="threshold_step"
+    type="float"
+    default="0.01"
+>
+    Step size for threshold calculation
+</ParamField>
+
+<ParamField
+    path="delim"
+    type="Union[str, List[str]]"
+    default="['.', '!', '?', '\n']"
+>
+    Delimiters to split sentences on
+</ParamField>
+
+<ParamField
+    path="include_delim"
+    type='Optional[Literal["prev", "next"]]'
+    default="prev"
+>
+    Include delimiters in the chunk text. If so, specify whether to include the previous or next delimiter.
+</ParamField>
+
+<ParamField
+    path="skip_window"
+    type="int"
+    default="1"
+>
+    Number of chunks to skip when looking for similarities
+</ParamField>
+
+
+## Usage
+
+### Single Text Chunking
+
 ```python
 from chonkie.legacy import SDPMChunker
 
@@ -102,9 +223,10 @@ chunker = SDPMChunker(
 chunks = chunker.chunk(text)
 for chunk in chunks:
     print(f"Sentences: {len(chunk.sentences)}")
-```
+````
 
 #### New Code (Recommended)
+
 ```python
 from chonkie import SemanticChunker
 
@@ -124,6 +246,7 @@ for chunk in chunks:
 ## Return Type Changes
 
 ### Legacy Return Type
+
 The legacy SDPMChunker returns `SemanticChunk` objects with sentence details:
 
 ```python
@@ -137,6 +260,7 @@ class SemanticChunk:
 ```
 
 ### New Return Type
+
 The new SemanticChunker returns simpler `Chunk` objects:
 
 ```python
@@ -180,6 +304,7 @@ batch_chunks = chunker.chunk_batch(texts)
 ## Support
 
 While the legacy SDPMChunker remains available for backward compatibility, it is no longer actively developed. Please consider migrating to the new SemanticChunker for:
+
 - Better performance
 - Active bug fixes
 - New features

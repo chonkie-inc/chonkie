@@ -23,7 +23,7 @@ class Model2VecEmbeddings(BaseEmbeddings):
     """
 
     def __init__(
-        self, model: Union[str, "StaticModel"] = "minishlab/potion-base-8M"
+        self, model: Union[str, "StaticModel"] = "minishlab/potion-base-32M"
     ) -> None:
         """Initialize Model2VecEmbeddings with a str or StaticModel instance."""
         super().__init__()

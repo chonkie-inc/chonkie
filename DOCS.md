@@ -359,7 +359,7 @@ For both of the above strategies, in `auto` mode, we determine the `threshold` v
 
 **Parameters:**
 
-- `embedding_model (Union[str, BaseEmbeddings])`: The embedding model to use for semantic chunking. Can be a string identifier (e.g., from Hugging Face Hub like `"minishlab/potion-base-8M"`) or an instantiated `BaseEmbeddings` object. Defaults to `"minishlab/potion-base-8M"`. Requires appropriate extras like `chonkie[semantic]` or specific model providers (`chonkie[st]`, `chonkie[openai]`, etc.).
+- `embedding_model (Union[str, BaseEmbeddings])`: The embedding model to use for semantic chunking. Can be a string identifier (e.g., from Hugging Face Hub like `"minishlab/potion-base-32M"`) or an instantiated `BaseEmbeddings` object. Defaults to `"minishlab/potion-base-32M"`. Requires appropriate extras like `chonkie[semantic]` or specific model providers (`chonkie[st]`, `chonkie[openai]`, etc.).
 - `mode (str)`: The strategy for comparing sentence similarity. `"window"` compares adjacent sentences (or within a small window), while `"cumulative"` compares a new sentence to the mean embedding of the current group. Defaults to `"window"`.
 - `threshold (Union[str, float, int])`: The similarity threshold for splitting sentences. Can be `"auto"` (uses a binary search to find an optimal threshold based on `chunk_size`), a float between 0.0 and 1.0 (direct cosine similarity threshold), or an int between 1 and 100 (percentile threshold). Defaults to `"auto"`.
 - `chunk_size (int)`: The target maximum number of tokens per chunk. Defaults to `512`.
