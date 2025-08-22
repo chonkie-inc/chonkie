@@ -21,7 +21,7 @@ if TYPE_CHECKING:
 
 # Import the unified split function
 try:
-    from .c_extensions.split import split_text
+    from chonkie.chunker.c_extensions.split import split_text
     SPLIT_AVAILABLE = True
 except ImportError:
     SPLIT_AVAILABLE = False
