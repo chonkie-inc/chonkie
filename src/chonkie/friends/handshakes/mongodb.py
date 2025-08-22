@@ -49,7 +49,7 @@ class MongoDBHandshake(BaseHandshake):
         username: Optional[str] = None,
         password: Optional[str] = None,
         hostname: Optional[str] = None,
-        port: Optional[int, str] = None,
+        port: Optional[Union[int, str]] = None,
         db_name: Union[str, Literal["random"]] = "random",
         collection_name: Union[str, Literal["random"]] = "random",
         embedding_model: Union[str, BaseEmbeddings] = "minishlab/potion-retrieval-32M",
@@ -92,7 +92,11 @@ class MongoDBHandshake(BaseHandshake):
                     # clear port
                     port = None
 
-            self.client = pymongo.MongoClient(uri, port=int(port), **kwargs)
+            self.client = pymongo.MongoClient(
+                uri,
+                port=int(port) if port is not None else None,
+                **kwargs,
+            )
 
         if db_name == "random":
             self.db_name = generate_random_collection_name()
