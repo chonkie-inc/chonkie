@@ -78,12 +78,11 @@ class MongoDBHandshake(BaseHandshake):
             # use uri
             if uri is None:
                 # construct the uri
-                if (
-                    username is not None
-                    and password is not None
-                    and hostname is not None
-                ):
-                    uri = f"mongodb://{username}:{password}@{hostname}"
+                if hostname is not None:
+                    if username is not None and password is not None:
+                        uri = f"mongodb://{username}:{password}@{hostname}"
+                    else:
+                        uri = f"mongodb://{hostname}"
                 # use localhost
                 else:
                     port = str(port) if port is not None else "27017"
