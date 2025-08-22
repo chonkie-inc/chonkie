@@ -85,6 +85,7 @@ class MongoDBHandshake(BaseHandshake):
                         uri = f"mongodb://{hostname}"
                 # use localhost
                 else:
+                    print("No hostname provided, using localhost instead")
                     port = str(port) if port is not None else "27017"
                     uri = f"mongodb://localhost:{port}"
                     # clear port
