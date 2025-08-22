@@ -67,7 +67,8 @@
               "python-sdk/handshakes/weaviate-handshake",
               "python-sdk/handshakes/tubropuffer-handshake",
               "python-sdk/handshakes/pinecone-handshake",
-              "python-sdk/handshakes/pgvector-handshake"
+              "python-sdk/handshakes/pgvector-handshake",
+              "python-sdk/handshakes/mongodb-handshake"
             ]
           },
           {
@@ -80,7 +81,10 @@
           },
           {
             "group": "Utils",
-            "pages": ["python-sdk/utils/visualizer", "python-sdk/utils/hubbie"]
+            "pages": [
+              "python-sdk/utils/visualizer",
+              "python-sdk/utils/hubbie"
+            ]
           },
           {
             "group": "Experimental",
@@ -123,7 +127,9 @@
       },
       {
         "tab": "Changelog",
-        "pages": ["changelog/changelog"]
+        "pages": [
+          "changelog/changelog"
+        ]
       }
     ],
     "global": {
