@@ -14,9 +14,9 @@ extensions = [
     Extension(
         "chonkie.chunker.c_extensions.merge",
         ["src/chonkie/chunker/c_extensions/merge.pyx"],
-    )
+    ),
 ]
 
 setup(
-    ext_modules=cythonize(extensions),
+    ext_modules=cythonize(extensions, language_level=3),
 )
