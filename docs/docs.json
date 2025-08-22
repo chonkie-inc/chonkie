@@ -81,10 +81,7 @@
           },
           {
             "group": "Utils",
-            "pages": [
-              "python-sdk/utils/visualizer",
-              "python-sdk/utils/hubbie"
-            ]
+            "pages": ["python-sdk/utils/visualizer", "python-sdk/utils/hubbie"]
           },
           {
             "group": "Experimental",
@@ -92,6 +89,10 @@
               "python-sdk/experimental/overview",
               "python-sdk/experimental/code-chunker"
             ]
+          },
+          {
+            "group": "Changelog",
+            "pages": ["python-sdk/changelog"]
           }
         ]
       },
@@ -127,9 +128,7 @@
       },
       {
         "tab": "Changelog",
-        "pages": [
-          "changelog/changelog"
-        ]
+        "pages": ["changelog/changelog"]
       }
     ],
     "global": {
