@@ -136,6 +136,8 @@ all = [
     "turbopuffer[fast]>=0.2.0",
     "weaviate-client>=4.16.7",
     "azure-identity>=1.23.0",
+    "pinecone",
+    "pymongo",
 ]
 dev = [
     "datasets>=1.14.0",
