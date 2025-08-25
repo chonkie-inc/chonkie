@@ -84,7 +84,7 @@ openai = [
     "numpy>=2.0.0, <3.0",
     "pydantic>=2.0.0",
 ]
-semantic = ["tokenizers>=0.16.0", "model2vec>=0.3.0", "numpy>=2.0.0, <3.0"]
+semantic = ["tokenizers>=0.16.0", "model2vec>=0.3.0", "numpy>=2.0.0, <3.0", "scipy>=1.11.0"]
 gemini = ["pydantic>=2.0.0", "google-genai>=1.0.0"]
 azure-openai = [
     "azure-identity>=1.23.0",
