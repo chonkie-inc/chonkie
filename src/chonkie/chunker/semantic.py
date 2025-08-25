@@ -15,6 +15,7 @@ if TYPE_CHECKING:
 # Import the unified split function
 try:
     from .c_extensions.split import split_text
+
     SPLIT_AVAILABLE = True
 except ImportError:
     SPLIT_AVAILABLE = False
@@ -43,7 +44,7 @@ class SemanticChunker(BaseChunker):
 
     def __init__(
         self,
-        embedding_model: Union[str, BaseEmbeddings] = "minishlab/potion-base-8M",
+        embedding_model: Union[str, BaseEmbeddings] = "minishlab/potion-base-32M",
         mode: str = "window",
         threshold: Union[str, float, int] = "auto",
         chunk_size: int = 2048,
@@ -97,9 +98,9 @@ class SemanticChunker(BaseChunker):
             raise ValueError("delim must be a string or list of strings")
         elif type(threshold) == str and threshold not in ["auto"]:
             raise ValueError("threshold must be 'auto', 'smart', or 'percentile'")
-        elif type(threshold) == float and (threshold < 0 or threshold > 1):
+        elif isinstance(threshold, float) and (threshold < 0 or threshold > 1):
             raise ValueError("threshold (float) must be between 0 and 1")
-        elif type(threshold) == int and (threshold < 1 or threshold > 100):
+        elif isinstance(threshold, int) and (threshold < 1 or threshold > 100):
             raise ValueError("threshold (int) must be between 1 and 100")
 
         # Lazy import dependencies to avoid importing them when not needed
@@ -120,7 +121,7 @@ class SemanticChunker(BaseChunker):
         # Initialize with type annotations
         self.similarity_threshold: Optional[float]
         self.similarity_percentile: Optional[int]
-        
+
         if isinstance(threshold, float):
             self.similarity_threshold = threshold
             self.similarity_percentile = None
@@ -157,21 +158,22 @@ class SemanticChunker(BaseChunker):
         self._use_multiprocessing = False
 
     @classmethod
-    def from_recipe(cls, 
-                    name: str = "default", 
-                    lang: Optional[str] = "en", 
-                    path: Optional[str] = None, 
-                    embedding_model: Union[str, BaseEmbeddings] = "minishlab/potion-base-8M",
-                    mode: str = "window",
-                    threshold: Union[str, float, int] = "auto",
-                    chunk_size: int = 2048,
-                    similarity_window: int = 1,
-                    min_sentences: int = 1,
-                    min_chunk_size: int = 2,
-                    min_characters_per_sentence: int = 12,
-                    threshold_step: float = 0.01,
-                    **kwargs: Dict[str, Any]    
-                    ) -> "SemanticChunker":
+    def from_recipe(
+        cls,
+        name: str = "default",
+        lang: Optional[str] = "en",
+        path: Optional[str] = None,
+        embedding_model: Union[str, BaseEmbeddings] = "minishlab/potion-base-32M",
+        mode: str = "window",
+        threshold: Union[str, float, int] = "auto",
+        chunk_size: int = 2048,
+        similarity_window: int = 1,
+        min_sentences: int = 1,
+        min_chunk_size: int = 2,
+        min_characters_per_sentence: int = 12,
+        threshold_step: float = 0.01,
+        **kwargs: Dict[str, Any],
+    ) -> "SemanticChunker":
         """Create a SemanticChunker from a recipe.
 
         Args:
@@ -212,7 +214,7 @@ class SemanticChunker(BaseChunker):
             delim=recipe["recipe"]["delimiters"],
             include_delim=recipe["recipe"]["include_delim"],
             **kwargs,
-        ) 
+        )
 
     def _split_sentences(
         self,
@@ -231,14 +233,16 @@ class SemanticChunker(BaseChunker):
         """
         if SPLIT_AVAILABLE:
             # Use optimized Cython split function
-            return list(split_text(
-                text=text,
-                delim=self.delim,
-                include_delim=self.include_delim,
-                min_characters_per_segment=self.min_characters_per_sentence,
-                whitespace_mode=False,
-                character_fallback=True
-            ))
+            return list(
+                split_text(
+                    text=text,
+                    delim=self.delim,
+                    include_delim=self.include_delim,
+                    min_characters_per_segment=self.min_characters_per_sentence,
+                    whitespace_mode=False,
+                    character_fallback=True,
+                )
+            )
         else:
             # Fallback to original Python implementation
             t = text
@@ -286,7 +290,9 @@ class SemanticChunker(BaseChunker):
         elif self.similarity_percentile is not None:
             return float(np.percentile(all_similarities, self.similarity_percentile))
         else:
-            raise ValueError("Both similarity_threshold and similarity_percentile are None")
+            raise ValueError(
+                "Both similarity_threshold and similarity_percentile are None"
+            )
 
     def _prepare_sentences(self, text: str) -> List[SemanticSentence]:
         """Prepare sentences with precomputed information.
@@ -372,7 +378,11 @@ class SemanticChunker(BaseChunker):
             # TODO: Account for embedding model truncating to max_seq_length, which causes a mismatch in the token count.
             return np.divide(
                 np.sum(
-                    [(sent.embedding * sent.token_count) for sent in sentences if sent.embedding is not None],
+                    [
+                        (sent.embedding * sent.token_count)
+                        for sent in sentences
+                        if sent.embedding is not None
+                    ],
                     axis=0,
                 ),
                 np.sum([sent.token_count for sent in sentences]),
@@ -388,7 +398,7 @@ class SemanticChunker(BaseChunker):
         window_embedding = sentences[0].embedding
         if window_embedding is None:
             raise ValueError("Sentence embedding is None")
-            
+
         for i in range(1, len(sentences)):
             sentence_embedding = sentences[i].embedding
             if sentence_embedding is None:
@@ -487,10 +497,13 @@ class SemanticChunker(BaseChunker):
             #     high = threshold - self.threshold_step
 
             # check if all the split token counts are between the min and max chunk size
-            if ((self.min_chunk_size <= split_token_counts) & (split_token_counts <= self.chunk_size)).all():
+            if (
+                (self.min_chunk_size <= split_token_counts)
+                & (split_token_counts <= self.chunk_size)
+            ).all():
                 break
             # check if any of the split token counts are greater than the max chunk size
-            elif (split_token_counts > self.chunk_size).any(): # type: ignore
+            elif (split_token_counts > self.chunk_size).any():  # type: ignore
                 low = threshold + self.threshold_step
             # check if any of the split token counts are less than the min chunk size
             else:
@@ -590,7 +603,9 @@ class SemanticChunker(BaseChunker):
         ]
         return groups
 
-    def _group_sentences(self, sentences: List[SemanticSentence]) -> List[List[SemanticSentence]]:
+    def _group_sentences(
+        self, sentences: List[SemanticSentence]
+    ) -> List[List[SemanticSentence]]:
         """Group sentences based on semantic similarity, either cumulatively or by window."""
         if self.mode == "cumulative":
             return self._group_sentences_cumulative(sentences)
@@ -601,7 +616,7 @@ class SemanticChunker(BaseChunker):
         """Create a chunk from a list of sentences."""
         if not sentences:
             raise ValueError("Cannot create chunk from empty sentence list")
-        
+
         # Compute chunk text and token count from sentences
         text = "".join(sent.text for sent in sentences)
         token_count = sum(sent.token_count for sent in sentences)

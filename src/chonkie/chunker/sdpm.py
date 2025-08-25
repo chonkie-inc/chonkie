@@ -36,7 +36,7 @@ class SDPMChunker(SemanticChunker):
 
     def __init__(
         self,
-        embedding_model: Union[str, BaseEmbeddings] = "minishlab/potion-base-8M",
+        embedding_model: Union[str, BaseEmbeddings] = "minishlab/potion-base-32M",
         chunk_size: int = 2048,
         mode: str = "window",
         threshold: Union[str, float, int] = "auto",
@@ -88,23 +88,24 @@ class SDPMChunker(SemanticChunker):
         # Disable the multiprocessing flag for this class
         self._use_multiprocessing = False
 
-    
     @classmethod
-    def from_recipe(cls,  # type: ignore[override]
-                    name: str = "default", 
-                    lang: Optional[str] = "en", 
-                    path: Optional[str] = None, 
-                    embedding_model: Union[str, BaseEmbeddings] = "minishlab/potion-base-8M",
-                    mode: str = "window",
-                    threshold: Union[str, float, int] = "auto",
-                    chunk_size: int = 2048,
-                    similarity_window: int = 1,
-                    min_sentences: int = 1,
-                    min_chunk_size: int = 2,
-                    min_characters_per_sentence: int = 12,
-                    threshold_step: float = 0.01,
-                    skip_window: int = 1,
-                    **kwargs: Dict[str, Any]) -> "SDPMChunker":  # type: ignore
+    def from_recipe(
+        cls,  # type: ignore[override]
+        name: str = "default",
+        lang: Optional[str] = "en",
+        path: Optional[str] = None,
+        embedding_model: Union[str, BaseEmbeddings] = "minishlab/potion-base-32M",
+        mode: str = "window",
+        threshold: Union[str, float, int] = "auto",
+        chunk_size: int = 2048,
+        similarity_window: int = 1,
+        min_sentences: int = 1,
+        min_chunk_size: int = 2,
+        min_characters_per_sentence: int = 12,
+        threshold_step: float = 0.01,
+        skip_window: int = 1,
+        **kwargs: Dict[str, Any],
+    ) -> "SDPMChunker":  # type: ignore
         """Create a SDPMChunker from a recipe.
 
         Args:

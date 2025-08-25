@@ -26,7 +26,7 @@ from chonkie import SDPMChunker
 
 # Basic initialization with default parameters
 chunker = SDPMChunker(
-    embedding_model="minishlab/potion-base-8M",  # Default model
+    embedding_model="minishlab/potion-base-32M",  # Default model
     threshold=0.5,                              # Similarity threshold (0-1)
     chunk_size=2048,                             # Maximum tokens per chunk
     min_sentences=1,                            # Initial sentences per chunk
@@ -39,7 +39,7 @@ chunker = SDPMChunker(
 <ParamField
     path="embedding_model"
     type="Union[str, BaseEmbeddings]"
-    default="minishlab/potion-base-8M"
+    default="minishlab/potion-base-32M"
 >
     Model identifier or embedding model instance
 </ParamField>

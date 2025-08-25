@@ -12,7 +12,7 @@ from .base import CloudChunker
 
 class SDPMChunker(CloudChunker):
     """Semantic Double-Pass Merging for Chonkie API.
-    
+
     This chunker uses the Semantic Double-Pass Merging algorithm to chunk text.
 
     Args:
@@ -31,26 +31,28 @@ class SDPMChunker(CloudChunker):
         return_type: The return type to use.
         api_key: The API key to use.
         **kwargs: Additional keyword arguments.
-        
+
     """
 
-    def __init__(self,
-                 embedding_model: str = "minishlab/potion-base-8M",
-                 mode: str = "window",
-                 threshold: Union[str, float, int] = "auto",
-                 chunk_size: int = 512,
-                 similarity_window: int = 1,
-                 min_sentences: int = 1,
-                 min_chunk_size: int = 2,
-                 min_characters_per_sentence: int = 12,
-                 threshold_step: float = 0.01,
-                 delim: Union[str, List[str]] = [". ", "! ", "? ", "\n"],
-                 include_delim: Optional[Literal["prev", "next"]] = "prev",
-                 skip_window: int = 1,
-                 api_key: Optional[str] = None, 
-                 **kwargs: Dict[str, Any]) -> None:
+    def __init__(
+        self,
+        embedding_model: str = "minishlab/potion-base-32M",
+        mode: str = "window",
+        threshold: Union[str, float, int] = "auto",
+        chunk_size: int = 512,
+        similarity_window: int = 1,
+        min_sentences: int = 1,
+        min_chunk_size: int = 2,
+        min_characters_per_sentence: int = 12,
+        threshold_step: float = 0.01,
+        delim: Union[str, List[str]] = [". ", "! ", "? ", "\n"],
+        include_delim: Optional[Literal["prev", "next"]] = "prev",
+        skip_window: int = 1,
+        api_key: Optional[str] = None,
+        **kwargs: Dict[str, Any],
+    ) -> None:
         """Initialize the SemanticDoublePassMerger.
-        
+
         Args:
             embedding_model: The embedding model to use.
             mode: The mode to use.
@@ -85,32 +87,34 @@ class SDPMChunker(CloudChunker):
 
         # Check if the threshold is valid
         if isinstance(threshold, str) and threshold != "auto":
-            raise ValueError("Threshold must be either 'auto' or a number between 0 and 1.")
+            raise ValueError(
+                "Threshold must be either 'auto' or a number between 0 and 1."
+            )
 
         # Check if the similarity window is valid
         if similarity_window <= 0:
             raise ValueError("Similarity window must be greater than 0.")
-        
+
         # Check if the minimum sentences is valid
         if min_sentences <= 0:
             raise ValueError("Minimum sentences must be greater than 0.")
-        
+
         # Check if the minimum chunk size is valid
         if min_chunk_size <= 0:
             raise ValueError("Minimum chunk size must be greater than 0.")
-        
+
         # Check if the minimum characters per sentence is valid
         if min_characters_per_sentence <= 0:
             raise ValueError("Minimum characters per sentence must be greater than 0.")
-        
+
         # Check if the threshold step is valid
         if threshold_step <= 0:
             raise ValueError("Threshold step must be greater than 0.")
-        
+
         # Check if the delimiters are valid
         if not isinstance(delim, list):
             raise ValueError("Delimiters must be a list.")
-        
+
         # Check if the include_delim is valid
         if include_delim not in ["prev", "next"]:
             raise ValueError("Include delim must be either 'prev' or 'next'.")
@@ -122,7 +126,7 @@ class SDPMChunker(CloudChunker):
         # Check if the embedding model is a string
         if not isinstance(embedding_model, str):
             raise ValueError("Embedding model must be a string.")
-        
+
         # Initialize the chunker
         self.embedding_model = embedding_model
         self.mode = mode
@@ -137,13 +141,14 @@ class SDPMChunker(CloudChunker):
         self.include_delim = include_delim
         self.skip_window = skip_window
 
-
-    def chunk(self, text: Union[str, List[str]]) -> Union[List[SemanticChunk], List[List[SemanticChunk]]]:
+    def chunk(
+        self, text: Union[str, List[str]]
+    ) -> Union[List[SemanticChunk], List[List[SemanticChunk]]]:
         """Chunk the text into a list of chunks.
-        
+
         Args:
             text: The text to chunk.
-            
+
         Returns:
             A list of chunks.
 
@@ -185,21 +190,25 @@ class SDPMChunker(CloudChunker):
                 return batch_chunks
             else:
                 single_result: List[Dict] = cast(List[Dict], response.json())
-                single_chunks: List[SemanticChunk] = [SemanticChunk.from_dict(chunk) for chunk in single_result]
+                single_chunks: List[SemanticChunk] = [
+                    SemanticChunk.from_dict(chunk) for chunk in single_result
+                ]
                 return single_chunks
         except Exception as error:
             raise ValueError(
                 "Oh no! The Chonkie API returned an invalid response."
                 + "Please try again in a short while."
-                + "If the issue persists, please contact support at support@chonkie.ai." 
+                + "If the issue persists, please contact support at support@chonkie.ai."
             ) from error
 
-    def __call__(self, text: Union[str, List[str]]) -> Union[List[SemanticChunk], List[List[SemanticChunk]]]:
+    def __call__(
+        self, text: Union[str, List[str]]
+    ) -> Union[List[SemanticChunk], List[List[SemanticChunk]]]:
         """Call the chunker.
-        
+
         Args:
             text: The text to chunk.
-            
+
         Returns:
             A list of chunks.
 

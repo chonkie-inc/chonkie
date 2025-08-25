@@ -574,7 +574,7 @@
                     "embedding_model": {
                         "type": "string",
                         "title": "Embedding Model",
-                        "default": "minishlab/potion-base-8M",
+                        "default": "minishlab/potion-base-32M",
                         "description": "Model identifier or embedding model instance to use for semantic analysis."
                     },
                     "threshold": {
@@ -696,7 +696,7 @@
                     "embedding_model": {
                         "type": "string",
                         "title": "Embedding Model",
-                        "default": "minishlab/potion-base-8M",
+                        "default": "minishlab/potion-base-32M",
                         "description": "Model identifier or embedding model instance to use for semantic analysis."
                     },
                     "threshold": {
@@ -1419,7 +1419,7 @@
                                     "embedding_model": {
                                         "type": "string",
                                         "title": "Embedding Model",
-                                        "default": "minishlab/potion-base-8M",
+                                        "default": "minishlab/potion-base-32M",
                                         "description": "Model identifier or embedding model instance to use for semantic analysis."
                                     },
                                     "threshold": {
@@ -1579,7 +1579,7 @@
                                     "embedding_model": {
                                         "type": "string",
                                         "title": "Embedding Model",
-                                        "default": "minishlab/potion-base-8M",
+                                        "default": "minishlab/potion-base-32M",
                                         "description": "Model identifier or embedding model instance to use for semantic analysis."
                                     },
                                     "threshold": {

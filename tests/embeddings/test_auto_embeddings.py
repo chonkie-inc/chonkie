@@ -21,7 +21,7 @@ class TestAutoEmbeddingsModel2Vec:
     @pytest.fixture
     def model_identifier(self) -> str:
         """Fixture providing a model2vec identifier."""
-        return "minishlab/potion-base-8M"
+        return "minishlab/potion-base-32M"
 
     def test_get_embeddings(self, model_identifier: str) -> None:
         """Test that AutoEmbeddings can load Model2Vec embeddings."""
@@ -38,9 +38,12 @@ class TestAutoEmbeddingsModel2Vec:
         assert len(result[0]) > 0  # Should have dimensions
         # Model2Vec returns numpy arrays, convert to check float types
         import numpy as np
+
         if isinstance(result[0], np.ndarray):
             result[0] = result[0].tolist()
-        assert all(isinstance(x, (float, int, np.floating, np.integer)) for x in result[0])
+        assert all(
+            isinstance(x, (float, int, np.floating, np.integer)) for x in result[0]
+        )
 
 
 class TestAutoEmbeddingsSentenceTransformers:
@@ -66,15 +69,20 @@ class TestAutoEmbeddingsSentenceTransformers:
         assert len(result[0]) > 0  # Should have dimensions
         # SentenceTransformers returns numpy arrays, convert to check float types
         import numpy as np
+
         if isinstance(result[0], np.ndarray):
             result[0] = result[0].tolist()
-        assert all(isinstance(x, (float, int, np.floating, np.integer)) for x in result[0])
+        assert all(
+            isinstance(x, (float, int, np.floating, np.integer)) for x in result[0]
+        )
 
 
 class TestAutoEmbeddingsProviderPrefix:
     """Test AutoEmbeddings with provider:// prefix syntax."""
 
-    @pytest.mark.skipif(not os.getenv("OPENAI_API_KEY"), reason="OpenAI API key not set")
+    @pytest.mark.skipif(
+        not os.getenv("OPENAI_API_KEY"), reason="OpenAI API key not set"
+    )
     def test_openai_provider_prefix(self) -> None:
         """Test OpenAI embeddings with provider prefix."""
         embeddings = AutoEmbeddings.get_embeddings("openai://text-embedding-3-small")
@@ -89,7 +97,9 @@ class TestAutoEmbeddingsProviderPrefix:
         assert isinstance(embeddings, CohereEmbeddings)
         assert embeddings.model == "embed-english-light-v3.0"
 
-    @pytest.mark.skipif(not os.getenv("VOYAGE_API_KEY"), reason="Voyage API key not set")
+    @pytest.mark.skipif(
+        not os.getenv("VOYAGE_API_KEY"), reason="Voyage API key not set"
+    )
     def test_voyage_provider_prefix(self) -> None:
         """Test VoyageAI embeddings with provider prefix."""
         embeddings = AutoEmbeddings.get_embeddings("voyageai://voyage-3")
@@ -107,7 +117,9 @@ class TestAutoEmbeddingsProviderPrefix:
 class TestAutoEmbeddingsProviderLookup:
     """Test AutoEmbeddings provider lookup without prefix."""
 
-    @pytest.mark.skipif(not os.getenv("OPENAI_API_KEY"), reason="OpenAI API key not set")
+    @pytest.mark.skipif(
+        not os.getenv("OPENAI_API_KEY"), reason="OpenAI API key not set"
+    )
     def test_openai_model_lookup(self) -> None:
         """Test OpenAI model lookup by identifier."""
         embeddings = AutoEmbeddings.get_embeddings("text-embedding-3-small")
@@ -126,6 +138,7 @@ class TestAutoEmbeddingsInputTypes:
 
     def test_custom_embeddings_object(self) -> None:
         """Test that custom embeddings objects can be wrapped."""
+
         class MockEmbeddings:
             def embed(self, texts: list[str]) -> list[list[float]]:
                 return [[1.0, 2.0, 3.0] for _ in texts]

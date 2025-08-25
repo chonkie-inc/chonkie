@@ -11,6 +11,7 @@ from chonkie.types import SemanticChunk
 @pytest.fixture
 def mock_api_response():
     """Mock successful API response."""
+
     def _mock_response(text_input, chunk_count=1):
         if isinstance(text_input, str):
             if not text_input.strip():
@@ -18,12 +19,14 @@ def mock_api_response():
             # Single text input - SDPM might not chunk very short text
             if len(text_input.split()) < 3:
                 return []  # SDPM typically requires more text
-            return [{
-                "text": text_input,
-                "token_count": max(1, len(text_input.split())),
-                "start_index": 0,
-                "end_index": len(text_input)
-            }]
+            return [
+                {
+                    "text": text_input,
+                    "token_count": max(1, len(text_input.split())),
+                    "start_index": 0,
+                    "end_index": len(text_input),
+                }
+            ]
         else:
             # Batch input
             results = []
@@ -31,20 +34,23 @@ def mock_api_response():
                 if not text.strip() or len(text.split()) < 3:
                     results.append([])
                 else:
-                    results.append([{
-                        "text": text,
-                        "token_count": max(1, len(text.split())),
-                        "start_index": 0,
-                        "end_index": len(text)
-                    }])
+                    results.append([
+                        {
+                            "text": text,
+                            "token_count": max(1, len(text.split())),
+                            "start_index": 0,
+                            "end_index": len(text),
+                        }
+                    ])
             return results
+
     return _mock_response
 
 
 @pytest.fixture
 def mock_requests_get():
     """Mock requests.get for API availability check."""
-    with patch('requests.get') as mock_get:
+    with patch("requests.get") as mock_get:
         mock_response = Mock()
         mock_response.status_code = 200
         mock_get.return_value = mock_response
@@ -54,7 +60,7 @@ def mock_requests_get():
 @pytest.fixture
 def mock_requests_post():
     """Mock requests.post for API chunking calls."""
-    with patch('requests.post') as mock_post:
+    with patch("requests.post") as mock_post:
         yield mock_post
 
 
@@ -87,7 +93,7 @@ def test_cloud_sdpm_chunker_initialization(mock_requests_get) -> None:
     # Check if the threshold_step is not a positive float
     with pytest.raises(ValueError):
         SDPMChunker(threshold_step=-0.1, api_key="test_key")
-    
+
     # Check if the delim is not a list
     with pytest.raises(ValueError):
         SDPMChunker(delim="not_a_list", api_key="test_key")
@@ -102,11 +108,11 @@ def test_cloud_sdpm_chunker_initialization(mock_requests_get) -> None:
 
     # Check if the embedding_model is not a string
     with pytest.raises(ValueError):
-        SDPMChunker(embedding_model=123, api_key="test_key") # type: ignore
+        SDPMChunker(embedding_model=123, api_key="test_key")  # type: ignore
 
     # Finally, check if the attributes are set correctly
-    chunker = SDPMChunker(chunk_size=256, api_key="test_key") 
-    assert chunker.embedding_model == "minishlab/potion-base-8M"
+    chunker = SDPMChunker(chunk_size=256, api_key="test_key")
+    assert chunker.embedding_model == "minishlab/potion-base-32M"
     assert chunker.mode == "window"
     assert chunker.threshold == "auto"
     assert chunker.chunk_size == 256
@@ -121,23 +127,22 @@ def test_cloud_sdpm_chunker_initialization(mock_requests_get) -> None:
     assert chunker.api_key == "test_key"
 
 
-def test_cloud_sdpm_chunker_single_sentence(mock_requests_get, mock_requests_post, mock_api_response) -> None:
+def test_cloud_sdpm_chunker_single_sentence(
+    mock_requests_get, mock_requests_post, mock_api_response
+) -> None:
     """Test that the SDPM Chunker works with a single sentence."""
     text = "Hello, world!"
-    
+
     # Mock the post request response
     mock_response = Mock()
     mock_response.status_code = 200
     mock_response.json.return_value = mock_api_response(text)
     mock_requests_post.return_value = mock_response
-    
-    sdpm_chunker = SDPMChunker(
-        chunk_size=512,
-        api_key="test_key"
-    )
+
+    sdpm_chunker = SDPMChunker(chunk_size=512, api_key="test_key")
 
     result = sdpm_chunker(text)
-    assert len(result) >= 0 # API might return 0 chunks for very short text
+    assert len(result) >= 0  # API might return 0 chunks for very short text
     if len(result) > 0:
         # Exact values depend on the API response, so we check for presence and type
         assert "text" in result[0]
@@ -150,31 +155,30 @@ def test_cloud_sdpm_chunker_single_sentence(mock_requests_get, mock_requests_pos
         assert isinstance(result[0]["end_index"], int)
 
 
-def test_cloud_sdpm_chunker_batch(mock_requests_get, mock_requests_post, mock_api_response) -> None:
+def test_cloud_sdpm_chunker_batch(
+    mock_requests_get, mock_requests_post, mock_api_response
+) -> None:
     """Test that the SDPM Chunker works with a batch of texts."""
     texts = [
         "Hello, world!",
         "This is another sentence.",
         "This is a third sentence. This is a fourth one to make it longer.",
     ]
-    
+
     # Mock the post request response
     mock_response = Mock()
     mock_response.status_code = 200
     mock_response.json.return_value = mock_api_response(texts)
     mock_requests_post.return_value = mock_response
-    
-    sdpm_chunker = SDPMChunker(
-        chunk_size=512,
-        api_key="test_key"
-    )
-    
+
+    sdpm_chunker = SDPMChunker(chunk_size=512, api_key="test_key")
+
     result = sdpm_chunker(texts)
     assert len(result) == len(texts)
     for i in range(len(texts)):
         assert isinstance(result[i], list)
         if len(result[i]) > 0:
-            assert result[i][0].text 
+            assert result[i][0].text
             assert isinstance(result[i][0].text, str)
             assert result[i][0].token_count
             assert isinstance(result[i][0].token_count, int)
@@ -184,33 +188,34 @@ def test_cloud_sdpm_chunker_batch(mock_requests_get, mock_requests_post, mock_ap
             assert isinstance(result[i][0].end_index, int)
 
 
-def test_cloud_sdpm_chunker_empty_text(mock_requests_get, mock_requests_post, mock_api_response) -> None:
+def test_cloud_sdpm_chunker_empty_text(
+    mock_requests_get, mock_requests_post, mock_api_response
+) -> None:
     """Test that the SDPM Chunker works with an empty text."""
     # Mock the post request response
     mock_response = Mock()
     mock_response.status_code = 200
     mock_response.json.return_value = mock_api_response("")
     mock_requests_post.return_value = mock_response
-    
-    sdpm_chunker = SDPMChunker(
-        chunk_size=512,
-        api_key="test_key"
-    )
+
+    sdpm_chunker = SDPMChunker(chunk_size=512, api_key="test_key")
 
     result = sdpm_chunker("")
     assert len(result) == 0
 
 
-def test_cloud_sdpm_chunker_real_api(mock_requests_get, mock_requests_post, mock_api_response) -> None:
+def test_cloud_sdpm_chunker_real_api(
+    mock_requests_get, mock_requests_post, mock_api_response
+) -> None:
     """Test with mocked API calls."""
     text = "This is a test sentence for the SDPM chunker. It has several parts. This is another sentence to test with."
-    
+
     # Mock the post request response
     mock_response = Mock()
     mock_response.status_code = 200
     mock_response.json.return_value = mock_api_response(text)
     mock_requests_post.return_value = mock_response
-    
+
     sdpm_chunker = SDPMChunker(chunk_size=512, api_key="test_key")
     result = sdpm_chunker(text)
     assert isinstance(result, list)
