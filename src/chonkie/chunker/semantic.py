@@ -306,12 +306,13 @@ class SemanticChunker(BaseChunker):
                 return []
             
             # Filter by percentile and minimum distance
-            split_indices = filter_split_indices(
+            filtered_indices, _ = filter_split_indices(
                 minima_indices,
                 minima_values,
                 self.threshold,
                 self.min_sentences_per_chunk
             )
+            split_indices = filtered_indices
         else:
             # Fallback to scipy implementation
             # Get the savgol filter first order derivatives
