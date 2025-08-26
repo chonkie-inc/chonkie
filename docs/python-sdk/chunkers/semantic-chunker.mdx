@@ -1,10 +1,10 @@
 ---
 title: 'Semantic Chunker'
-description: 'Split text into chunks based on semantic similarity'
+description: 'Split text into chunks based on semantic similarity with advanced features'
 icon: 'vector-square'
 ---
 
-The `SemanticChunker` splits text into chunks based on semantic similarity, ensuring that related content stays together in the same chunk. This approach is particularly useful for RAG applications where context preservation is crucial.
+The `SemanticChunker` splits text into chunks based on semantic similarity, ensuring that related content stays together in the same chunk. This chunker now includes advanced features like Savitzky-Golay filtering for smoother boundary detection and skip-window merging for connecting related content that may not be consecutive.
 
 ## API Reference
 To use the `SemanticChunker` via the API, check out the [API reference documentation](../../api-reference/semantic-chunker).
@@ -27,9 +27,18 @@ from chonkie import SemanticChunker
 # Basic initialization with default parameters
 chunker = SemanticChunker(
     embedding_model="minishlab/potion-base-8M",  # Default model
-    threshold=0.5,                               # Similarity threshold (0-1) or (1-100) or "auto"
-    chunk_size=2048,                              # Maximum tokens per chunk
-    min_sentences=1                              # Initial sentences per chunk
+    threshold=0.8,                               # Similarity threshold (0-1)
+    chunk_size=2048,                             # Maximum tokens per chunk
+    similarity_window=3,                         # Window for similarity calculation
+    skip_window=0                                # Skip-and-merge window (0=disabled)
+)
+
+# With skip-and-merge enabled (similar to legacy SDPM behavior)
+chunker = SemanticChunker(
+    embedding_model="minishlab/potion-base-8M",
+    threshold=0.7,
+    chunk_size=2048,
+    skip_window=1  # Enable merging of similar non-consecutive groups
 )
 ```
 
@@ -44,21 +53,11 @@ chunker = SemanticChunker(
 </ParamField>
 
 <ParamField
-    path="mode"
-    type="str"
-    default="window"
->
-    Mode for grouping sentences, either "cumulative" or "window"
-</ParamField>
-
-<ParamField
     path="threshold"
-    type="Union[float, int, str]"
-    default="auto"
+    type="float"
+    default="0.8"
 >
-   When in the range [0,1], denotes the similarity threshold to consider sentences similar.
-   When in the range (1,100], interprets the given value as a percentile threshold.
-   When set to "auto", the threshold is automatically calculated.
+    Similarity threshold for grouping sentences (0-1). Lower values create larger groups.
 </ParamField>
 
 <ParamField
@@ -72,13 +71,13 @@ chunker = SemanticChunker(
 <ParamField
     path="similarity_window"
     type="int"
-    default="1"
+    default="3"
 >
-    Number of sentences to consider for similarity threshold calculation
+    Number of sentences to consider for similarity calculation
 </ParamField>
 
 <ParamField
-    path="min_sentences"
+    path="min_sentences_per_chunk"
     type="int"
     default="1"
 >
@@ -86,62 +85,112 @@ chunker = SemanticChunker(
 </ParamField>
 
 <ParamField
-    path="min_chunk_size"
-    type="Optional[int]"
-    default="None"
->
-    Minimum tokens per chunk
-</ParamField>
-
-<ParamField
     path="min_characters_per_sentence"
     type="int"
-    default="12"
+    default="24"
 >
     Minimum number of characters per sentence
 </ParamField>
 
 <ParamField
-    path="threshold_step"
-    type="float"
-    default="0.01"
+    path="skip_window"
+    type="int"
+    default="0"
 >
-    Step size for similarity threshold calculation
+    Number of groups to skip when looking for similar content to merge.
+    - `0` (default): No skip-and-merge, uses standard semantic grouping
+    - `1` or higher: Enables merging of semantically similar groups within the skip window
+    
+    This feature allows the chunker to connect related content that may not be consecutive in the text.
+</ParamField>
+
+<ParamField
+    path="filter_window"
+    type="int"
+    default="5"
+>
+    Window length for the Savitzky-Golay filter used in boundary detection
+</ParamField>
+
+<ParamField
+    path="filter_polyorder"
+    type="int"
+    default="3"
+>
+    Polynomial order for the Savitzky-Golay filter
+</ParamField>
+
+<ParamField
+    path="filter_tolerance"
+    type="float"
+    default="0.2"
+>
+    Tolerance for the Savitzky-Golay filter boundary detection
 </ParamField>
 
 <ParamField
     path="delim"
     type="Union[str, List[str]]"
-    default= "['.', '!', '?', '\n']"
+    default='[". ", "! ", "? ", "\n"]'
 >
-    Delimiters to split sentences on. Default is `['.', '!', '?', '\n']`
+    Delimiters to split sentences on
 </ParamField>
 
-<ParamField>
+<ParamField
     path="include_delim"
     type='Optional[Literal["prev", "next"]]'
     default="prev"
 >
-    Include delimiters in the chunk text. If so, specify whether to include the previous or next delimiter.
+    Include delimiters in the chunk text. Specify whether to include with the previous or next sentence.
 </ParamField>
 
 
 ## Usage
 
-### Single Text Chunking
+### Basic Semantic Chunking
 
 ```python
+from chonkie import SemanticChunker
+
 text = """First paragraph about a specific topic.
 Second paragraph continuing the same topic.
 Third paragraph switching to a different topic.
 Fourth paragraph expanding on the new topic."""
+
+# Standard semantic chunking
+chunker = SemanticChunker(
+    embedding_model="minishlab/potion-base-8M",
+    threshold=0.7,
+    chunk_size=512
+)
 
 chunks = chunker.chunk(text)
 
 for chunk in chunks:
     print(f"Chunk text: {chunk.text}")
     print(f"Token count: {chunk.token_count}")
-    print(f"Number of sentences: {len(chunk.sentences)}")
+```
+
+### With Skip-Window Merging
+
+```python
+# Enable skip-window for merging related non-consecutive content
+chunker = SemanticChunker(
+    embedding_model="minishlab/potion-base-8M",
+    threshold=0.6,
+    chunk_size=512,
+    skip_window=2  # Look up to 2 groups ahead for similar content
+)
+
+text = """The neural network processes input data through layers.
+Stock market showed volatility today.
+Training data is essential for model performance.
+Economic indicators suggest growth.
+GPUs accelerate neural network computations significantly.
+Federal reserve announced new policies."""
+
+chunks = chunker.chunk(text)
+# Related AI content will be grouped together despite being separated
 ```
 
 ### Batch Chunking
@@ -158,30 +207,54 @@ for doc_chunks in batch_chunks:
         print(f"Chunk: {chunk.text}")
 ```
 
+## Advanced Features
+
+### Savitzky-Golay Filtering
+
+The SemanticChunker uses Savitzky-Golay filtering for smoother boundary detection in similarity curves. This reduces noise in the semantic similarity signal and provides more stable chunk boundaries.
+
+### Skip-Window Merging
+
+When `skip_window > 0`, the chunker can merge semantically similar groups that are not consecutive. This is useful for:
+- Documents with alternating topics
+- Content with recurring themes
+- Technical documents with distributed related sections
+
 ## Supported Embeddings
 
 SemanticChunker supports multiple embedding providers through Chonkie's embedding system. See the [Embeddings Overview](/embeddings/overview) for more information.
 
 ## Return Type
 
-SemanticChunker returns `SemanticChunk` objects with optimized storage using slots:
+SemanticChunker returns `Chunk` objects:
 
 ```python
 @dataclass
-class SemanticSentence(Sentence):
+class Chunk:
     text: str
     start_index: int
     end_index: int
     token_count: int
-    embedding: Optional[np.ndarray]  # Sentence embedding vector
-    
-    __slots__ = ['embedding']  # Optimized memory usage
-
-@dataclass
-class SemanticChunk(SentenceChunk):
-    text: str
-    start_index: int
-    end_index: int
-    token_count: int
-    sentences: List[SemanticSentence]
 ```
+
+## Legacy Versions
+
+<Note>
+The original SemanticChunker (pre-v1.2.0) with different parameter names and behavior is available in the legacy module:
+
+```python
+from chonkie.legacy import SemanticChunker as LegacySemanticChunker
+
+# Uses old parameter names and behavior
+chunker = LegacySemanticChunker(
+    mode="window",
+    min_sentences=1,
+    min_chunk_size=2,
+    threshold_step=0.01
+)
+```
+
+For the SDPM (Semantic Double-Pass Merging) functionality, you can either:
+1. Use the new SemanticChunker with `skip_window > 0` (recommended)
+2. Use the legacy SDPMChunker (see [SDPM Chunker documentation](./sdpm-chunker))
+</Note>
