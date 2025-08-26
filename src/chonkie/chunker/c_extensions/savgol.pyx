@@ -1,312 +1,289 @@
-# distutils: language = c++
+# distutils: language = c
 # cython: language_level=3, boundscheck=False, wraparound=False, cdivision=True, nonecheck=False
 """
-Optimized Cython implementation of Savitzky-Golay filter for BetterSemanticChunker.
+NumPy-free Cython wrapper for pure C Savitzky-Golay implementation.
 
-This module provides highly optimized filtering and similarity operations using:
-- Precomputed filter coefficients for efficiency
-- np.convolve for fast application
-- Zero-crossing interpolation for accurate minima detection
-- Windowed cross-similarity for better semantic analysis
-
-Performance gains: ~3-5x faster than scipy implementation.
+This module provides Python bindings for the pure C implementation without NumPy dependencies.
+It handles conversion between Python lists/arrays and C arrays.
 """
 
 import cython
-import numpy as np
-cimport numpy as np
-from libc.math cimport fabs, pow
+from libc.stdlib cimport malloc, free
+from libc.string cimport memcpy
 
-# Type definitions for flexibility
-ctypedef fused DTYPE_t:
-    np.float32_t
-    np.float64_t
+# External C declarations
+cdef extern from "savgol_pure.h":
+    ctypedef struct ArrayResult:
+        double* data
+        size_t size
+    
+    ctypedef struct MinimaResult:
+        int* indices
+        double* values
+        size_t count
+    
+    ArrayResult* create_array_result(size_t size)
+    void free_array_result(ArrayResult* result)
+    MinimaResult* create_minima_result(size_t size)
+    void free_minima_result(MinimaResult* result)
+    
+    ArrayResult* savgol_filter_pure(const double* data, size_t n,
+                                    int window_length, int polyorder, int deriv)
+    
+    MinimaResult* find_local_minima_interpolated_pure(const double* data, size_t n,
+                                                      int window_size, int poly_order,
+                                                      double tolerance)
+    
+    ArrayResult* windowed_cross_similarity_pure(const double* embeddings, size_t n, size_t d,
+                                               int window_size)
+    
+    MinimaResult* filter_split_indices_pure(const int* indices, const double* values,
+                                           size_t n_indices, double threshold,
+                                           int min_distance)
 
-np.import_array()
-
+# Helper function to convert Python list to C array
 @cython.boundscheck(False)
 @cython.wraparound(False)
-@cython.cdivision(True)
-cdef np.ndarray compute_savitzky_golay_coeffs(int window_size, int poly_order, dtype=np.float32):
-    """
-    Precompute Savitzky-Golay filter coefficients for multiple derivatives.
+cdef double* list_to_c_array(list data, size_t* length):
+    """Convert Python list to C double array."""
+    cdef size_t n = len(data)
+    cdef double* c_array = <double*>malloc(n * sizeof(double))
+    if not c_array:
+        raise MemoryError("Failed to allocate memory for C array")
     
-    This is more efficient than computing coefficients on each call.
-    """
-    cdef int half_window = (window_size - 1) // 2
-    cdef np.ndarray A = np.zeros((window_size, poly_order + 1), dtype=dtype)
-    cdef np.ndarray coeffs = np.zeros((3, window_size), dtype=dtype)
-    cdef int i, j
-    cdef double val
+    for i in range(n):
+        c_array[i] = float(data[i])
+    
+    length[0] = n
+    return c_array
 
-    # Build Vandermonde matrix
-    for i in range(window_size):
-        val = i - half_window
-        for j in range(poly_order + 1):
-            A[i, j] = pow(val, j)
-
-    # Compute pseudoinverse for least squares solution
-    cdef np.ndarray pinv_A = np.linalg.pinv(A).astype(dtype)
-
-    # Extract coefficients for 0th, 1st, and 2nd derivatives
-    if poly_order >= 0:
-        coeffs[0] = pinv_A[0]  # 0th derivative (smoothing)
-    if poly_order >= 1:
-        coeffs[1] = pinv_A[1]  # 1st derivative
-    if poly_order >= 2:
-        coeffs[2] = pinv_A[2] * 2.0  # 2nd derivative (factor of 2!)
-
-    return coeffs
-
+# Helper function to convert Python list of ints to C array
 @cython.boundscheck(False)
 @cython.wraparound(False)
-cdef np.ndarray apply_savitzky_golay_filter(np.ndarray coeffs, np.ndarray y, int deriv):
-    """
-    Apply precomputed Savitzky-Golay filter using efficient convolution.
+cdef int* int_list_to_c_array(list data, size_t* length):
+    """Convert Python list of ints to C int array."""
+    cdef size_t n = len(data)
+    cdef int* c_array = <int*>malloc(n * sizeof(int))
+    if not c_array:
+        raise MemoryError("Failed to allocate memory for C array")
     
-    Much faster than manual loops - leverages NumPy's optimized convolution.
-    """
-    cdef int n = y.shape[0]
-    cdef int window_size = coeffs.shape[1]
-    cdef int half_window = (window_size - 1) // 2
+    for i in range(n):
+        c_array[i] = int(data[i])
     
-    # Pad data with edge values for boundary handling
-    cdef np.ndarray y_padded = np.pad(y, (half_window, half_window), mode='edge')
-    
-    # Apply filter using convolution (reversed coefficients for proper convolution)
-    cdef np.ndarray result = np.convolve(y_padded, coeffs[deriv][::-1], mode='valid')
-    
+    length[0] = n
+    return c_array
+
+# Helper to convert C array to Python list
+@cython.boundscheck(False)
+@cython.wraparound(False)
+cdef list c_array_to_list(double* data, size_t n):
+    """Convert C double array to Python list."""
+    result = []
+    for i in range(n):
+        result.append(data[i])
     return result
 
+# Helper to convert C int array to Python list
 @cython.boundscheck(False)
 @cython.wraparound(False)
-@cython.cdivision(True)
-cpdef np.ndarray savgol_filter(np.ndarray data, 
-                               int window_length=5, 
-                               int polyorder=3, 
-                               int deriv=0,
-                               bint use_float32=False):
+cdef list c_int_array_to_list(int* data, size_t n):
+    """Convert C int array to Python list."""
+    result = []
+    for i in range(n):
+        result.append(data[i])
+    return result
+
+# Python-accessible functions
+
+def savgol_filter(data, int window_length=5, int polyorder=3, int deriv=0, bint use_float32=False):
     """
-    Apply Savitzky-Golay filter with precomputed coefficients.
+    Apply Savitzky-Golay filter without NumPy.
     
     Args:
-        data: Input data
+        data: Input data (list or array-like)
         window_length: Length of the filter window (must be odd and > polyorder)
         polyorder: Order of the polynomial
         deriv: Derivative order (0=smoothing, 1=first, 2=second)
-        use_float32: If True, use float32 for memory efficiency
+        use_float32: Ignored (kept for compatibility)
     
     Returns:
-        Filtered data
+        Filtered data as a list
     """
-    # Validate inputs
-    if window_length % 2 == 0 or window_length < 3:
-        raise ValueError("window_length must be an odd positive integer >= 3")
-    if polyorder >= window_length:
-        raise ValueError("polyorder must be less than window_length")
-    if polyorder < 0:
-        raise ValueError("polyorder must be non-negative")
-    if deriv < 0 or deriv > min(polyorder, 2):
-        raise ValueError(f"deriv must be between 0 and {min(polyorder, 2)}")
+    # Convert input to list if needed
+    if not isinstance(data, list):
+        data = list(data)
     
-    # Choose dtype
-    dtype = np.float32 if use_float32 else np.float64
+    cdef size_t n
+    cdef double* c_data = list_to_c_array(data, &n)
+    cdef ArrayResult* result
     
-    # Ensure data is the right type
-    if data.dtype != dtype:
-        data = data.astype(dtype)
-    
-    # Precompute coefficients (could cache these for repeated calls)
-    cdef np.ndarray coeffs = compute_savitzky_golay_coeffs(window_length, polyorder, dtype)
-    
-    # Apply filter
-    return apply_savitzky_golay_filter(coeffs, data, deriv)
+    try:
+        # Call C function
+        result = savgol_filter_pure(c_data, n, window_length, polyorder, deriv)
+        if not result:
+            raise ValueError("Invalid parameters for Savitzky-Golay filter")
+        
+        # Convert result to Python list
+        py_result = c_array_to_list(result.data, result.size)
+        
+        # Free C result
+        free_array_result(result)
+        
+        return py_result
+    finally:
+        free(c_data)
 
-@cython.boundscheck(False)
-@cython.wraparound(False)
-@cython.cdivision(True)
-cpdef tuple find_local_minima_interpolated(np.ndarray y, 
-                                          int window_size=11, 
-                                          int poly_order=2,
-                                          double tolerance=0.2,
-                                          bint use_float32=False):
+def find_local_minima_interpolated(data, int window_size=11, int poly_order=2,
+                                  double tolerance=0.2, bint use_float32=False):
     """
-    Find local minima with sub-sample accuracy using zero-crossing interpolation.
-    
-    This is more accurate than simple threshold-based detection as it finds
-    the exact zero-crossing point of the first derivative.
+    Find local minima with sub-sample accuracy without NumPy.
     
     Args:
-        y: Input data
+        data: Input data (list or array-like)
         window_size: Savitzky-Golay window size
         poly_order: Polynomial order
         tolerance: Tolerance for considering derivative as zero
-        use_float32: If True, use float32 for memory efficiency
+        use_float32: Ignored (kept for compatibility)
     
     Returns:
-        Tuple of (indices, values) of local minima
+        Tuple of (indices, values) as lists
     """
-    # Validate inputs
-    if window_size % 2 == 0 or window_size < 3:
-        raise ValueError("window_size must be an odd positive integer >= 3")
-    if poly_order >= window_size:
-        raise ValueError("poly_order must be less than window_size")
-    if poly_order < 1:
-        raise ValueError("poly_order must be at least 1 for derivative computation")
+    # Convert input to list if needed
+    if not isinstance(data, list):
+        data = list(data)
     
-    dtype = np.float32 if use_float32 else np.float64
-    y = np.asarray(y, dtype=dtype)
+    cdef size_t n
+    cdef double* c_data = list_to_c_array(data, &n)
+    cdef MinimaResult* result
     
-    cdef int n = y.shape[0]
-    if n < window_size:
-        return np.array([], dtype=np.int32), np.array([], dtype=dtype)
-    
-    # Precompute coefficients
-    cdef np.ndarray coeffs = compute_savitzky_golay_coeffs(window_size, poly_order, dtype)
-    
-    # Compute derivatives
-    cdef np.ndarray dy = apply_savitzky_golay_filter(coeffs, y, deriv=1)
-    cdef np.ndarray ddy = apply_savitzky_golay_filter(coeffs, y, deriv=2)
-    
-    cdef list minima_indices = []
-    cdef list minima_values = []
-    cdef int i
-    cdef double interp_weight
-    
-    # Find zero crossings with interpolation
-    for i in range(1, n - 1):
-        # Check for sign change in first derivative (negative to positive)
-        # and positive second derivative (concave up)
-        if dy[i] < -tolerance and dy[i + 1] > tolerance and ddy[i] > 0:
-            # Linear interpolation to find exact zero crossing
-            interp_weight = -dy[i] / (dy[i + 1] - dy[i])
-            
-            # Choose the closer index
-            if interp_weight < 0.5:
-                minima_indices.append(i)
-                minima_values.append(y[i])
-            else:
-                minima_indices.append(i + 1)
-                minima_values.append(y[i + 1])
-        # Also check for exact zeros (within tolerance)
-        elif fabs(dy[i]) < tolerance and ddy[i] > 0:
-            # Check if it's a true minimum (not just a flat region)
-            if i > 0 and i < n - 1:
-                if y[i] <= y[i-1] and y[i] <= y[i+1]:
-                    minima_indices.append(i)
-                    minima_values.append(y[i])
-    
-    return (np.array(minima_indices, dtype=np.int32), 
-            np.array(minima_values, dtype=dtype))
+    try:
+        # Call C function
+        result = find_local_minima_interpolated_pure(
+            c_data, n, window_size, poly_order, tolerance
+        )
+        if not result:
+            raise ValueError("Invalid parameters for minima detection")
+        
+        # Convert results to Python lists
+        indices = c_int_array_to_list(result.indices, result.count)
+        values = c_array_to_list(result.values, result.count)
+        
+        # Free C result
+        free_minima_result(result)
+        
+        return (indices, values)
+    finally:
+        free(c_data)
 
-@cython.boundscheck(False)
-@cython.wraparound(False)
-@cython.cdivision(True)
-cpdef np.ndarray windowed_cross_similarity(np.ndarray embeddings, int window_size):
+def windowed_cross_similarity(embeddings, int window_size):
     """
-    Compute windowed cross-similarity for semantic chunking.
-    
-    This calculates the average similarity within a sliding window,
-    excluding self-similarity (diagonal elements). This is useful for
-    finding semantic coherence in text.
+    Compute windowed cross-similarity without NumPy.
     
     Args:
-        embeddings: n×d matrix of embeddings
+        embeddings: List of embedding vectors (list of lists)
         window_size: Size of sliding window (must be odd and >= 3)
     
     Returns:
-        Array of average similarities for each position
+        List of average similarities for each position
     """
-    if window_size < 3 or window_size % 2 == 0:
-        raise ValueError("window_size must be odd and >= 3")
+    # Handle embeddings as list of lists
+    if not embeddings:
+        return []
     
-    cdef int n = embeddings.shape[0]
-    cdef int d = embeddings.shape[1]
-    cdef int half_window = window_size // 2
+    cdef size_t n = len(embeddings)
+    cdef size_t d = len(embeddings[0]) if n > 0 else 0
+    cdef size_t idx = 0
+    cdef double* c_embeddings
+    cdef ArrayResult* result
     
-    # Use appropriate dtype based on input
-    dtype = embeddings.dtype
-    cdef np.ndarray averaged = np.zeros(n, dtype=dtype)
+    if d == 0:
+        return []
     
-    cdef int i, j, k
-    cdef double similarity_sum
-    cdef int window_count
+    # Flatten embeddings to C array (row-major)
+    c_embeddings = <double*>malloc(n * d * sizeof(double))
+    if not c_embeddings:
+        raise MemoryError("Failed to allocate memory for embeddings")
     
-    # Compute windowed similarity
+    idx = 0
     for i in range(n):
-        similarity_sum = 0.0
-        window_count = 0
-        
-        # Only compute similarities within the window
-        for j in range(max(0, i - half_window), min(n, i + half_window + 1)):
-            for k in range(j + 1, min(n, i + half_window + 1)):  # j+1 to avoid duplicates
-                similarity_sum += np.dot(embeddings[j], embeddings[k])
-                window_count += 1
-        
-        # Average the similarities
-        averaged[i] = similarity_sum / window_count if window_count > 0 else 0.0
+        emb = embeddings[i]
+        if len(emb) != d:
+            free(c_embeddings)
+            raise ValueError("All embeddings must have the same dimension")
+        for j in range(d):
+            c_embeddings[idx] = float(emb[j])
+            idx += 1
     
-    return averaged
+    try:
+        # Call C function
+        result = windowed_cross_similarity_pure(
+            c_embeddings, n, d, window_size
+        )
+        if not result:
+            raise ValueError("Invalid parameters for windowed cross-similarity")
+        
+        # Convert result to Python list
+        py_result = c_array_to_list(result.data, result.size)
+        
+        # Free C result
+        free_array_result(result)
+        
+        return py_result
+    finally:
+        free(c_embeddings)
 
-@cython.boundscheck(False)
-@cython.wraparound(False)
-cpdef np.ndarray filter_split_indices(np.ndarray indices, 
-                                      np.ndarray values,
-                                      double threshold,
-                                      int min_distance):
+def filter_split_indices(indices, values, double threshold, int min_distance):
     """
-    Filter split indices by percentile threshold and minimum distance.
+    Filter split indices by percentile threshold and minimum distance without NumPy.
     
     Args:
-        indices: Candidate split indices
-        values: Values at those indices
+        indices: Candidate split indices (list)
+        values: Values at those indices (list)
         threshold: Percentile threshold (0-1)
         min_distance: Minimum distance between splits
     
     Returns:
-        Filtered indices
+        Filtered indices as a list
     """
-    if indices.shape[0] == 0:
-        return np.array([], dtype=np.int32)
+    # Convert inputs to lists if needed
+    if not isinstance(indices, list):
+        indices = list(indices)
+    if not isinstance(values, list):
+        values = list(values)
     
-    # Calculate percentile threshold
-    cdef double percentile = np.percentile(values, (1.0 - threshold) * 100)
+    if len(indices) != len(values):
+        raise ValueError("indices and values must have the same length")
     
-    # Filter by threshold
-    mask = values < percentile
-    filtered_indices = indices[mask]
-    filtered_values = values[mask]
+    if len(indices) == 0:
+        return []
     
-    if filtered_indices.shape[0] == 0:
-        return np.array([], dtype=np.int32)
+    cdef size_t n
+    cdef int* c_indices = int_list_to_c_array(indices, &n)
+    cdef double* c_values = list_to_c_array(values, &n)
+    cdef MinimaResult* result
     
-    # Sort by index (should already be sorted, but ensure)
-    sort_order = np.argsort(filtered_indices)
-    filtered_indices = filtered_indices[sort_order]
-    filtered_values = filtered_values[sort_order]
-    
-    # Filter by minimum distance
-    cdef list final_indices = [filtered_indices[0]]
-    cdef int last_index = filtered_indices[0]
-    cdef int i
-    
-    for i in range(1, filtered_indices.shape[0]):
-        if filtered_indices[i] - last_index >= min_distance:
-            final_indices.append(filtered_indices[i])
-            last_index = filtered_indices[i]
-    
-    return np.array(final_indices, dtype=np.int32)
+    try:
+        # Call C function
+        result = filter_split_indices_pure(
+            c_indices, c_values, n, threshold, min_distance
+        )
+        if not result:
+            raise ValueError("Invalid parameters for filter_split_indices")
+        
+        # Convert result to Python list (only indices needed)
+        py_result = c_int_array_to_list(result.indices, result.count)
+        
+        # Free C result
+        free_minima_result(result)
+        
+        return py_result
+    finally:
+        free(c_indices)
+        free(c_values)
 
-# Cache for precomputed coefficients
-cdef dict _coeff_cache = {}
-
-cpdef np.ndarray get_cached_coeffs(int window_size, int poly_order, dtype=np.float32):
+def get_cached_coeffs(int window_size, int poly_order, dtype=None):
     """
-    Get cached Savitzky-Golay coefficients or compute and cache them.
-    
-    This avoids recomputing coefficients for repeated calls with same parameters.
+    Stub for compatibility - caching is handled internally in C.
+    Returns None as coefficients are computed as needed.
     """
-    key = (window_size, poly_order, dtype)
-    if key not in _coeff_cache:
-        _coeff_cache[key] = compute_savitzky_golay_coeffs(window_size, poly_order, dtype)
-    return _coeff_cache[key]
+    return None

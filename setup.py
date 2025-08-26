@@ -1,19 +1,33 @@
 """Setup script for Chonkie's Cython extensions.
 
 This script configures the Cython extensions used in the Chonkie library.
-It includes the token_chunker, split, and merge extensions.
+It includes the token_chunker, split, merge, and NumPy-free Savitzky-Golay extensions.
 """
 from Cython.Build import cythonize
 from setuptools import Extension, setup
+import os
+
+# Get the c_extensions directory
+c_extensions_dir = os.path.join("src", "chonkie", "chunker", "c_extensions")
 
 extensions = [
     Extension(
         "chonkie.chunker.c_extensions.split",
-        ["src/chonkie/chunker/c_extensions/split.pyx"],
+        [os.path.join(c_extensions_dir, "split.pyx")],
     ),
     Extension(
         "chonkie.chunker.c_extensions.merge",
-        ["src/chonkie/chunker/c_extensions/merge.pyx"],
+        [os.path.join(c_extensions_dir, "merge.pyx")],
+    ),
+    Extension(
+        "chonkie.chunker.c_extensions.savgol",
+        [
+            os.path.join(c_extensions_dir, "savgol.pyx"),
+            os.path.join(c_extensions_dir, "savgol_pure.c"),
+        ],
+        include_dirs=[c_extensions_dir],
+        extra_compile_args=["-O3", "-ffast-math"],
+        language="c",
     ),
 ]
 

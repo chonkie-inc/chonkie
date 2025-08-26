@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 
 from chonkie.embeddings import AutoEmbeddings, BaseEmbeddings
 from chonkie.tokenizer import Tokenizer
-from chonkie.types import SemanticChunk, Sentence
+from chonkie.types import Chunk, Sentence
 from chonkie.utils import Hubbie
 
 from .base import BaseChunker
@@ -24,7 +24,7 @@ try:
 except ImportError:
     SPLIT_AVAILABLE = False
 
-# Import the optimized Savitzky-Golay filter
+# Import the optimized Savitzky-Golay filter (pure C implementation)
 try:
     from .c_extensions.savgol import (
         filter_split_indices,
@@ -33,8 +33,10 @@ try:
         windowed_cross_similarity,
     )
     SAVGOL_AVAILABLE = True
+    SAVGOL_IMPL = "pure_c"
 except ImportError:
     SAVGOL_AVAILABLE = False
+    SAVGOL_IMPL = "none"
 
 
 class SemanticChunker(BaseChunker):
@@ -82,7 +84,7 @@ class SemanticChunker(BaseChunker):
             raise ValueError("similarity_window must be positive")
         if min_sentences_per_chunk <= 0:
             raise ValueError("min_sentences_per_chunk must be positive")
-        if threshold <= 0 or threshold >= 1:
+        if not isinstance(threshold, (int, float)) or threshold <= 0 or threshold >= 1:
             raise ValueError("threshold must be between 0 and 1")
         if type(delim) not in [str, list]:
             raise ValueError("delim must be a string or list of strings")
@@ -94,9 +96,9 @@ class SemanticChunker(BaseChunker):
             raise ValueError("filter_tolerance must be between 0 and 1")
          
         if isinstance(embedding_model, str):
-            self.embedding_model: BaseEmbeddings = AutoEmbeddings.get_embeddings(embedding_model)
+            self.embedding_model = AutoEmbeddings.get_embeddings(embedding_model)
         elif isinstance(embedding_model, BaseEmbeddings):
-            self.embedding_model: BaseEmbeddings = embedding_model
+            self.embedding_model = embedding_model
         else:
             raise ValueError("embedding_model must be a string or a BaseEmbeddings object")
 
@@ -242,7 +244,14 @@ class SemanticChunker(BaseChunker):
 
     def _prepare_sentences(self, text: str) -> List[Sentence]:
         """Prepare the sentences for chunking."""
+        # Handle empty or whitespace-only text
+        if not text or text.isspace():
+            return []
+            
         sentences = self._split_sentences(text)
+        if not sentences:
+            return []
+            
         token_counts = self.tokenizer.count_tokens_batch(sentences)
         return [Sentence(text=s, start_index=i, end_index=i + len(s), token_count=tc) for (i, (s, tc)) in enumerate(zip(sentences, token_counts))]
     
@@ -393,19 +402,23 @@ class SemanticChunker(BaseChunker):
         # Return the chunks
         return groups
 
-    def _create_chunks(self, sentence_groups: List[List[Sentence]]) -> List[SemanticChunk]:
+    def _create_chunks(self, sentence_groups: List[List[Sentence]]) -> List[Chunk]:
         """Create a chunk from the sentence groups."""
         chunks = []
         current_index = 0
         for group in sentence_groups:
             text = "".join([s.text for s in group])
             token_count = sum([s.token_count for s in group])
-            chunks.append(SemanticChunk(text=text, start_index=current_index, end_index=current_index + len(text), token_count=token_count, sentences=group))
+            chunks.append(Chunk(text=text, start_index=current_index, end_index=current_index + len(text), token_count=token_count))
             current_index += len(text)
         return chunks
 
-    def chunk(self, text: str) -> List[SemanticChunk]:
+    def chunk(self, text: str) -> List[Chunk]:
         """Chunk the text into semantic chunks."""
+        # Handle empty text
+        if not text or text.isspace():
+            return []
+            
         # Prepare the sentences
         sentences = self._prepare_sentences(text)
         
@@ -415,12 +428,11 @@ class SemanticChunker(BaseChunker):
             if sentences:
                 text = "".join([s.text for s in sentences])
                 token_count = sum([s.token_count for s in sentences])
-                return [SemanticChunk(
+                return [Chunk(
                     text=text,
                     start_index=0,
                     end_index=len(text),
-                    token_count=token_count,
-                    sentences=sentences
+                    token_count=token_count
                 )]
             else:
                 return []
@@ -443,19 +455,18 @@ class SemanticChunker(BaseChunker):
     def _import_dependencies(self) -> None:
         """Import the dependencies."""
         global np, savgol_filter, windowed_cross_similarity, filter_split_indices, find_local_minima_interpolated
-        import numpy as np
-        from scipy.signal import savgol_filter
         
-        # Import Cython extensions if available
-        if SAVGOL_AVAILABLE:
-            from .c_extensions.savgol import (
-                filter_split_indices,
-                find_local_minima_interpolated,
-                windowed_cross_similarity,
-            )
+        # Import NumPy (still needed for array operations)
+        import numpy as np
+        
+        # Import fallback Savitzky-Golay from SciPy if no C extensions available
+        if not SAVGOL_AVAILABLE:
+            from scipy.signal import savgol_filter
+        # Note: If C extensions are available, the functions are already imported above
     
     def __repr__(self) -> str: 
         """Return a string representation of the SemanticChunker."""
+        impl_info = f" (using {SAVGOL_IMPL})" if SAVGOL_AVAILABLE else ""
         return (
             f"SemanticChunker(model={self.embedding_model}, "
             f"chunk_size={self.chunk_size}, "
@@ -464,5 +475,5 @@ class SemanticChunker(BaseChunker):
             f"min_sentences_per_chunk={self.min_sentences_per_chunk}, "
             f"filter_window={self.filter_window}, "
             f"filter_polyorder={self.filter_polyorder}, "
-            f"filter_tolerance={self.filter_tolerance})"    
+            f"filter_tolerance={self.filter_tolerance}){impl_info}"    
         )
