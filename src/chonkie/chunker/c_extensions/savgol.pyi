@@ -65,7 +65,7 @@ def filter_split_indices(
     values: Union[List[float], Any],
     threshold: float,
     min_distance: int
-) -> List[int]: 
+) -> Tuple[List[int], List[float]]: 
     """
     Filter split indices by percentile threshold and minimum distance without NumPy.
     
@@ -76,7 +76,7 @@ def filter_split_indices(
         min_distance: Minimum distance between splits
     
     Returns:
-        Filtered indices as a list
+        Tuple of (filtered_indices, filtered_values) as lists
     """
     ...
 

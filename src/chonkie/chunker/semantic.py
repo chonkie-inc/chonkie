@@ -5,7 +5,7 @@ and calculates window embeddings directly rather than approximating them from se
 It uses Savitzky-Golay filtering for smoother boundary detection.
 """
 
-from typing import TYPE_CHECKING, Any, Dict, List, Literal, Optional, Union
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Literal, Optional, Union
 
 if TYPE_CHECKING:
     import numpy as np
@@ -109,8 +109,9 @@ class SemanticChunker(BaseChunker):
         self._import_dependencies()
 
         # Initialize the tokenizer and chunker
-        self.tokenizer: Tokenizer = self.embedding_model.get_tokenizer_or_token_counter()
-        super().__init__(self.tokenizer)
+        tokenizer = self.embedding_model.get_tokenizer_or_token_counter()
+        self.tokenizer = tokenizer  # type: ignore[assignment]
+        super().__init__(tokenizer)
         
         # Initialize the chunker parameters
         self.threshold = threshold
@@ -258,7 +259,7 @@ class SemanticChunker(BaseChunker):
         if not sentences:
             return []
             
-        token_counts = self.tokenizer.count_tokens_batch(sentences)
+        token_counts = self.tokenizer.count_tokens_batch(sentences)  # type: ignore[union-attr]
         return [Sentence(text=s, start_index=i, end_index=i + len(s), token_count=tc) for (i, (s, tc)) in enumerate(zip(sentences, token_counts))]
     
     def _get_sentence_embeddings(self, sentences: List[Sentence]) -> List["np.ndarray"]:
@@ -276,7 +277,8 @@ class SemanticChunker(BaseChunker):
         """Get the similarity between the window and the sentence embeddings."""
         window_embeddings = self._get_window_embeddings(sentences)
         sentence_embeddings = self._get_sentence_embeddings(sentences)
-        return np.asarray([self.embedding_model.similarity(w, s) for w, s in zip(window_embeddings, sentence_embeddings)])
+        similarities = [float(self.embedding_model.similarity(w, s)) for w, s in zip(window_embeddings, sentence_embeddings)]
+        return similarities
     
     def _get_split_indices(self, similarities: Union[List[float], "np.ndarray"]) -> List[int]:
         """Get split indices using optimized Savitzky-Golay filter with interpolation."""
@@ -290,6 +292,8 @@ class SemanticChunker(BaseChunker):
         if len(similarities) < self.filter_window:
             # If data is too small for filter, return boundaries only
             return []
+        
+        split_indices_list: List[int] = []
         
         if SAVGOL_AVAILABLE:
             # Use optimized Cython implementation with interpolation
@@ -312,23 +316,26 @@ class SemanticChunker(BaseChunker):
                 self.threshold,
                 self.min_sentences_per_chunk
             )
-            split_indices = filtered_indices
+            split_indices_list = filtered_indices  # Already a list from filter_split_indices
         else:
             # Fallback to scipy implementation
+            # Ensure similarities is a numpy array for scipy
+            similarities_array = np.asarray(similarities)
+            
             # Get the savgol filter first order derivatives
-            first_order_filter = savgol_filter(similarities, window_length=self.filter_window, polyorder=self.filter_polyorder, deriv=1)
+            first_order_filter = savgol_filter(similarities_array, window_length=self.filter_window, polyorder=self.filter_polyorder, deriv=1)
             
             # Get the savgol filter second order derivatives
-            second_order_filter = savgol_filter(similarities, window_length=self.filter_window, polyorder=self.filter_polyorder, deriv=2)
+            second_order_filter = savgol_filter(similarities_array, window_length=self.filter_window, polyorder=self.filter_polyorder, deriv=2)
             
             # Get the indices where the first order derivative is close to zero and the second order derivative is positive
-            local_minima_indices = np.where((np.abs(first_order_filter) < self.filter_tolerance) & (second_order_filter > 0))[0]
+            local_minima_indices = np.where((np.abs(first_order_filter) < self.filter_tolerance) & (second_order_filter > 0))[0]  # type: ignore[operator]
             
             # Handle empty case
             if len(local_minima_indices) == 0:
-                split_indices = np.array([], dtype=np.int32)
+                split_indices_list = []
             else:
-                local_minima_values = np.asarray([similarities[i] for i in local_minima_indices])
+                local_minima_values = np.asarray([similarities_array[i] for i in local_minima_indices])
                 
                 # Calculate the percentile of these values (convert threshold to percentile)
                 percentile_value = (1.0 - self.threshold) * 100
@@ -343,16 +350,13 @@ class SemanticChunker(BaseChunker):
                     for idx in thresholded_minima_indices[1:]:
                         if idx - final_indices[-1] >= self.min_sentences_per_chunk:
                             final_indices.append(idx)
-                    split_indices = np.array(final_indices, dtype=np.int32)
+                    split_indices_list = [int(i) for i in final_indices]
                 else:
-                    split_indices = np.array([], dtype=np.int32)
-        
-        # Convert to list and add boundaries
-        split_indices = split_indices.tolist() if isinstance(split_indices, np.ndarray) else split_indices
-        
+                    split_indices_list = []
+            
         # Add boundaries with window offset
         return ([0] + 
-                [int(i + self.similarity_window) for i in split_indices] + 
+                [int(i + self.similarity_window) for i in split_indices_list] + 
                 [len(similarities) + self.similarity_window])
     
     def _compute_group_embeddings_batch(self, groups: List[List[Sentence]]) -> List["np.ndarray"]:
@@ -377,7 +381,7 @@ class SemanticChunker(BaseChunker):
         embeddings = self.embedding_model.embed_batch(group_texts)
         return embeddings
     
-    def _get_windowed_similarity(self, sentences: List[Sentence]) -> "np.ndarray":
+    def _get_windowed_similarity(self, sentences: List[Sentence]) -> Union[List[float], "np.ndarray"]:
         """Alternative similarity computation using windowed cross-similarity.
         
         This can be more robust than pairwise window-sentence comparison.
@@ -385,11 +389,14 @@ class SemanticChunker(BaseChunker):
         if SAVGOL_AVAILABLE:
             # Get embeddings for all sentences
             embeddings = self.embedding_model.embed_batch([s.text for s in sentences])
-            embeddings = np.asarray(embeddings)
-            return windowed_cross_similarity(embeddings, self.similarity_window * 2 + 1)
+            # Convert embeddings to list of lists for the C extension
+            embeddings_list = [emb.tolist() if hasattr(emb, 'tolist') else list(emb) for emb in embeddings]
+            result = windowed_cross_similarity(embeddings_list, self.similarity_window * 2 + 1)
+            return np.asarray(result)
         else:
             # Fallback to existing implementation
-            return self._get_similarity(sentences)
+            similarities = self._get_similarity(sentences)
+            return np.asarray(similarities) if not isinstance(similarities, np.ndarray) else similarities
     
     def _skip_and_merge(self, groups: List[List[Sentence]]) -> List[List[Sentence]]:
         """Merge similar groups considering skip window.
@@ -420,15 +427,15 @@ class SemanticChunker(BaseChunker):
             skip_index = min(i + self.skip_window + 1, len(groups) - 1)
             
             # Find the best merge candidate within the skip window
-            best_similarity = -1
+            best_similarity = -1.0
             best_idx = -1
             
             # Check similarity with all groups within skip window
             for j in range(i + 1, min(skip_index + 1, len(groups))):
-                similarity = self.embedding_model.similarity(
+                similarity = float(self.embedding_model.similarity(
                     embeddings[i], 
                     embeddings[j]
-                )
+                ))
                 if similarity >= self.threshold and similarity > best_similarity:
                     best_similarity = similarity
                     best_idx = j
