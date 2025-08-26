@@ -86,6 +86,7 @@ def get_cached_coeffs(
     dtype: Optional[type] = None
 ) -> None: 
     """Stub for compatibility - caching is handled internally in C.
+    
     Returns None as coefficients are computed as needed.
     """
     ...
