@@ -5,13 +5,12 @@ and calculates window embeddings directly rather than approximating them from se
 It uses Savitzky-Golay filtering for smoother boundary detection.
 """
 
-from typing import TYPE_CHECKING, Any, Callable, Dict, List, Literal, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Literal, Optional, Union
 
 if TYPE_CHECKING:
     import numpy as np
 
 from chonkie.embeddings import AutoEmbeddings, BaseEmbeddings
-from chonkie.tokenizer import Tokenizer
 from chonkie.types import Chunk, Sentence
 from chonkie.utils import Hubbie
 
@@ -163,6 +162,7 @@ class SemanticChunker(BaseChunker):
             min_characters_per_sentence: The minimum number of characters per sentence.
             delim: The delimiter to use for sentence splitting.
             include_delim: Whether to include the delimiter in the sentence.
+            skip_window: Window size for merging non-consecutive groups (0 to disable)
             filter_window: Window length for the Savitzky-Golay filter
             filter_polyorder: Polynomial order for the Savitzky-Golay filter
             filter_tolerance: Tolerance for the Savitzky-Golay filter
@@ -367,6 +367,7 @@ class SemanticChunker(BaseChunker):
             
         Returns:
             List of embedding vectors, one for each group
+
         """
         if not groups:
             return []
@@ -406,6 +407,7 @@ class SemanticChunker(BaseChunker):
             
         Returns:
             List of merged groups
+
         """
         if len(groups) <= 1 or self.skip_window == 0:
             return groups
@@ -491,6 +493,7 @@ class SemanticChunker(BaseChunker):
             
         Returns:
             List of groups where each respects the chunk_size limit
+
         """
         final_groups = []
         
