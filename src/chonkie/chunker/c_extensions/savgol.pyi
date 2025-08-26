@@ -1,4 +1,4 @@
-from typing import Tuple, List, Union, Optional, Any
+from typing import Any, List, Optional, Tuple, Union
 
 def savgol_filter(
     data: Union[List[float], Any],
@@ -7,8 +7,7 @@ def savgol_filter(
     deriv: int = 0,
     use_float32: bool = False
 ) -> List[float]: 
-    """
-    Apply Savitzky-Golay filter without NumPy.
+    """Apply Savitzky-Golay filter without NumPy.
     
     Args:
         data: Input data (list or array-like)
@@ -19,6 +18,7 @@ def savgol_filter(
     
     Returns:
         Filtered data as a list
+
     """
     ...
 
@@ -29,8 +29,7 @@ def find_local_minima_interpolated(
     tolerance: float = 0.2,
     use_float32: bool = False
 ) -> Tuple[List[int], List[float]]: 
-    """
-    Find local minima with sub-sample accuracy without NumPy.
+    """Find local minima with sub-sample accuracy without NumPy.
     
     Args:
         data: Input data (list or array-like)
@@ -41,6 +40,7 @@ def find_local_minima_interpolated(
     
     Returns:
         Tuple of (indices, values) as lists
+
     """
     ...
 
@@ -48,8 +48,7 @@ def windowed_cross_similarity(
     embeddings: List[List[float]],
     window_size: int
 ) -> List[float]: 
-    """
-    Compute windowed cross-similarity without NumPy.
+    """Compute windowed cross-similarity without NumPy.
     
     Args:
         embeddings: List of embedding vectors (list of lists)
@@ -57,6 +56,7 @@ def windowed_cross_similarity(
     
     Returns:
         List of average similarities for each position
+
     """
     ...
 
@@ -66,8 +66,7 @@ def filter_split_indices(
     threshold: float,
     min_distance: int
 ) -> Tuple[List[int], List[float]]: 
-    """
-    Filter split indices by percentile threshold and minimum distance without NumPy.
+    """Filter split indices by percentile threshold and minimum distance without NumPy.
     
     Args:
         indices: Candidate split indices (list)
@@ -77,6 +76,7 @@ def filter_split_indices(
     
     Returns:
         Tuple of (filtered_indices, filtered_values) as lists
+
     """
     ...
 
@@ -85,8 +85,7 @@ def get_cached_coeffs(
     poly_order: int,
     dtype: Optional[type] = None
 ) -> None: 
-    """
-    Stub for compatibility - caching is handled internally in C.
+    """Stub for compatibility - caching is handled internally in C.
     Returns None as coefficients are computed as needed.
     """
     ...

@@ -1,12 +1,11 @@
 """Test the SemanticChunker class - cleaned version with only working tests."""
 
-import os
 from typing import List
 
 import pytest
 
 from chonkie import SemanticChunker
-from chonkie.embeddings import BaseEmbeddings, Model2VecEmbeddings, OpenAIEmbeddings, CohereEmbeddings
+from chonkie.embeddings import BaseEmbeddings, Model2VecEmbeddings
 from chonkie.types.base import Chunk
 
 

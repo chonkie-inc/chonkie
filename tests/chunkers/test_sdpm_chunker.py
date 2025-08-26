@@ -2,8 +2,8 @@
 
 import pytest
 
-from chonkie.legacy import SDPMChunker
 from chonkie.embeddings import Model2VecEmbeddings
+from chonkie.legacy import SDPMChunker
 from chonkie.types.semantic import SemanticChunk
 
 

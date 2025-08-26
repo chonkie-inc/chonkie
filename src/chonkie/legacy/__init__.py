@@ -15,6 +15,7 @@ Example:
 Note:
     The SDPMChunker's merging capabilities are now integrated into the new
     SemanticChunker implementation.
+
 """
 
 from .sdpm import SDPMChunker

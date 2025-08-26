@@ -12,9 +12,9 @@ To use this legacy version:
 
 from typing import Any, Dict, List, Literal, Optional, Union
 
-from chonkie.legacy.semantic import SemanticChunker
 from chonkie.embeddings import BaseEmbeddings
 from chonkie.pipeline.registry import chunker
+from chonkie.legacy.semantic import SemanticChunker
 from chonkie.types import SemanticChunk, Sentence
 from chonkie.utils import Hubbie
 
