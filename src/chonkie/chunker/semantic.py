@@ -56,6 +56,7 @@ class SemanticChunker(BaseChunker):
                  min_characters_per_sentence: int = 24,
                  delim: Union[str, List[str]] = [". ", "! ", "? ", "\n"],
                  include_delim: Optional[Literal["prev", "next"]] = "prev",
+                 skip_window: int = 0,
                  filter_window: int = 5,
                  filter_polyorder: int = 3,
                  filter_tolerance: float = 0.2,
@@ -64,14 +65,14 @@ class SemanticChunker(BaseChunker):
 
         Args:
             embedding_model: Name of the sentence-transformers model to load
-            mode: Mode for grouping sentences, either "cumulative" or "window"
-            threshold: Threshold for semantic similarity (0-1) or percentile (1-100), defaults to "auto"
+            threshold: Threshold for semantic similarity (0-1)
             chunk_size: Maximum tokens allowed per chunk
             similarity_window: Number of sentences to consider for similarity threshold calculation
             min_sentences_per_chunk: Minimum number of sentences per chunk
             min_characters_per_sentence: Minimum number of characters per sentence
             delim: Delimiter to use for sentence splitting
             include_delim: Whether to include the delimiter in the sentence
+            skip_window: Number of groups to skip when merging (0=disabled, >0=enabled)
             filter_window: Window length for the Savitzky-Golay filter
             filter_polyorder: Polynomial order for the Savitzky-Golay filter
             filter_tolerance: Tolerance for the Savitzky-Golay filter
@@ -84,6 +85,8 @@ class SemanticChunker(BaseChunker):
             raise ValueError("similarity_window must be positive")
         if min_sentences_per_chunk <= 0:
             raise ValueError("min_sentences_per_chunk must be positive")
+        if skip_window < 0:
+            raise ValueError("skip_window must be non-negative")
         if not isinstance(threshold, (int, float)) or threshold <= 0 or threshold >= 1:
             raise ValueError("threshold must be between 0 and 1")
         if type(delim) not in [str, list]:
@@ -114,6 +117,7 @@ class SemanticChunker(BaseChunker):
         self.chunk_size = chunk_size
         self.similarity_window = similarity_window
         self.min_sentences_per_chunk = min_sentences_per_chunk
+        self.skip_window = skip_window
         self.delim = delim
         self.include_delim = include_delim
         self.sep = "✄"
@@ -138,6 +142,7 @@ class SemanticChunker(BaseChunker):
                    min_characters_per_sentence: int = 24,
                    delim: Union[str, List[str]] = [". ", "! ", "? ", "\n"],
                    include_delim: Optional[Literal["prev", "next"]] = "prev",
+                   skip_window: int = 0,
                    filter_window: int = 5,
                    filter_polyorder: int = 3,
                    filter_tolerance: float = 0.2,
@@ -174,6 +179,7 @@ class SemanticChunker(BaseChunker):
             min_characters_per_sentence=min_characters_per_sentence,
             delim=recipe["recipe"]["delimiters"],
             include_delim=recipe["recipe"]["include_delim"],
+            skip_window=skip_window,
             filter_window=filter_window,
             filter_polyorder=filter_polyorder,
             filter_tolerance=filter_tolerance,
@@ -348,6 +354,28 @@ class SemanticChunker(BaseChunker):
                 [int(i + self.similarity_window) for i in split_indices] + 
                 [len(similarities) + self.similarity_window])
     
+    def _compute_group_embeddings_batch(self, groups: List[List[Sentence]]) -> List["np.ndarray"]:
+        """Compute embeddings for all groups in batch.
+        
+        Args:
+            groups: List of sentence groups
+            
+        Returns:
+            List of embedding vectors, one for each group
+        """
+        if not groups:
+            return []
+            
+        # Combine sentences in each group into a single text
+        group_texts = []
+        for group in groups:
+            combined_text = "".join([s.text for s in group])
+            group_texts.append(combined_text)
+        
+        # Get embeddings for all groups in batch
+        embeddings = self.embedding_model.embed_batch(group_texts)
+        return embeddings
+    
     def _get_windowed_similarity(self, sentences: List[Sentence]) -> "np.ndarray":
         """Alternative similarity computation using windowed cross-similarity.
         
@@ -362,8 +390,68 @@ class SemanticChunker(BaseChunker):
             # Fallback to existing implementation
             return self._get_similarity(sentences)
     
+    def _skip_and_merge(self, groups: List[List[Sentence]]) -> List[List[Sentence]]:
+        """Merge similar groups considering skip window.
+        
+        Args:
+            groups: List of sentence groups to potentially merge
+            
+        Returns:
+            List of merged groups
+        """
+        if len(groups) <= 1 or self.skip_window == 0:
+            return groups
+            
+        # Get embeddings for all groups in batch for efficiency
+        group_texts = ["".join([s.text for s in group]) for group in groups]
+        embeddings = self.embedding_model.embed_batch(group_texts)
+        
+        merged_groups = []
+        i = 0
+        
+        while i < len(groups):
+            if i == len(groups) - 1:
+                # Last group, can't merge with anything
+                merged_groups.append(groups[i])
+                break
+                
+            # Calculate skip index ensuring it's valid
+            skip_index = min(i + self.skip_window + 1, len(groups) - 1)
+            
+            # Find the best merge candidate within the skip window
+            best_similarity = -1
+            best_idx = -1
+            
+            # Check similarity with all groups within skip window
+            for j in range(i + 1, min(skip_index + 1, len(groups))):
+                similarity = self.embedding_model.similarity(
+                    embeddings[i], 
+                    embeddings[j]
+                )
+                if similarity >= self.threshold and similarity > best_similarity:
+                    best_similarity = similarity
+                    best_idx = j
+            
+            if best_idx != -1:
+                # Merge groups from i to best_idx (inclusive)
+                merged = []
+                for k in range(i, best_idx + 1):
+                    merged.extend(groups[k])
+                merged_groups.append(merged)
+                i = best_idx + 1  # Skip past merged groups
+            else:
+                # No merge possible, add current group
+                merged_groups.append(groups[i])
+                i += 1
+                
+        return merged_groups
+    
     def _group_sentences(self, sentences: List[Sentence], split_indices: List[int]) -> List[List[Sentence]]:
-        """Group the sentences into chunks based on the split indices."""
+        """Group the sentences based on the split indices.
+        
+        Simply groups sentences between split points without any size checking.
+        Size enforcement happens later in _split_groups.
+        """
         groups = []
         
         # Handle empty split_indices
@@ -373,25 +461,11 @@ class SemanticChunker(BaseChunker):
                 groups.append(sentences)
             return groups
             
+        # Create groups from sentences between split indices
         for i in range(len(split_indices) - 1):
-            candidate_group = sentences[split_indices[i]:split_indices[i + 1]]
-            token_count = sum([s.token_count for s in candidate_group])
-            if token_count <= self.chunk_size:
-                groups.append(candidate_group)
-            else:
-                # Split the candidate group into smaller groups that respect the chunk_size
-                current_group = []
-                current_token_count = 0
-                for sentence in candidate_group:
-                    if current_token_count + sentence.token_count <= self.chunk_size:
-                        current_group.append(sentence)
-                        current_token_count += sentence.token_count
-                    else:
-                        groups.append(current_group)
-                        current_group = [sentence]
-                        current_token_count = sentence.token_count
-                if current_group != []:
-                    groups.append(current_group)
+            group = sentences[split_indices[i]:split_indices[i + 1]]
+            if group:  # Only add non-empty groups
+                groups.append(group)
 
         # Add the last group if there are remaining sentences
         if len(split_indices) > 0 and split_indices[-1] < len(sentences):
@@ -399,9 +473,44 @@ class SemanticChunker(BaseChunker):
             if remaining:
                 groups.append(remaining)
 
-        # Return the chunks
         return groups
 
+    def _split_groups(self, groups: List[List[Sentence]]) -> List[List[Sentence]]:
+        """Split groups that exceed chunk_size into smaller groups.
+        
+        Args:
+            groups: List of sentence groups
+            
+        Returns:
+            List of groups where each respects the chunk_size limit
+        """
+        final_groups = []
+        
+        for group in groups:
+            token_count = sum([s.token_count for s in group])
+            
+            if token_count <= self.chunk_size:
+                final_groups.append(group)
+            else:
+                # Split the group into smaller chunks that respect chunk_size
+                current_group = []
+                current_token_count = 0
+                
+                for sentence in group:
+                    if current_token_count + sentence.token_count <= self.chunk_size:
+                        current_group.append(sentence)
+                        current_token_count += sentence.token_count
+                    else:
+                        if current_group:
+                            final_groups.append(current_group)
+                        current_group = [sentence]
+                        current_token_count = sentence.token_count
+                
+                if current_group:
+                    final_groups.append(current_group)
+                    
+        return final_groups
+    
     def _create_chunks(self, sentence_groups: List[List[Sentence]]) -> List[Chunk]:
         """Create a chunk from the sentence groups."""
         chunks = []
@@ -443,11 +552,18 @@ class SemanticChunker(BaseChunker):
         # Get the split indices
         split_indices = self._get_split_indices(similarities)
 
-        # Group the sentences into chunks
+        # Group the sentences into chunks based on split indices
         sentence_groups = self._group_sentences(sentences, split_indices)
+        
+        # Apply skip-and-merge if skip_window > 0
+        if self.skip_window > 0:
+            sentence_groups = self._skip_and_merge(sentence_groups)
+        
+        # Split groups that exceed chunk_size
+        final_groups = self._split_groups(sentence_groups)
 
         # Create the chunks
-        chunks = self._create_chunks(sentence_groups)
+        chunks = self._create_chunks(final_groups)
 
         # Return the chunks
         return chunks
@@ -473,6 +589,7 @@ class SemanticChunker(BaseChunker):
             f"threshold={self.threshold}, "
             f"similarity_window={self.similarity_window}, "
             f"min_sentences_per_chunk={self.min_sentences_per_chunk}, "
+            f"skip_window={self.skip_window}, "
             f"filter_window={self.filter_window}, "
             f"filter_polyorder={self.filter_polyorder}, "
             f"filter_tolerance={self.filter_tolerance}){impl_info}"    

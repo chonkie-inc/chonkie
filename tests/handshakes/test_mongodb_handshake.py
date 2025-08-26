@@ -5,14 +5,23 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from chonkie.embeddings import BaseEmbeddings
-from chonkie.friends.handshakes.mongodb import MongoDBHandshake
 from chonkie.types import Chunk
+
+# Try to import pymongo, skip tests if unavailable
+try:
+    import pymongo
+    pymongo_available = True
+    from chonkie.friends.handshakes.mongodb import MongoDBHandshake
+except ImportError:
+    pymongo = None
+    pymongo_available = False
+    MongoDBHandshake = None
 
 DEFAULT_EMBEDDING_MODEL = "minishlab/potion-retrieval-32M"
 
 # Skip all tests in this module if pymongo is not installed
 pytestmark = pytest.mark.skipif(
-    not MongoDBHandshake()._is_available(), reason="pymongo not installed"
+    not pymongo_available, reason="pymongo not installed"
 )
 
 

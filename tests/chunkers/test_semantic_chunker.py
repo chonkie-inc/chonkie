@@ -299,5 +299,206 @@ class TestSemanticChunkerEdgeCases:
         )
         text = "First sentence. Second sentence. Third sentence."
         chunks = chunker.chunk(text)
+        assert len(chunks) >= 1
+
+
+class TestSemanticChunkerSkipWindow:
+    """Test suite for skip_window functionality in SemanticChunker."""
+    
+    def test_skip_window_default_disabled(self, embedding_model: BaseEmbeddings) -> None:
+        """Test that skip_window=0 (default) disables skip-and-merge."""
+        chunker = SemanticChunker(
+            embedding_model=embedding_model,
+            chunk_size=512,
+            threshold=0.5,
+            # skip_window defaults to 0
+        )
         
-        assert len(chunks) > 0
+        # Verify default value
+        assert chunker.skip_window == 0
+        
+        text = """The weather is beautiful today. The sun is shining brightly.
+        I love programming in Python. It's a versatile language.
+        The climate is changing rapidly. Global temperatures are rising."""
+        
+        chunks = chunker.chunk(text)
+        assert len(chunks) >= 1
+    
+    def test_skip_window_enabled_single(self, embedding_model: BaseEmbeddings) -> None:
+        """Test that skip_window=1 enables merging of adjacent similar groups."""
+        # Test with skip_window disabled
+        chunker_no_skip = SemanticChunker(
+            embedding_model=embedding_model,
+            chunk_size=512,
+            threshold=0.7,
+            skip_window=0
+        )
+        
+        # Test with skip_window enabled
+        chunker_with_skip = SemanticChunker(
+            embedding_model=embedding_model,
+            chunk_size=512,
+            threshold=0.7,
+            skip_window=1
+        )
+        
+        # Text with alternating but related topics
+        text = """Dogs are loyal companions. They love to play fetch.
+        Cats are independent pets. They enjoy climbing trees.
+        Puppies need lots of training. They require patience.
+        Kittens are playful animals. They chase laser pointers."""
+        
+        chunks_no_skip = chunker_no_skip.chunk(text)
+        chunks_with_skip = chunker_with_skip.chunk(text)
+        
+        # Both should produce valid chunks
+        assert len(chunks_no_skip) >= 1
+        assert len(chunks_with_skip) >= 1
+        
+        # Skip window may produce different chunking patterns
+        # We can't guarantee fewer chunks as it depends on embeddings
+        # but we verify the functionality works without errors
+    
+    def test_skip_window_larger_value(self, embedding_model: BaseEmbeddings) -> None:
+        """Test skip_window with larger values (2+)."""
+        chunker = SemanticChunker(
+            embedding_model=embedding_model,
+            chunk_size=512,
+            threshold=0.6,
+            skip_window=2
+        )
+        
+        # Text with topics that might be merged across gaps
+        text = """Machine learning is fascinating. Neural networks are powerful.
+        The stock market fluctuated today. Economic indicators show growth.
+        Deep learning models are complex. They require lots of data.
+        Financial markets are volatile. Investors remain cautious."""
+        
+        chunks = chunker.chunk(text)
+        assert len(chunks) >= 1
+        
+        # Verify all chunks have proper structure
+        for chunk in chunks:
+            assert isinstance(chunk, Chunk)
+            assert chunk.text
+            assert chunk.token_count > 0
+    
+    def test_skip_window_with_different_thresholds(self, embedding_model: BaseEmbeddings) -> None:
+        """Test skip_window interaction with different threshold values."""
+        thresholds = [0.3, 0.5, 0.7, 0.9]
+        skip_windows = [0, 1, 2]
+        
+        text = """Python is a programming language. It's used for web development.
+        JavaScript runs in browsers. It powers interactive websites.
+        Python has many libraries. Data science uses Python extensively.
+        JavaScript frameworks are popular. React and Vue are examples."""
+        
+        for threshold in thresholds:
+            for skip_window in skip_windows:
+                chunker = SemanticChunker(
+                    embedding_model=embedding_model,
+                    chunk_size=512,
+                    threshold=threshold,
+                    skip_window=skip_window
+                )
+                
+                chunks = chunker.chunk(text)
+                assert len(chunks) >= 1
+                
+                # Verify chunks are valid
+                for chunk in chunks:
+                    assert chunk.text
+                    assert chunk.start_index >= 0
+                    assert chunk.end_index > chunk.start_index
+    
+    def test_skip_window_preserves_chunk_size_limits(self, embedding_model: BaseEmbeddings) -> None:
+        """Test that skip_window respects chunk_size limits after merging."""
+        chunker = SemanticChunker(
+            embedding_model=embedding_model,
+            chunk_size=50,  # Small chunk size to force splitting
+            threshold=0.5,
+            skip_window=2
+        )
+        
+        # Long text that will need to be split even after merging
+        text = """The Renaissance was a period of cultural rebirth in Europe.
+        It began in Italy during the 14th century and spread across the continent.
+        Artists like Leonardo da Vinci and Michelangelo created masterpieces.
+        Scientific discoveries challenged traditional beliefs about the world.
+        The printing press revolutionized the spread of knowledge.
+        Literature flourished with writers like Shakespeare and Dante.
+        Architecture evolved with new techniques and classical influences.
+        Trade routes expanded, bringing new goods and ideas to Europe."""
+        
+        chunks = chunker.chunk(text)
+        
+        # All chunks should respect the size limit
+        for chunk in chunks:
+            assert chunk.token_count <= 50
+    
+    def test_skip_window_with_empty_text(self, embedding_model: BaseEmbeddings) -> None:
+        """Test skip_window behavior with empty or minimal text."""
+        chunker = SemanticChunker(
+            embedding_model=embedding_model,
+            skip_window=1
+        )
+        
+        # Empty text
+        chunks = chunker.chunk("")
+        assert chunks == []
+        
+        # Whitespace only
+        chunks = chunker.chunk("   \n  \t  ")
+        assert chunks == []
+        
+        # Single sentence
+        chunks = chunker.chunk("Hello world.")
+        assert len(chunks) == 1
+        assert chunks[0].text == "Hello world."
+    
+    def test_skip_window_with_single_sentence_groups(self, embedding_model: BaseEmbeddings) -> None:
+        """Test skip_window when text produces single-sentence groups."""
+        chunker = SemanticChunker(
+            embedding_model=embedding_model,
+            chunk_size=512,
+            threshold=0.6,
+            skip_window=1,
+            min_sentences_per_chunk=1
+        )
+        
+        # Short sentences that might each form their own group
+        text = "First. Second. Third. Fourth. Fifth."
+        
+        chunks = chunker.chunk(text)
+        assert len(chunks) >= 1
+        
+        # Verify reconstruction
+        reconstructed = "".join(chunk.text for chunk in chunks)
+        assert reconstructed == text
+    
+    def test_skip_window_parameter_validation(self, embedding_model: BaseEmbeddings) -> None:
+        """Test that skip_window parameter validates correctly."""
+        # Valid skip_window values
+        for skip_window in [0, 1, 2, 5, 10]:
+            chunker = SemanticChunker(
+                embedding_model=embedding_model,
+                skip_window=skip_window
+            )
+            assert chunker.skip_window == skip_window
+        
+        # Negative skip_window should raise error
+        with pytest.raises(ValueError, match="skip_window must be non-negative"):
+            SemanticChunker(
+                embedding_model=embedding_model,
+                skip_window=-1
+            )
+    
+    def test_skip_window_representation(self, embedding_model: BaseEmbeddings) -> None:
+        """Test that skip_window appears in string representation."""
+        chunker = SemanticChunker(
+            embedding_model=embedding_model,
+            skip_window=2
+        )
+        
+        repr_str = repr(chunker)
+        assert "skip_window=2" in repr_str
