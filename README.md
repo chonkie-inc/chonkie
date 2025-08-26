@@ -106,7 +106,6 @@ Chonkie provides several chunkers to help you split your text efficiently for RA
 | `SentenceChunker`| `sentence` | Splits text into chunks based on sentences.                                                                |
 | `RecursiveChunker`| `recursive`| Splits text hierarchically using customizable rules to create semantically meaningful chunks.              |
 | `SemanticChunker`| `semantic` | Splits text into chunks based on semantic similarity. Inspired by the work of [Greg Kamradt](https://github.com/gkamradt).                                                        |
-| `SDPMChunker`    | `sdpm`     | Splits text using a Semantic Double-Pass Merge approach.                                                   |
 | `LateChunker`    | `late`     | Embeds text and then splits it to have better chunk embeddings.                                            |
 | `CodeChunker`    | `code`     | Splits code into structurally meaningful chunks.                                                           |
 | `NeuralChunker`  | `neural`   | Splits text using a neural model.                                                                          |

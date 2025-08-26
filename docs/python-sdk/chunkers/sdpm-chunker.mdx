@@ -1,199 +1,188 @@
 ---
-title: 'SDPM Chunker'
-description: 'Split text using Semantic Double-Pass Merging for improved context preservation'
+title: 'SDPM Chunker (Legacy)'
+description: 'Semantic Double-Pass Merging chunker - now integrated into SemanticChunker'
 icon: 'layer-group'
 ---
 
-The `SDPMChunker` extends semantic chunking by using a double-pass merging approach. It first groups content by semantic similarity, then merges similar groups within a skip window, allowing it to connect related content that may not be consecutive in the text. This technique is particularly useful for documents with recurring themes or concepts spread apart.
+<Warning>
+**Deprecated as of v1.2.0**
 
-## API Reference
-To use the `SDPMChunker` via the API, check out the [API reference documentation](../../api-reference/sdpm-chunker).
+The SDPM (Semantic Double-Pass Merging) functionality has been integrated into the main `SemanticChunker`. 
 
-## Installation
+**Recommended Migration:**
+```python
+# Old way (deprecated)
+from chonkie.legacy import SDPMChunker
+chunker = SDPMChunker(skip_window=1)
 
-SDPMChunker requires additional dependencies for semantic capabilities. You can install it with:
+# New way (recommended)
+from chonkie import SemanticChunker
+chunker = SemanticChunker(skip_window=1)
+```
+
+The new SemanticChunker provides all SDPM capabilities plus additional improvements like Savitzky-Golay filtering for better boundary detection.
+</Warning>
+
+The `SDPMChunker` extends semantic chunking by using a double-pass merging approach. It first groups content by semantic similarity, then merges similar groups within a skip window, allowing it to connect related content that may not be consecutive in the text.
+
+## Why Use the New SemanticChunker Instead?
+
+The new `SemanticChunker` includes all SDPM functionality plus:
+- **Better performance**: Optimized C extensions for faster processing
+- **Smoother boundaries**: Savitzky-Golay filtering for noise reduction
+- **Cleaner API**: Simplified parameter names and improved defaults
+- **Active development**: Ongoing improvements and bug fixes
+
+## Legacy Installation
+
+If you need to use the legacy version for compatibility:
 
 ```bash
 pip install "chonkie[semantic]"
 ```
 
-<Info>For installation instructions, see the [Installation Guide](/getting-started/installation).</Info>
-
-## Initialization
+Then import from the legacy module:
 
 ```python
-from chonkie import SDPMChunker
+from chonkie.legacy import SDPMChunker
+```
 
-# Basic initialization with default parameters
+## Legacy Usage
+
+<Note>
+This documentation is preserved for users who need to maintain existing code using SDPMChunker. For new projects, please use the main [SemanticChunker](./semantic-chunker).
+</Note>
+
+### Basic Initialization
+
+```python
+from chonkie.legacy import SDPMChunker
+
+# Legacy initialization
 chunker = SDPMChunker(
-    embedding_model="minishlab/potion-base-8M",  # Default model
-    threshold=0.5,                              # Similarity threshold (0-1)
-    chunk_size=2048,                             # Maximum tokens per chunk
-    min_sentences=1,                            # Initial sentences per chunk
-    skip_window=1                               # Number of chunks to skip when looking for similarities
+    embedding_model="minishlab/potion-base-8M",
+    threshold=0.5,                              
+    chunk_size=2048,                             
+    min_sentences=1,                            
+    skip_window=1                               
 )
 ```
 
-## Parameters
+### Legacy Parameters
 
-<ParamField
-    path="embedding_model"
-    type="Union[str, BaseEmbeddings]"
-    default="minishlab/potion-base-8M"
->
-    Model identifier or embedding model instance
-</ParamField>
+The legacy SDPMChunker uses these parameters (many now renamed in the new SemanticChunker):
 
-<ParamField
-    path="chunk_size"
-    type="int"
-    default="2048"
->
-    Maximum tokens per chunk
-</ParamField>
+- `embedding_model`: Model identifier or embedding instance
+- `mode`: "cumulative" or "window" (removed in new version)
+- `threshold`: Similarity threshold (0-1) or "auto"
+- `chunk_size`: Maximum tokens per chunk
+- `similarity_window`: Sentences for threshold calculation
+- `min_sentences`: Minimum sentences per chunk (now `min_sentences_per_chunk`)
+- `min_chunk_size`: Minimum tokens per chunk (removed in new version)
+- `min_characters_per_sentence`: Minimum characters per sentence
+- `threshold_step`: Step size for threshold calculation (removed in new version)
+- `skip_window`: Number of chunks to skip when merging
 
-<ParamField
-    path="mode"
-    type="str"
-    default="window"
->
-    Mode for grouping sentences, either "cumulative" or "window"
-</ParamField>
+### Example Migration
 
-<ParamField
-    path="threshold"
-    type="Union[float, int, str]"
-    default="auto"
->
-    When in the range [0,1], denotes the similarity threshold to consider sentences similar.
-    When in the range (1,100], interprets the given value as a percentile threshold.
-    When set to "auto", the threshold is automatically calculated.
-</ParamField>
-
-<ParamField
-    path="similarity_window"
-    type="int"
-    default="1"
->
-    Number of sentences to consider for similarity threshold calculation
-</ParamField>
-
-<ParamField
-    path="min_sentences"
-    type="int"
-    default="1"
->
-    Minimum number of sentences per chunk
-</ParamField>
-
-<ParamField
-    path="min_chunk_size"
-    type="int"
-    default="2"
->
-    Minimum tokens per chunk
-</ParamField>
-
-<ParamField
-    path="min_characters_per_sentence"
-    type="int"
-    default="12"
->
-    Minimum number of characters per sentence
-</ParamField>
-
-<ParamField
-    path="threshold_step"
-    type="float"
-    default="0.01"
->
-    Step size for threshold calculation
-</ParamField>
-
-<ParamField
-    path="delim"
-    type="Union[str, List[str]]"
-    default="['.', '!', '?', '\n']"
->
-    Delimiters to split sentences on
-</ParamField>
-
-<ParamField
-    path="include_delim"
-    type='Optional[Literal["prev", "next"]]'
-    default="prev"
->
-    Include delimiters in the chunk text. If so, specify whether to include the previous or next delimiter.
-</ParamField>
-
-<ParamField
-    path="skip_window"
-    type="int"
-    default="1"
->
-    Number of chunks to skip when looking for similarities
-</ParamField>
-
-
-## Usage
-
-### Single Text Chunking
-
+#### Old Code (Legacy)
 ```python
-text = """The neural network processes input data through layers.
-Training data is essential for model performance.
-GPUs accelerate neural network computations significantly.
-Quality training data improves model accuracy.
-TPUs provide specialized hardware for deep learning.
-Data preprocessing is a crucial step in training."""
+from chonkie.legacy import SDPMChunker
+
+chunker = SDPMChunker(
+    embedding_model="minishlab/potion-base-8M",
+    mode="window",
+    threshold="auto",
+    chunk_size=512,
+    min_sentences=1,
+    min_chunk_size=2,
+    skip_window=1
+)
 
 chunks = chunker.chunk(text)
-
 for chunk in chunks:
-    print(f"Chunk text: {chunk.text}")
+    print(f"Sentences: {len(chunk.sentences)}")
+```
+
+#### New Code (Recommended)
+```python
+from chonkie import SemanticChunker
+
+chunker = SemanticChunker(
+    embedding_model="minishlab/potion-base-8M",
+    threshold=0.7,  # Explicit threshold instead of "auto"
+    chunk_size=512,
+    min_sentences_per_chunk=1,  # Renamed parameter
+    skip_window=1  # Same functionality
+)
+
+chunks = chunker.chunk(text)
+for chunk in chunks:
     print(f"Token count: {chunk.token_count}")
-    print(f"Number of sentences: {len(chunk.sentences)}")
 ```
 
-### Batch Chunking
+## Return Type Changes
+
+### Legacy Return Type
+The legacy SDPMChunker returns `SemanticChunk` objects with sentence details:
 
 ```python
-texts = [
-    "Document with scattered but related content...",
-    "Another document with similar patterns..."
-]
+@dataclass
+class SemanticChunk:
+    text: str
+    start_index: int
+    end_index: int
+    token_count: int
+    sentences: List[SemanticSentence]  # Detailed sentence information
+```
+
+### New Return Type
+The new SemanticChunker returns simpler `Chunk` objects:
+
+```python
+@dataclass
+class Chunk:
+    text: str
+    start_index: int
+    end_index: int
+    token_count: int
+    # No sentence details - cleaner and more efficient
+```
+
+## Full Legacy Documentation
+
+For users who must use the legacy version, the complete original functionality remains available:
+
+```python
+from chonkie.legacy import SDPMChunker
+
+# All original parameters still work
+chunker = SDPMChunker(
+    embedding_model="minishlab/potion-base-8M",
+    mode="window",
+    threshold="auto",
+    chunk_size=2048,
+    similarity_window=1,
+    min_sentences=1,
+    min_chunk_size=2,
+    min_characters_per_sentence=12,
+    threshold_step=0.01,
+    delim=[". ", "! ", "? ", "\n"],
+    include_delim="prev",
+    skip_window=1
+)
+
+# Original methods preserved
+chunks = chunker.chunk(text)
 batch_chunks = chunker.chunk_batch(texts)
-
-for doc_chunks in batch_chunks:
-    for chunk in doc_chunks:
-        print(f"Chunk: {chunk.text}")
 ```
 
-## Supported Embeddings
+## Support
 
-SDPMChunker supports multiple embedding providers through Chonkie's embedding system. 
-See the [Embeddings Overview](/embeddings/overview) for more information.
+While the legacy SDPMChunker remains available for backward compatibility, it is no longer actively developed. Please consider migrating to the new SemanticChunker for:
+- Better performance
+- Active bug fixes
+- New features
+- Ongoing support
 
-## Return Type
-
-SDPMChunker returns `SemanticChunk` objects with optimized storage using slots:
-
-```python
-@dataclass
-class SemanticSentence(Sentence):
-    text: str
-    start_index: int
-    end_index: int
-    token_count: int
-    embedding: Optional[np.ndarray]  # Sentence embedding vector
-    
-    __slots__ = ['embedding']  # Optimized memory usage
-
-@dataclass
-class SemanticChunk(SentenceChunk):
-    text: str
-    start_index: int
-    end_index: int
-    token_count: int
-    sentences: List[SemanticSentence]
-```
+For migration assistance, see the [SemanticChunker documentation](./semantic-chunker) or open an issue on our [GitHub repository](https://github.com/chonkie-ai/chonkie).
