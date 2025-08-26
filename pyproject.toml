@@ -105,6 +105,7 @@ pgvector = ["vecs>=0.4.0"]
 weaviate = ["weaviate-client>=4.16.7"]
 datasets = ["datasets>=4.0.0"]
 pinecone = ["pinecone"]
+mongodb = ["pymongo"]
 
 # Optional dependencies for the genie
 genie = ["pydantic>=2.0.0", "google-genai>=1.0.0"]
@@ -134,6 +135,8 @@ all = [
     "turbopuffer[fast]>=0.2.0",
     "weaviate-client>=4.16.7",
     "azure-identity>=1.23.0",
+    "pinecone",
+    "pymongo",
 ]
 dev = [
     "datasets>=1.14.0",
