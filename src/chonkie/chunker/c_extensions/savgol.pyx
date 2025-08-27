@@ -8,7 +8,7 @@ All C implementations are included directly in this file.
 """
 
 import cython
-from libc.stdlib cimport malloc, free, calloc
+from libc.stdlib cimport malloc, free, calloc, qsort
 from libc.string cimport memcpy
 from libc.math cimport fabs, pow, sqrt
 
@@ -227,6 +227,17 @@ cdef double dot_product(const double* a, const double* b, size_t n):
         result += a[i] * b[i]
     return result
 
+# Comparison function for qsort
+cdef int compare_doubles(const void* a, const void* b) noexcept nogil:
+    cdef double val_a = (<double*>a)[0]
+    cdef double val_b = (<double*>b)[0]
+    if val_a < val_b:
+        return -1
+    elif val_a > val_b:
+        return 1
+    else:
+        return 0
+
 # Percentile calculation
 cdef double percentile(const double* data, size_t n, double p):
     if n == 0:
@@ -236,15 +247,8 @@ cdef double percentile(const double* data, size_t n, double p):
     cdef double* sorted_data = <double*>malloc(n * sizeof(double))
     memcpy(sorted_data, data, n * sizeof(double))
     
-    # Simple bubble sort (fine for small arrays)
-    cdef size_t i, j
-    cdef double temp
-    for i in range(n - 1):
-        for j in range(n - i - 1):
-            if sorted_data[j] > sorted_data[j + 1]:
-                temp = sorted_data[j]
-                sorted_data[j] = sorted_data[j + 1]
-                sorted_data[j + 1] = temp
+    # Use qsort for efficient sorting
+    qsort(sorted_data, n, sizeof(double), compare_doubles)
     
     cdef double idx = p * (n - 1)
     cdef size_t lower = <size_t>idx
