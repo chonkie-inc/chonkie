@@ -195,6 +195,9 @@ sources = ["src/chonkie/chunker/c_extensions/split.pyx"]
 name = "chonkie.chunker.c_extensions.merge"
 sources = ["src/chonkie/chunker/c_extensions/merge.pyx"]
 
+[[tool.setuptools.ext-modules]]
+name = "chonkie.chunker.c_extensions.savgol"
+sources = ["src/chonkie/chunker/c_extensions/savgol.pyx"]
 
 [tool.ruff]
 exclude = ["*.ipynb"]
