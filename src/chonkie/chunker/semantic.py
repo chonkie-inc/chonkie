@@ -24,18 +24,11 @@ except ImportError:
     SPLIT_AVAILABLE = False
 
 # Import the optimized Savitzky-Golay filter (pure C implementation)
-try:
-    from .c_extensions.savgol import (
-        filter_split_indices,
-        find_local_minima_interpolated,
-        savgol_filter,
-        windowed_cross_similarity,
-    )
-    SAVGOL_AVAILABLE = True
-    SAVGOL_IMPL = "pure_c"
-except ImportError:
-    SAVGOL_AVAILABLE = False
-    SAVGOL_IMPL = "none"
+from .c_extensions.savgol import (
+    filter_split_indices,
+    find_local_minima_interpolated,
+    windowed_cross_similarity,
+)
 
 
 class SemanticChunker(BaseChunker):
@@ -293,66 +286,27 @@ class SemanticChunker(BaseChunker):
             # If data is too small for filter, return boundaries only
             return []
         
-        split_indices_list: List[int] = []
+        # Use optimized Cython implementation with interpolation
+        minima_indices, minima_values = find_local_minima_interpolated(
+            similarities,
+            window_size=self.filter_window,
+            poly_order=self.filter_polyorder,
+            tolerance=self.filter_tolerance,
+            use_float32=False  # Use float64 for consistency with embeddings
+        )
         
-        if SAVGOL_AVAILABLE:
-            # Use optimized Cython implementation with interpolation
-            minima_indices, minima_values = find_local_minima_interpolated(
-                similarities,
-                window_size=self.filter_window,
-                poly_order=self.filter_polyorder,
-                tolerance=self.filter_tolerance,
-                use_float32=False  # Use float64 for consistency with embeddings
-            )
-            
-            # Handle empty case
-            if len(minima_indices) == 0:
-                return []
-            
-            # Filter by percentile and minimum distance
-            filtered_indices, _ = filter_split_indices(
-                minima_indices,
-                minima_values,
-                self.threshold,
-                self.min_sentences_per_chunk
-            )
-            split_indices_list = filtered_indices  # Already a list from filter_split_indices
-        else:
-            # Fallback to scipy implementation
-            # Ensure similarities is a numpy array for scipy
-            similarities_array = np.asarray(similarities)
-            
-            # Get the savgol filter first order derivatives
-            first_order_filter = savgol_filter(similarities_array, window_length=self.filter_window, polyorder=self.filter_polyorder, deriv=1)
-            
-            # Get the savgol filter second order derivatives
-            second_order_filter = savgol_filter(similarities_array, window_length=self.filter_window, polyorder=self.filter_polyorder, deriv=2)
-            
-            # Get the indices where the first order derivative is close to zero and the second order derivative is positive
-            local_minima_indices = np.where((np.abs(first_order_filter) < self.filter_tolerance) & (second_order_filter > 0))[0]  # type: ignore[operator]
-            
-            # Handle empty case
-            if len(local_minima_indices) == 0:
-                split_indices_list = []
-            else:
-                local_minima_values = np.asarray([similarities_array[i] for i in local_minima_indices])
-                
-                # Calculate the percentile of these values (convert threshold to percentile)
-                percentile_value = (1.0 - self.threshold) * 100
-                percentile_threshold = np.percentile(local_minima_values, percentile_value)
-                
-                # Get the indices where the similarity value is below the percentile threshold
-                thresholded_minima_indices = local_minima_indices[local_minima_values < percentile_threshold]
-                
-                # Filter by minimum distance between splits
-                if len(thresholded_minima_indices) > 0:
-                    final_indices = [thresholded_minima_indices[0]]
-                    for idx in thresholded_minima_indices[1:]:
-                        if idx - final_indices[-1] >= self.min_sentences_per_chunk:
-                            final_indices.append(idx)
-                    split_indices_list = [int(i) for i in final_indices]
-                else:
-                    split_indices_list = []
+        # Handle empty case
+        if len(minima_indices) == 0:
+            return []
+        
+        # Filter by percentile and minimum distance
+        filtered_indices, _ = filter_split_indices(
+            minima_indices,
+            minima_values,
+            self.threshold,
+            self.min_sentences_per_chunk
+        )
+        split_indices_list = filtered_indices  # Already a list from filter_split_indices
             
         # Add boundaries with window offset
         return ([0] + 
@@ -387,17 +341,12 @@ class SemanticChunker(BaseChunker):
         
         This can be more robust than pairwise window-sentence comparison.
         """
-        if SAVGOL_AVAILABLE:
-            # Get embeddings for all sentences
-            embeddings = self.embedding_model.embed_batch([s.text for s in sentences])
-            # Convert embeddings to list of lists for the C extension
-            embeddings_list = [emb.tolist() if hasattr(emb, 'tolist') else list(emb) for emb in embeddings]
-            result = windowed_cross_similarity(embeddings_list, self.similarity_window * 2 + 1)
-            return np.asarray(result)
-        else:
-            # Fallback to existing implementation
-            similarities = self._get_similarity(sentences)
-            return np.asarray(similarities) if not isinstance(similarities, np.ndarray) else similarities
+        # Get embeddings for all sentences
+        embeddings = self.embedding_model.embed_batch([s.text for s in sentences])
+        # Convert embeddings to list of lists for the C extension
+        embeddings_list = [emb.tolist() if hasattr(emb, 'tolist') else list(emb) for emb in embeddings]
+        result = windowed_cross_similarity(embeddings_list, self.similarity_window * 2 + 1)
+        return np.asarray(result)
     
     def _skip_and_merge(self, groups: List[List[Sentence]]) -> List[List[Sentence]]:
         """Merge similar groups considering skip window.
@@ -581,19 +530,13 @@ class SemanticChunker(BaseChunker):
 
     def _import_dependencies(self) -> None:
         """Import the dependencies."""
-        global np, savgol_filter, windowed_cross_similarity, filter_split_indices, find_local_minima_interpolated
+        global np
         
         # Import NumPy (still needed for array operations)
         import numpy as np
-        
-        # Import fallback Savitzky-Golay from SciPy if no C extensions available
-        if not SAVGOL_AVAILABLE:
-            from scipy.signal import savgol_filter
-        # Note: If C extensions are available, the functions are already imported above
     
     def __repr__(self) -> str: 
         """Return a string representation of the SemanticChunker."""
-        impl_info = f" (using {SAVGOL_IMPL})" if SAVGOL_AVAILABLE else ""
         return (
             f"SemanticChunker(model={self.embedding_model}, "
             f"chunk_size={self.chunk_size}, "
@@ -603,5 +546,5 @@ class SemanticChunker(BaseChunker):
             f"skip_window={self.skip_window}, "
             f"filter_window={self.filter_window}, "
             f"filter_polyorder={self.filter_polyorder}, "
-            f"filter_tolerance={self.filter_tolerance}){impl_info}"    
+            f"filter_tolerance={self.filter_tolerance})"    
         )

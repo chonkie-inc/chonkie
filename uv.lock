@@ -497,7 +497,7 @@ wheels = [
 
 [[package]]
 name = "chonkie"
-version = "1.1.2"
+version = "1.2.0"
 source = { editable = "." }
 dependencies = [
     { name = "tqdm" },
@@ -530,6 +530,7 @@ all = [
     { name = "tree-sitter" },
     { name = "tree-sitter-language-pack" },
     { name = "turbopuffer", extra = ["fast"] },
+    { name = "voyageai" },
     { name = "weaviate-client" },
 ]
 azure-openai = [
@@ -619,8 +620,6 @@ semantic = [
     { name = "model2vec" },
     { name = "numpy", version = "2.0.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.13'" },
     { name = "numpy", version = "2.3.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.13'" },
-    { name = "scipy", version = "1.13.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.13'" },
-    { name = "scipy", version = "1.15.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.13'" },
     { name = "tokenizers" },
 ]
 st = [
@@ -709,7 +708,6 @@ requires-dist = [
     { name = "rich", marker = "extra == 'all'", specifier = ">=13.0.0" },
     { name = "rich", marker = "extra == 'viz'", specifier = ">=13.0.0" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.0.265" },
-    { name = "scipy", marker = "extra == 'semantic'", specifier = ">=1.11.0" },
     { name = "sentence-transformers", marker = "extra == 'all'", specifier = ">=3.0.0" },
     { name = "sentence-transformers", marker = "extra == 'st'", specifier = ">=3.0.0" },
     { name = "tiktoken", marker = "extra == 'all'", specifier = ">=0.5.0" },
@@ -737,6 +735,7 @@ requires-dist = [
     { name = "turbopuffer", extras = ["fast"], marker = "extra == 'all'", specifier = ">=0.2.0" },
     { name = "turbopuffer", extras = ["fast"], marker = "extra == 'tpuf'", specifier = ">=0.2.0" },
     { name = "vecs", marker = "extra == 'pgvector'", specifier = ">=0.4.0" },
+    { name = "voyageai", marker = "extra == 'all'", specifier = ">=0.3.2" },
     { name = "voyageai", marker = "extra == 'voyageai'", specifier = ">=0.3.2" },
     { name = "weaviate-client", marker = "extra == 'all'", specifier = ">=4.16.7" },
     { name = "weaviate-client", marker = "extra == 'weaviate'", specifier = ">=4.16.7" },
