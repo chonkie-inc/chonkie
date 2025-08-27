@@ -145,67 +145,281 @@ chunker = SemanticChunker(
 </ParamField>
 
 
-## Usage
-
-### Basic Semantic Chunking
+## Basic Usage
 
 ```python
 from chonkie import SemanticChunker
 
-text = """First paragraph about a specific topic.
-Second paragraph continuing the same topic.
-Third paragraph switching to a different topic.
-Fourth paragraph expanding on the new topic."""
+# Initialize with semantic similarity grouping
+chunker = SemanticChunker(
+    embedding_model="minishlab/potion-base-8M",
+    threshold=0.7,  # Similarity threshold
+    chunk_size=512
+)
 
-# Standard semantic chunking
+text = """Your document text with multiple topics and themes..."""
+chunks = chunker.chunk(text)
+
+# Process chunks
+for chunk in chunks:
+    print(f"Chunk: {chunk.text[:50]}...")
+    print(f"Tokens: {chunk.token_count}")
+```
+
+## Examples
+
+<AccordionGroup>
+
+<Accordion title="Basic Semantic Chunking">
+```python
+from chonkie import SemanticChunker
+
+text = """Artificial intelligence is transforming industries worldwide. 
+Machine learning algorithms can now process vast amounts of data efficiently.
+Deep learning models have achieved remarkable accuracy in complex tasks.
+
+Climate change poses significant challenges to our planet.
+Rising temperatures affect ecosystems and biodiversity globally.
+Sustainable practices are essential for environmental preservation.
+
+Quantum computing represents a paradigm shift in computation.
+These systems leverage quantum mechanical phenomena for processing.
+Potential applications include cryptography and drug discovery."""
+
+# Create semantic chunker
+chunker = SemanticChunker(
+    embedding_model="minishlab/potion-base-8M",
+    threshold=0.75,  # Higher threshold = more similar content grouped
+    chunk_size=1024
+)
+
+chunks = chunker.chunk(text)
+
+# Analyze semantic groupings
+for i, chunk in enumerate(chunks):
+    print(f"\n--- Semantic Group {i+1} ---")
+    print(f"Content: {chunk.text[:100]}...")
+    print(f"Token count: {chunk.token_count}")
+    print(f"Theme: {chunk.text.split('.')[0]}")  # First sentence as theme indicator
+```
+</Accordion>
+
+<Accordion title="Skip-Window Merging">
+```python
+from chonkie import SemanticChunker
+
+# Text with alternating topics
+text = """Neural networks process information through interconnected nodes.
+The stock market experienced significant volatility this quarter.
+Deep learning models require substantial training data for optimization.
+Economic indicators point to potential recession risks ahead.
+GPU acceleration has revolutionized machine learning computations.
+Federal reserve policies impact global financial markets.
+Transformer architectures dominate modern NLP applications.
+Cryptocurrency markets show correlation with traditional assets."""
+
+# Enable skip-window to merge non-consecutive similar content
+chunker = SemanticChunker(
+    embedding_model="minishlab/potion-base-8M",
+    threshold=0.65,
+    chunk_size=512,
+    skip_window=2  # Look ahead 2 groups for similar content
+)
+
+chunks = chunker.chunk(text)
+
+# AI-related content will be grouped together
+# Financial content will be grouped separately
+for i, chunk in enumerate(chunks):
+    print(f"\nGroup {i+1}: {len(chunk.text.split('.'))} sentences")
+    print(f"Preview: {chunk.text[:80]}...")
+```
+</Accordion>
+
+<Accordion title="Fine-tuned Similarity Control">
+```python
+from chonkie import SemanticChunker
+
+text = """Your comprehensive document with various topics..."""
+
+# Experiment with different thresholds
+thresholds = [0.5, 0.7, 0.9]
+
+for threshold in thresholds:
+    chunker = SemanticChunker(
+        embedding_model="minishlab/potion-base-8M",
+        threshold=threshold,
+        chunk_size=512,
+        similarity_window=3  # Consider 3 sentences for similarity
+    )
+    
+    chunks = chunker.chunk(text)
+    print(f"\nThreshold {threshold}: {len(chunks)} chunks created")
+    
+    # Lower threshold = larger, more diverse chunks
+    # Higher threshold = smaller, more focused chunks
+    avg_size = sum(c.token_count for c in chunks) / len(chunks)
+    print(f"Average chunk size: {avg_size:.1f} tokens")
+```
+</Accordion>
+
+<Accordion title="Batch Document Processing">
+```python
+from chonkie import SemanticChunker
+
+# Initialize chunker once
+chunker = SemanticChunker(
+    embedding_model="minishlab/potion-base-8M",
+    threshold=0.7,
+    chunk_size=1024,
+    min_sentences_per_chunk=2  # Ensure meaningful chunks
+)
+
+# Multiple documents with different topics
+documents = [
+    """Document about artificial intelligence and machine learning...""",
+    """Document about climate change and environmental science...""",
+    """Document about quantum computing and physics..."""
+]
+
+# Process all documents
+batch_results = chunker.chunk_batch(documents)
+
+# Analyze results
+for doc_idx, chunks in enumerate(batch_results):
+    print(f"\nDocument {doc_idx + 1}:")
+    print(f"  Total chunks: {len(chunks)}")
+    print(f"  Total tokens: {sum(c.token_count for c in chunks)}")
+    
+    # Show semantic boundaries
+    for i, chunk in enumerate(chunks):
+        first_sentence = chunk.text.split('.')[0]
+        print(f"  Chunk {i+1}: {first_sentence[:50]}...")
+```
+</Accordion>
+
+<Accordion title="Custom Embeddings Integration">
+```python
+from chonkie import SemanticChunker
+from chonkie.embeddings import AutoEmbeddings
+
+# Use AutoEmbeddings for automatic model selection
+embeddings = AutoEmbeddings.get_embeddings(
+    model="sentence-transformers/all-MiniLM-L6-v2"
+)
+
+chunker = SemanticChunker(
+    embedding_model=embeddings,
+    threshold=0.8,
+    chunk_size=512
+)
+
+# Or use specific embedding providers
+from chonkie.embeddings import OpenAIEmbeddings
+
+openai_embeddings = OpenAIEmbeddings(
+    model="text-embedding-ada-002"
+)
+
+chunker = SemanticChunker(
+    embedding_model=openai_embeddings,
+    threshold=0.75,
+    chunk_size=1024
+)
+
+text = "Your text to chunk with custom embeddings..."
+chunks = chunker.chunk(text)
+```
+</Accordion>
+
+<Accordion title="Advanced Filtering Options">
+```python
+from chonkie import SemanticChunker
+
+# Configure Savitzky-Golay filter for smoother boundaries
+chunker = SemanticChunker(
+    embedding_model="minishlab/potion-base-8M",
+    threshold=0.7,
+    chunk_size=512,
+    filter_window=7,      # Larger window for smoother filtering
+    filter_polyorder=4,   # Higher order polynomial
+    filter_tolerance=0.15 # Stricter boundary detection
+)
+
+text = """Complex document with subtle topic transitions..."""
+chunks = chunker.chunk(text)
+
+# The filtering helps identify more natural semantic boundaries
+# especially in documents with gradual topic shifts
+for chunk in chunks:
+    print(f"Smooth boundary chunk: {chunk.text[:60]}...")
+```
+</Accordion>
+
+<Accordion title="Sentence Configuration">
+```python
+from chonkie import SemanticChunker
+
+# Customize sentence detection
+chunker = SemanticChunker(
+    embedding_model="minishlab/potion-base-8M",
+    threshold=0.7,
+    chunk_size=1024,
+    min_sentences_per_chunk=3,   # At least 3 sentences per chunk
+    min_characters_per_sentence=30,  # Filter out short fragments
+    delim=[". ", "! ", "? ", "\n\n"],  # Custom sentence delimiters
+    include_delim="prev"  # Include delimiter with previous sentence
+)
+
+# Text with various sentence structures
+text = """Short sentence. This is a much longer sentence with more detail.
+Question here? Exclamation point! New paragraph starts here.
+
+Another paragraph with different content..."""
+
+chunks = chunker.chunk(text)
+
+for chunk in chunks:
+    sentences = chunk.text.split('. ')
+    print(f"Chunk with {len(sentences)} sentences")
+```
+</Accordion>
+
+<Accordion title="RAG Pipeline Integration">
+```python
+from chonkie import SemanticChunker
+from chonkie.refinery import OverlapRefinery, EmbeddingsRefinery
+
+# Create semantic chunker
 chunker = SemanticChunker(
     embedding_model="minishlab/potion-base-8M",
     threshold=0.7,
     chunk_size=512
 )
 
-chunks = chunker.chunk(text)
-
-for chunk in chunks:
-    print(f"Chunk text: {chunk.text}")
-    print(f"Token count: {chunk.token_count}")
-```
-
-### With Skip-Window Merging
-
-```python
-# Enable skip-window for merging related non-consecutive content
-chunker = SemanticChunker(
-    embedding_model="minishlab/potion-base-8M",
-    threshold=0.6,
-    chunk_size=512,
-    skip_window=2  # Look up to 2 groups ahead for similar content
+# Add refineries for RAG optimization
+overlap_refinery = OverlapRefinery(overlap_size=50)
+embeddings_refinery = EmbeddingsRefinery(
+    embedding_model="minishlab/potion-base-8M"
 )
 
-text = """The neural network processes input data through layers.
-Stock market showed volatility today.
-Training data is essential for model performance.
-Economic indicators suggest growth.
-GPUs accelerate neural network computations significantly.
-Federal reserve announced new policies."""
-
+# Process document
+text = """Your document for RAG system..."""
 chunks = chunker.chunk(text)
-# Related AI content will be grouped together despite being separated
+
+# Apply refinements
+chunks = overlap_refinery.refine(chunks)
+chunks = embeddings_refinery.refine(chunks)  # Add embeddings
+
+# Ready for vector database
+for chunk in chunks:
+    print(f"Chunk ready for indexing: {chunk.text[:50]}...")
+    if hasattr(chunk, 'embeddings'):
+        print(f"  Embedding shape: {chunk.embeddings.shape}")
 ```
+</Accordion>
 
-### Batch Chunking
-
-```python
-texts = [
-    "First document about topic A...",
-    "Second document about topic B..."
-]
-batch_chunks = chunker.chunk_batch(texts)
-
-for doc_chunks in batch_chunks:
-    for chunk in doc_chunks:
-        print(f"Chunk: {chunk.text}")
-```
+</AccordionGroup>
 
 ## Advanced Features
 
