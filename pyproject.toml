@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "chonkie"
-version = "1.1.2"
+version = "1.2.0"
 description = "🦛 CHONK your texts with Chonkie ✨ - The no-nonsense chunking library"
 readme = "README.md"
 requires-python = ">=3.9,<4.0"
@@ -141,6 +141,8 @@ all = [
     "azure-identity>=1.23.0",
     "pinecone",
     "pymongo",
+    "voyageai>=0.3.2",
+    "scipy>=1.11.0",
 ]
 dev = [
     "datasets>=1.14.0",
