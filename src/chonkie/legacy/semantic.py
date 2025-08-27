@@ -101,7 +101,7 @@ class SemanticChunker(BaseChunker):
             raise ValueError("threshold_step must be between 0 and 1")
         if mode not in ["cumulative", "window"]:
             raise ValueError("mode must be 'cumulative' or 'window'")
-        if type(threshold) not in [str, float, int]:
+        if not isinstance(threshold, (str, float, int)):
             raise ValueError("threshold must be a string, float, or int")
         if type(delim) not in [str, list]:
             raise ValueError("delim must be a string or list of strings")
