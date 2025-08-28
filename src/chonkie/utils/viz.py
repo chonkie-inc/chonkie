@@ -206,8 +206,16 @@ class Visualizer:
         # If the full text is not provided, we'll try to reconstruct it (assuming the chunks are reconstructable)
         if full_text is None:
             try:
-                # Reconstruct the full text from the chunks
-                full_text = "".join([chunk.text for chunk in chunks])
+                 # check if the chunks has overlap taht would cause reconstruction issue.
+                 has_overlap= False
+                 for i in range(1, len(chunks)):
+                     if chunks[i].start_index < chunks[i-1].end_index:
+                         has_overlap = True
+                         break
+                 if has_overlap:
+                        raise ValueError("Chunks have overlapping indices, cannot reconstruct full text automatically. Please provide the full_text parameter.")
+                 else:
+                     full_text = "".join([chunk.text for chunk in chunks])
             except AttributeError:
                 raise ValueError("Error: Chunks must have 'text', 'start_index', and 'end_index' attributes for automatic text reconstruction.")
             except Exception as e:
@@ -265,7 +273,16 @@ class Visualizer:
         # If the full text is not provided, we'll try to reconstruct it (assuming the chunks are reconstructable)
         if full_text is None:
             try:
-                 full_text = "".join([chunk.text for chunk in chunks])
+                 # check if the chunks has overlap taht would cause reconstruction issue.
+                 has_overlap= False
+                 for i in range(1, len(chunks)):
+                     if chunks[i].start_index < chunks[i-1].end_index:
+                         has_overlap = True
+                         break
+                 if has_overlap:
+                        raise ValueError("Chunks have overlapping indices, cannot reconstruct full text automatically. Please provide the full_text parameter.")
+                 else:
+                     full_text = "".join([chunk.text for chunk in chunks])
             except AttributeError: 
                 raise AttributeError("Error: Chunks must have 'text', 'start_index', and 'end_index' attributes for automatic text reconstruction. HTML not saved.")
             except Exception as e: 
