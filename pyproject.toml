@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "chonkie"
-version = "1.1.2"
+version = "1.2.0"
 description = "🦛 CHONK your texts with Chonkie ✨ - The no-nonsense chunking library"
 readme = "README.md"
 requires-python = ">=3.9"
@@ -97,13 +97,15 @@ voyageai = ["tokenizers>=0.16.0", "voyageai>=0.3.2", "numpy>=2.0.0, <3.0"]
 cohere = ["tokenizers>=0.16.0", "cohere>=5.13.0", "numpy>=2.0.0, <3.0"]
 jina = ["tokenizers>=0.16.0", "numpy>=2.0.0, <3.0"]
 
-# optional dependencies for the friends
+# Optional dependencies for the friends
 chroma = ["chromadb>=1.0.0"]
 qdrant = ["qdrant-client>=1.0.0"]
 tpuf = ["turbopuffer[fast]>=0.2.0"]
 pgvector = ["vecs>=0.4.0"]
 weaviate = ["weaviate-client>=4.16.7"]
 datasets = ["datasets>=4.0.0"]
+pinecone = ["pinecone"]
+mongodb = ["pymongo"]
 
 # Optional dependencies for the genie
 genie = ["pydantic>=2.0.0", "google-genai>=1.0.0"]
@@ -133,6 +135,9 @@ all = [
     "turbopuffer[fast]>=0.2.0",
     "weaviate-client>=4.16.7",
     "azure-identity>=1.23.0",
+    "pinecone",
+    "pymongo",
+    "voyageai>=0.3.2",
 ]
 dev = [
     "datasets>=1.14.0",
@@ -185,6 +190,9 @@ sources = ["src/chonkie/chunker/c_extensions/split.pyx"]
 name = "chonkie.chunker.c_extensions.merge"
 sources = ["src/chonkie/chunker/c_extensions/merge.pyx"]
 
+[[tool.setuptools.ext-modules]]
+name = "chonkie.chunker.c_extensions.savgol"
+sources = ["src/chonkie/chunker/c_extensions/savgol.pyx"]
 
 [tool.ruff]
 exclude = ["*.ipynb"]

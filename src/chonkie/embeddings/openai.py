@@ -3,6 +3,7 @@
 import importlib.util as importutil
 import os
 import warnings
+from functools import lru_cache
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from .base import BaseEmbeddings
@@ -29,9 +30,18 @@ class OpenAIEmbeddings(BaseEmbeddings):
     """
 
     AVAILABLE_MODELS = {
-        "text-embedding-3-small": 1536,  # Latest model, best performance/cost ratio
-        "text-embedding-3-large": 3072,  # Latest model, highest performance
-        "text-embedding-ada-002": 1536,  # Legacy model
+        "text-embedding-3-small": {
+            "dimension": 1536,
+            "max_tokens": 8192,
+        },
+        "text-embedding-3-large": {
+            "dimension": 3072,
+            "max_tokens": 8192,
+        },
+        "text-embedding-ada-002": {
+            "dimension": 1536,
+            "max_tokens": 8192,
+        },
     }
 
     DEFAULT_MODEL = "text-embedding-3-small"
@@ -39,8 +49,9 @@ class OpenAIEmbeddings(BaseEmbeddings):
     def __init__(
         self,
         model: str = DEFAULT_MODEL,
-        tokenizer: Optional[str] = None,
+        tokenizer: Optional[Any] = None,
         dimension: Optional[int] = None,
+        max_tokens: Optional[int] = None,
         base_url: Optional[str] = None,
         api_key: Optional[str] = None,
         max_retries: int = 3,
@@ -54,6 +65,7 @@ class OpenAIEmbeddings(BaseEmbeddings):
             model: Name of the OpenAI embedding model to use
             tokenizer: The tokenizer to use. Can be loaded directly if it's a OpenAI model, otherwise needs to be provided.
             dimension: The dimension of the embedding model to use. Can be inferred if it's a OpenAI model, otherwise needs to be provided.
+            max_tokens: The maximum number of tokens to use. Can be inferred if it's a OpenAI model, otherwise needs to be provided.
             base_url: The base URL to use.
             api_key: OpenAI API key (if not provided, looks for OPENAI_API_KEY env var)
             max_retries: Maximum number of retries for failed requests
@@ -76,7 +88,7 @@ class OpenAIEmbeddings(BaseEmbeddings):
         if tokenizer is not None: 
             self._tokenizer = tokenizer
         elif model in self.AVAILABLE_MODELS:
-            self._tokenizer = tiktoken.encoding_for_model(model) # type: ignore
+            self._tokenizer = tiktoken.encoding_for_model(model)
         else:
             raise ValueError(f"Tokenizer not found for model {model}. Please provide a tokenizer.")
 
@@ -84,7 +96,17 @@ class OpenAIEmbeddings(BaseEmbeddings):
         if dimension is not None:
             self._dimension = dimension
         elif model in self.AVAILABLE_MODELS:
-            self._dimension = self.AVAILABLE_MODELS[model]
+            self._dimension = self.AVAILABLE_MODELS[model]['dimension']
+        else: 
+            raise ValueError(f"Dimension not found for model {model}. Please provide a dimension.")
+
+        # Do something for the max tokens
+        if max_tokens is not None:
+            self._max_tokens = max_tokens
+        elif model in self.AVAILABLE_MODELS:
+            self._max_tokens = self.AVAILABLE_MODELS[model]['max_tokens']
+        else:
+            raise ValueError(f"Max tokens not found for model {model}. Please provide a max tokens.")
 
         # Setup OpenAI client
         self.client = OpenAI(               # type: ignore
@@ -100,13 +122,25 @@ class OpenAIEmbeddings(BaseEmbeddings):
                 "OpenAI API key not found. Either pass it as api_key or set OPENAI_API_KEY environment variable."
             )
 
+    @lru_cache(maxsize=4096)
+    def _truncate(self, text: str) -> str:
+        """Truncate the text to be below the max token count."""
+        max_tokens = self._max_tokens
+        token_estimate = len(text) // 5 
+        if token_estimate > max_tokens:
+          tokens = self._tokenizer.encode(text)
+          if len(tokens) > max_tokens:
+              warnings.warn(f"OpenAIEmbeddings encountered a text that is too long. Truncating to {max_tokens} tokens.")
+              return self._tokenizer.decode(tokens[:max_tokens])
+        return text
+
     def embed(self, text: str) -> "np.ndarray":
         """Get embeddings for a single text."""
+        text = self._truncate(text)
         response = self.client.embeddings.create(
             model=self.model,
             input=text,
         )
-
         return np.array(response.data[0].embedding, dtype=np.float32)
 
     def embed_batch(self, texts: List[str]) -> List["np.ndarray"]:
@@ -115,6 +149,9 @@ class OpenAIEmbeddings(BaseEmbeddings):
             return []
 
         all_embeddings = []
+
+        # Truncate all the texts
+        texts = [self._truncate(text) for text in texts]
 
         # Process in batches
         for i in range(0, len(texts), self._batch_size):

@@ -1,13 +1,19 @@
-"""Module containing the SDPMChunker class.
+"""Module containing the SDPMChunker class (Legacy).
 
 This chunker uses the Semantic Double-Pass Merging algorithm to chunk text.
 
+.. deprecated:: 1.2.0
+    The merging capabilities of SDPMChunker are now integrated into the new
+    SemanticChunker. Use `from chonkie.chunker import SemanticChunker` instead.
+    
+To use this legacy version:
+    from chonkie.legacy import SDPMChunker
 """
 
 from typing import Any, Dict, List, Literal, Optional, Union
 
-from chonkie.chunker.semantic import SemanticChunker
 from chonkie.embeddings import BaseEmbeddings
+from chonkie.legacy.semantic import SemanticChunker
 from chonkie.types import SemanticChunk, Sentence
 from chonkie.utils import Hubbie
 
