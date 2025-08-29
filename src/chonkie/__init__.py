@@ -7,6 +7,7 @@ from .chef import (
 from .chunker import (
     BaseChunker,
     CodeChunker,
+    MarkdownChunker,
     LateChunker,
     NeuralChunker,
     RecursiveChunker,
@@ -132,6 +133,7 @@ __all__ += [
     "CodeChunker",
     "SlumberChunker",
     "NeuralChunker",
+    "MarkdownChunker",
 ]
 
 # Add all cloud classes to __all__
