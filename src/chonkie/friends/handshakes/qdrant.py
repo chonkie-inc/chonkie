@@ -232,4 +232,4 @@ class QdrantHandshake(BaseHandshake):
                 limit=limit,
                 with_payload=True,
             )
-        return results
+        return [{"score": res.score, **res.payload} for res in results]
