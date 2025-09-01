@@ -228,7 +228,7 @@ class QdrantHandshake(BaseHandshake):
         else:
             results = self.client.search(
                 collection_name=self.collection_name,
-                query_vector=embedding,  # type: ignore[arg-type] # Since this passes a numpy array, we need to convert it to a list
+                query_vector=embedding, 
                 limit=limit,
                 with_payload=True,
             )
