@@ -58,6 +58,27 @@ chunks = chunker.chunk("Chonkie loves to chonk your texts!")
 # Write chunks to Qdrant
 handshake.write(chunks)
 ```
+### Reading Chunks from Qdrant
+
+You can retrieve the most similar chunks from your Qdrant collection using the `search` method:
+
+```python
+from chonkie import QdrantHandshake
+
+# Initialize handshake (see above)
+handshake = QdrantHandshake(collection_name="my_documents")
+
+# Search using a text query
+results = handshake.search(query="chonk your texts", limit=3)
+for result in results:
+    print(result["score"], result["text"])
+
+# Search using an embedding
+embedding = handshake.embedding_model.embed("chonk your texts").tolist()
+results = handshake.search(embedding=embedding, limit=3)
+for result in results:
+    print(result["score"], result["text"])
+```
 
 ## Parameters
 
