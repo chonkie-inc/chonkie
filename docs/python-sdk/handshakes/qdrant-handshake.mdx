@@ -21,66 +21,27 @@ pip install chonkie[qdrant]
 ## Basic Usage
 
 ### Initialization
-
-```python
+<CodeGroup>
+```python Initialize using chonkie
 from chonkie import QdrantHandshake
-
-# Initialize with default settings (in-memory Qdrant)
-handshake = QdrantHandshake()
-
-# Or connect to a Qdrant server
 handshake = QdrantHandshake(url="http://localhost:6333")
+```
 
-# Or use an existing Qdrant client
+```python intialize using the client
 from qdrant_client import QdrantClient
 client = QdrantClient(":memory:")
 handshake = QdrantHandshake(client=client, collection_name="my_collection")
-
-# For Qdrant Cloud
+```
+```python qdrant cloud Initialization
+from qdrant_client import QdrantClient
 handshake = QdrantHandshake(
     url="YOUR_CLOUD_URL",
     api_key="YOUR_API_KEY"
 )
 ```
+</CodeGroup>
 
-### Writing Chunks to Qdrant
-
-```python
-from chonkie import QdrantHandshake, SemanticChunker    
-
-# Initialize the handshake
-handshake = QdrantHandshake(collection_name="my_documents")
-
-# Create some chunks
-chunker = SemanticChunker()
-chunks = chunker.chunk("Chonkie loves to chonk your texts!")
-
-# Write chunks to Qdrant
-handshake.write(chunks)
-```
-### Reading Chunks from Qdrant
-
-You can retrieve the most similar chunks from your Qdrant collection using the `search` method:
-
-```python
-from chonkie import QdrantHandshake
-
-# Initialize handshake (see above)
-handshake = QdrantHandshake(collection_name="my_documents")
-
-# Search using a text query
-results = handshake.search(query="chonk your texts", limit=3)
-for result in results:
-    print(result["score"], result["text"])
-
-# Search using an embedding
-embedding = handshake.embedding_model.embed("chonk your texts").tolist()
-results = handshake.search(embedding=embedding, limit=3)
-for result in results:
-    print(result["score"], result["text"])
-```
-
-## Parameters
+# Parameters
 
 <ParamField
     path="client"
@@ -130,3 +91,62 @@ for result in results:
     API key for Qdrant Cloud authentication.
 </ParamField>
 
+### Writing Chunks to Qdrant
+
+```python
+from chonkie import QdrantHandshake, SemanticChunker    
+
+# Initialize the handshake
+handshake = QdrantHandshake(collection_name="my_documents")
+
+# Create some chunks
+chunker = SemanticChunker()
+chunks = chunker.chunk("Chonkie loves to chonk your texts!")
+
+# Write chunks to Qdrant
+handshake.write(chunks)
+```
+### Reading Chunks from Qdrant
+
+You can retrieve the most similar chunks from your Qdrant collection using the `search` method:
+<CodeGroup>
+```python search using a query
+from chonkie import QdrantHandshake
+handshake = QdrantHandshake(
+    url=url,
+    api_key=api_key,
+    collection_name="my_documents",
+)
+results = handshake.search(query="chonk your texts", limit=2)
+for result in results:
+    print(result["score"], result["text"])
+```
+```python search using embedding
+from chonkie import QdrantHandshake
+handshake = QdrantHandshake(
+    url=url,
+    api_key=api_key,
+    collection_name="my_documents",
+)
+embedding = handshake.embedding_model.embed("chonk your texts").tolist()
+results = handshake.search(embedding=embedding, limit=2)
+for result in results:
+    print(result["score"], result["text"])
+```
+```python search using chonkie chunks
+from chonkie import QdrantHandshake, SemanticChunker
+handshake = QdrantHandshake(
+    url=url,
+    api_key=api_key,
+    collection_name="my_documents",
+)
+chunker = SemanticChunker(embedding_model=handshake.embedding_model)
+chunks = chunker.chunk("Chonkie loves to chonk your texts!")
+results = handshake.search(
+    embedding=chunks[0].sentences[0].embedding, 
+    limit=2
+)
+for result in results:
+    print(result["score"], result["text"])
+```
+</CodeGroup>
