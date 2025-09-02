@@ -36,7 +36,7 @@ handshake = QdrantHandshake(client=client, collection_name="my_collection")
 from qdrant_client import QdrantClient
 handshake = QdrantHandshake(
     url="YOUR_CLOUD_URL",
-    api_key="YOUR_API_KEY"
+    api_key="YOUR_API_KEY",
 )
 ```
 </CodeGroup>
@@ -97,7 +97,11 @@ handshake = QdrantHandshake(
 from chonkie import QdrantHandshake, SemanticChunker    
 
 # Initialize the handshake
-handshake = QdrantHandshake(collection_name="my_documents")
+handshake = QdrantHandshake(
+    url="YOUR_CLOUD_URL",
+    api_key="YOUR_API_KEY",
+    collection_name="my_documents",
+)
 
 # Create some chunks
 chunker = SemanticChunker()
@@ -112,9 +116,11 @@ You can retrieve the most similar chunks from your Qdrant collection using the `
 <CodeGroup>
 ```python search using a query
 from chonkie import QdrantHandshake
+
+# Initialize the handshake
 handshake = QdrantHandshake(
-    url=url,
-    api_key=api_key,
+    url="YOUR_CLOUD_URL",
+    api_key="YOUR_API_KEY",
     collection_name="my_documents",
 )
 results = handshake.search(query="chonk your texts", limit=2)
@@ -123,9 +129,11 @@ for result in results:
 ```
 ```python search using embedding
 from chonkie import QdrantHandshake
+
+# Initialize the handshake
 handshake = QdrantHandshake(
-    url=url,
-    api_key=api_key,
+    url="YOUR_CLOUD_URL",
+    api_key="YOUR_API_KEY",
     collection_name="my_documents",
 )
 embedding = handshake.embedding_model.embed("chonk your texts").tolist()
@@ -135,13 +143,19 @@ for result in results:
 ```
 ```python search using chonkie chunks
 from chonkie import QdrantHandshake, SemanticChunker
+
+# Initialize the handshake
 handshake = QdrantHandshake(
-    url=url,
-    api_key=api_key,
+    url="YOUR_CLOUD_URL",
+    api_key="YOUR_API_KEY",
     collection_name="my_documents",
 )
+
+# Create some chunks
 chunker = SemanticChunker(embedding_model=handshake.embedding_model)
 chunks = chunker.chunk("Chonkie loves to chonk your texts!")
+
+# Search the handshake
 results = handshake.search(
     embedding=chunks[0].sentences[0].embedding, 
     limit=2,
