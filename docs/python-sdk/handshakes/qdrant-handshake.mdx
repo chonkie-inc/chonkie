@@ -144,7 +144,7 @@ chunker = SemanticChunker(embedding_model=handshake.embedding_model)
 chunks = chunker.chunk("Chonkie loves to chonk your texts!")
 results = handshake.search(
     embedding=chunks[0].sentences[0].embedding, 
-    limit=2
+    limit=2,
 )
 for result in results:
     print(result["score"], result["text"])
