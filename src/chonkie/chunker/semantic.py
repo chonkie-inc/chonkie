@@ -1,16 +1,20 @@
-"""Semantic chunking using sentence embeddings."""
+"""SemanticChunker with advanced peak detection and window embedding calculation.
 
-import importlib.util as importutil
-import warnings
-from typing import TYPE_CHECKING, Any, Dict, List, Literal, Optional, Sequence, Union
+This chunker uses peak detection to find split points instead of a simple threshold, 
+and calculates window embeddings directly rather than approximating them from sentence embeddings.
+It uses Savitzky-Golay filtering for smoother boundary detection.
+"""
 
-from chonkie.chunker.base import BaseChunker
-from chonkie.embeddings.base import BaseEmbeddings
-from chonkie.types.semantic import SemanticChunk, SemanticSentence
-from chonkie.utils import Hubbie
+from typing import TYPE_CHECKING, Any, Dict, List, Literal, Optional, Union
 
 if TYPE_CHECKING:
     import numpy as np
+
+from chonkie.embeddings import AutoEmbeddings, BaseEmbeddings
+from chonkie.types import Chunk, Sentence
+from chonkie.utils import Hubbie
+
+from .base import BaseChunker
 
 # Import the unified split function
 try:
@@ -19,205 +23,164 @@ try:
 except ImportError:
     SPLIT_AVAILABLE = False
 
+# Import the optimized Savitzky-Golay filter (pure C implementation)
+from .c_extensions.savgol import (
+    filter_split_indices,
+    find_local_minima_interpolated,
+    windowed_cross_similarity,
+)
+
 
 class SemanticChunker(BaseChunker):
-    """Chunker that splits text into semantically coherent chunks using embeddings.
+    """SemanticChunker uses peak detection to find split points and direct window embedding calculation.
 
-    Args:
-        embedding_model: Embedding model to use for semantic chunking
-        mode: Mode for grouping sentences, either "cumulative" or "window"
-        threshold: Threshold for semantic similarity (0-1) or percentile (1-100), defaults to "auto"
-        chunk_size: Maximum tokens allowed per chunk
-        similarity_window: Number of sentences to consider for similarity threshold calculation
-        min_sentences: Minimum number of sentences per chunk
-        min_characters_per_sentence: Minimum number of characters per sentence
-        min_chunk_size: Minimum number of tokens per sentence (defaults to 2)
-        threshold_step: Step size for similarity threshold calculation
-        delim: Delimiters to split sentences on
-        include_delim: Whether to include the delimiters in the sentences
-
-    Raises:
-        ValueError: If parameters are invalid
-
+    This chunker improves on traditional semantic chunking by using Savitzky-Golay filtering
+    for smoother boundary detection and calculating window embeddings directly for more accurate
+    semantic similarity computation.
     """
 
-    def __init__(
-        self,
-        embedding_model: Union[str, BaseEmbeddings] = "minishlab/potion-base-8M",
-        mode: str = "window",
-        threshold: Union[str, float, int] = "auto",
-        chunk_size: int = 2048,
-        similarity_window: int = 1,
-        min_sentences: int = 1,
-        min_chunk_size: int = 2,
-        min_characters_per_sentence: int = 12,
-        threshold_step: float = 0.01,
-        delim: Union[str, List[str]] = [". ", "! ", "? ", "\n"],
-        include_delim: Optional[Literal["prev", "next"]] = "prev",
-        **kwargs: Dict[str, Any],
-    ) -> None:  # type: ignore
+    def __init__(self, 
+                 embedding_model: Union[str, BaseEmbeddings] = "minishlab/potion-base-8M",
+                 threshold: float = 0.8,
+                 chunk_size: int = 2048,
+                 similarity_window: int = 3,
+                 min_sentences_per_chunk: int = 1,
+                 min_characters_per_sentence: int = 24,
+                 delim: Union[str, List[str]] = [". ", "! ", "? ", "\n"],
+                 include_delim: Optional[Literal["prev", "next"]] = "prev",
+                 skip_window: int = 0,
+                 filter_window: int = 5,
+                 filter_polyorder: int = 3,
+                 filter_tolerance: float = 0.2,
+                 **kwargs: Dict[str, Any]) -> None:
         """Initialize the SemanticChunker.
-
-        SemanticChunkers split text into semantically coherent chunks using embeddings.
 
         Args:
             embedding_model: Name of the sentence-transformers model to load
-            mode: Mode for grouping sentences, either "cumulative" or "window"
-            threshold: Threshold for semantic similarity (0-1) or percentile (1-100), defaults to "auto"
+            threshold: Threshold for semantic similarity (0-1)
             chunk_size: Maximum tokens allowed per chunk
             similarity_window: Number of sentences to consider for similarity threshold calculation
-            min_sentences: Minimum number of sentences per chunk
+            min_sentences_per_chunk: Minimum number of sentences per chunk
             min_characters_per_sentence: Minimum number of characters per sentence
-            min_chunk_size: Minimum number of tokens per chunk (and sentence, defaults to 2)
-            threshold_step: Step size for similarity threshold calculation
-            delim: Delimiters to split sentences on
-            include_delim: Whether to include the delimiters in the sentences
+            delim: Delimiter to use for sentence splitting
+            include_delim: Whether to include the delimiter in the sentence
+            skip_window: Number of groups to skip when merging (0=disabled, >0=enabled)
+            filter_window: Window length for the Savitzky-Golay filter
+            filter_polyorder: Polynomial order for the Savitzky-Golay filter
+            filter_tolerance: Tolerance for the Savitzky-Golay filter
             **kwargs: Additional keyword arguments
-
-        Raises:
-            ValueError: If parameters are invalid
-            ImportError: If required dependencies aren't installed
 
         """
         if chunk_size <= 0:
             raise ValueError("chunk_size must be positive")
-        if min_chunk_size <= 0:
-            raise ValueError("min_chunk_size must be positive")
-        if min_sentences <= 0:
-            raise ValueError("min_sentences must be positive")
-        if similarity_window < 0:
-            raise ValueError("similarity_window must be non-negative")
-        if threshold_step <= 0 or threshold_step >= 1:
-            raise ValueError("threshold_step must be between 0 and 1")
-        if mode not in ["cumulative", "window"]:
-            raise ValueError("mode must be 'cumulative' or 'window'")
-        if type(threshold) not in [str, float, int]:
-            raise ValueError("threshold must be a string, float, or int")
+        if similarity_window <= 0:
+            raise ValueError("similarity_window must be positive")
+        if min_sentences_per_chunk <= 0:
+            raise ValueError("min_sentences_per_chunk must be positive")
+        if skip_window < 0:
+            raise ValueError("skip_window must be non-negative")
+        if not isinstance(threshold, (int, float)) or threshold <= 0 or threshold >= 1:
+            raise ValueError("threshold must be between 0 and 1")
         if type(delim) not in [str, list]:
             raise ValueError("delim must be a string or list of strings")
-        elif type(threshold) == str and threshold not in ["auto"]:
-            raise ValueError("threshold must be 'auto', 'smart', or 'percentile'")
-        elif type(threshold) == float and (threshold < 0 or threshold > 1):
-            raise ValueError("threshold (float) must be between 0 and 1")
-        elif type(threshold) == int and (threshold < 1 or threshold > 100):
-            raise ValueError("threshold (int) must be between 1 and 100")
+        if filter_window <= 0:
+            raise ValueError("filter_window must be positive")
+        if filter_polyorder < 0 or filter_polyorder >= filter_window:
+            raise ValueError("filter_polyorder must be non-negative and less than filter_window")
+        if filter_tolerance <= 0 or filter_tolerance >= 1:
+            raise ValueError("filter_tolerance must be between 0 and 1")
+         
+        if isinstance(embedding_model, str):
+            self.embedding_model = AutoEmbeddings.get_embeddings(embedding_model)
+        elif isinstance(embedding_model, BaseEmbeddings):
+            self.embedding_model = embedding_model
+        else:
+            raise ValueError("embedding_model must be a string or a BaseEmbeddings object")
 
-        # Lazy import dependencies to avoid importing them when not needed
+        # Lazy import dependencies
         self._import_dependencies()
 
-        self.mode = mode
-        self.chunk_size = chunk_size
+        # Initialize the tokenizer and chunker
+        tokenizer = self.embedding_model.get_tokenizer_or_token_counter()
+        self.tokenizer = tokenizer  # type: ignore[assignment]
+        super().__init__(tokenizer)
+        
+        # Initialize the chunker parameters
         self.threshold = threshold
-        self.similarity_window = similarity_window if mode == "window" else 1
-        self.min_sentences = min_sentences
-        self.min_chunk_size = min_chunk_size
-        self.min_characters_per_sentence = min_characters_per_sentence
-        self.threshold_step = threshold_step
+        self.chunk_size = chunk_size
+        self.similarity_window = similarity_window
+        self.min_sentences_per_chunk = min_sentences_per_chunk
+        self.skip_window = skip_window
         self.delim = delim
         self.include_delim = include_delim
         self.sep = "✄"
+        self.min_characters_per_sentence = min_characters_per_sentence
+        self.filter_window = filter_window
+        self.filter_polyorder = filter_polyorder
+        self.filter_tolerance = filter_tolerance
 
-        # Initialize with type annotations
-        self.similarity_threshold: Optional[float]
-        self.similarity_percentile: Optional[int]
-        
-        if isinstance(threshold, float):
-            self.similarity_threshold = threshold
-            self.similarity_percentile = None
-        elif isinstance(threshold, int):
-            self.similarity_percentile = threshold
-            self.similarity_threshold = None
-        else:
-            self.similarity_threshold = None
-            self.similarity_percentile = None
-
-        if isinstance(embedding_model, BaseEmbeddings):
-            self.embedding_model = embedding_model
-        elif isinstance(embedding_model, str):
-            from chonkie.embeddings.auto import AutoEmbeddings
-
-            self.embedding_model = AutoEmbeddings.get_embeddings(
-                embedding_model, **kwargs
-            )
-        else:
-            raise ValueError(f"{embedding_model} is not a valid embedding model")
-
-        # Probably the dependency is not installed
-        if self.embedding_model is None:
-            raise ImportError(
-                f"{embedding_model} is not a valid embedding model",
-                "Please install the `semantic` extra to use this feature",
-            )
-
-        # Keeping the tokenizer the same as the sentence model is important
-        # for the group semantic meaning to be calculated properly
-        super().__init__(self.embedding_model.get_tokenizer_or_token_counter())
-
-        # Remove the multiprocessing flag from the base class
+        # Set the multiprocessing flag to False
         self._use_multiprocessing = False
-
+    
     @classmethod
     def from_recipe(cls, 
-                    name: str = "default", 
-                    lang: Optional[str] = "en", 
-                    path: Optional[str] = None, 
-                    embedding_model: Union[str, BaseEmbeddings] = "minishlab/potion-base-8M",
-                    mode: str = "window",
-                    threshold: Union[str, float, int] = "auto",
-                    chunk_size: int = 2048,
-                    similarity_window: int = 1,
-                    min_sentences: int = 1,
-                    min_chunk_size: int = 2,
-                    min_characters_per_sentence: int = 12,
-                    threshold_step: float = 0.01,
-                    **kwargs: Dict[str, Any]    
-                    ) -> "SemanticChunker":
+                   name: str = "default", 
+                   lang: Optional[str] = "en", 
+                   path: Optional[str] = None,
+                   embedding_model: Union[str, BaseEmbeddings] = "minishlab/potion-base-8M",
+                   threshold: float = 0.8,
+                   chunk_size: int = 2048, 
+                   similarity_window: int = 3,
+                   min_sentences_per_chunk: int = 1, 
+                   min_characters_per_sentence: int = 24,
+                   delim: Union[str, List[str]] = [". ", "! ", "? ", "\n"],
+                   include_delim: Optional[Literal["prev", "next"]] = "prev",
+                   skip_window: int = 0,
+                   filter_window: int = 5,
+                   filter_polyorder: int = 3,
+                   filter_tolerance: float = 0.2,
+                   **kwargs: Dict[str, Any]    
+                ) -> "SemanticChunker":
         """Create a SemanticChunker from a recipe.
-
+        
         Args:
             name: The name of the recipe to use.
             lang: The language that the recipe should support.
             path: The path to the recipe to use.
             embedding_model: The embedding model to use.
-            mode: The mode to use for grouping sentences.
             threshold: The threshold to use for semantic similarity.
             chunk_size: The maximum tokens allowed per chunk.
             similarity_window: The number of sentences to consider for similarity threshold calculation.
-            min_sentences: The minimum number of sentences per chunk.
-            min_chunk_size: The minimum number of tokens per chunk.
+            min_sentences_per_chunk: The minimum number of sentences per chunk.
             min_characters_per_sentence: The minimum number of characters per sentence.
-            threshold_step: The step size for similarity threshold calculation.
-            **kwargs: Additional keyword arguments.
-
-        Returns:
-            SemanticChunker: The created SemanticChunker.
-
-        Raises:
-            ValueError: If the recipe is invalid.
+            delim: The delimiter to use for sentence splitting.
+            include_delim: Whether to include the delimiter in the sentence.
+            skip_window: Window size for merging non-consecutive groups (0 to disable)
+            filter_window: Window length for the Savitzky-Golay filter
+            filter_polyorder: Polynomial order for the Savitzky-Golay filter
+            filter_tolerance: Tolerance for the Savitzky-Golay filter
+            **kwargs: Additional keyword arguments
 
         """
-        # Create a hubbie instance
         hub = Hubbie()
         recipe = hub.get_recipe(name, lang, path)
         return cls(
             embedding_model=embedding_model,
-            mode=mode,
             threshold=threshold,
             chunk_size=chunk_size,
             similarity_window=similarity_window,
-            min_sentences=min_sentences,
-            min_chunk_size=min_chunk_size,
+            min_sentences_per_chunk=min_sentences_per_chunk,
             min_characters_per_sentence=min_characters_per_sentence,
-            threshold_step=threshold_step,
             delim=recipe["recipe"]["delimiters"],
             include_delim=recipe["recipe"]["include_delim"],
+            skip_window=skip_window,
+            filter_window=filter_window,
+            filter_polyorder=filter_polyorder,
+            filter_tolerance=filter_tolerance,
             **kwargs,
-        ) 
-
-    def _split_sentences(
-        self,
-        text: str,
-    ) -> List[str]:
+        )
+    
+    def _split_sentences(self, text: str) -> List[str]:
         """Fast sentence splitting using unified split function when available.
 
         This method is faster than using regex for sentence splitting and is more accurate than using the spaCy sentence tokenizer.
@@ -279,439 +242,309 @@ class SemanticChunker(BaseChunker):
 
             return sentences
 
-    def _compute_similarity_threshold(self, all_similarities: List[float]) -> float:
-        """Compute similarity threshold based on percentile if specified."""
-        if self.similarity_threshold is not None:
-            return self.similarity_threshold
-        elif self.similarity_percentile is not None:
-            return float(np.percentile(all_similarities, self.similarity_percentile))
-        else:
-            raise ValueError("Both similarity_threshold and similarity_percentile are None")
+    def _prepare_sentences(self, text: str) -> List[Sentence]:
+        """Prepare the sentences for chunking."""
+        # Handle empty or whitespace-only text
+        if not text or text.isspace():
+            return []
+            
+        sentences = self._split_sentences(text)
+        if not sentences:
+            return []
+            
+        token_counts = self.tokenizer.count_tokens_batch(sentences)  # type: ignore[union-attr]
+        return [Sentence(text=s, start_index=i, end_index=i + len(s), token_count=tc) for (i, (s, tc)) in enumerate(zip(sentences, token_counts))]
+    
+    def _get_sentence_embeddings(self, sentences: List[Sentence]) -> List["np.ndarray"]:
+        """Get the embeddings for the sentences."""
+        return self.embedding_model.embed_batch([s.text for s in sentences[self.similarity_window:]])
 
-    def _prepare_sentences(self, text: str) -> List[SemanticSentence]:
-        """Prepare sentences with precomputed information.
+    def _get_window_embeddings(self, sentences: List[Sentence]) -> List["np.ndarray"]:
+        """Get the embeddings for the window."""
+        paragraphs = []
+        for i in range(len(sentences) - self.similarity_window):
+            paragraphs.append("".join([s.text for s in sentences[i:i + self.similarity_window]]))
+        return self.embedding_model.embed_batch(paragraphs)
 
+    def _get_similarity(self, sentences: List[Sentence]) -> List[float]:
+        """Get the similarity between the window and the sentence embeddings."""
+        window_embeddings = self._get_window_embeddings(sentences)
+        sentence_embeddings = self._get_sentence_embeddings(sentences)
+        similarities = [float(self.embedding_model.similarity(w, s)) for w, s in zip(window_embeddings, sentence_embeddings)]
+        return similarities
+    
+    def _get_split_indices(self, similarities: Union[List[float], "np.ndarray"]) -> List[int]:
+        """Get split indices using optimized Savitzky-Golay filter with interpolation."""
+        # Convert to numpy array if needed
+        if not isinstance(similarities, np.ndarray):
+            similarities = np.asarray(similarities, dtype=np.float64)
+        
+        # Handle case where data is too small for the filter window
+        if len(similarities) == 0:
+            return []
+        if len(similarities) < self.filter_window:
+            # If data is too small for filter, return boundaries only
+            return []
+        
+        # Use optimized Cython implementation with interpolation
+        minima_indices, minima_values = find_local_minima_interpolated(
+            similarities,
+            window_size=self.filter_window,
+            poly_order=self.filter_polyorder,
+            tolerance=self.filter_tolerance,
+            use_float32=False  # Use float64 for consistency with embeddings
+        )
+        
+        # Handle empty case
+        if len(minima_indices) == 0:
+            return []
+        
+        # Filter by percentile and minimum distance
+        filtered_indices, _ = filter_split_indices(
+            minima_indices,
+            minima_values,
+            self.threshold,
+            self.min_sentences_per_chunk
+        )
+        split_indices_list = filtered_indices  # Already a list from filter_split_indices
+            
+        # Add boundaries with window offset
+        return ([0] + 
+                [int(i + self.similarity_window) for i in split_indices_list] + 
+                [len(similarities) + self.similarity_window])
+    
+    def _compute_group_embeddings_batch(self, groups: List[List[Sentence]]) -> List["np.ndarray"]:
+        """Compute embeddings for all groups in batch.
+        
         Args:
-            text: Input text to be processed
-
+            groups: List of sentence groups
+            
         Returns:
-            List of SemanticSentence objects with precomputed token counts and embeddings
+            List of embedding vectors, one for each group
 
         """
-        if not text.strip():
+        if not groups:
             return []
-
-        # Split text into sentences
-        raw_sentences = self._split_sentences(text)
-
-        # Get start and end indices for each sentence
-        sentence_indices = []
-        current_idx = 0
-        for sent in raw_sentences:
-            start_idx = text.find(sent, current_idx)
-            end_idx = start_idx + len(sent)
-            sentence_indices.append((start_idx, end_idx))
-            current_idx = end_idx
-
-        # Batch compute embeddings for all sentences
-        # The embeddings are computed assuming a similarity window is applied
-        # There should be len(raw_sentences) number of similarity groups
-        sentence_groups = []
-        for i in range(len(raw_sentences)):
-            group = []
-            # similarity window should consider before and after the current sentence
-            for j in range(i - self.similarity_window, i + self.similarity_window + 1):
-                if j >= 0 and j < len(raw_sentences):
-                    group.append(raw_sentences[j])
-            sentence_groups.append("".join(group))
-        assert len(sentence_groups) == len(raw_sentences), (
-            f"Number of sentence groups ({len(sentence_groups)}) does not match number of raw sentences ({len(raw_sentences)})"
-        )
-        embeddings = self.embedding_model.embed_batch(sentence_groups)
-
-        # Batch compute token counts
-        token_counts = self.tokenizer.count_tokens_batch(raw_sentences)
-
-        # Create Sentence objects with all precomputed information
-        sentences = [
-            SemanticSentence(
-                text=sent,
-                start_index=start_idx,
-                end_index=end_idx,
-                token_count=count,
-                embedding=embedding,
-            )
-            for sent, (start_idx, end_idx), count, embedding in zip(
-                raw_sentences, sentence_indices, token_counts, embeddings
-            )
-        ]
-
-        return sentences
-
-    def _get_semantic_similarity(
-        self, embedding1: "np.ndarray", embedding2: "np.ndarray"
-    ) -> float:
-        """Compute cosine similarity between two embeddings."""
-        similarity = self.embedding_model.similarity(embedding1, embedding2)
-        return float(similarity)
-
-    def _compute_group_embedding(
-        self, sentences: List[SemanticSentence]
-    ) -> "np.ndarray":
-        """Compute mean embedding for a group of sentences."""
-        if len(sentences) == 1:
-            embedding = sentences[0].embedding
-            if embedding is None:
-                raise ValueError("Sentence embedding is None")
-            return embedding
-        else:
-            # NOTE: There's a known issue, where while calculating the sentence embeddings special tokens are added
-            # but when taking the token count the special tokens are not being counted, which causes a mismatch here.
-            # This is a known issue and we're working on a fix. At the moment, the error is minimal and doesn't affect the chunking as much.
-
-            # TODO: Account for embedding model truncating to max_seq_length, which causes a mismatch in the token count.
-            return np.divide(
-                np.sum(
-                    [(sent.embedding * sent.token_count) for sent in sentences if sent.embedding is not None],
-                    axis=0,
-                ),
-                np.sum([sent.token_count for sent in sentences]),
-                dtype=np.float32,
-            )
-
-    def _compute_window_similarities(
-        self, sentences: List[SemanticSentence]
-    ) -> List[float]:
-        """Compute all pairwise similarities between sentences."""
-        similarities = [1.0]
-        current_sentence_window = [sentences[0]]
-        window_embedding = sentences[0].embedding
-        if window_embedding is None:
-            raise ValueError("Sentence embedding is None")
             
-        for i in range(1, len(sentences)):
-            sentence_embedding = sentences[i].embedding
-            if sentence_embedding is None:
-                raise ValueError("Sentence embedding is None")
-            similarities.append(
-                self._get_semantic_similarity(window_embedding, sentence_embedding)
-            )
-
-            # Update the window embedding
-            if len(current_sentence_window) < self.similarity_window:
-                current_sentence_window.append(sentences[i])
-                window_embedding = self._compute_group_embedding(
-                    current_sentence_window
-                )
-            else:
-                current_sentence_window.pop(0)
-                current_sentence_window.append(sentences[i])
-                window_embedding = self._compute_group_embedding(
-                    current_sentence_window
-                )
-
-        return similarities
-
-    def _get_split_indices(
-        self, similarities: List[float], threshold: Optional[float] = None
-    ) -> List[int]:
-        """Get indices of sentences to split at."""
-        if threshold is None:
-            threshold = (
-                self.similarity_threshold
-                if self.similarity_threshold is not None
-                else 0.5
-            )
-
-        # get the indices of the sentences that are below the threshold
-        splits = [
-            i + 1
-            for i, s in enumerate(similarities)
-            if s <= threshold and i + 1 < len(similarities)
-        ]
-        # add the start and end of the text
-        splits = [0] + splits + [len(similarities)]
-        # check if the splits are valid (i.e. there are enough sentences between them)
-        i = 0
-        while i < len(splits) - 1:
-            if splits[i + 1] - splits[i] < self.min_sentences:
-                splits.pop(i + 1)
-            else:
-                i += 1
-        return splits
-
-    def _calculate_threshold_via_binary_search(
-        self, sentences: List[SemanticSentence]
-    ) -> float:
-        """Calculate similarity threshold via binary search."""
-        # Get the token counts and cumulative token counts
-        token_counts = [sent.token_count for sent in sentences]
-        cumulative_token_counts = np.cumsum([0] + token_counts)
-
-        # Compute all pairwise similarities
-        similarities = self._compute_window_similarities(sentences)
-
-        # get the median and the std for the similarities
-        median = float(np.median(similarities))
-        std = float(np.std(similarities))
-
-        # the threshold is set between 1 std of the median
-        low = max(median - 1 * std, 0.0)
-        high = min(median + 1 * std, 1.0)
-
-        # set iterations
-        iterations = 0
-
-        # initialize threshold
-        threshold = (low + high) / 2
-
-        while abs(high - low) > self.threshold_step:
-            threshold = (low + high) / 2
-            # Get the split indices
-            split_indices = self._get_split_indices(similarities, threshold)
-
-            # Get the cumulative token count`s at the split indices
-
-            split_token_counts = np.diff(cumulative_token_counts[split_indices])
-
-            # Get the median of the split token counts
-            # median_split_token_count = np.median(split_token_counts)
-            # Check if the split respects the chunk size
-            # if self.min_chunk_size * 1.1 <= median_split_token_count <= 0.95 * self.chunk_size:
-            # break
-            # elif median_split_token_count > 0.95 * self.chunk_size:
-            # The code is calculating the median of a list of token counts stored in the variable
-            # `split_token_counts` using the `np.median()` function from the NumPy library in Python.
-            #     low = threshold + self.threshold_step
-            # else:
-            #     high = threshold - self.threshold_step
-
-            # check if all the split token counts are between the min and max chunk size
-            if ((self.min_chunk_size <= split_token_counts) & (split_token_counts <= self.chunk_size)).all():
-                break
-            # check if any of the split token counts are greater than the max chunk size
-            elif (split_token_counts > self.chunk_size).any(): # type: ignore
-                low = threshold + self.threshold_step
-            # check if any of the split token counts are less than the min chunk size
-            else:
-                high = threshold - self.threshold_step
-
-            iterations += 1
-            if iterations > 10:
-                warnings.warn(
-                    "Too many iterations in threshold calculation, stopping...",
-                    stacklevel=2,
-                )
-                break
-
-        return threshold
-
-    def _calculate_threshold_via_percentile(
-        self, sentences: List[SemanticSentence]
-    ) -> float:
-        """Calculate similarity threshold via percentile."""
-        # Compute all pairwise similarities, since the embeddings are already computed
-        # The embeddings are computed assuming a similarity window is applied
-        all_similarities = self._compute_window_similarities(sentences)
-        if self.similarity_percentile is None:
-            raise ValueError("similarity_percentile is None")
-        return float(np.percentile(all_similarities, 100 - self.similarity_percentile))
-
-    def _calculate_similarity_threshold(
-        self, sentences: List[SemanticSentence]
-    ) -> float:
-        """Calculate similarity threshold either through the smart binary search or percentile."""
-        if self.similarity_threshold is not None:
-            return self.similarity_threshold
-        elif self.similarity_percentile is not None:
-            return self._calculate_threshold_via_percentile(sentences)
-        else:
-            return self._calculate_threshold_via_binary_search(sentences)
-
-    def _group_sentences_cumulative(
-        self, sentences: List[SemanticSentence]
-    ) -> List[List[SemanticSentence]]:
-        """Group sentences based on semantic similarity, ignoring token count limits.
-
+        # Combine sentences in each group into a single text
+        group_texts = []
+        for group in groups:
+            combined_text = "".join([s.text for s in group])
+            group_texts.append(combined_text)
+        
+        # Get embeddings for all groups in batch
+        embeddings = self.embedding_model.embed_batch(group_texts)
+        return embeddings
+    
+    def _get_windowed_similarity(self, sentences: List[Sentence]) -> Union[List[float], "np.ndarray"]:
+        """Alternative similarity computation using windowed cross-similarity.
+        
+        This can be more robust than pairwise window-sentence comparison.
+        """
+        # Get embeddings for all sentences
+        embeddings = self.embedding_model.embed_batch([s.text for s in sentences])
+        # Convert embeddings to list of lists for the C extension
+        embeddings_list = [emb.tolist() if hasattr(emb, 'tolist') else list(emb) for emb in embeddings]
+        result = windowed_cross_similarity(embeddings_list, self.similarity_window * 2 + 1)
+        return np.asarray(result)
+    
+    def _skip_and_merge(self, groups: List[List[Sentence]]) -> List[List[Sentence]]:
+        """Merge similar groups considering skip window.
+        
         Args:
-            sentences: List of SemanticSentence objects with precomputed embeddings
-
+            groups: List of sentence groups to potentially merge
+            
         Returns:
-            List of sentence groups, where each group is semantically coherent
+            List of merged groups
 
+        """
+        if len(groups) <= 1 or self.skip_window == 0:
+            return groups
+            
+        # Get embeddings for all groups in batch for efficiency
+        group_texts = ["".join([s.text for s in group]) for group in groups]
+        embeddings = self.embedding_model.embed_batch(group_texts)
+        
+        merged_groups = []
+        i = 0
+        
+        while i < len(groups):
+            if i == len(groups) - 1:
+                # Last group, can't merge with anything
+                merged_groups.append(groups[i])
+                break
+                
+            # Calculate skip index ensuring it's valid
+            skip_index = min(i + self.skip_window + 1, len(groups) - 1)
+            
+            # Find the best merge candidate within the skip window
+            best_similarity = -1.0
+            best_idx = -1
+            
+            # Check similarity with all groups within skip window
+            for j in range(i + 1, min(skip_index + 1, len(groups))):
+                similarity = float(self.embedding_model.similarity(
+                    embeddings[i], 
+                    embeddings[j]
+                ))
+                if similarity >= self.threshold and similarity > best_similarity:
+                    best_similarity = similarity
+                    best_idx = j
+            
+            if best_idx != -1:
+                # Merge groups from i to best_idx (inclusive)
+                merged = []
+                for k in range(i, best_idx + 1):
+                    merged.extend(groups[k])
+                merged_groups.append(merged)
+                i = best_idx + 1  # Skip past merged groups
+            else:
+                # No merge possible, add current group
+                merged_groups.append(groups[i])
+                i += 1
+                
+        return merged_groups
+    
+    def _group_sentences(self, sentences: List[Sentence], split_indices: List[int]) -> List[List[Sentence]]:
+        """Group the sentences based on the split indices.
+        
+        Simply groups sentences between split points without any size checking.
+        Size enforcement happens later in _split_groups.
         """
         groups = []
-        current_group = sentences[: self.min_sentences]
-        current_embedding = self._compute_group_embedding(current_group)
-
-        for sentence in sentences[self.min_sentences :]:
-            # Compare new sentence against mean embedding of entire current group
-            if sentence.embedding is None:
-                raise ValueError("Sentence embedding is None")
-            similarity = self._get_semantic_similarity(
-                current_embedding, sentence.embedding
-            )
-
-            if self.similarity_threshold is None:
-                raise ValueError("similarity_threshold is None")
-            if similarity >= self.similarity_threshold:
-                # Add to current group
-                current_group.append(sentence)
-                # Update mean embedding
-                current_embedding = self._compute_group_embedding(current_group)
-            else:
-                # Start new group
-                if current_group:
-                    groups.append(current_group)
-                current_group = [sentence]
-                if sentence.embedding is None:
-                    raise ValueError("Sentence embedding is None")
-                current_embedding = sentence.embedding
-
-        # Add final group
-        if current_group:
-            groups.append(current_group)
-
-        return groups
-
-    def _group_sentences_window(
-        self, sentences: List[SemanticSentence]
-    ) -> List[List[SemanticSentence]]:
-        """Group sentences based on semantic similarity, respecting the similarity window."""
-        similarities = self._compute_window_similarities(
-            sentences
-        )  # NOTE: This is calculating pairwise, but not window.
-        if self.similarity_threshold is None:
-            raise ValueError("similarity_threshold is None")
-        split_indices = self._get_split_indices(similarities, self.similarity_threshold)
-        groups = [
-            sentences[split_indices[i] : split_indices[i + 1]]
-            for i in range(len(split_indices) - 1)
-        ]
-        return groups
-
-    def _group_sentences(self, sentences: List[SemanticSentence]) -> List[List[SemanticSentence]]:
-        """Group sentences based on semantic similarity, either cumulatively or by window."""
-        if self.mode == "cumulative":
-            return self._group_sentences_cumulative(sentences)
-        else:
-            return self._group_sentences_window(sentences)
-
-    def _create_chunk(self, sentences: List[SemanticSentence]) -> SemanticChunk:
-        """Create a chunk from a list of sentences."""
-        if not sentences:
-            raise ValueError("Cannot create chunk from empty sentence list")
         
-        # Compute chunk text and token count from sentences
-        text = "".join(sent.text for sent in sentences)
-        token_count = sum(sent.token_count for sent in sentences)
-        return SemanticChunk(
-            text=text,
-            start_index=sentences[0].start_index,
-            end_index=sentences[-1].end_index,
-            token_count=token_count,
-            sentences=sentences,
-        )
+        # Handle empty split_indices
+        if not split_indices:
+            # Return all sentences as one group if no splits
+            if sentences:
+                groups.append(sentences)
+            return groups
+            
+        # Create groups from sentences between split indices
+        for i in range(len(split_indices) - 1):
+            group = sentences[split_indices[i]:split_indices[i + 1]]
+            if group:  # Only add non-empty groups
+                groups.append(group)
 
-    def _split_chunks(
-        self, sentence_groups: List[List[SemanticSentence]]
-    ) -> List[SemanticChunk]:
-        """Split sentence groups into chunks that respect chunk_size.
+        # Add the last group if there are remaining sentences
+        if len(split_indices) > 0 and split_indices[-1] < len(sentences):
+            remaining = sentences[split_indices[-1]:]
+            if remaining:
+                groups.append(remaining)
 
+        return groups
+
+    def _split_groups(self, groups: List[List[Sentence]]) -> List[List[Sentence]]:
+        """Split groups that exceed chunk_size into smaller groups.
+        
         Args:
-            sentence_groups: List of semantically coherent sentence groups
-
+            groups: List of sentence groups
+            
         Returns:
-            List of SemanticChunk objects
+            List of groups where each respects the chunk_size limit
 
         """
-        chunks: List[SemanticChunk] = []
-
+        final_groups = []
+        
+        for group in groups:
+            token_count = sum([s.token_count for s in group])
+            
+            if token_count <= self.chunk_size:
+                final_groups.append(group)
+            else:
+                # Split the group into smaller chunks that respect chunk_size
+                current_group = []
+                current_token_count = 0
+                
+                for sentence in group:
+                    if current_token_count + sentence.token_count <= self.chunk_size:
+                        current_group.append(sentence)
+                        current_token_count += sentence.token_count
+                    else:
+                        if current_group:
+                            final_groups.append(current_group)
+                        current_group = [sentence]
+                        current_token_count = sentence.token_count
+                
+                if current_group:
+                    final_groups.append(current_group)
+                    
+        return final_groups
+    
+    def _create_chunks(self, sentence_groups: List[List[Sentence]]) -> List[Chunk]:
+        """Create a chunk from the sentence groups."""
+        chunks = []
+        current_index = 0
         for group in sentence_groups:
-            current_chunk_sentences: List[SemanticSentence] = []
-            current_tokens = 0
-
-            for sentence in group:
-                test_tokens = (
-                    current_tokens
-                    + sentence.token_count
-                    + (1 if current_chunk_sentences else 0)
-                )
-
-                if test_tokens <= self.chunk_size:
-                    # Add to current chunk
-                    current_chunk_sentences.append(sentence)
-                    current_tokens = test_tokens
-                else:
-                    # Create chunk if we have sentences
-                    if current_chunk_sentences:
-                        chunks.append(self._create_chunk(current_chunk_sentences))
-
-                    # Start new chunk with current sentence
-                    current_chunk_sentences = [sentence]
-                    current_tokens = sentence.token_count
-
-            # Create final chunk for this group
-            if current_chunk_sentences:
-                chunks.append(self._create_chunk(current_chunk_sentences))
-
+            text = "".join([s.text for s in group])
+            token_count = sum([s.token_count for s in group])
+            chunks.append(Chunk(text=text, start_index=current_index, end_index=current_index + len(text), token_count=token_count))
+            current_index += len(text)
         return chunks
 
-    def chunk(self, text: str) -> Sequence[SemanticChunk]:
-        """Split text into semantically coherent chunks using two-pass approach.
-
-        First groups sentences by semantic similarity, then splits groups to respect
-        chunk_size while maintaining sentence boundaries.
-
-        Args:
-            text: Input text to be chunked
-
-        Returns:
-            List of SemanticChunk objects containing the chunked text and metadata
-
-        """
-        if not text.strip():
+    def chunk(self, text: str) -> List[Chunk]:
+        """Chunk the text into semantic chunks."""
+        # Handle empty text
+        if not text or text.isspace():
             return []
-
-        # Prepare sentences with precomputed information
+            
+        # Prepare the sentences
         sentences = self._prepare_sentences(text)
-        if len(sentences) <= self.min_sentences:
-            chunk_result = self._create_chunk(sentences)
-            return [chunk_result]
+        
+        # Handle edge cases - too few sentences
+        if len(sentences) <= self.similarity_window:
+            # If we have any sentences, return them as a single chunk
+            if sentences:
+                text = "".join([s.text for s in sentences])
+                token_count = sum([s.token_count for s in sentences])
+                return [Chunk(
+                    text=text,
+                    start_index=0,
+                    end_index=len(text),
+                    token_count=token_count
+                )]
+            else:
+                return []
 
-        # Calculate similarity threshold
-        self.similarity_threshold = self._calculate_similarity_threshold(sentences)
+        # Get the similarities
+        similarities = self._get_similarity(sentences)
 
-        # First pass: Group sentences by semantic similarity
-        sentence_groups = self._group_sentences(sentences)
+        # Get the split indices
+        split_indices = self._get_split_indices(similarities)
 
-        # Second pass: Split groups into size-appropriate chunks
-        chunks = self._split_chunks(sentence_groups)
+        # Group the sentences into chunks based on split indices
+        sentence_groups = self._group_sentences(sentences, split_indices)
+        
+        # Apply skip-and-merge if skip_window > 0
+        if self.skip_window > 0:
+            sentence_groups = self._skip_and_merge(sentence_groups)
+        
+        # Split groups that exceed chunk_size
+        final_groups = self._split_groups(sentence_groups)
 
+        # Create the chunks
+        chunks = self._create_chunks(final_groups)
+
+        # Return the chunks
         return chunks
 
     def _import_dependencies(self) -> None:
-        """Lazy import dependencies for the chunker implementation.
-
-        This method should be implemented by all chunker implementations that require
-        additional dependencies. It lazily imports the dependencies only when they are needed.
-        """
-        if importutil.find_spec("numpy"):
-            global np
-            import numpy as np
-        else:
-            raise ImportError(
-                "numpy is not available. Please install it via `pip install chonkie[semantic]`"
-            )
-
-    def __repr__(self) -> str:
+        """Import the dependencies."""
+        global np
+        
+        # Import NumPy (still needed for array operations)
+        import numpy as np
+    
+    def __repr__(self) -> str: 
         """Return a string representation of the SemanticChunker."""
         return (
             f"SemanticChunker(model={self.embedding_model}, "
             f"chunk_size={self.chunk_size}, "
-            f"mode={self.mode}, "
             f"threshold={self.threshold}, "
             f"similarity_window={self.similarity_window}, "
-            f"min_sentences={self.min_sentences}, "
-            f"min_chunk_size={self.min_chunk_size})"
+            f"min_sentences_per_chunk={self.min_sentences_per_chunk}, "
+            f"skip_window={self.skip_window}, "
+            f"filter_window={self.filter_window}, "
+            f"filter_polyorder={self.filter_polyorder}, "
+            f"filter_tolerance={self.filter_tolerance})"    
         )

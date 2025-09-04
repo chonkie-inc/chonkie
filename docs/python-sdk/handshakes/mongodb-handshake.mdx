@@ -26,7 +26,7 @@ pip install chonkie[mongodb]
 from chonkie import MongoDBHandshake
 
 # Initialize with default settings (auto-generated database/collection)
-handshake = MongoDBHandshake()
+handshake = MongoDBHandshake(uri="mongodb://localhost:27017")
 
 # Or connect to an existing MongoDB client
 import pymongo
@@ -48,7 +48,7 @@ handshake = MongoDBHandshake(
 from chonkie import MongoDBHandshake, SemanticChunker    
 
 # Initialize the handshake
-handshake = MongoDBHandshake(db_name="my_documents")
+handshake = MongoDBHandshake(uri="mongodb://localhost:27017", db_name="my_documents")
 
 # Create some chunks
 chunker = SemanticChunker()

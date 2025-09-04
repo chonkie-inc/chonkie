@@ -199,5 +199,34 @@
       "x": "https://x.com/ChonkieAI",
       "discord": "https://discord.com/invite/Q6zkP8w6ur"
     }
+  },
+  "contextual": {
+    "options": [
+      "copy",
+      "view",
+      "chatgpt",
+      "claude",
+      "perplexity",
+      {
+        "title": "Share on X",
+        "description": "Share this documentation page on X",
+        "icon": "x-twitter",
+        "href": {
+          "base": "https://x.com/intent/tweet",
+          "query": [
+            {
+              "key": "text",
+              "value": "Check out Chonkie docs: $page"
+            }
+          ]
+        }
+      },
+      {
+        "title": "Report an Issue",
+        "description": "Report documentation issues or suggest improvements on GitHub",
+        "icon": "github",
+        "href": "https://github.com/chonkie-inc/chonkie/issues/new"
+      }
+    ]
   }
 }

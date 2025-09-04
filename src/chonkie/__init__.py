@@ -10,7 +10,6 @@ from .chunker import (
     LateChunker,
     NeuralChunker,
     RecursiveChunker,
-    SDPMChunker,
     SemanticChunker,
     SentenceChunker,
     SlumberChunker,
@@ -85,7 +84,7 @@ from .utils import (
 )
 
 # This hippo grows with every release 🦛✨~
-__version__ = "1.1.2"
+__version__ = "1.2.1"
 __name__ = "chonkie"
 __author__ = "🦛 Chonkie Inc"
 
@@ -128,7 +127,6 @@ __all__ += [
     "TokenChunker",
     "SentenceChunker",
     "SemanticChunker",
-    "SDPMChunker",
     "RecursiveChunker",
     "LateChunker",
     "CodeChunker",
