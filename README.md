@@ -223,7 +223,7 @@ Handshakes provide a unified interface to ingest chunks directly into your favor
 | `turbopuffer`  | `TurbopufferHandshake`| Ingest chunks into Turbopuffer.         | `chonkie[tpuf]`           |
 | `pinecone`     | `PineconeHandshake`   | Ingest chunks into Pinecone.            | `chonkie[pinecone]`        |
 | `weaviate`     | `WeaviateHandshake`   | Ingest chunks into Weaviate.            | `chonkie[weaviate]`        |
-| `mongodb`        | `MongoDBHandshake`      | Ingest chunks into MongoDB.             | `chonkie[mongodb]`          |
+| `mongodb`      | `MongoDBHandshake`    | Ingest chunks into MongoDB.             | `chonkie[mongodb]`         |
 
 </details>
 
