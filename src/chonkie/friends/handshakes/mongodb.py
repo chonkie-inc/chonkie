@@ -175,3 +175,68 @@ class MongoDBHandshake(BaseHandshake):
     def __repr__(self) -> str:
         """Return a string representation of the MongoDBHandshake instance."""
         return f"MongoDBHandshake(db_name={self.db_name}, collection_name={self.collection_name})"
+
+    def search(
+        self,
+        query: Optional[str] = None,
+        embedding: Optional[List[float]] = None,
+        limit: int = 5,
+    ) -> List[Dict[str, Any]]:
+        """Search for similar chunks in the MongoDB collection.
+
+        Args:
+            query: The query string to search for.
+            embedding: The embedding vector to search for.
+            limit: The number of top similar chunks to return.
+
+        Returns:
+            A list of dictionaries containing the similar chunks and their metadata.
+
+        """
+        assert (query is not None or embedding is not None), "Either query or embedding must be provided."
+        if query is not None:
+            embedding = self.embedding_model.embed(query).tolist()
+        # Get all documents with embeddings
+        docs = list(
+            self.collection.find(
+                {},
+                {
+                    "_id": 1,
+                    "text": 1,
+                    "embedding": 1,
+                    "start_index": 1,
+                    "end_index": 1,
+                    "token_count": 1,
+                },
+            )
+        )
+
+        def cosine_similarity(a, b):
+            """Compute cosine similarity between two vectors."""
+            import math
+
+            dot = sum(x * y for x, y in zip(a, b))
+            norm_a = math.sqrt(sum(x * x for x in a))
+            norm_b = math.sqrt(sum(y * y for y in b))
+            if norm_a == 0 or norm_b == 0:
+                return 0.0
+            return dot / (norm_a * norm_b)
+
+        # Score and sort
+        results = []
+        for doc in docs:
+            emb = doc.get("embedding")
+            if emb is not None:
+                score = cosine_similarity(embedding, emb)
+                result = {
+                    "id": doc["_id"],
+                    "score": score,
+                    "text": doc["text"],
+                    "start_index": doc.get("start_index"),
+                    "end_index": doc.get("end_index"),
+                    "token_count": doc.get("token_count"),
+                }
+                results.append(result)
+        # Sort by score descending and return limit
+        results.sort(key=lambda x: x["score"], reverse=True)
+        return results[:limit]
