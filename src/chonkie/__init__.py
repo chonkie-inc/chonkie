@@ -1,7 +1,7 @@
 """Main package for Chonkie."""
 
 # ruff: noqa: F401
-# above line tells ruff to ignore unused imports in this file
+# Imports are intentionally unused to expose the package's public API.
 
 from .chef import (
     BaseChef,
