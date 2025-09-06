@@ -206,16 +206,33 @@ class Visualizer:
         # If the full text is not provided, we'll try to reconstruct it (assuming the chunks are reconstructable)
         if full_text is None:
             try:
-                 # check if the chunks has overlap taht would cause reconstruction issue.
-                 has_overlap= False
-                 for i in range(1, len(chunks)):
-                     if chunks[i].start_index < chunks[i-1].end_index:
-                         has_overlap = True
-                         break
-                 if has_overlap:
-                        raise ValueError("Chunks have overlapping indices, cannot reconstruct full text automatically. Please provide the full_text parameter.")
-                 else:
-                     full_text = "".join([chunk.text for chunk in chunks])
+                # Sort chunks by start_index to handle overlaps correctly
+                sorted_chunks = sorted(chunks, key=lambda x: x.start_index)
+                
+                # Check if chunks have the required attributes
+                for chunk in sorted_chunks:
+                    if not hasattr(chunk, 'text') or not hasattr(chunk, 'start_index') or not hasattr(chunk, 'end_index'):
+                        raise AttributeError("Error: Chunks must have 'text', 'start_index', and 'end_index' attributes for automatic text reconstruction.")
+                
+                # Reconstruct full text by merging chunks intelligently
+                full_text = ""
+                last_end = 0
+                
+                for chunk in sorted_chunks:
+                    start_idx = chunk.start_index
+                    end_idx = chunk.end_index
+                    
+                    if start_idx >= last_end:
+                        # No overlap, append chunk text directly
+                        full_text += chunk.text
+                        last_end = end_idx
+                    else:
+                        # Handle overlap by taking only the non-overlapping part
+                        overlap_offset = last_end - start_idx
+                        if overlap_offset < len(chunk.text):
+                            full_text += chunk.text[overlap_offset:]
+                            last_end = end_idx
+                        # If overlap_offset >= len(chunk.text), skip this chunk as it's fully contained
             except AttributeError:
                 raise ValueError("Error: Chunks must have 'text', 'start_index', and 'end_index' attributes for automatic text reconstruction.")
             except Exception as e:
@@ -273,16 +290,33 @@ class Visualizer:
         # If the full text is not provided, we'll try to reconstruct it (assuming the chunks are reconstructable)
         if full_text is None:
             try:
-                 # check if the chunks has overlap taht would cause reconstruction issue.
-                 has_overlap= False
-                 for i in range(1, len(chunks)):
-                     if chunks[i].start_index < chunks[i-1].end_index:
-                         has_overlap = True
-                         break
-                 if has_overlap:
-                        raise ValueError("Chunks have overlapping indices, cannot reconstruct full text automatically. Please provide the full_text parameter.")
-                 else:
-                     full_text = "".join([chunk.text for chunk in chunks])
+                # Sort chunks by start_index to handle overlaps correctly
+                sorted_chunks = sorted(chunks, key=lambda x: x.start_index)
+                
+                # Check if chunks have the required attributes
+                for chunk in sorted_chunks:
+                    if not hasattr(chunk, 'text') or not hasattr(chunk, 'start_index') or not hasattr(chunk, 'end_index'):
+                        raise AttributeError("Error: Chunks must have 'text', 'start_index', and 'end_index' attributes for automatic text reconstruction.")
+                
+                # Reconstruct full text by merging chunks intelligently
+                full_text = ""
+                last_end = 0
+                
+                for chunk in sorted_chunks:
+                    start_idx = chunk.start_index
+                    end_idx = chunk.end_index
+                    
+                    if start_idx >= last_end:
+                        # No overlap, append chunk text directly
+                        full_text += chunk.text
+                        last_end = end_idx
+                    else:
+                        # Handle overlap by taking only the non-overlapping part
+                        overlap_offset = last_end - start_idx
+                        if overlap_offset < len(chunk.text):
+                            full_text += chunk.text[overlap_offset:]
+                            last_end = end_idx
+                        # If overlap_offset >= len(chunk.text), skip this chunk as it's fully contained
             except AttributeError: 
                 raise AttributeError("Error: Chunks must have 'text', 'start_index', and 'end_index' attributes for automatic text reconstruction. HTML not saved.")
             except Exception as e: 
