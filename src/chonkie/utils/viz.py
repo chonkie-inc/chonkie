@@ -196,19 +196,17 @@ class Visualizer:
         
         for chunk in sorted_chunks:
             start_idx = chunk.start_index
-            end_idx = chunk.end_index
             
             if start_idx >= last_end:
                 # No overlap, append chunk text directly
                 reconstructed_text += chunk.text
-                last_end = end_idx
+                last_end = len(reconstructed_text) # fix for overlapped chunks
             else:
                 # Handle overlap by taking only the non-overlapping part
                 overlap_offset = last_end - start_idx
                 if overlap_offset < len(chunk.text):
                     reconstructed_text += chunk.text[overlap_offset:]
-                    last_end = end_idx
-                # If overlap_offset >= len(chunk.text), skip this chunk as it's fully contained
+                    last_end = len(reconstructed_text) # fix for overlapped chunks
         
         return reconstructed_text
 
