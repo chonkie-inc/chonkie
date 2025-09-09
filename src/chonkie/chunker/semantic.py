@@ -41,7 +41,7 @@ class SemanticChunker(BaseChunker):
     """
 
     def __init__(self, 
-                 embedding_model: Union[str, BaseEmbeddings] = "minishlab/potion-base-8M",
+                 embedding_model: Union[str, BaseEmbeddings] = "minishlab/potion-base-32M",
                  threshold: float = 0.8,
                  chunk_size: int = 2048,
                  similarity_window: int = 3,
@@ -128,7 +128,7 @@ class SemanticChunker(BaseChunker):
                    name: str = "default", 
                    lang: Optional[str] = "en", 
                    path: Optional[str] = None,
-                   embedding_model: Union[str, BaseEmbeddings] = "minishlab/potion-base-8M",
+                   embedding_model: Union[str, BaseEmbeddings] = "minishlab/potion-base-32M",
                    threshold: float = 0.8,
                    chunk_size: int = 2048, 
                    similarity_window: int = 3,
