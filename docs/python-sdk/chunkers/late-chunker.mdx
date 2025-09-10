@@ -105,7 +105,7 @@ chunks = chunker(text)
 for chunk in chunks:
     print(f"Chunk text: {chunk.text}")
     print(f"Token count: {chunk.token_count}")
-    print(f"Number of sentences: {len(chunk.sentences)}")
+    print(f"Embedding: {chunk.embedding}")
 ```
 
 ### Batch Chunking
@@ -121,7 +121,7 @@ batch_chunks = chunker(texts)
 for chunk in batch_chunks:
     print(f"Chunk text: {chunk.text}")
     print(f"Token count: {chunk.token_count}")
-    print(f"Number of sentences: {len(chunk.sentences)}")
+    print(f"Embedding: {chunk.embedding}")
 ```
 
 ## Return Type
@@ -130,15 +130,13 @@ LateChunker returns `LateChunk` objects with optimized storage using slots:
 
 ```python
 @dataclass
-class LateChunk(SentenceChunk):
-    text: str  # The text of the chunk.
-    start_index: int  # The start index of the chunk.
-    end_index: int  # The end index of the chunk.
-    token_count: int  # The number of tokens in the chunk.
-    start_token: int  # The start token of the chunk.
-    end_token: int  # The end token of the chunk.
-    sentences: list[LateSentence]  # The sentences in the chunk.
-    embedding: Optional[np.ndarray]  # The embedding of the chunk.
+class LateChunk(RecursiveChunk):
+    text: str  # The chunk text
+    start_index: int  # Starting position in original text
+    end_index: int  # Ending position in original text
+    token_count: int  # Number of tokens in Chunk
+    level: int  # Level of the chunk in the recursive tree
+    embedding: Optional[np.ndarray]  # The embedding of the chunk
 ```
 
 ## Additional Information
