@@ -105,7 +105,7 @@ chunks = chunker(text)
 for chunk in chunks:
     print(f"Chunk text: {chunk.text}")
     print(f"Token count: {chunk.token_count}")
-    print(f"Embedding: {chunk.embedding}")
+    print(f"Embedding shape: {chunk.embedding.shape}")
 ```
 
 ### Batch Chunking
@@ -121,7 +121,7 @@ batch_chunks = chunker(texts)
 for chunk in batch_chunks:
     print(f"Chunk text: {chunk.text}")
     print(f"Token count: {chunk.token_count}")
-    print(f"Embedding: {chunk.embedding}")
+    print(f"Embedding shape: {chunk.embedding.shape}")
 ```
 
 ## Return Type
