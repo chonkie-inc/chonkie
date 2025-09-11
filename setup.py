@@ -23,7 +23,6 @@ extensions = [
     Extension(
         "chonkie.chunker.c_extensions.savgol",
         [os.path.join(c_extensions_dir, "savgol.pyx")],
-        extra_compile_args=["-O3"],
     ),
 ]
 
