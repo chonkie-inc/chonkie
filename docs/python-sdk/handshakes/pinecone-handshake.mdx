@@ -18,10 +18,7 @@ Before using the Pinecone handshake, make sure to install the required dependenc
 pip install chonkie[pinecone]
 ```
 
-## Basic Usage
-
-
-### Initialization
+## Initialization
 <CodeGroup>
 ```python Initialize using chonkie
 from chonkie import PineconeHandshake
@@ -42,7 +39,7 @@ handshake = PineconeHandshake(
 )
 ```
 </CodeGroup>
-## Parameters
+### Parameters
 
 <ParamField
     path="client"
@@ -92,7 +89,7 @@ handshake = PineconeHandshake(
 </ParamField>
 
 
-### Writing Chunks to Pinecone
+## Writing Chunks to Pinecone
 ```python
 from chonkie import PineconeHandshake, SemanticChunker    
 
@@ -107,7 +104,7 @@ chunks = chunker.chunk("Chonkie loves to chonk your texts!")
 handshake.write(chunks)
 ```
 
-### Searching Chunks in Pinecone
+## Searching Chunks in Pinecone
 
 You can retrieve the most similar chunks from your Pinecone index using the `search` method:
 <CodeGroup>
