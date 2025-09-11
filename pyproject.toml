@@ -123,6 +123,7 @@ all = [
     "openai>=1.0.0",
     "model2vec>=0.3.0",
     "cohere>=5.13.0",
+    "voyageai>=0.3.2",
     "accelerate>=1.6.0",
     "huggingface-hub>=0.24.0",
     "jsonschema>=4.23.0",

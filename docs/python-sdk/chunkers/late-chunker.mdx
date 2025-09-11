@@ -46,7 +46,7 @@ chunker = LateChunker(
 You can also initialize the LateChunker using a recipe. Recipes are pre-defined rules for common chunking tasks.
 Find all available recipes on our Hugging Face Hub [here](https://huggingface.co/datasets/chonkie-ai/recipes).
 ```python
-from chonkie import LateChunk
+from chonkie import LateChunker
 
 # Initialize the late chunker to chunk Markdown
 chunker = LateChunker.from_recipe("markdown", lang="en")
