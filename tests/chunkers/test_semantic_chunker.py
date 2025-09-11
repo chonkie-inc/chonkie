@@ -19,7 +19,7 @@ def sample_text() -> str:
 @pytest.fixture
 def embedding_model() -> BaseEmbeddings:
     """Fixture that returns a Model2Vec embedding model for testing."""
-    return Model2VecEmbeddings("minishlab/potion-base-8M")
+    return Model2VecEmbeddings("minishlab/potion-base-32M")
 
 
 @pytest.fixture
@@ -174,7 +174,7 @@ class TestSemanticChunkerParameterValidation:
         """Test that SemanticChunker raises error for invalid chunk_size."""
         with pytest.raises(ValueError, match="chunk_size must be positive"):
             SemanticChunker(embedding_model=embedding_model, chunk_size=0)
-        
+
         with pytest.raises(ValueError, match="chunk_size must be positive"):
             SemanticChunker(embedding_model=embedding_model, chunk_size=-1)
 
@@ -231,7 +231,7 @@ class TestSemanticChunkerConfiguration:
         chunker1 = SemanticChunker(
             embedding_model=embedding_model,
             threshold=0.5,
-            chunk_size=512
+            chunk_size=512,
         )
         chunks1 = chunker1.chunk(sample_text)
         assert len(chunks1) > 0
