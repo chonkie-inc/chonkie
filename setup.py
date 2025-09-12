@@ -20,10 +20,11 @@ extensions = [
         "chonkie.chunker.c_extensions.merge",
         [os.path.join(c_extensions_dir, "merge.pyx")],
     ),
+    # The -O3 compile flag was removed as it caused issues with re-installing
+    # the package in editable mode.
     Extension(
         "chonkie.chunker.c_extensions.savgol",
         [os.path.join(c_extensions_dir, "savgol.pyx")],
-        extra_compile_args=["-O3"],
     ),
 ]
 
