@@ -26,7 +26,7 @@ from chonkie import SemanticChunker
 
 # Basic initialization with default parameters
 chunker = SemanticChunker(
-    embedding_model="minishlab/potion-base-8M",  # Default model
+    embedding_model="minishlab/potion-base-32M",  # Default model
     threshold=0.8,                               # Similarity threshold (0-1)
     chunk_size=2048,                             # Maximum tokens per chunk
     similarity_window=3,                         # Window for similarity calculation
@@ -35,7 +35,7 @@ chunker = SemanticChunker(
 
 # With skip-and-merge enabled (similar to legacy SDPM behavior)
 chunker = SemanticChunker(
-    embedding_model="minishlab/potion-base-8M",
+    embedding_model="minishlab/potion-base-32M",
     threshold=0.7,
     chunk_size=2048,
     skip_window=1  # Enable merging of similar non-consecutive groups
@@ -47,7 +47,7 @@ chunker = SemanticChunker(
 <ParamField
     path="embedding_model"
     type="Union[str, BaseEmbeddings]"
-    default="minishlab/potion-base-8M"
+    default="minishlab/potion-base-32M"
 >
     Model identifier or embedding model instance
 </ParamField>
@@ -152,7 +152,7 @@ from chonkie import SemanticChunker
 
 # Initialize with semantic similarity grouping
 chunker = SemanticChunker(
-    embedding_model="minishlab/potion-base-8M",
+    embedding_model="minishlab/potion-base-32M",
     threshold=0.7,  # Similarity threshold
     chunk_size=512
 )
@@ -188,7 +188,7 @@ Potential applications include cryptography and drug discovery."""
 
 # Create semantic chunker
 chunker = SemanticChunker(
-    embedding_model="minishlab/potion-base-8M",
+    embedding_model="minishlab/potion-base-32M",
     threshold=0.75,  # Higher threshold = more similar content grouped
     chunk_size=1024
 )
@@ -220,7 +220,7 @@ Cryptocurrency markets show correlation with traditional assets."""
 
 # Enable skip-window to merge non-consecutive similar content
 chunker = SemanticChunker(
-    embedding_model="minishlab/potion-base-8M",
+    embedding_model="minishlab/potion-base-32M",
     threshold=0.65,
     chunk_size=512,
     skip_window=2  # Look ahead 2 groups for similar content
@@ -247,7 +247,7 @@ thresholds = [0.5, 0.7, 0.9]
 
 for threshold in thresholds:
     chunker = SemanticChunker(
-        embedding_model="minishlab/potion-base-8M",
+        embedding_model="minishlab/potion-base-32M",
         threshold=threshold,
         chunk_size=512,
         similarity_window=3  # Consider 3 sentences for similarity
@@ -269,7 +269,7 @@ from chonkie import SemanticChunker
 
 # Initialize chunker once
 chunker = SemanticChunker(
-    embedding_model="minishlab/potion-base-8M",
+    embedding_model="minishlab/potion-base-32M",
     threshold=0.7,
     chunk_size=1024,
     min_sentences_per_chunk=2  # Ensure meaningful chunks
@@ -338,7 +338,7 @@ from chonkie import SemanticChunker
 
 # Configure Savitzky-Golay filter for smoother boundaries
 chunker = SemanticChunker(
-    embedding_model="minishlab/potion-base-8M",
+    embedding_model="minishlab/potion-base-32M",
     threshold=0.7,
     chunk_size=512,
     filter_window=7,      # Larger window for smoother filtering
@@ -362,7 +362,7 @@ from chonkie import SemanticChunker
 
 # Customize sentence detection
 chunker = SemanticChunker(
-    embedding_model="minishlab/potion-base-8M",
+    embedding_model="minishlab/potion-base-32M",
     threshold=0.7,
     chunk_size=1024,
     min_sentences_per_chunk=3,   # At least 3 sentences per chunk
@@ -392,7 +392,7 @@ from chonkie.refinery import OverlapRefinery, EmbeddingsRefinery
 
 # Create semantic chunker
 chunker = SemanticChunker(
-    embedding_model="minishlab/potion-base-8M",
+    embedding_model="minishlab/potion-base-32M",
     threshold=0.7,
     chunk_size=512
 )
@@ -400,7 +400,7 @@ chunker = SemanticChunker(
 # Add refineries for RAG optimization
 overlap_refinery = OverlapRefinery(overlap_size=50)
 embeddings_refinery = EmbeddingsRefinery(
-    embedding_model="minishlab/potion-base-8M"
+    embedding_model="minishlab/potion-base-32M"
 )
 
 # Process document

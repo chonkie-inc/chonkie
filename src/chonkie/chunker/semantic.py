@@ -19,6 +19,7 @@ from .base import BaseChunker
 # Import the unified split function
 try:
     from .c_extensions.split import split_text
+
     SPLIT_AVAILABLE = True
 except ImportError:
     SPLIT_AVAILABLE = False
@@ -40,7 +41,7 @@ class SemanticChunker(BaseChunker):
     """
 
     def __init__(self, 
-                 embedding_model: Union[str, BaseEmbeddings] = "minishlab/potion-base-8M",
+                 embedding_model: Union[str, BaseEmbeddings] = "minishlab/potion-base-32M",
                  threshold: float = 0.8,
                  chunk_size: int = 2048,
                  similarity_window: int = 3,
@@ -127,7 +128,7 @@ class SemanticChunker(BaseChunker):
                    name: str = "default", 
                    lang: Optional[str] = "en", 
                    path: Optional[str] = None,
-                   embedding_model: Union[str, BaseEmbeddings] = "minishlab/potion-base-8M",
+                   embedding_model: Union[str, BaseEmbeddings] = "minishlab/potion-base-32M",
                    threshold: float = 0.8,
                    chunk_size: int = 2048, 
                    similarity_window: int = 3,
@@ -194,14 +195,16 @@ class SemanticChunker(BaseChunker):
         """
         if SPLIT_AVAILABLE:
             # Use optimized Cython split function
-            return list(split_text(
-                text=text,
-                delim=self.delim,
-                include_delim=self.include_delim,
-                min_characters_per_segment=self.min_characters_per_sentence,
-                whitespace_mode=False,
-                character_fallback=True
-            ))
+            return list(
+                split_text(
+                    text=text,
+                    delim=self.delim,
+                    include_delim=self.include_delim,
+                    min_characters_per_segment=self.min_characters_per_sentence,
+                    whitespace_mode=False,
+                    character_fallback=True,
+                )
+            )
         else:
             # Fallback to original Python implementation
             t = text
