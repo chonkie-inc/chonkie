@@ -45,7 +45,7 @@ def short_text() -> str:
 @pytest.fixture
 def embedding_model():
     """Fixture that returns a Model2Vec embedding model for testing."""
-    return Model2VecEmbeddings("minishlab/potion-base-8M")
+    return Model2VecEmbeddings("minishlab/potion-base-32M")
 
 
 class TestSDPMChunkerInitialization:
@@ -54,7 +54,7 @@ class TestSDPMChunkerInitialization:
     def test_init_with_default_parameters(self, embedding_model):
         """Test initialization with default parameters."""
         chunker = SDPMChunker(embedding_model=embedding_model)
-        
+
         assert chunker.chunk_size == 2048
         assert chunker.threshold == "auto"
         assert chunker.similarity_window == 1
@@ -73,7 +73,7 @@ class TestSDPMChunkerInitialization:
             min_chunk_size=5,
             skip_window=2,
         )
-        
+
         assert chunker.chunk_size == 256
         assert chunker.threshold == 0.7
         assert chunker.similarity_window == 2
@@ -83,19 +83,16 @@ class TestSDPMChunkerInitialization:
 
     def test_init_with_string_embedding_model(self):
         """Test initialization with string embedding model."""
-        chunker = SDPMChunker(embedding_model="minishlab/potion-base-8M")
-        
+        chunker = SDPMChunker(embedding_model="minishlab/potion-base-32M")
+
         assert chunker.chunk_size == 2048
         assert chunker.threshold == "auto"
-        assert hasattr(chunker, 'embedding_model')
+        assert hasattr(chunker, "embedding_model")
 
     def test_init_with_different_modes(self, embedding_model):
         """Test initialization with different modes."""
         for mode in ["window", "cumulative"]:
-            chunker = SDPMChunker(
-                embedding_model=embedding_model,
-                mode=mode
-            )
+            chunker = SDPMChunker(embedding_model=embedding_model, mode=mode)
             assert chunker.mode == mode
 
     def test_init_with_different_thresholds(self, embedding_model):
@@ -103,11 +100,11 @@ class TestSDPMChunkerInitialization:
         # Auto threshold
         chunker1 = SDPMChunker(embedding_model=embedding_model, threshold="auto")
         assert chunker1.threshold == "auto"
-        
+
         # Float threshold
         chunker2 = SDPMChunker(embedding_model=embedding_model, threshold=0.6)
         assert chunker2.threshold == 0.6
-        
+
         # Int threshold (percentile)
         chunker3 = SDPMChunker(embedding_model=embedding_model, threshold=80)
         assert chunker3.threshold == 80
@@ -120,7 +117,7 @@ class TestSDPMChunkerBasicFunctionality:
         """Test that chunking returns SemanticChunk objects."""
         chunker = SDPMChunker(embedding_model=embedding_model)
         result = chunker.chunk(sample_text)
-        
+
         assert isinstance(result, list)
         assert len(result) > 0
         assert all(isinstance(chunk, SemanticChunk) for chunk in result)
@@ -129,7 +126,7 @@ class TestSDPMChunkerBasicFunctionality:
         """Test that chunking preserves all content."""
         chunker = SDPMChunker(embedding_model=embedding_model)
         result = chunker.chunk(sample_text)
-        
+
         reconstructed = "".join(chunk.text for chunk in result)
         assert reconstructed == sample_text
 
@@ -137,12 +134,12 @@ class TestSDPMChunkerBasicFunctionality:
         """Test that chunks have valid properties."""
         chunker = SDPMChunker(embedding_model=embedding_model)
         result = chunker.chunk(sample_text)
-        
+
         for chunk in result:
             assert isinstance(chunk.text, str)
             assert len(chunk.text) > 0
             assert chunk.token_count > 0
-            assert hasattr(chunk, 'sentences')
+            assert hasattr(chunk, "sentences")
             assert isinstance(chunk.sentences, list)
             assert len(chunk.sentences) > 0
 
@@ -150,24 +147,22 @@ class TestSDPMChunkerBasicFunctionality:
         """Test that chunker respects minimum sentences per chunk."""
         min_sentences = 2
         chunker = SDPMChunker(
-            embedding_model=embedding_model,
-            min_sentences=min_sentences
+            embedding_model=embedding_model, min_sentences=min_sentences
         )
         result = chunker.chunk(multi_topic_text)
-        
+
         # Most chunks should respect the minimum (some might not due to text end)
-        chunks_with_min_sentences = [c for c in result if len(c.sentences) >= min_sentences]
+        chunks_with_min_sentences = [
+            c for c in result if len(c.sentences) >= min_sentences
+        ]
         assert len(chunks_with_min_sentences) > 0
 
     def test_chunk_respects_chunk_size(self, embedding_model, multi_topic_text):
         """Test that chunks respect maximum chunk size."""
         chunk_size = 100
-        chunker = SDPMChunker(
-            embedding_model=embedding_model,
-            chunk_size=chunk_size
-        )
+        chunker = SDPMChunker(embedding_model=embedding_model, chunk_size=chunk_size)
         result = chunker.chunk(multi_topic_text)
-        
+
         for chunk in result:
             # Allow some flexibility due to sentence boundaries
             assert chunk.token_count <= chunk_size * 1.5
@@ -182,12 +177,18 @@ class TestSDPMChunkerInternalMethods:
         sentence_groups = [
             ["First sentence.", "Second sentence."],
             ["Third sentence."],
-            ["Fourth sentence.", "Fifth sentence."]
+            ["Fourth sentence.", "Fifth sentence."],
         ]
-        
+
         merged = chunker._merge_sentence_groups(sentence_groups)
-        
-        expected = ["First sentence.", "Second sentence.", "Third sentence.", "Fourth sentence.", "Fifth sentence."]
+
+        expected = [
+            "First sentence.",
+            "Second sentence.",
+            "Third sentence.",
+            "Fourth sentence.",
+            "Fifth sentence.",
+        ]
         assert merged == expected
 
     def test_merge_sentence_groups_empty(self, embedding_model):
@@ -206,17 +207,17 @@ class TestSDPMChunkerInternalMethods:
     def test_skip_and_merge_basic(self, embedding_model):
         """Test _skip_and_merge method with basic input."""
         chunker = SDPMChunker(embedding_model=embedding_model, skip_window=1)
-        
+
         # Create real sentence objects by preparing sentences through the chunker
         text = "First sentence. Second sentence. Third sentence."
         sentences = chunker._prepare_sentences(text)
-        
+
         # Create groups from the prepared sentences
         groups = [[sentences[0]], [sentences[1]], [sentences[2]]]
-        
+
         # Use a low threshold to test merging behavior
         result = chunker._skip_and_merge(groups, similarity_threshold=0.1)
-        
+
         assert isinstance(result, list)
         # Should return some result (exact behavior depends on embeddings)
         assert len(result) <= len(groups)
@@ -230,12 +231,12 @@ class TestSDPMChunkerInternalMethods:
     def test_skip_and_merge_single_group(self, embedding_model):
         """Test _skip_and_merge with single group."""
         chunker = SDPMChunker(embedding_model=embedding_model)
-        
+
         # Create a real sentence object
         text = "Single sentence."
         sentences = chunker._prepare_sentences(text)
         groups = [sentences]
-        
+
         result = chunker._skip_and_merge(groups, similarity_threshold=0.5)
         assert len(result) == 1
         assert result == groups
@@ -248,7 +249,7 @@ class TestSDPMChunkerEdgeCases:
         """Test chunking empty text."""
         chunker = SDPMChunker(embedding_model=embedding_model)
         result = chunker.chunk("")
-        
+
         assert isinstance(result, list)
         assert len(result) == 0
 
@@ -256,7 +257,7 @@ class TestSDPMChunkerEdgeCases:
         """Test chunking single sentence."""
         chunker = SDPMChunker(embedding_model=embedding_model)
         result = chunker.chunk("This is a single sentence.")
-        
+
         assert isinstance(result, list)
         assert len(result) == 1
         assert result[0].text == "This is a single sentence."
@@ -265,7 +266,7 @@ class TestSDPMChunkerEdgeCases:
         """Test chunking very short text."""
         chunker = SDPMChunker(embedding_model=embedding_model)
         result = chunker.chunk(short_text)
-        
+
         assert isinstance(result, list)
         assert len(result) > 0
         reconstructed = "".join(chunk.text for chunk in result)
@@ -275,7 +276,7 @@ class TestSDPMChunkerEdgeCases:
         """Test chunking whitespace-only text."""
         chunker = SDPMChunker(embedding_model=embedding_model)
         result = chunker.chunk("   \n\t  ")
-        
+
         assert isinstance(result, list)
         # Should handle gracefully
 
@@ -283,10 +284,10 @@ class TestSDPMChunkerEdgeCases:
         """Test with large skip window."""
         chunker = SDPMChunker(
             embedding_model=embedding_model,
-            skip_window=10  # Larger than typical sentence count
+            skip_window=10,  # Larger than typical sentence count
         )
         result = chunker.chunk(multi_topic_text)
-        
+
         assert isinstance(result, list)
         assert len(result) > 0
 
@@ -294,10 +295,10 @@ class TestSDPMChunkerEdgeCases:
         """Test with very small chunk size."""
         chunker = SDPMChunker(
             embedding_model=embedding_model,
-            chunk_size=50  # Very small
+            chunk_size=50,  # Very small
         )
         result = chunker.chunk(multi_topic_text)
-        
+
         assert isinstance(result, list)
         assert len(result) > 0
 
@@ -308,7 +309,7 @@ class TestSDPMChunkerRepresentation:
     def test_repr(self, embedding_model):
         """Test the __repr__ method."""
         chunker = SDPMChunker(embedding_model=embedding_model)
-        
+
         repr_str = repr(chunker)
         assert "SDPMChunker" in repr_str
         assert "chunk_size=2048" in repr_str
@@ -324,7 +325,7 @@ class TestSDPMChunkerRepresentation:
             threshold=0.7,
             skip_window=2,
         )
-        
+
         repr_str = repr(chunker)
         assert "chunk_size=256" in repr_str
         assert "threshold=0.7" in repr_str
@@ -338,9 +339,9 @@ class TestSDPMChunkerBehavior:
         """Test that chunk boundaries make semantic sense."""
         chunker = SDPMChunker(embedding_model=embedding_model)
         result = chunker.chunk(multi_topic_text)
-        
+
         assert len(result) >= 1
-        
+
         for chunk in result:
             assert len(chunk.text.strip()) > 0
             assert len(chunk.sentences) > 0
@@ -350,13 +351,13 @@ class TestSDPMChunkerBehavior:
         """Test that semantically similar sentences are grouped."""
         # Text with two clear topics
         text = "Dogs are loyal pets. Cats are independent animals. Canines love their owners. Felines prefer solitude."
-        
+
         chunker = SDPMChunker(
             embedding_model=embedding_model,
-            threshold=0.3  # Lower threshold to encourage grouping
+            threshold=0.3,  # Lower threshold to encourage grouping
         )
         result = chunker.chunk(text)
-        
+
         assert isinstance(result, list)
         assert len(result) > 0
         # Should group semantically similar sentences
@@ -367,28 +368,27 @@ class TestSDPMChunkerBehavior:
         """Test that all sentences are preserved in chunking."""
         chunker = SDPMChunker(embedding_model=embedding_model)
         result = chunker.chunk(multi_topic_text)
-        
+
         # Extract all sentences from chunks
         all_chunk_sentences = []
         for chunk in result:
             all_chunk_sentences.extend(chunk.sentences)
-        
+
         assert len(all_chunk_sentences) > 0
-        
+
         # All sentences should be non-empty (check .text attribute for SemanticSentence)
         for sentence in all_chunk_sentences:
-            assert hasattr(sentence, 'text')
+            assert hasattr(sentence, "text")
             assert len(sentence.text.strip()) > 0
 
     def test_different_similarity_windows(self, embedding_model, multi_topic_text):
         """Test with different similarity windows."""
         for window in [1, 2, 3]:
             chunker = SDPMChunker(
-                embedding_model=embedding_model,
-                similarity_window=window
+                embedding_model=embedding_model, similarity_window=window
             )
             result = chunker.chunk(multi_topic_text)
-            
+
             assert isinstance(result, list)
             assert len(result) > 0
             assert chunker.similarity_window == window
@@ -400,14 +400,11 @@ class TestSDPMChunkerParameterVariations:
     def test_different_thresholds(self, embedding_model, multi_topic_text):
         """Test with different similarity thresholds."""
         thresholds = [0.3, 0.5, 0.7, 0.9]
-        
+
         for threshold in thresholds:
-            chunker = SDPMChunker(
-                embedding_model=embedding_model,
-                threshold=threshold
-            )
+            chunker = SDPMChunker(embedding_model=embedding_model, threshold=threshold)
             result = chunker.chunk(multi_topic_text)
-            
+
             assert isinstance(result, list)
             assert len(result) > 0
             assert all(isinstance(chunk, SemanticChunk) for chunk in result)
@@ -415,17 +412,14 @@ class TestSDPMChunkerParameterVariations:
     def test_different_chunk_sizes(self, embedding_model, multi_topic_text):
         """Test with different maximum chunk sizes."""
         chunk_sizes = [64, 128, 256, 512]
-        
+
         for size in chunk_sizes:
-            chunker = SDPMChunker(
-                embedding_model=embedding_model,
-                chunk_size=size
-            )
+            chunker = SDPMChunker(embedding_model=embedding_model, chunk_size=size)
             result = chunker.chunk(multi_topic_text)
-            
+
             assert isinstance(result, list)
             assert len(result) > 0
-            
+
             # Check that chunks respect token limits (with some flexibility)
             for chunk in result:
                 assert chunk.token_count <= size * 1.5
@@ -434,11 +428,10 @@ class TestSDPMChunkerParameterVariations:
         """Test with different minimum chunk sizes."""
         for min_size in [1, 2, 3, 5]:
             chunker = SDPMChunker(
-                embedding_model=embedding_model,
-                min_chunk_size=min_size
+                embedding_model=embedding_model, min_chunk_size=min_size
             )
             result = chunker.chunk(multi_topic_text)
-            
+
             assert isinstance(result, list)
             assert len(result) > 0
             assert chunker.min_chunk_size == min_size
@@ -446,12 +439,10 @@ class TestSDPMChunkerParameterVariations:
     def test_return_type_parameter(self, embedding_model, sample_text):
         """Test that chunker returns SemanticChunk objects by default."""
         # Test default return type (chunks)
-        chunker = SDPMChunker(
-            embedding_model=embedding_model
-        )
+        chunker = SDPMChunker(embedding_model=embedding_model)
         result = chunker.chunk(sample_text)
         assert all(isinstance(item, SemanticChunk) for item in result)
-        
+
         # Test that text content is accessible via .text property
         for chunk in result:
             assert isinstance(chunk.text, str)
@@ -464,9 +455,7 @@ class TestSDPMChunkerRecipeFeature:
     def test_from_recipe_default(self, embedding_model):
         """Test creating chunker from default recipe."""
         try:
-            chunker = SDPMChunker.from_recipe(
-                embedding_model=embedding_model
-            )
+            chunker = SDPMChunker.from_recipe(embedding_model=embedding_model)
             assert isinstance(chunker, SDPMChunker)
             assert chunker.chunk_size == 2048
         except Exception:
@@ -477,9 +466,7 @@ class TestSDPMChunkerRecipeFeature:
         """Test creating chunker from recipe with custom parameters."""
         try:
             chunker = SDPMChunker.from_recipe(
-                embedding_model=embedding_model,
-                chunk_size=256,
-                threshold=0.6
+                embedding_model=embedding_model, chunk_size=256, threshold=0.6
             )
             assert isinstance(chunker, SDPMChunker)
             assert chunker.chunk_size == 256
@@ -496,12 +483,12 @@ class TestSDPMChunkerBatchProcessing:
         """Test batch processing of texts."""
         chunker = SDPMChunker(embedding_model=embedding_model)
         texts = [sample_text, sample_text[:100], sample_text[100:]]
-        
+
         results = chunker.chunk_batch(texts)
-        
+
         assert isinstance(results, list)
         assert len(results) == len(texts)
-        
+
         for result in results:
             assert isinstance(result, list)
             assert all(isinstance(chunk, SemanticChunk) for chunk in result)
@@ -516,9 +503,9 @@ class TestSDPMChunkerBatchProcessing:
         """Test batch processing with texts of different lengths."""
         chunker = SDPMChunker(embedding_model=embedding_model)
         texts = [sample_text, short_text, ""]
-        
+
         results = chunker.chunk_batch(texts)
-        
+
         assert len(results) == 3
         assert len(results[0]) > 0  # Long text should have chunks
         assert len(results[1]) > 0  # Short text should have at least one chunk

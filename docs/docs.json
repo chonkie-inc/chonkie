@@ -44,9 +44,14 @@
             "pages": [
               "python-sdk/embeddings/overview",
               "python-sdk/embeddings/auto-embeddings",
+              "python-sdk/embeddings/cohere-embeddings",
               "python-sdk/embeddings/sentence-transformer-embeddings",
               "python-sdk/embeddings/openai-embeddings",
+              "python-sdk/embeddings/azure-embeddings",
               "python-sdk/embeddings/model2vec-embeddings",
+              "python-sdk/embeddings/jina-embeddings",
+              "python-sdk/embeddings/gemini-embeddings",
+              "python-sdk/embeddings/voyageai-embeddings",
               "python-sdk/embeddings/custom-embeddings"
             ]
           },
