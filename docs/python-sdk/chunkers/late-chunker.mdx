@@ -131,11 +131,11 @@ LateChunker returns `LateChunk` objects with optimized storage using slots:
 ```python
 @dataclass
 class LateChunk(RecursiveChunk):
-    text: str  # The chunk text
-    start_index: int  # Starting position in original text
-    end_index: int  # Ending position in original text
-    token_count: int  # Number of tokens in Chunk
-    embedding: Optional[np.ndarray]  # The embedding of the chunk
+    text: str  # The text of the chunk.
+    start_index: int  # The start index of the chunk.
+    end_index: int  # The end index of the chunk.
+    token_count: int  # The number of tokens in the chunk.
+    embedding: Optional[np.ndarray]  # The embedding of the chunk.
 ```
 
 ## Additional Information
