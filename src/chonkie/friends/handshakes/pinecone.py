@@ -191,3 +191,41 @@ class PineconeHandshake(BaseHandshake):
 
         """
         return f"PineconeHandshake(index_name={self.index_name})"
+    def search(
+        self,
+        query: Optional[str] = None,
+        embedding: Optional[List[float]] = None,
+        limit: int = 5,
+    ) -> List[Dict[str, Any]]:
+        """Search the Pinecone index for similar chunks.
+
+        Args:
+            query: The query string to search for. If provided, `embedding` is ignored.
+            embedding: The embedding vector to search for. 
+            limit: The maximum number of results to return.
+
+        Returns:
+            List[Dict[str, Any]]: A list of dictionaries containing the matching chunks and their metadata.
+
+        """
+        if self.embed is not None:
+            # Use Pinecone's integrated embedding model
+            results = self.index.query(query=query, top_k=limit, include_metadata=True)
+        elif query is None and embedding is None:
+            raise ValueError("Query string or embedding must be provided when using a custom embedding model.")
+        elif query is not None:
+            # warning if both query and embedding are provided, query is used
+            if embedding is not None:
+                print("⚠️ Warning: Both query and embedding provided. Using query.")
+            # Use custom embedding model to embed the query
+            embedding = self.embedding_model.embed(query).tolist() # type: ignore
+        results = self.index.query(vector=embedding, top_k=limit, include_metadata=True)
+
+        matches = []
+        for match in results.get('matches', []):
+            matches.append({
+                'id': match.get('id'),
+                'score': match.get('score'),
+                **match.get('metadata', {}),
+            })
+        return matches
