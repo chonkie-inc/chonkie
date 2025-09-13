@@ -18,9 +18,6 @@ class LateChunk(RecursiveChunk):
         start_index (int): The start index of the chunk.
         end_index (int): The end index of the chunk.
         token_count (int): The number of tokens in the chunk.
-        start_token (int): The start token of the chunk.
-        end_token (int): The end token of the chunk.
-        sentences (list[LateSentence]): The sentences in the chunk.
         embedding (Optional[np.ndarray]): The embedding of the chunk.
 
     """
