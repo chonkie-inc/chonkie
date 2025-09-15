@@ -219,17 +219,11 @@ class QdrantHandshake(BaseHandshake):
             raise ValueError("Either query or embedding must be provided")
         if query is not None:
             embedding = self.embedding_model.embed(query).tolist()
-            results = self.client.search(
-                collection_name=self.collection_name,
-                query_vector=embedding,
-                limit=limit,
-                with_payload=True,
-            )
-        else:
-            results = self.client.search(
-                collection_name=self.collection_name,
-                query_vector=embedding, 
-                limit=limit,
-                with_payload=True,
-            )
-        return [{"score": res.score, **res.payload} for res in results]
+
+        results = self.client.query_points(
+            collection_name=self.collection_name,
+            query=embedding,
+            limit=limit,
+            with_payload=True,
+        )
+        return [{"id": result["id"], "score": result["score"], **result["payload"]} for result in results.dict()["points"]]
