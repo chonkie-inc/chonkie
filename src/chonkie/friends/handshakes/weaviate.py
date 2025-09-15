@@ -109,10 +109,11 @@ class WeaviateHandshake(BaseHandshake):
                 if api_key is not None:
                     auth_credentials = weaviate.auth.Auth.api_key(api_key=api_key)
                 elif auth_config is not None:
-                    assert "client_secret" in auth_config, "client_secret is required in auth_config"
+                    assert "client_secret" in auth_config, (
+                        "client_secret is required in auth_config"
+                    )
                     auth_credentials = weaviate.auth.Auth.client_credentials(
-                        client_secret=auth_config.pop("client_secret"),
-                        **auth_config
+                        client_secret=auth_config.pop("client_secret"), **auth_config
                     )
 
                 # Use provided grpc_host or default to HTTP host
@@ -466,22 +467,21 @@ class WeaviateHandshake(BaseHandshake):
             near_vector=embedding,
             limit=limit,
             return_metadata=weaviate.classes.query.MetadataQuery(distance=True),
-            # return_properties=["text", "start_index", "end_index", "token_count", "chunk_type"],
         )
         # Format results to match other handshakes
         matches = []
         for obj in results.objects:
-                score = getattr(obj.metadata, "distance", None) if obj.metadata else None
-                # Weaviate returns distance, convert to similarity (1 - distance) if needed
-                similarity = 1.0 - score if score is not None else None
-                match = {
-                    "id": obj.uuid,
-                    "score": similarity,
-                    "text": obj.properties.get("text"),
-                    "start_index": obj.properties.get("start_index"),
-                    "end_index": obj.properties.get("end_index"),
-                    "token_count": obj.properties.get("token_count"),
-                    "chunk_type": obj.properties.get("chunk_type"),
-                }
-                matches.append(match)
+            score = getattr(obj.metadata, "distance", None) if obj.metadata else None
+            # Weaviate returns distance, convert to similarity (1 - distance) if needed
+            similarity = 1.0 - score if score is not None else None
+            match = {
+                "id": obj.uuid,
+                "score": similarity,
+                "text": obj.properties.get("text"),
+                "start_index": obj.properties.get("start_index"),
+                "end_index": obj.properties.get("end_index"),
+                "token_count": obj.properties.get("token_count"),
+                "chunk_type": obj.properties.get("chunk_type"),
+            }
+            matches.append(match)
         return matches
