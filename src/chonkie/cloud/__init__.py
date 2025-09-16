@@ -1,13 +1,11 @@
 """Module for Chonkie Cloud APIs."""
 
-from .auth import Auth
 from .chunker import (
     CloudChunker,
     CodeChunker,
     LateChunker,
     NeuralChunker,
     RecursiveChunker,
-    SDPMChunker,
     SemanticChunker,
     SentenceChunker,
     SlumberChunker,
@@ -22,7 +20,6 @@ __all__ = [
     "SemanticChunker",
     "SentenceChunker",
     "LateChunker",
-    "SDPMChunker",
     "CodeChunker",
     "NeuralChunker",
     "SlumberChunker",

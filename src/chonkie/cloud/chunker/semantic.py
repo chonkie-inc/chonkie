@@ -5,7 +5,7 @@ from typing import Dict, List, Literal, Optional, Union, cast
 
 import requests
 
-from chonkie.types import SemanticChunk
+from chonkie.types import Chunk
 
 from .base import CloudChunker
 
@@ -19,15 +19,17 @@ class SemanticChunker(CloudChunker):
     def __init__(
         self,
         embedding_model: str = "minishlab/potion-base-32M",
+        threshold: float = 0.8,
         chunk_size: int = 512,
-        threshold: Union[Literal["auto"], float, int] = "auto",
         similarity_window: int = 1,
-        min_sentences: int = 1,
-        min_chunk_size: int = 2,
+        min_sentences_per_chunk: int = 1,
         min_characters_per_sentence: int = 12,
-        threshold_step: float = 0.01,
         delim: Union[str, List[str]] = [". ", "! ", "? ", "\n"],
         include_delim: Optional[Literal["prev", "next"]] = "prev",
+        skip_window: int = 0,
+        filter_window: int = 5,
+        filter_polyorder: int = 3,
+        filter_tolerance: float = 0.2,
         api_key: Optional[str] = None,
     ) -> None:
         """Initialize the Chonkie Cloud Semantic Chunker."""
@@ -46,11 +48,7 @@ class SemanticChunker(CloudChunker):
             raise ValueError("Chunk size must be greater than 0.")
 
         # Check if the threshold is valid
-        if isinstance(threshold, str) and threshold != "auto":
-            raise ValueError(
-                "Threshold must be either 'auto' or a number between 0 and 1."
-            )
-        elif isinstance(threshold, (float, int)) and (threshold <= 0 or threshold > 1):
+        if threshold <= 0 or threshold > 1:
             raise ValueError("Threshold must be between 0 and 1.")
 
         # Check if the similarity window is valid
@@ -58,22 +56,30 @@ class SemanticChunker(CloudChunker):
             raise ValueError("Similarity window must be greater than 0.")
 
         # Check if the minimum sentences is valid
-        if min_sentences <= 0:
+        if min_sentences_per_chunk <= 0:
             raise ValueError("Minimum sentences must be greater than 0.")
-
-        # Check if the minimum chunk size is valid
-        if min_chunk_size <= 0:
-            raise ValueError("Minimum chunk size must be greater than 0.")
 
         # Check if the minimum characters per sentence is valid
         if min_characters_per_sentence <= 0:
             raise ValueError("Minimum characters per sentence must be greater than 0.")
 
-        # Check if the threshold step is valid
-        if threshold_step <= 0 or threshold_step > 1:
+        # Check if the skip window is valid
+        if skip_window < 0:
+            raise ValueError("Skip window must be greater than or equal to 0.")
+
+        # Check if the filter window is valid
+        if filter_window <= 0:
+            raise ValueError("Filter window must be greater than 0.")
+
+        # Check if the filter polyorder is valid
+        if filter_polyorder < 0 or filter_polyorder >= filter_window:
             raise ValueError(
-                "Threshold step must be greater than 0 and less than or equal to 1."
+                "Filter polyorder must be greater than 0 and less than or equal to filter window."
             )
+
+        # Check if the filter tolerance is valid
+        if filter_tolerance <= 0 or filter_tolerance >= 1:
+            raise ValueError("Filter tolerance must be between 0 and 1.")
 
         # Check if the delim is valid
         if not isinstance(delim, (list, str)):
@@ -89,10 +95,12 @@ class SemanticChunker(CloudChunker):
         self.chunk_size = chunk_size
         self.threshold = threshold
         self.similarity_window = similarity_window
-        self.min_sentences = min_sentences
-        self.min_chunk_size = min_chunk_size
+        self.min_sentences_per_chunk = min_sentences_per_chunk
         self.min_characters_per_sentence = min_characters_per_sentence
-        self.threshold_step = threshold_step
+        self.skip_window = skip_window
+        self.filter_window = filter_window
+        self.filter_polyorder = filter_polyorder
+        self.filter_tolerance = filter_tolerance
         self.delim = delim
         self.include_delim = include_delim
 
@@ -105,7 +113,7 @@ class SemanticChunker(CloudChunker):
                 + "If the issue persists, please contact support at support@chonkie.ai."
             )
 
-    def chunk(self, text: Union[str, List[str]]) -> Union[List[SemanticChunk], List[List[SemanticChunk]]]:
+    def chunk(self, text: Union[str, List[str]]) -> Union[List[Chunk], List[List[Chunk]]]:
         """Chunk the text into a list of chunks."""
         # Make the payload
         payload = {
@@ -114,10 +122,12 @@ class SemanticChunker(CloudChunker):
             "chunk_size": self.chunk_size,
             "threshold": self.threshold,
             "similarity_window": self.similarity_window,
-            "min_sentences": self.min_sentences,
-            "min_chunk_size": self.min_chunk_size,
+            "min_sentences_per_chunk": self.min_sentences_per_chunk,
             "min_characters_per_sentence": self.min_characters_per_sentence,
-            "threshold_step": self.threshold_step,
+            "skip_window": self.skip_window,
+            "filter_window": self.filter_window,
+            "filter_polyorder": self.filter_polyorder,
+            "filter_tolerance": self.filter_tolerance,
             "delim": self.delim,
             "include_delim": self.include_delim,
         }
@@ -133,16 +143,16 @@ class SemanticChunker(CloudChunker):
         try:
             if isinstance(text, list):
                 batch_result: List[List[Dict]] = cast(List[List[Dict]], response.json())
-                batch_chunks: List[List[SemanticChunk]] = []
+                batch_chunks: List[List[Chunk]] = []
                 for chunk_list in batch_result:
                     curr_chunks = []
                     for chunk in chunk_list:
-                        curr_chunks.append(SemanticChunk.from_dict(chunk))
+                        curr_chunks.append(Chunk.from_dict(chunk))
                     batch_chunks.append(curr_chunks)
                 return batch_chunks
             else:
                 single_result: List[Dict] = cast(List[Dict], response.json())
-                single_chunks: List[SemanticChunk] = [SemanticChunk.from_dict(chunk) for chunk in single_result]
+                single_chunks: List[Chunk] = [Chunk.from_dict(chunk) for chunk in single_result]
                 return single_chunks
         except Exception as error:
             raise ValueError(
@@ -151,6 +161,6 @@ class SemanticChunker(CloudChunker):
                 + "If the issue persists, please contact support at support@chonkie.ai."
             ) from error
 
-    def __call__(self, text: Union[str, List[str]]) -> Union[List[SemanticChunk], List[List[SemanticChunk]]]:
+    def __call__(self, text: Union[str, List[str]]) -> Union[List[Chunk], List[List[Chunk]]]:
         """Call the chunker."""
         return self.chunk(text)
