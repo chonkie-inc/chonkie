@@ -23,7 +23,6 @@ __all__ = [
     "CodeChunker",
     "NeuralChunker",
     "SlumberChunker",
-    "Auth",
     "EmbeddingsRefinery",
     "OverlapRefinery",
 ]
