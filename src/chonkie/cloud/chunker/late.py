@@ -1,6 +1,6 @@
 """Late Chunking for Chonkie API."""
 
-from typing import Dict, List, Optional, Union, cast
+from typing import Any, Dict, List, Optional, Union, cast
 
 import requests
 
@@ -44,11 +44,12 @@ class LateChunker(RecursiveChunker):
             lang=lang,
         )
 
-    def chunk(self, text: Union[str, List[str]]) -> Union[List[LateChunk], List[List[LateChunk]]]:
-        """Chunk the text into a list of late-interaction chunks via the Chonkie API.
+    def chunk(self, text: Optional[Union[str, List[str]]] = None, file: Optional[str] = None) -> Union[List[LateChunk], List[List[LateChunk]]]:
+        """Chunk the text or file into a list of late-interaction chunks via the Chonkie API.
 
         Args:
             text: The text or list of texts to chunk.
+            file: The path to a file to chunk.
 
         Returns:
             A list of dictionaries, where each dictionary represents a chunk
@@ -59,14 +60,31 @@ class LateChunker(RecursiveChunker):
 
         """
         # Make the payload
-        payload = {
-            "text": text,
-            "embedding_model": self.embedding_model,
-            "chunk_size": self.chunk_size,
-            "min_characters_per_chunk": self.min_characters_per_chunk,
-            "recipe": self.recipe,
-            "lang": self.lang,
-        }
+        payload: Dict[str, Any]
+        if text is not None:
+            payload = {
+                "text": text,
+                "embedding_model": self.embedding_model,
+                "chunk_size": self.chunk_size,
+                "min_characters_per_chunk": self.min_characters_per_chunk,
+                "recipe": self.recipe,
+                "lang": self.lang,
+            }
+        elif file is not None:
+            file_response = self.file_manager.upload(file)
+            payload = {
+                "file": {
+                    "type": "document",
+                    "content": file_response.name,
+                },
+                "embedding_model": self.embedding_model,
+                "chunk_size": self.chunk_size,
+                "min_characters_per_chunk": self.min_characters_per_chunk,
+                "recipe": self.recipe,
+                "lang": self.lang,
+            }
+        else:
+            raise ValueError("No text or file provided. Please provide either text or a file path.")
 
         # Make the request to the Chonkie API's late chunking endpoint
         response = requests.post(
@@ -115,7 +133,7 @@ class LateChunker(RecursiveChunker):
                 + "Please try again in a short while."
                 + "If the issue persists, please contact support at support@chonkie.ai."
             ) from error
-
-    def __call__(self, text: Union[str, List[str]]) -> Union[List[LateChunk], List[List[LateChunk]]]:
+    
+    def __call__(self, text: Optional[Union[str, List[str]]] = None, file: Optional[str] = None) -> Union[List[LateChunk], List[List[LateChunk]]]:
         """Call the LateChunker to chunk text."""
-        return self.chunk(text)
+        return self.chunk(text=text, file=file)

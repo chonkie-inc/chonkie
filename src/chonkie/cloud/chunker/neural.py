@@ -1,10 +1,11 @@
 """Neural Chunking for Chonkie API."""
 
 import os
-from typing import Dict, List, Optional, Union, cast
+from typing import Any, Dict, List, Optional, Union, cast
 
 import requests
 
+from chonkie.cloud.file import FileManager
 from chonkie.types import Chunk
 
 from .base import CloudChunker
@@ -69,15 +70,33 @@ class NeuralChunker(CloudChunker):
                 + "If the issue persists, please contact support at support@chonkie.ai."
             ) from error
 
-    def chunk(self, text: Union[str, List[str]]) -> Union[List[Chunk], List[List[Chunk]]]:
-        """Chunk the text into a list of chunks."""
+        # Initialize the file manager to upload files if needed
+        self.file_manager = FileManager(api_key=self.api_key)
+
+    def chunk(self, text: Optional[Union[str, List[str]]] = None, file: Optional[str] = None) -> Union[List[Chunk], List[List[Chunk]]]:
+        """Chunk the text or file into a list of chunks."""
         # Create the payload
-        payload = {
-            "text": text,
-            "model": self.model,
-            "min_characters_per_chunk": self.min_characters_per_chunk,
-            "stride": self.stride,
-        }
+        payload: Dict[str, Any]
+        if text is not None:
+            payload = {
+                "text": text,
+                "model": self.model,
+                "min_characters_per_chunk": self.min_characters_per_chunk,
+                "stride": self.stride,
+            }
+        elif file is not None:
+            file_response = self.file_manager.upload(file)
+            payload = {
+                "file": {
+                    "type": "document",
+                    "content": file_response.name,
+                },
+                "model": self.model,
+                "min_characters_per_chunk": self.min_characters_per_chunk,
+                "stride": self.stride,
+            }
+        else:
+            raise ValueError("No text or file provided. Please provide either text or a file path.")
         
         # Send the request to the Chonkie API
         try:
@@ -105,6 +124,6 @@ class NeuralChunker(CloudChunker):
                 + "If the problem continues, contact support at support@chonkie.ai."
             ) from error
 
-    def __call__(self, text: Union[str, List[str]]) -> Union[List[Chunk], List[List[Chunk]]]:
+    def __call__(self, text: Optional[Union[str, List[str]]] = None, file: Optional[str] = None) -> Union[List[Chunk], List[List[Chunk]]]:
         """Call the NeuralChunker."""
-        return self.chunk(text)
+        return self.chunk(text=text, file=file)

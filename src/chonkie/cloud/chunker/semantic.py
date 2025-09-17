@@ -1,10 +1,11 @@
 """Semantic Chunking for Chonkie API."""
 
 import os
-from typing import Dict, List, Literal, Optional, Union, cast
+from typing import Any, Dict, List, Literal, Optional, Union, cast
 
 import requests
 
+from chonkie.cloud.file import FileManager
 from chonkie.types import Chunk
 
 from .base import CloudChunker
@@ -113,24 +114,51 @@ class SemanticChunker(CloudChunker):
                 + "If the issue persists, please contact support at support@chonkie.ai."
             )
 
-    def chunk(self, text: Union[str, List[str]]) -> Union[List[Chunk], List[List[Chunk]]]:
-        """Chunk the text into a list of chunks."""
+        # Initialize the file manager to upload files if needed
+        self.file_manager = FileManager(api_key=self.api_key)
+
+    def chunk(self, text: Optional[Union[str, List[str]]] = None, file: Optional[str] = None) -> Union[List[Chunk], List[List[Chunk]]]:
+        """Chunk the text or file into a list of chunks."""
         # Make the payload
-        payload = {
-            "text": text,
-            "embedding_model": self.embedding_model,
-            "chunk_size": self.chunk_size,
-            "threshold": self.threshold,
-            "similarity_window": self.similarity_window,
-            "min_sentences_per_chunk": self.min_sentences_per_chunk,
-            "min_characters_per_sentence": self.min_characters_per_sentence,
-            "skip_window": self.skip_window,
-            "filter_window": self.filter_window,
-            "filter_polyorder": self.filter_polyorder,
-            "filter_tolerance": self.filter_tolerance,
-            "delim": self.delim,
-            "include_delim": self.include_delim,
-        }
+        payload: Dict[str, Any]
+        if text is not None:
+            payload = {
+                "text": text,
+                "embedding_model": self.embedding_model,
+                "chunk_size": self.chunk_size,
+                "threshold": self.threshold,
+                "similarity_window": self.similarity_window,
+                "min_sentences_per_chunk": self.min_sentences_per_chunk,
+                "min_characters_per_sentence": self.min_characters_per_sentence,
+                "skip_window": self.skip_window,
+                "filter_window": self.filter_window,
+                "filter_polyorder": self.filter_polyorder,
+                "filter_tolerance": self.filter_tolerance,
+                "delim": self.delim,
+                "include_delim": self.include_delim,
+            }
+        elif file is not None:
+            file_response = self.file_manager.upload(file)
+            payload = {
+                "file": {
+                    "type": "document",
+                    "content": file_response.name,
+                },
+                "embedding_model": self.embedding_model,
+                "chunk_size": self.chunk_size,
+                "threshold": self.threshold,
+                "similarity_window": self.similarity_window,
+                "min_sentences_per_chunk": self.min_sentences_per_chunk,
+                "min_characters_per_sentence": self.min_characters_per_sentence,
+                "skip_window": self.skip_window,
+                "filter_window": self.filter_window,
+                "filter_polyorder": self.filter_polyorder,
+                "filter_tolerance": self.filter_tolerance,
+                "delim": self.delim,
+                "include_delim": self.include_delim,
+            }
+        else:
+            raise ValueError("No text or file provided. Please provide either text or a file path.")
 
         # Make the request to the Chonkie API
         response = requests.post(
@@ -161,6 +189,6 @@ class SemanticChunker(CloudChunker):
                 + "If the issue persists, please contact support at support@chonkie.ai."
             ) from error
 
-    def __call__(self, text: Union[str, List[str]]) -> Union[List[Chunk], List[List[Chunk]]]:
+    def __call__(self, text: Optional[Union[str, List[str]]] = None, file: Optional[str] = None) -> Union[List[Chunk], List[List[Chunk]]]:
         """Call the chunker."""
-        return self.chunk(text)
+        return self.chunk(text=text, file=file)
