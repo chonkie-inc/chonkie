@@ -1,10 +1,11 @@
 """Slumber Chunking for Chonkie API."""
 
 import os
-from typing import Callable, Dict, List, Optional, Union, cast
+from typing import Any, Callable, Dict, List, Optional, Union, cast
 
 import requests
 
+from chonkie.cloud.file import FileManager
 from chonkie.types import Chunk
 
 from .base import CloudChunker
@@ -70,26 +71,48 @@ class SlumberChunker(CloudChunker):
                 + " If the issue persists, please contact support at support@chonkie.ai."
             ) from error
 
+        # Initialize the file manager to upload files if needed
+        self.file_manager = FileManager(api_key=self.api_key)
 
-    def chunk(self, text: Union[str, List[str]]) -> Union[List[Chunk], List[List[Chunk]]]:
-        """Chunk the text into a list of chunks using the Slumber strategy via API.
+
+    def chunk(self, text: Optional[Union[str, List[str]]] = None, file: Optional[str] = None) -> Union[List[Chunk], List[List[Chunk]]]:
+        """Chunk the text or file into a list of chunks using the Slumber strategy via API.
 
         Args:
             text (Union[str, List[str]]): The text or list of texts to chunk.
+            file (Optional[str]): The path to a file to chunk.
 
         Returns:
             List[Dict]: A list of dictionaries representing the chunks or texts.
 
         """
-        payload = {
-            "text": text,
-            "tokenizer_or_token_counter": self.tokenizer_or_token_counter,
-            "chunk_size": self.chunk_size,
-            "recipe": self.recipe,
-            "lang": self.lang,
-            "candidate_size": self.candidate_size,
-            "min_characters_per_chunk": self.min_characters_per_chunk,
-        }
+        payload: Dict[str, Any]
+        if text is not None:
+            payload = {
+                "text": text,
+                "tokenizer_or_token_counter": self.tokenizer_or_token_counter,
+                "chunk_size": self.chunk_size,
+                "recipe": self.recipe,
+                "lang": self.lang,
+                "candidate_size": self.candidate_size,
+                "min_characters_per_chunk": self.min_characters_per_chunk,
+            }
+        elif file is not None:
+            file_response = self.file_manager.upload(file)
+            payload = {
+                "file": {
+                    "type": "document",
+                    "content": file_response.name,
+                },
+                "tokenizer_or_token_counter": self.tokenizer_or_token_counter,
+                "chunk_size": self.chunk_size,
+                "recipe": self.recipe,
+                "lang": self.lang,
+                "candidate_size": self.candidate_size,
+                "min_characters_per_chunk": self.min_characters_per_chunk,
+            }
+        else:
+            raise ValueError("No text or file provided. Please provide either text or a file path.")
 
         try:
             response = requests.post(
@@ -145,9 +168,9 @@ class SlumberChunker(CloudChunker):
             ) from error
 
 
-    def __call__(self, text: Union[str, List[str]]) -> Union[List[Chunk], List[List[Chunk]]]:
+    def __call__(self, text: Optional[Union[str, List[str]]] = None, file: Optional[str] = None) -> Union[List[Chunk], List[List[Chunk]]]:
         """Call the SlumberChunker."""
-        return self.chunk(text)
+        return self.chunk(text=text, file=file)
 
     def __repr__(self) -> str:
         """Return a string representation of the SlumberChunker."""

@@ -11,6 +11,7 @@ from .chunker import (
     SlumberChunker,
     TokenChunker,
 )
+from .file import FileManager
 from .refineries import EmbeddingsRefinery, OverlapRefinery
 
 __all__ = [
@@ -25,4 +26,5 @@ __all__ = [
     "SlumberChunker",
     "EmbeddingsRefinery",
     "OverlapRefinery",
+    "FileManager",
 ]
