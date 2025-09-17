@@ -172,7 +172,6 @@ packages = [
     "chonkie.friends.porters",
     "chonkie.friends.handshakes",
     "chonkie.cloud",
-    "chonkie.cloud.auth",
     "chonkie.cloud.chunker",
     "chonkie.cloud.refineries",
     "chonkie.experimental",

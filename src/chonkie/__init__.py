@@ -19,7 +19,6 @@ from .chunker import (
     TokenChunker,
 )
 from .cloud import (
-    auth,
     chunker,
     refineries,
 )
