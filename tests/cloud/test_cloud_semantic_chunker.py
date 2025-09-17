@@ -61,10 +61,6 @@ def test_cloud_semantic_chunker_initialization(mock_requests_get) -> None:
     with pytest.raises(ValueError):
         SemanticChunker(chunk_size=-1, api_key="test_key")
 
-    # Check if the threshold is a str but not "auto"
-    with pytest.raises(ValueError):
-        SemanticChunker(threshold="not_auto", api_key="test_key")
-
     # Check if the threshold is a number but not between 0 and 1
     with pytest.raises(ValueError):
         SemanticChunker(threshold=1.1, api_key="test_key")
@@ -77,25 +73,29 @@ def test_cloud_semantic_chunker_initialization(mock_requests_get) -> None:
     with pytest.raises(ValueError):
         SemanticChunker(similarity_window=-1, api_key="test_key")
 
-    # Check if the min_sentences is not a positive integer
+    # Check if the min_sentences_per_chunk is not a positive integer
     with pytest.raises(ValueError):
-        SemanticChunker(min_sentences=-1, api_key="test_key")
-
-    # Check if the min_chunk_size is not a positive integer
-    with pytest.raises(ValueError):
-        SemanticChunker(min_chunk_size=-1, api_key="test_key")
+        SemanticChunker(min_sentences_per_chunk=-1, api_key="test_key")
 
     # Check if the min_characters_per_sentence is not a positive integer
     with pytest.raises(ValueError):
         SemanticChunker(min_characters_per_sentence=-1, api_key="test_key")
 
-    # Check if the threshold_step is not a number between 0 and 1
+    # Check if the skip_window is negative
     with pytest.raises(ValueError):
-        SemanticChunker(threshold_step=-0.1, api_key="test_key")
+        SemanticChunker(skip_window=-1, api_key="test_key")
 
-    # Check if the threshold_step is not a number between 0 and 1
+    # Check if the filter_window is not positive
     with pytest.raises(ValueError):
-        SemanticChunker(threshold_step=1.1, api_key="test_key")
+        SemanticChunker(filter_window=0, api_key="test_key")
+
+    # Check if the filter_polyorder is invalid
+    with pytest.raises(ValueError):
+        SemanticChunker(filter_polyorder=5, filter_window=5, api_key="test_key")
+
+    # Check if the filter_tolerance is out of range
+    with pytest.raises(ValueError):
+        SemanticChunker(filter_tolerance=1.1, api_key="test_key")
 
     # Check if the delim is not a string or a list of strings
     with pytest.raises(ValueError):
@@ -109,12 +109,14 @@ def test_cloud_semantic_chunker_initialization(mock_requests_get) -> None:
     chunker = SemanticChunker(chunk_size=512, api_key="test_key")
     assert chunker.embedding_model == "minishlab/potion-base-32M"
     assert chunker.chunk_size == 512
-    assert chunker.threshold == "auto"
+    assert chunker.threshold == 0.8  # Default threshold value
     assert chunker.similarity_window == 1
-    assert chunker.min_sentences == 1
-    assert chunker.min_chunk_size == 2
+    assert chunker.min_sentences_per_chunk == 1
     assert chunker.min_characters_per_sentence == 12
-    assert chunker.threshold_step == 0.01
+    assert chunker.skip_window == 0
+    assert chunker.filter_window == 5
+    assert chunker.filter_polyorder == 3
+    assert chunker.filter_tolerance == 0.2
     assert chunker.delim == [". ", "! ", "? ", "\n"]
     assert chunker.include_delim == "prev"
 
