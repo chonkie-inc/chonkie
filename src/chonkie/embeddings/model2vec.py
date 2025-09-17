@@ -40,7 +40,7 @@ class Model2VecEmbeddings(BaseEmbeddings):
             # TODO: `base_model_name` is mentioned in here -
             # https://github.com/MinishLab/model2vec/blob/b1358a9c2e777800e8f89c7a5f830fa2176c15b5/model2vec/model.py#L165`
             # but its `None` for potion models
-            self.model_name_or_path = self.model.base_model_name
+            self.model_name_or_path = self.model.base_model_name # type: ignore
         else:
             raise ValueError("model must be a string or model2vec.StaticModel instance")
         self._dimension = self.model.dim

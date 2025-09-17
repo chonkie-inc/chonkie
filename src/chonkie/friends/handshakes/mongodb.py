@@ -211,7 +211,7 @@ class MongoDBHandshake(BaseHandshake):
             )
         )
 
-        def cosine_similarity(a, b):
+        def cosine_similarity(a: List[float], b: List[float]) -> float:
             """Compute cosine similarity between two vectors."""
             import math
 
@@ -227,7 +227,7 @@ class MongoDBHandshake(BaseHandshake):
         for doc in docs:
             emb = doc.get("embedding")
             if emb is not None:
-                score = cosine_similarity(embedding, emb)
+                score = cosine_similarity(embedding, emb) # type: ignore[arg-type]
                 result = {
                     "id": doc["_id"],
                     "score": score,
