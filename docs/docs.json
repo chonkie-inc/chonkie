@@ -7,7 +7,7 @@
     "light": "#faf6e3",
     "dark": "#77c775"
   },
-  "favicon": "/favicon.png",
+  "favicon": "/favicon.ico",
   "navigation": {
     "tabs": [
       {
@@ -86,10 +86,7 @@
           },
           {
             "group": "Utils",
-            "pages": [
-              "python-sdk/utils/visualizer",
-              "python-sdk/utils/hubbie"
-            ]
+            "pages": ["python-sdk/utils/visualizer", "python-sdk/utils/hubbie"]
           },
           {
             "group": "Experimental",
@@ -100,9 +97,7 @@
           },
           {
             "group": "Changelog",
-            "pages": [
-              "python-sdk/changelog"
-            ]
+            "pages": ["python-sdk/changelog"]
           }
         ]
       },
