@@ -85,8 +85,10 @@ class QdrantHandshake(BaseHandshake):
         if client is None:
             if url is not None and api_key is not None:
                 self.client = qdrant_client.QdrantClient(
-                    url=url, api_key=api_key, **kwargs
-                )  # type: ignore[arg-type]
+                    url=url,
+                    api_key=api_key,
+                    **kwargs,  # type: ignore[arg-type]
+                )
             elif url is not None:
                 self.client = qdrant_client.QdrantClient(url=url, **kwargs)  # type: ignore[arg-type]
             elif path is not None:
@@ -226,4 +228,7 @@ class QdrantHandshake(BaseHandshake):
             limit=limit,
             with_payload=True,
         )
-        return [{"id": result["id"], "score": result["score"], **result["payload"]} for result in results.dict()["points"]]
+        return [
+            {"id": result["id"], "score": result["score"], **result["payload"]}
+            for result in results.dict()["points"]
+        ]
