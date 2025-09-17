@@ -5,7 +5,7 @@ This chunker uses the Semantic Double-Pass Merging algorithm to chunk text.
 .. deprecated:: 1.2.0
     The merging capabilities of SDPMChunker are now integrated into the new
     SemanticChunker. Use `from chonkie.chunker import SemanticChunker` instead.
-    
+
 To use this legacy version:
     from chonkie.legacy import SDPMChunker
 """
@@ -95,8 +95,8 @@ class SDPMChunker(SemanticChunker):
         self._use_multiprocessing = False
 
     @classmethod
-    def from_recipe(
-        cls,  # type: ignore[override]
+    def from_recipe( # type: ignore[override]
+        cls,  
         name: str = "default",
         lang: Optional[str] = "en",
         path: Optional[str] = None,

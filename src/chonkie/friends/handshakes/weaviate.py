@@ -460,11 +460,11 @@ class WeaviateHandshake(BaseHandshake):
         if embedding is None and query is None:
             raise ValueError("Either query or embedding must be provided")
         if query is not None:
-            embedding = self.embedding_model.embed(query).tolist()
+            embedding  = self.embedding_model.embed(query).tolist()
         collection = self.client.collections.get(self.collection_name)
         # Weaviate expects a vector for similarity search
         results = collection.query.near_vector(
-            near_vector=embedding,
+            near_vector=embedding, # type: ignore[arg-type] 
             limit=limit,
             return_metadata=weaviate.classes.query.MetadataQuery(distance=True),
         )
