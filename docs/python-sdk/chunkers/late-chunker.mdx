@@ -130,7 +130,7 @@ LateChunker returns `LateChunk` objects with optimized storage using slots:
 
 ```python
 @dataclass
-class LateChunk(RecursiveChunk):
+class LateChunk(Chunk):
     text: str  # The text of the chunk.
     start_index: int  # The start index of the chunk.
     end_index: int  # The end index of the chunk.

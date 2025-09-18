@@ -3,8 +3,6 @@
 import re
 from dataclasses import dataclass
 from typing import Dict, Iterator, List, Literal, Optional, Union
-
-from chonkie.types.base import Chunk
 from chonkie.utils import Hubbie
 
 
@@ -220,30 +218,3 @@ class RecursiveRules:
         recipe = hub.get_recipe(name, lang, path) 
         return cls.from_dict(recipe["recipe"]["recursive_rules"])
 
-@dataclass
-class RecursiveChunk(Chunk):
-    """Class to represent recursive chunks.
-
-    Attributes:
-        level (Optional[int]): The level of recursion for the chunk, if any.
-
-    """
-
-    level: Optional[int] = None
-
-    def __repr__(self) -> str:
-        """Return a string representation of the RecursiveChunk."""
-        return (
-            f"RecursiveChunk(text={self.text}, start_index={self.start_index}, "
-            f"end_index={self.end_index}, token_count={self.token_count}, "
-            f"level={self.level})"
-        )
-
-    def to_dict(self) -> Dict:
-        """Return the RecursiveChunk as a dictionary."""
-        return self.__dict__.copy()
-
-    @classmethod
-    def from_dict(cls, data: Dict) -> "RecursiveChunk":
-        """Create a RecursiveChunk object from a dictionary."""
-        return cls(**data)
