@@ -100,6 +100,7 @@ class Chunk:
 
         Returns:
             A string preview of the embedding
+
         """
         if self.embedding is None:
             return ""
