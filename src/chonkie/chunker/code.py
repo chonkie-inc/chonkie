@@ -306,7 +306,6 @@ class CodeChunker(BaseChunker):
         for i in range(len(texts)):
             text = texts[i]
             token_count = token_counts[i]
-            node_groups[i] if self.include_nodes else None
 
             chunks.append(Chunk(text=text,
                                 start_index=current_index,
