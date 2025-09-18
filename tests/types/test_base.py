@@ -7,7 +7,7 @@ import pytest
 from chonkie import Chunk, Context
 
 try:
-    import numpy as np
+    import numpy as np  # noqa: F401
     NUMPY_AVAILABLE = True
 except ImportError:
     NUMPY_AVAILABLE = False
