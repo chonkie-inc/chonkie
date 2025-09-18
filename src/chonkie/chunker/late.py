@@ -131,7 +131,7 @@ class LateChunker(RecursiveChunker):
             )
         return embs
 
-    def chunk(self, text: str) -> List[Chunk]: # type: ignore
+    def chunk(self, text: str) -> List[Chunk]:
         """Chunk the text via LateChunking."""
         # This would first call upon the _recursive_chunk method
         # and then use the embedding model to get the token token_embeddings
