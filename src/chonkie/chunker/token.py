@@ -10,7 +10,7 @@ from tqdm import trange
 
 from chonkie.chunker.base import BaseChunker
 from chonkie.pipeline.registry import chunker
-from chonkie.types.base import Chunk
+from chonkie.types import Chunk
 
 
 @chunker("token")

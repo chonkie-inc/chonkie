@@ -78,14 +78,12 @@ from .tokenizer import (
 )
 from .types import (
     Chunk,
-    CodeChunk,
     Context,
     LanguageConfig,
     LateChunk,
     MergeRule,
     RecursiveLevel,
     RecursiveRules,
-    SemanticChunk,
     SemanticSentence,
     Sentence,
     SplitRule,

@@ -12,8 +12,7 @@ from itertools import accumulate
 from typing import Any, Callable, List, Literal, Optional, Sequence, Union
 
 from chonkie.pipeline.registry import chunker
-from chonkie.types.base import Chunk
-from chonkie.types.sentence import Sentence
+from chonkie.types import Chunk, Sentence
 from chonkie.utils import Hubbie
 
 from .base import BaseChunker

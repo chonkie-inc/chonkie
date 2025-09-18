@@ -7,7 +7,7 @@ import warnings
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from chonkie.chunker.base import BaseChunker
-from chonkie.types.base import Chunk
+from chonkie.types import Chunk
 from chonkie.types.code import SplitRule
 
 from .code_registry import CodeLanguageRegistry

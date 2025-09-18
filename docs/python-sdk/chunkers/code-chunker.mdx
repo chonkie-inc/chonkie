@@ -73,7 +73,7 @@ chunker = CodeChunker(
     type="bool"
     default="False"
 >
-    Whether to include the list of corresponding AST `Node` objects within each `CodeChunk`.
+    Whether to include AST node information (Note: with the base Chunk type, node information is not stored).
 </ParamField>
 
 
@@ -126,15 +126,18 @@ batch_chunks = chunker(["int main() { return 0; }", "package main\nimport \"fmt\
 
 ## Return Type
 
-CodeChunker returns chunks as `CodeChunk` objects:
+CodeChunker returns chunks as `Chunk` objects:
 
 ```python
 @dataclass
-class CodeChunk(Chunk):
+class Chunk:
     text: str           # The chunk text (code snippet)
     start_index: int    # Starting position in original code
     end_index: int      # Ending position in original code
     token_count: int    # Number of tokens in chunk
-    lang: Optional[str] = None # Language of the code chunk
-    nodes: Optional[List[Node]] = None # List of AST nodes if include_nodes=True
+    context: Optional[Context] = None    # Optional context metadata
+    embedding: Optional[Any] = None      # Optional embedding vector
 ```
+
+> [!NOTE]
+> As of version 1.3.0, CodeChunker returns the base `Chunk` type instead of the specialized `CodeChunk` type. This simplifies integration with other chunkers and refineries.

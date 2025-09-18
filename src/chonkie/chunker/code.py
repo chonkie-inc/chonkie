@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING, Any, List, Literal, Tuple, Union
 from chonkie.chunker.base import BaseChunker
 from chonkie.pipeline.registry import chunker
 from chonkie.tokenizer import Tokenizer
-from chonkie.types.code import CodeChunk
+from chonkie.types import Chunk
 
 if TYPE_CHECKING:
     from typing import Any
@@ -299,24 +299,23 @@ class CodeChunker(BaseChunker):
     def _create_chunks(self,
                        texts: List[str],
                        token_counts: List[int],
-                       node_groups: List[List["Node"]]) -> List[CodeChunk]:
+                       node_groups: List[List["Node"]]) -> List[Chunk]:
         """Create Code Chunks."""
         chunks = []
         current_index = 0
-        for i in range(len(texts)): 
+        for i in range(len(texts)):
             text = texts[i]
             token_count = token_counts[i]
             node_group = node_groups[i] if self.include_nodes else None
 
-            chunks.append(CodeChunk(text=text, 
-                                    start_index=current_index, 
-                                    end_index=current_index + len(text),
-                                    token_count=token_count,
-                                    nodes=None if not self.include_nodes or not node_group else [{"type": node.type, "text": node.text.decode() if node.text else ""} for node in node_group]))  # type: ignore[attr-defined]
+            chunks.append(Chunk(text=text,
+                                start_index=current_index,
+                                end_index=current_index + len(text),
+                                token_count=token_count))  # type: ignore[attr-defined]
             current_index += len(text)
         return chunks
         
-    def chunk(self, text: str) -> List[CodeChunk]:
+    def chunk(self, text: str) -> List[Chunk]:
         """Recursively chunks the code based on context from tree-sitter."""
         if not text.strip(): # Handle empty or whitespace-only input
             return []
