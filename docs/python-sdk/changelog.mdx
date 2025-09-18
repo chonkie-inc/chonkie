@@ -32,7 +32,7 @@ iconType: "solid"
       end_index: int
       token_count: int
       context: Optional[Context] = None
-      embedding: Optional[Any] = None  # NEW!
+      embedding: Union[List[float], "np.ndarray", None] = None  # NEW!
   ```
 
   ## Import Changes

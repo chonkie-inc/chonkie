@@ -136,7 +136,7 @@ class Chunk:
     end_index: int      # Ending position in original code
     token_count: int    # Number of tokens in chunk
     context: Optional[Context] = None    # Optional context metadata
-    embedding: Optional[Any] = None      # Optional embedding vector
+    embedding: Union[List[float], "np.ndarray", None] = None  # Optional embedding vector
 ```
 
 > [!NOTE]
