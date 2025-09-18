@@ -1,7 +1,7 @@
 """Custom types for Sentence Chunking."""
 
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Union
 
 if TYPE_CHECKING:
     import numpy as np

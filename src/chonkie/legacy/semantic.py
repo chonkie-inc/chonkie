@@ -29,6 +29,7 @@ SemanticSentence = Sentence
 @dataclass
 class SemanticChunk(Chunk):
     """Legacy SemanticChunk type for backward compatibility."""
+
     sentences: List[SemanticSentence] = field(default_factory=list)
 
     def __repr__(self) -> str:
