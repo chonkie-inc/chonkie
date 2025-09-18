@@ -5,7 +5,7 @@ from unittest.mock import Mock, patch
 import pytest
 
 from chonkie.cloud import LateChunker
-from chonkie.types import LateChunk
+from chonkie.types import Chunk
 
 
 @pytest.fixture
@@ -92,7 +92,7 @@ def test_cloud_late_chunker_single_text(mock_requests_get, mock_requests_post, m
     assert isinstance(result, list)
     if result: # API might return multiple chunks depending on its logic
         for chunk in result:
-            assert isinstance(chunk, LateChunk)
+            assert isinstance(chunk, Chunk)
             assert isinstance(chunk.text, str)
             assert isinstance(chunk.start_index, int)
             assert isinstance(chunk.end_index, int)
@@ -127,7 +127,7 @@ def test_cloud_late_chunker_batch_texts(mock_requests_get, mock_requests_post, m
         all_chunks = result[0]
         if all_chunks:
             for chunk in all_chunks: # Iterate through the inner list of chunks
-                assert isinstance(chunk, LateChunk)
+                assert isinstance(chunk, Chunk)
                 assert isinstance(chunk.text, str)
                 assert isinstance(chunk.start_index, int)
                 assert isinstance(chunk.end_index, int)
@@ -186,6 +186,6 @@ def test_cloud_late_chunker_real_api(mock_requests_get, mock_requests_post, mock
     assert isinstance(result, list)
     if result:
         for chunk in result:
-            assert isinstance(chunk, LateChunk)
+            assert isinstance(chunk, Chunk)
             assert isinstance(chunk.text, str)
             assert isinstance(chunk.token_count, int)

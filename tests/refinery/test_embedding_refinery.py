@@ -123,18 +123,20 @@ def test_embeddings_refinery_is_available(mock_embeddings: MockEmbeddings) -> No
 def test_embeddings_refinery_refine_basic(mock_embeddings: MockEmbeddings, sample_chunks: list[Chunk]) -> None:
     """Test basic refine functionality."""
     refinery = EmbeddingsRefinery(mock_embeddings)
-    
-    # Ensure chunks don't have embeddings initially
+
+    # Ensure chunks don't have embeddings initially (should be None)
     for chunk in sample_chunks:
-        assert not hasattr(chunk, 'embedding')
-    
+        assert hasattr(chunk, 'embedding')  # attribute exists
+        assert chunk.embedding is None  # but is None initially
+
     refined_chunks = refinery.refine(sample_chunks)
-    
+
     # Check that embeddings were added
     assert len(refined_chunks) == 3
     for chunk in refined_chunks:
         assert hasattr(chunk, 'embedding')
         import numpy as np
+        assert chunk.embedding is not None  # Now should have a value
         assert isinstance(chunk.embedding, np.ndarray)
         assert chunk.embedding.shape == (128,)  # Mock dimension
         assert chunk.embedding.dtype == np.float32
