@@ -6,7 +6,7 @@ from unittest.mock import Mock, patch
 import pytest
 
 from chonkie.cloud import CodeChunker
-from chonkie.types import CodeChunk
+from chonkie.types import Chunk
 
 
 @pytest.fixture
@@ -182,7 +182,7 @@ def test_cloud_code_chunker_simple(mock_requests_get: Any, mock_requests_post: A
 
     # Check the result
     assert isinstance(result, list) and len(result) >= 1
-    assert isinstance(result[0], CodeChunk)
+    assert isinstance(result[0], Chunk)
     assert result[0].text
     assert result[0].token_count
     assert result[0].start_index is not None
@@ -212,7 +212,7 @@ def test_cloud_code_chunker_python_complex(mock_requests_get: Any, mock_requests
     # Check the result
     assert isinstance(result, list)
     assert len(result) > 1  # Should be split into multiple chunks
-    assert all(isinstance(item, CodeChunk) for item in result)
+    assert all(isinstance(item, Chunk) for item in result)
     assert all(isinstance(item.text, str) for item in result)
     assert all(isinstance(item.token_count, int) for item in result)
     assert all(isinstance(item.start_index, int) for item in result)
@@ -242,7 +242,7 @@ def test_cloud_code_chunker_javascript(mock_requests_get: Any, mock_requests_pos
     # Check the result
     assert isinstance(result, list)
     assert len(result) > 1  # Should be split into multiple chunks
-    assert all(isinstance(item, CodeChunk) for item in result)
+    assert all(isinstance(item, Chunk) for item in result)
     assert all(isinstance(item.text, str) for item in result)
     assert all(isinstance(item.token_count, int) for item in result)
 
@@ -270,7 +270,7 @@ def test_cloud_code_chunker_auto_language(mock_requests_get: Any, mock_requests_
     # Check the result
     assert isinstance(result, list)
     assert len(result) >= 1
-    assert all(isinstance(item, CodeChunk) for item in result)
+    assert all(isinstance(item, Chunk) for item in result)
     assert all(isinstance(item.text, str) for item in result)
 
     # Check that chunks can be reconstructed
@@ -298,7 +298,7 @@ def test_cloud_code_chunker_no_nodes_support(mock_requests_get: Any, mock_reques
 
     # Check the result - should not contain nodes since API doesn't support them
     assert isinstance(result, list) and len(result) >= 1
-    assert isinstance(result[0], CodeChunk)
+    assert isinstance(result[0], Chunk)
     assert result[0].text
     # API doesn't support tree-sitter nodes, so they shouldn't be in response
 
@@ -327,8 +327,8 @@ def test_cloud_code_chunker_batch(mock_requests_get: Any, mock_requests_post: An
     assert all(isinstance(item, list) for item in result), (
         f"Expected a list of lists, got {type(result)}"
     )
-    assert all(isinstance(chunk, CodeChunk) for batch in result for chunk in batch), (
-        "Expected lists of CodeChunks"
+    assert all(isinstance(chunk, Chunk) for batch in result for chunk in batch), (
+        "Expected lists of Chunks"
     )
     assert all(isinstance(chunk.text, str) for batch in result for chunk in batch), (
         "Expected chunks with text field"
@@ -458,7 +458,7 @@ def test_cloud_code_chunker_different_tokenizers(mock_requests_get: Any, mock_re
         
         assert isinstance(result, list)
         assert len(result) >= 1
-        assert all(isinstance(chunk, CodeChunk) for chunk in result)
+        assert all(isinstance(chunk, Chunk) for chunk in result)
         assert all(chunk.text for chunk in result)
 
 
@@ -482,6 +482,6 @@ def test_cloud_code_chunker_real_api(mock_requests_get: Any, mock_requests_post:
 
     # Check the result
     assert isinstance(result, list) and len(result) >= 1
-    assert isinstance(result[0], CodeChunk)
+    assert isinstance(result[0], Chunk)
     assert result[0].text
     assert result[0].token_count

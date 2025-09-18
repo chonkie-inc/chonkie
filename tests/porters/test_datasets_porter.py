@@ -58,8 +58,8 @@ def test_export_empty_chunks():  # noqa
 def test_dataset_structure_and_content(sample_chunks):  # noqa
     porter = DatasetsPorter()
     ds = porter.export(sample_chunks, save_to_disk=False)
-    # Check column names
-    expected_columns = {"text", "start_index", "end_index", "token_count", "context"}
+    # Check column names - now includes embedding field
+    expected_columns = {"text", "start_index", "end_index", "token_count", "context", "embedding"}
     assert set(ds.column_names) == expected_columns
     # Check content
     for i, chunk in enumerate(sample_chunks):
