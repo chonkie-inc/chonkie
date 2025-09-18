@@ -6,6 +6,45 @@ icon: "hippo"
 iconType: "solid"
 ---
 
+<Update label="v1.3.0 (Upcoming)">
+  # v1.3.0 Release Highlights ✨
+
+  ## Breaking Changes
+
+  - **Unified Chunk Type**: All chunkers now return the base `Chunk` type instead of specialized types (`SentenceChunk`, `RecursiveChunk`, `SemanticChunk`, `CodeChunk`). This simplifies the API and improves interoperability between different chunkers and refineries.
+
+  - **New `embedding` Attribute**: The base `Chunk` type now includes an optional `embedding` attribute that can store embedding vectors (as lists or numpy arrays). This is automatically populated by `EmbeddingsRefinery` and certain chunkers like `LateChunker`.
+
+  ## Migration Guide
+
+  If you were relying on specialized chunk attributes:
+  - `SentenceChunk.sentences` → No longer available in base Chunk
+  - `SemanticChunk.sentences` → No longer available in base Chunk
+  - `CodeChunk.nodes` → No longer available in base Chunk
+  - `RecursiveChunk.level` → No longer available in base Chunk
+
+  All chunkers now consistently return `Chunk` objects with:
+  ```python
+  @dataclass
+  class Chunk:
+      text: str
+      start_index: int
+      end_index: int
+      token_count: int
+      context: Optional[Context] = None
+      embedding: Optional[Any] = None  # NEW!
+  ```
+
+  ## Import Changes
+
+  When importing the Chunk type, use:
+  ```python
+  from chonkie.types import Chunk
+  ```
+
+  The specialized types are deprecated but remain available for backward compatibility in the legacy module.
+</Update>
+
 <Update label="v1.0.6">
   # v1.0.6 Release Highlights ✨
 
