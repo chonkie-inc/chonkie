@@ -73,7 +73,7 @@ class CodeChunker(CloudChunker):
             file: The path to a file to chunk.
 
         Returns:
-            A list of CodeChunk objects containing the chunked code.
+            A list of Chunk objects containing the chunked code.
 
         Raises:
             ValueError: If the API request fails or returns invalid data.

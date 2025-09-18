@@ -14,7 +14,7 @@ from typing import Any, Dict, List, Literal, Optional, Union
 
 from chonkie.embeddings import BaseEmbeddings
 from chonkie.pipeline.registry import chunker
-from chonkie.legacy.semantic import SemanticChunker, SemanticChunk
+from chonkie.legacy.semantic import SemanticChunk, SemanticChunker
 from chonkie.types import Sentence
 from chonkie.utils import Hubbie
 
