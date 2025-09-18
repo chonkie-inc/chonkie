@@ -3,7 +3,8 @@
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
-from chonkie.types.sentence import Sentence, SentenceChunk
+from chonkie.types.base import Chunk
+from chonkie.types.sentence import Sentence
 
 if TYPE_CHECKING:
     import numpy as np
@@ -71,7 +72,7 @@ class SemanticSentence(Sentence):
 
 
 @dataclass
-class SemanticChunk(SentenceChunk):
+class SemanticChunk(Chunk):
     """SemanticChunk dataclass representing a semantic chunk with metadata.
 
     Attributes:
@@ -83,7 +84,7 @@ class SemanticChunk(SentenceChunk):
 
     """
 
-    sentences: List[SemanticSentence] = field(default_factory=list)  # type: ignore[assignment]
+    sentences: List[SemanticSentence] = field(default_factory=list)
 
     def to_dict(self) -> dict:
         """Return the SemanticChunk as a dictionary."""

@@ -77,7 +77,6 @@ from .types import (
     SemanticChunk,
     SemanticSentence,
     Sentence,
-    SentenceChunk,
     SplitRule,
 )
 from .utils import (

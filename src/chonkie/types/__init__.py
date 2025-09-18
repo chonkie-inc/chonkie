@@ -5,7 +5,7 @@ from .code import CodeChunk, LanguageConfig, MergeRule, SplitRule
 from .late import LateChunk
 from .recursive import RecursiveChunk, RecursiveLevel, RecursiveRules
 from .semantic import SemanticChunk, SemanticSentence
-from .sentence import Sentence, SentenceChunk
+from .sentence import Sentence
 
 __all__ = [
     "Chunk",
@@ -14,7 +14,6 @@ __all__ = [
     "RecursiveLevel",
     "RecursiveRules",
     "Sentence",
-    "SentenceChunk",
     "SemanticChunk",
     "SemanticSentence",
     "LateChunk",
