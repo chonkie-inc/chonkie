@@ -380,15 +380,15 @@ class SemanticChunker(BaseChunker):
         return sentences
 
     def _get_semantic_similarity(
-        self, embedding1: "np.ndarray", embedding2: "np.ndarray"
+        self, embedding1: Union[List[float], "np.ndarray"], embedding2: Union[List[float], "np.ndarray"]
     ) -> float:
         """Compute cosine similarity between two embeddings."""
-        similarity = self.embedding_model.similarity(embedding1, embedding2)
+        similarity = self.embedding_model.similarity(embedding1, embedding2)  # type: ignore[arg-type]
         return float(similarity)
 
     def _compute_group_embedding(
         self, sentences: List[SemanticSentence]
-    ) -> "np.ndarray":
+    ) -> Union[List[float], "np.ndarray"]:
         """Compute mean embedding for a group of sentences."""
         if len(sentences) == 1:
             embedding = sentences[0].embedding
@@ -403,7 +403,7 @@ class SemanticChunker(BaseChunker):
             # TODO: Account for embedding model truncating to max_seq_length, which causes a mismatch in the token count.
             return np.divide(
                 np.sum(
-                    [(sent.embedding * sent.token_count) for sent in sentences if sent.embedding is not None],
+                    [(sent.embedding * sent.token_count) for sent in sentences if sent.embedding is not None],  # type: ignore[operator, arg-type]
                     axis=0,
                 ),
                 np.sum([sent.token_count for sent in sentences]),
@@ -597,7 +597,7 @@ class SemanticChunker(BaseChunker):
                 current_group = [sentence]
                 if sentence.embedding is None:
                     raise ValueError("Sentence embedding is None")
-                current_embedding = sentence.embedding
+                current_embedding = sentence.embedding  # type: ignore[assignment]
 
         # Add final group
         if current_group:
