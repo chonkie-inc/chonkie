@@ -19,6 +19,8 @@ Unfortunately, we do need docs for Chonkie (we tried!). While official docs are 
 - [📦 Installation](#-installation)
   - [Optional Dependencies](#optional-dependencies)
 - [Usage](#usage)
+- [Types and Data Structures](#types-and-data-structures)
+  - [The `Chunk` Type](#the-chunk-type)
 - [CHONKosophy](#chonkosophy)
   - [How does Chonkie think about chunking?](#how-does-chonkie-think-about-chunking)
 - [Chunkers](#chunkers)
@@ -128,7 +130,27 @@ for chunk in chunks:
     print(chunk.end_index)
 ```
 
-Refer to the types reference below for more information on the `Chunk` object.
+## Types and Data Structures
+
+### The `Chunk` Type
+
+All chunkers in Chonkie now return the base `Chunk` type for consistency and simplicity. The `Chunk` type is a dataclass with the following attributes:
+
+```python
+@dataclass
+class Chunk:
+    text: str                    # The text content of the chunk
+    start_index: int             # Starting position in original text
+    end_index: int               # Ending position in original text
+    token_count: int             # Number of tokens in the chunk
+    context: Optional[Context] = None    # Optional context metadata
+    embedding: Optional[Any] = None      # Optional embedding vector
+```
+
+The `embedding` attribute can store embedding vectors (as lists or numpy arrays) which are automatically added when using `EmbeddingsRefinery` or certain chunkers like `LateChunker`.
+
+> [!NOTE]
+> As of version 1.3.0, specialized chunk types like `SentenceChunk`, `RecursiveChunk`, `SemanticChunk`, and `CodeChunk` have been deprecated. All chunkers now return the base `Chunk` type. This simplifies the API and makes it easier to chain different chunkers and refineries together.
 
 ## CHONKosophy
 
@@ -249,7 +271,7 @@ The `SentenceChunker` is a chunker that splits the text into sentences and then 
 
 **Methods:**
 
-- `chunk(text: str) -> List[Chunk]`: Chunks a string into a list of `Chunk` objects.
+- `chunk(text: str) -> List[Chunk]`: Chunks a string into a list of `Chunk` objects. Returns the base `Chunk` type.
 - `chunk_batch(texts: List[str]) -> List[List[Chunk]]`: Chunks a list of strings into a list of lists of `Chunk` objects. (Inherited)
 - `from_recipe(name: str, lang: str, **kwargs) -> SentenceChunker`: Creates a `SentenceChunker` instance using pre-defined recipes from the [Chonkie Recipe Store](https://huggingface.co/datasets/chonkie-ai/recipes). This allows easy configuration for specific languages or splitting behaviors.
 - `__call__(text: str) -> Union[List[Chunk], List[List[Chunk]]]`: Chunks a string or list of strings. Calls `chunk` or `chunk_batch` depending on input type. (Inherited)
@@ -276,7 +298,7 @@ for chunk in chunks:
     print(f"Token Count: {chunk.token_count}")
     print(f"Start Index: {chunk.start_index}")
     print(f"End Index: {chunk.end_index}")
-    # Note: sentence information is no longer directly accessible in the base Chunk type
+    # All chunkers now return the base Chunk type for consistency
     print("-" * 10)
 ```
 
