@@ -1,10 +1,10 @@
 """Module for chunkers."""
 
 from .base import Chunk, Context
-from .code import CodeChunk, LanguageConfig, MergeRule, SplitRule
+from .code import LanguageConfig, MergeRule, SplitRule
 from .late import LateChunk
 from .recursive import RecursiveLevel, RecursiveRules
-from .semantic import SemanticChunk, SemanticSentence
+from .semantic import SemanticSentence
 from .sentence import Sentence
 
 __all__ = [
@@ -13,11 +13,9 @@ __all__ = [
     "RecursiveLevel",
     "RecursiveRules",
     "Sentence",
-    "SemanticChunk",
     "SemanticSentence",
     "LateChunk",
     "LanguageConfig",
     "MergeRule",
     "SplitRule",
-    "CodeChunk",
 ]

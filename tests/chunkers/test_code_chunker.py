@@ -2,7 +2,7 @@
 import pytest
 
 from chonkie import CodeChunker
-from chonkie.types.code import CodeChunk
+from chonkie.types import Chunk
 
 
 @pytest.fixture
@@ -64,12 +64,12 @@ def test_code_chunker_chunking_python(python_code: str) -> None:
 
     assert isinstance(chunks, list)
     assert len(chunks) > 0
-    assert all(isinstance(chunk, CodeChunk) for chunk in chunks)
+    assert all(isinstance(chunk, Chunk) for chunk in chunks)
     assert all(chunk.text is not None for chunk in chunks)
     assert all(chunk.start_index is not None for chunk in chunks)
     assert all(chunk.end_index is not None for chunk in chunks)
     assert all(chunk.token_count is not None for chunk in chunks)
-    assert all(chunk.nodes is not None for chunk in chunks)
+    # Note: nodes attribute is no longer part of base Chunk
 
 
 def test_code_chunker_reconstruction_python(python_code: str) -> None:
@@ -104,12 +104,12 @@ def test_code_chunker_indices_python(python_code: str) -> None:
 
 
 def test_code_chunker_return_type_chunks(python_code: str) -> None:
-    """Test that chunker returns CodeChunk objects by default."""
+    """Test that chunker returns Chunk objects."""
     chunker = CodeChunker(language="python", chunk_size=50)
     chunks = chunker.chunk(python_code)
     assert isinstance(chunks, list)
     assert len(chunks) > 0
-    assert all(isinstance(chunk, CodeChunk) for chunk in chunks)
+    assert all(isinstance(chunk, Chunk) for chunk in chunks)
     reconstructed_text = "".join(chunk.text for chunk in chunks)
     assert reconstructed_text == python_code
 
@@ -145,7 +145,7 @@ def test_code_chunker_chunking_javascript(js_code: str) -> None:
 
     assert isinstance(chunks, list)
     assert len(chunks) > 0
-    assert all(isinstance(chunk, CodeChunk) for chunk in chunks)
+    assert all(isinstance(chunk, Chunk) for chunk in chunks)
     reconstructed_text = "".join(chunk.text for chunk in chunks)
     assert reconstructed_text == js_code
 

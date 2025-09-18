@@ -3,8 +3,8 @@
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
-from chonkie.types.base import Chunk
-from chonkie.types.sentence import Sentence
+from .base import Chunk
+from .sentence import Sentence
 
 if TYPE_CHECKING:
     import numpy as np

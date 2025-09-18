@@ -9,7 +9,7 @@ import pytest
 from datasets import Dataset
 
 from chonkie.friends.porters.datasets import DatasetsPorter
-from chonkie.types.base import Chunk
+from chonkie.types import Chunk
 
 
 @pytest.fixture
