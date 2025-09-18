@@ -6,6 +6,12 @@ import pytest
 
 from chonkie import Chunk, Context
 
+try:
+    import numpy as np
+    NUMPY_AVAILABLE = True
+except ImportError:
+    NUMPY_AVAILABLE = False
+
 
 def test_context_init():
     """Test Context initialization."""
