@@ -83,7 +83,6 @@ from .types import (
     LanguageConfig,
     LateChunk,
     MergeRule,
-    RecursiveChunk,
     RecursiveLevel,
     RecursiveRules,
     SemanticChunk,

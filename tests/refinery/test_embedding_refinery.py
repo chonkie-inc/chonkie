@@ -228,15 +228,13 @@ def test_embeddings_refinery_embed_batch_called_correctly(mock_embeddings: MockE
 
 def test_embeddings_refinery_with_different_chunk_types() -> None:
     """Test refinery with different chunk types."""
-    from chonkie.types import RecursiveChunk
-
     mock_embeddings = MockEmbeddings()
     refinery = EmbeddingsRefinery(mock_embeddings)
 
     # Mix of different chunk types
     chunks = [
         Chunk(text="Regular chunk", start_index=0, end_index=12, token_count=2),
-        RecursiveChunk(text="Recursive chunk", start_index=13, end_index=27, token_count=2, level=1),
+        Chunk(text="Recursive chunk", start_index=13, end_index=27, token_count=2),
         Chunk(text="Sentence chunk", start_index=28, end_index=41, token_count=2),
     ]
     
