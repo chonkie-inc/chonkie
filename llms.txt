@@ -139,12 +139,12 @@ All chunkers in Chonkie now return the base `Chunk` type for consistency and sim
 ```python
 @dataclass
 class Chunk:
-    text: str                    # The text content of the chunk
-    start_index: int             # Starting position in original text
-    end_index: int               # Ending position in original text
-    token_count: int             # Number of tokens in the chunk
-    context: Optional[Context] = None    # Optional context metadata
-    embedding: Optional[Any] = None      # Optional embedding vector
+    text: str                                        # The text content of the chunk
+    start_index: int                                 # Starting position in original text
+    end_index: int                                   # Ending position in original text
+    token_count: int                                 # Number of tokens in the chunk
+    context: Optional[Context] = None               # Optional context metadata
+    embedding: Union[List[float], "np.ndarray", None] = None  # Optional embedding vector (list or numpy array)
 ```
 
 The `embedding` attribute can store embedding vectors (as lists or numpy arrays) which are automatically added when using `EmbeddingsRefinery` or certain chunkers like `LateChunker`.
