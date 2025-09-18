@@ -1,9 +1,7 @@
 """Custom types for Sentence Chunking."""
 
-from dataclasses import dataclass, field
-from typing import Dict, List, Union
-
-from chonkie.types.base import Chunk
+from dataclasses import dataclass
+from typing import Dict, Union
 
 
 @dataclass
@@ -63,42 +61,3 @@ class Sentence:
         )
 
 
-@dataclass
-class SentenceChunk(Chunk):
-    """Class to represent sentence chunks.
-
-    Attributes:
-        text (str): The text of the chunk.
-        start_index (int): The starting index of the chunk in the original text.
-        end_index (int): The ending index of the chunk in the original text.
-        token_count (int): The number of tokens in the chunk.
-        sentences (list[Sentence]): List of sentences in the chunk.
-
-    """
-
-    sentences: List[Sentence] = field(default_factory=list)
-
-    def __repr__(self) -> str:
-        """Return a string representation of the SentenceChunk."""
-        return (
-            f"SentenceChunk(text={self.text}, start_index={self.start_index}, "
-            f"end_index={self.end_index}, token_count={self.token_count}, "
-            f"sentences={self.sentences})"
-        )
-
-    def to_dict(self) -> Dict:
-        """Return the SentenceChunk as a dictionary."""
-        result = super().to_dict()
-        result["sentences"] = [sentence.to_dict() for sentence in self.sentences]
-        return result
-
-    @classmethod
-    def from_dict(cls, data: dict) -> "SentenceChunk":
-        """Create a SentenceChunk from dictionary."""
-        sentences_dict = data.pop("sentences") if "sentences" in data else None
-        sentences = (
-            [Sentence.from_dict(sentence) for sentence in sentences_dict]
-            if sentences_dict is not None
-            else []
-        )
-        return cls(**data, sentences=sentences)

@@ -12,7 +12,8 @@ from itertools import accumulate
 from typing import Any, Callable, List, Literal, Optional, Sequence, Union
 
 from chonkie.pipeline.registry import chunker
-from chonkie.types.sentence import Sentence, SentenceChunk
+from chonkie.types.base import Chunk
+from chonkie.types.sentence import Sentence
 from chonkie.utils import Hubbie
 
 from .base import BaseChunker
@@ -257,7 +258,7 @@ class SentenceChunker(BaseChunker):
             for sent, pos, count in zip(sentence_texts, positions, token_counts)
         ]
 
-    def _create_chunk(self, sentences: List[Sentence]) -> SentenceChunk:
+    def _create_chunk(self, sentences: List[Sentence]) -> Chunk:
         """Create a chunk from a list of sentences.
 
         Args:
@@ -268,21 +269,20 @@ class SentenceChunker(BaseChunker):
 
         """
         chunk_text = "".join([sentence.text for sentence in sentences])
-        
+
         # We calculate the token count here, as sum of the token counts of the sentences
         # does not match the token count of the chunk as a whole for some reason. That's to
         # say that the tokenizer encodes the text differently when the text is joined together.
         token_count = self.tokenizer.count_tokens(chunk_text)
 
-        return SentenceChunk(
+        return Chunk(
             text=chunk_text,
             start_index=sentences[0].start_index,
             end_index=sentences[-1].end_index,
             token_count=token_count,
-            sentences=sentences,
         )
 
-    def chunk(self, text: str) -> Sequence[SentenceChunk]:
+    def chunk(self, text: str) -> Sequence[Chunk]:
         """Split text into overlapping chunks based on sentences while respecting token limits.
 
         Args:

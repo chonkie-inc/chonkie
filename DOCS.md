@@ -249,10 +249,10 @@ The `SentenceChunker` is a chunker that splits the text into sentences and then 
 
 **Methods:**
 
-- `chunk(text: str) -> List[SentenceChunk]`: Chunks a string into a list of `SentenceChunk` objects.
-- `chunk_batch(texts: List[str]) -> List[List[SentenceChunk]]`: Chunks a list of strings into a list of lists of `SentenceChunk` objects. (Inherited)
+- `chunk(text: str) -> List[Chunk]`: Chunks a string into a list of `Chunk` objects.
+- `chunk_batch(texts: List[str]) -> List[List[Chunk]]`: Chunks a list of strings into a list of lists of `Chunk` objects. (Inherited)
 - `from_recipe(name: str, lang: str, **kwargs) -> SentenceChunker`: Creates a `SentenceChunker` instance using pre-defined recipes from the [Chonkie Recipe Store](https://huggingface.co/datasets/chonkie-ai/recipes). This allows easy configuration for specific languages or splitting behaviors.
-- `__call__(text: str) -> Union[List[SentenceChunk], List[List[SentenceChunk]]]`: Chunks a string or list of strings. Calls `chunk` or `chunk_batch` depending on input type. (Inherited)
+- `__call__(text: str) -> Union[List[Chunk], List[List[Chunk]]]`: Chunks a string or list of strings. Calls `chunk` or `chunk_batch` depending on input type. (Inherited)
 
 **Examples:**
 
@@ -276,7 +276,7 @@ for chunk in chunks:
     print(f"Token Count: {chunk.token_count}")
     print(f"Start Index: {chunk.start_index}")
     print(f"End Index: {chunk.end_index}")
-    print(f"Number of Sentences: {len(chunk.sentences)}") # SentenceChunk specific attribute
+    # Note: sentence information is no longer directly accessible in the base Chunk type
     print("-" * 10)
 ```
 
@@ -1413,7 +1413,7 @@ print("Created HNSW index")
 results = handshake.search(
     "metadata filtering",
     limit=2,
-    filters={"chunk_type": {"$eq": "SentenceChunk"}}
+    filters={"chunk_type": {"$eq": "Chunk"}}
 )
 
 for result in results:
