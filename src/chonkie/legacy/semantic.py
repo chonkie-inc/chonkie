@@ -9,15 +9,35 @@ To use this legacy version:
 
 import importlib.util as importutil
 import warnings
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Dict, List, Literal, Optional, Sequence, Union
 
 from chonkie.chunker.base import BaseChunker
 from chonkie.embeddings.base import BaseEmbeddings
-from chonkie.types.semantic import SemanticChunk, SemanticSentence
+from chonkie.types import Chunk, Sentence
 from chonkie.utils import Hubbie
 
 if TYPE_CHECKING:
     import numpy as np
+
+
+# Legacy types for backward compatibility
+# SemanticSentence is now just an alias for Sentence since Sentence has embedding field
+SemanticSentence = Sentence
+
+
+@dataclass
+class SemanticChunk(Chunk):
+    """Legacy SemanticChunk type for backward compatibility."""
+    sentences: List[SemanticSentence] = field(default_factory=list)
+
+    def __repr__(self) -> str:
+        """Return a string representation of the SemanticChunk."""
+        return (
+            f"SemanticChunk(text={self.text}, start_index={self.start_index}, "
+            f"end_index={self.end_index}, token_count={self.token_count}, "
+            f"sentences={self.sentences})"
+        )
 
 # Import the unified split function
 try:

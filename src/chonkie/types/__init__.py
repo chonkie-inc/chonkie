@@ -3,7 +3,6 @@
 from .base import Chunk, Context
 from .code import LanguageConfig, MergeRule, SplitRule
 from .recursive import RecursiveLevel, RecursiveRules
-from .semantic import SemanticSentence
 from .sentence import Sentence
 
 __all__ = [
@@ -12,7 +11,6 @@ __all__ = [
     "RecursiveLevel",
     "RecursiveRules",
     "Sentence",
-    "SemanticSentence",
     "LanguageConfig",
     "MergeRule",
     "SplitRule",
