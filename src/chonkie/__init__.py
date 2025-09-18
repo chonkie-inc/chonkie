@@ -68,7 +68,6 @@ from .types import (
     Chunk,
     Context,
     LanguageConfig,
-    LateChunk,
     MergeRule,
     RecursiveLevel,
     RecursiveRules,
