@@ -1,7 +1,7 @@
 """Custom base types for Chonkie."""
 
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any, Iterator, List, Optional, Union
+from typing import TYPE_CHECKING, Iterator, List, Optional, Union
 
 if TYPE_CHECKING:
     import numpy as np
