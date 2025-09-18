@@ -11,9 +11,11 @@ iconType: "solid"
 
   ## Breaking Changes
 
-  - **Unified Chunk Type**: All chunkers now return the base `Chunk` type instead of specialized types (`SentenceChunk`, `RecursiveChunk`, `SemanticChunk`, `CodeChunk`). This simplifies the API and improves interoperability between different chunkers and refineries.
+  - **Unified Chunk Type**: All chunkers now return the base `Chunk` type instead of specialized types. The specialized chunk types (`SentenceChunk`, `RecursiveChunk`, `SemanticChunk`, `CodeChunk`, and `LateChunk`) have been removed entirely. This simplifies the API and improves interoperability between different chunkers and refineries.
 
-  - **New `embedding` Attribute**: The base `Chunk` type now includes an optional `embedding` attribute that can store embedding vectors (as lists or numpy arrays). This is automatically populated by `EmbeddingsRefinery` and certain chunkers like `LateChunker`.
+  - **Unified Sentence Type**: The `SemanticSentence` type has been removed. The base `Sentence` type now includes an optional `embedding` attribute, providing the same functionality with a simpler API.
+
+  - **New `embedding` Attribute**: Both the base `Chunk` and `Sentence` types now include an optional `embedding` attribute that can store embedding vectors (as lists or numpy arrays). This is automatically populated by `EmbeddingsRefinery` and certain chunkers like `LateChunker`.
 
   ## Migration Guide
 
@@ -22,6 +24,8 @@ iconType: "solid"
   - `SemanticChunk.sentences` → No longer available in base Chunk
   - `CodeChunk.nodes` → No longer available in base Chunk
   - `RecursiveChunk.level` → No longer available in base Chunk
+  - `LateChunk` → Use base `Chunk` (embedding is now part of base type)
+  - `SemanticSentence` → Use base `Sentence` (embedding is now part of base type)
 
   All chunkers now consistently return `Chunk` objects with:
   ```python

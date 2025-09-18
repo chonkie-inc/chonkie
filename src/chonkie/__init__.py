@@ -83,7 +83,6 @@ from .types import (
     MergeRule,
     RecursiveLevel,
     RecursiveRules,
-    SemanticSentence,
     Sentence,
     SplitRule,
 )
