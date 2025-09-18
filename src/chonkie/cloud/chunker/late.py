@@ -4,7 +4,7 @@ from typing import Any, Dict, List, Optional, Union, cast
 
 import requests
 
-from chonkie.types import LateChunk
+from chonkie.types import Chunk
 
 from .recursive import RecursiveChunker
 
@@ -44,7 +44,7 @@ class LateChunker(RecursiveChunker):
             lang=lang,
         )
 
-    def chunk(self, text: Optional[Union[str, List[str]]] = None, file: Optional[str] = None) -> Union[List[LateChunk], List[List[LateChunk]]]:
+    def chunk(self, text: Optional[Union[str, List[str]]] = None, file: Optional[str] = None) -> Union[List[Chunk], List[List[Chunk]]]:
         """Chunk the text or file into a list of late-interaction chunks via the Chonkie API.
 
         Args:
@@ -98,16 +98,16 @@ class LateChunker(RecursiveChunker):
             response.raise_for_status()  # Raise an exception for HTTP errors (4xx or 5xx)
             if isinstance(text, list):
                 batch_result: List[List[Dict]] = cast(List[List[Dict]], response.json())
-                batch_chunks: List[List[LateChunk]] = []
+                batch_chunks: List[List[Chunk]] = []
                 for chunk_list in batch_result:
                     curr_chunks = []
                     for chunk in chunk_list:
-                        curr_chunks.append(LateChunk.from_dict(chunk))
+                        curr_chunks.append(Chunk.from_dict(chunk))
                     batch_chunks.append(curr_chunks)
                 return batch_chunks
             else:
                 single_result: List[Dict] = cast(List[Dict], response.json())
-                single_chunks: List[LateChunk] = [LateChunk.from_dict(chunk) for chunk in single_result]
+                single_chunks: List[Chunk] = [Chunk.from_dict(chunk) for chunk in single_result]
                 return single_chunks
         except requests.exceptions.HTTPError as http_error:
             # Attempt to get more detailed error from API response if possible
@@ -134,6 +134,6 @@ class LateChunker(RecursiveChunker):
                 + "If the issue persists, please contact support at support@chonkie.ai."
             ) from error
     
-    def __call__(self, text: Optional[Union[str, List[str]]] = None, file: Optional[str] = None) -> Union[List[LateChunk], List[List[LateChunk]]]:
+    def __call__(self, text: Optional[Union[str, List[str]]] = None, file: Optional[str] = None) -> Union[List[Chunk], List[List[Chunk]]]:
         """Call the LateChunker to chunk text."""
         return self.chunk(text=text, file=file)
