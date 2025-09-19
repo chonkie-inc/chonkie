@@ -139,6 +139,7 @@ all = [
     "pinecone",
     "pymongo",
     "voyageai>=0.3.2",
+    "vecs>=0.4.0",
 ]
 dev = [
     "datasets>=1.14.0",

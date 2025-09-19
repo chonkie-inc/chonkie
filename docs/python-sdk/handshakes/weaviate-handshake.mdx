@@ -22,6 +22,7 @@ pip install chonkie[weaviate]
 
 ### Initialization
 <CodeGroup>
+
 ```python Initialize using chonkie
 from chonkie import WeaviateHandshake
 
@@ -29,16 +30,20 @@ from chonkie import WeaviateHandshake
 handshake = WeaviateHandshake()
 
 # Or connect to a Weaviate server
-handshake = WeaviateHandshake(url="http://localhost:8080")
+handshake = WeaviateHandshake(url="http://localhost:8080", api_key= "YOUR_API_KEY")
 ```
 
 ```python initialize using the client
 import weaviate
+from chonkie import WeaviateHandshake
+
 client = weaviate.connect_to_local()
 handshake = WeaviateHandshake(client=client, collection_name="my_collection")
 ```
 
 ```python weaviate cloud initialization
+from chonkie import WeaviateHandshake
+
 handshake = WeaviateHandshake(
     url="YOUR_CLOUD_URL",
     api_key="YOUR_API_KEY"
