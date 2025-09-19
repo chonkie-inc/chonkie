@@ -11,7 +11,7 @@ import qdrant_client
 from qdrant_client.http.models import Distance, VectorParams
 
 from chonkie.embeddings import AutoEmbeddings, BaseEmbeddings
-from chonkie.friends.handshakes.qdrant import QdrantHandshake
+from chonkie.handshakes.qdrant import QdrantHandshake
 from chonkie.types import Chunk
 
 # Define the default model name for clarity
