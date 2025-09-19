@@ -9,7 +9,7 @@ from typing import Any, Generator, List, Sequence, Union
 from tqdm import trange
 
 from chonkie.chunker.base import BaseChunker
-from chonkie.types.base import Chunk
+from chonkie.types import Chunk
 
 
 class TokenChunker(BaseChunker):

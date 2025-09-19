@@ -1,8 +1,8 @@
-"""Unit tests for Sentence and SentenceChunk classes."""
+"""Unit tests for Sentence class."""
 
 import pytest
 
-from chonkie import Sentence, SentenceChunk
+from chonkie import Sentence
 
 
 def test_sentence_init():
@@ -56,38 +56,3 @@ def test_sentence_serialization():
     assert sentence.token_count == restored.token_count
 
 
-def test_sentence_chunk_init():
-    """Test SentenceChunk initialization."""
-    sentences = [
-        Sentence("First sentence.", 0, 14, 3),
-        Sentence("Second sentence.", 15, 30, 3),
-    ]
-    chunk = SentenceChunk(
-        text="Wall-E is a Pixar movie. Ratatouille is another one.",
-        start_index=0,
-        end_index=30,
-        token_count=6,
-        sentences=sentences,
-    )
-    assert chunk.text == "Wall-E is a Pixar movie. Ratatouille is another one."
-    assert len(chunk.sentences) == 2
-    assert all(isinstance(s, Sentence) for s in chunk.sentences)
-
-
-def test_sentence_chunk_serialization():
-    """Test SentenceChunk serialization/deserialization."""
-    sentences = [
-        Sentence("First sentence.", 0, 14, 3),
-        Sentence("Second sentence.", 15, 30, 3),
-    ]
-    chunk = SentenceChunk(
-        text="Wall-E is a Pixar movie. Ratatouille is another one.",
-        start_index=0,
-        end_index=30,
-        token_count=6,
-        sentences=sentences,
-    )
-    chunk_dict = chunk.to_dict()
-    restored = SentenceChunk.from_dict(chunk_dict)
-    assert len(restored.sentences) == 2
-    assert all(isinstance(s, Sentence) for s in restored.sentences)

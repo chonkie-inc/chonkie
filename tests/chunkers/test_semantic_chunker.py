@@ -6,7 +6,7 @@ import pytest
 
 from chonkie import SemanticChunker
 from chonkie.embeddings import BaseEmbeddings, Model2VecEmbeddings
-from chonkie.types.base import Chunk
+from chonkie.types import Chunk
 
 
 @pytest.fixture

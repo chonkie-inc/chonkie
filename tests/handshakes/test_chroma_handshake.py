@@ -25,7 +25,7 @@ except ImportError:
 import chromadb
 
 from chonkie import ChromaHandshake
-from chonkie.friends.handshakes.chroma import ChromaEmbeddingFunction
+from chonkie.handshakes.chroma import ChromaEmbeddingFunction
 from chonkie.types import Chunk
 
 # Mark all tests in this module to be skipped if chromadb is not installed

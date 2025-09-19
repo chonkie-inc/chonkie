@@ -5,7 +5,7 @@ import pytest
 
 from chonkie import LateChunker
 from chonkie.embeddings import SentenceTransformerEmbeddings
-from chonkie.types import LateChunk, RecursiveLevel, RecursiveRules
+from chonkie.types import Chunk, RecursiveLevel, RecursiveRules
 
 
 @pytest.fixture
@@ -61,7 +61,7 @@ def test_late_chunker_chunk_basic(embedding_model: SentenceTransformerEmbeddings
 
     assert isinstance(chunks, list)
     assert len(chunks) > 0
-    assert all(isinstance(chunk, LateChunk) for chunk in chunks)
+    assert all(isinstance(chunk, Chunk) for chunk in chunks)
 
     # Check attributes of each chunk
     for chunk in chunks:
@@ -97,7 +97,7 @@ def test_late_chunker_chunk_short_text(embedding_model: SentenceTransformerEmbed
 
     assert len(chunks) == 1
     chunk = chunks[0]
-    assert isinstance(chunk, LateChunk)
+    assert isinstance(chunk, Chunk)
     assert chunk.text == text
     assert chunk.start_index == 0
     assert chunk.end_index == len(text)
@@ -106,7 +106,7 @@ def test_late_chunker_chunk_short_text(embedding_model: SentenceTransformerEmbed
     assert chunk.embedding.shape == (embedding_model.dimension,)
 
 
-def verify_chunk_indices(chunks: list[LateChunk], original_text: str) -> None:
+def verify_chunk_indices(chunks: list[Chunk], original_text: str) -> None:
     """Verify that chunk indices correctly map to the original text."""
     reconstructed_text = ""
     for i, chunk in enumerate(chunks):
@@ -133,7 +133,7 @@ def test_late_chunker_indices(embedding_model: SentenceTransformerEmbeddings, sa
 
 
 def test_late_chunk_repr(embedding_model: SentenceTransformerEmbeddings) -> None:
-    """Test the string representation of LateChunk."""
+    """Test the string representation of Chunk with embedding."""
     text = "This is a short text, definitely shorter than the chunk size."
     chunker = LateChunker(embedding_model=embedding_model, chunk_size=50)
     chunks = chunker.chunk(text)
@@ -142,7 +142,8 @@ def test_late_chunk_repr(embedding_model: SentenceTransformerEmbeddings) -> None
 
     chunk = chunks[0]
     representation = repr(chunk)
-    assert f"text={chunk.text}" in representation
+    assert "Chunk(" in representation
+    assert chunk.text in representation
     assert f"start_index={chunk.start_index}" in representation
     assert f"end_index={chunk.end_index}" in representation
     assert f"token_count={chunk.token_count}" in representation

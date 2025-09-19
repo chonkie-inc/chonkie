@@ -123,18 +123,20 @@ def test_embeddings_refinery_is_available(mock_embeddings: MockEmbeddings) -> No
 def test_embeddings_refinery_refine_basic(mock_embeddings: MockEmbeddings, sample_chunks: list[Chunk]) -> None:
     """Test basic refine functionality."""
     refinery = EmbeddingsRefinery(mock_embeddings)
-    
-    # Ensure chunks don't have embeddings initially
+
+    # Ensure chunks don't have embeddings initially (should be None)
     for chunk in sample_chunks:
-        assert not hasattr(chunk, 'embedding')
-    
+        assert hasattr(chunk, 'embedding')  # attribute exists
+        assert chunk.embedding is None  # but is None initially
+
     refined_chunks = refinery.refine(sample_chunks)
-    
+
     # Check that embeddings were added
     assert len(refined_chunks) == 3
     for chunk in refined_chunks:
         assert hasattr(chunk, 'embedding')
         import numpy as np
+        assert chunk.embedding is not None  # Now should have a value
         assert isinstance(chunk.embedding, np.ndarray)
         assert chunk.embedding.shape == (128,)  # Mock dimension
         assert chunk.embedding.dtype == np.float32
@@ -228,16 +230,14 @@ def test_embeddings_refinery_embed_batch_called_correctly(mock_embeddings: MockE
 
 def test_embeddings_refinery_with_different_chunk_types() -> None:
     """Test refinery with different chunk types."""
-    from chonkie.types import RecursiveChunk, SentenceChunk
-    
     mock_embeddings = MockEmbeddings()
     refinery = EmbeddingsRefinery(mock_embeddings)
-    
+
     # Mix of different chunk types
     chunks = [
         Chunk(text="Regular chunk", start_index=0, end_index=12, token_count=2),
-        RecursiveChunk(text="Recursive chunk", start_index=13, end_index=27, token_count=2, level=1),
-        SentenceChunk(text="Sentence chunk", start_index=28, end_index=41, token_count=2),
+        Chunk(text="Recursive chunk", start_index=13, end_index=27, token_count=2),
+        Chunk(text="Sentence chunk", start_index=28, end_index=41, token_count=2),
     ]
     
     refined_chunks = refinery.refine(chunks)

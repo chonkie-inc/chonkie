@@ -4,7 +4,7 @@ import pytest
 
 from chonkie.embeddings import Model2VecEmbeddings
 from chonkie.legacy import SDPMChunker
-from chonkie.types.semantic import SemanticChunk
+from chonkie.legacy.semantic import SemanticChunk
 
 
 @pytest.fixture

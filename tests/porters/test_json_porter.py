@@ -9,7 +9,7 @@ from typing import Generator
 import pytest
 
 from chonkie import Chunk, Context
-from chonkie.friends.porters.json import JSONPorter
+from chonkie.porters.json import JSONPorter
 
 
 @pytest.fixture

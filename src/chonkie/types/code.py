@@ -1,9 +1,7 @@
-"""Module containing CodeChunker types."""
+"""Module containing CodeChunker configuration types."""
 
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Union
-
-from .base import Chunk
+from typing import List, Optional, Union
 
 
 @dataclass
@@ -43,30 +41,3 @@ class LanguageConfig:
   language: str
   merge_rules: List[MergeRule]
   split_rules: List[SplitRule]
-
-@dataclass
-class CodeChunk(Chunk):
-  """A chunk of code with language-specific metadata."""
-
-  language: Optional[str] = None
-  nodes: Optional[List[Dict[str, Any]]] = None
-  node_type: Optional[str] = None
-  start_line: Optional[int] = None
-  end_line: Optional[int] = None
-
-  def to_dict(self) -> dict:
-    """Return the Chunk as a dictionary."""
-    result = super().to_dict()
-    result["language"] = self.language
-    result["nodes"] = self.nodes
-    result["node_type"] = self.node_type
-    result["start_line"] = self.start_line
-    result["end_line"] = self.end_line
-    return result
-
-  @classmethod
-  def from_dict(cls, data: dict) -> "CodeChunk":
-    """Create a Chunk object from a dictionary."""
-    if "language" not in data and "lang" in data:
-      data["language"] = data.pop("lang") # Compatibility with old versions
-    return cls(**data)
