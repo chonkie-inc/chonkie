@@ -69,18 +69,12 @@ from .tokenizer import (
 )
 from .types import (
     Chunk,
-    CodeChunk,
     Context,
     LanguageConfig,
-    LateChunk,
     MergeRule,
-    RecursiveChunk,
     RecursiveLevel,
     RecursiveRules,
-    SemanticChunk,
-    SemanticSentence,
     Sentence,
-    SentenceChunk,
     SplitRule,
 )
 from .utils import (

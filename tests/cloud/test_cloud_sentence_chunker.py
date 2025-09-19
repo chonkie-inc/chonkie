@@ -5,7 +5,7 @@ from unittest.mock import Mock, patch
 import pytest
 
 from chonkie.cloud import SentenceChunker
-from chonkie.types import SentenceChunk
+from chonkie.types import Chunk
 
 
 @pytest.fixture
@@ -143,7 +143,7 @@ def test_cloud_sentence_chunker_simple(mock_requests_get, mock_requests_post, mo
     result = sentence_chunker(text)
 
     # Check the result
-    assert isinstance(result, list) and isinstance(result[0], SentenceChunk) and len(result) == 1
+    assert isinstance(result, list) and isinstance(result[0], Chunk) and len(result) == 1
     assert result[0].text == "Hello, world!"
     assert result[0].token_count == 2  # Based on simple word split
     assert result[0].start_index == 0
@@ -192,7 +192,7 @@ def test_cloud_sentence_chunker_multiple_sentences(mock_requests_get, mock_reque
     # Check the result
     assert len(result) > 1
     assert isinstance(result, list)
-    assert all(isinstance(item, SentenceChunk) for item in result)
+    assert all(isinstance(item, Chunk) for item in result)
     assert all(isinstance(item.text, str) for item in result)
     assert all(isinstance(item.token_count, int) for item in result)
     assert all(isinstance(item.start_index, int) for item in result)
@@ -221,7 +221,7 @@ def test_cloud_sentence_chunker_batch(mock_requests_get, mock_requests_post, moc
     assert len(result) == len(texts)
     assert isinstance(result, list)
     assert all(isinstance(item, list) for item in result)
-    assert all(isinstance(item, SentenceChunk) for item in result[0])
+    assert all(isinstance(item, Chunk) for item in result[0])
     assert all(isinstance(item.text, str) for item in result[0])
     assert all(isinstance(item.token_count, int) for item in result[0])
     assert all(isinstance(item.start_index, int) for item in result[0])

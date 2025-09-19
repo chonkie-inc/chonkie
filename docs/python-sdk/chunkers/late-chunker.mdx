@@ -126,17 +126,20 @@ for chunk in batch_chunks:
 
 ## Return Type
 
-LateChunker returns `LateChunk` objects with optimized storage using slots:
+LateChunker returns chunks as `Chunk` objects:
 
 ```python
 @dataclass
-class LateChunk(RecursiveChunk):
-    text: str  # The text of the chunk.
-    start_index: int  # The start index of the chunk.
-    end_index: int  # The end index of the chunk.
-    token_count: int  # The number of tokens in the chunk.
-    embedding: Optional[np.ndarray]  # The embedding of the chunk.
+class Chunk:
+    text: str           # The chunk text
+    start_index: int    # Starting position in original text
+    end_index: int      # Ending position in original text
+    token_count: int    # Number of tokens in chunk
+    context: Optional[Context] = None    # Optional context metadata
+    embedding: Union[List[float], "np.ndarray", None] = None  # Optional embedding vector
 ```
+
+<Note>As of version 1.3.0, LateChunker returns the base `Chunk` type instead of the specialized `LateChunk` type. The embedding is automatically populated by the LateChunker during the chunking process.</Note>
 
 ## Additional Information
 

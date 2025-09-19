@@ -6,7 +6,7 @@ from typing import Any, Callable, Dict, List, Optional, Union, cast
 import requests
 
 from chonkie.cloud.file import FileManager
-from chonkie.types import RecursiveChunk
+from chonkie.types import Chunk
 
 from .base import CloudChunker
 
@@ -109,16 +109,16 @@ class RecursiveChunker(CloudChunker):
         try:
             if isinstance(text, list):
                 batch_result: List[List[Dict]] = cast(List[List[Dict]], response.json())
-                batch_chunks: List[List[RecursiveChunk]] = []
+                batch_chunks: List[List[Chunk]] = []
                 for chunk_list in batch_result:
                     curr_chunks = []
                     for chunk in chunk_list:
-                        curr_chunks.append(RecursiveChunk.from_dict(chunk))
+                        curr_chunks.append(Chunk.from_dict(chunk))
                     batch_chunks.append(curr_chunks)
                 return batch_chunks
             else:
                 single_result: List[Dict] = cast(List[Dict], response.json())
-                single_chunks: List[RecursiveChunk] = [RecursiveChunk.from_dict(chunk) for chunk in single_result]
+                single_chunks: List[Chunk] = [Chunk.from_dict(chunk) for chunk in single_result]
                 return single_chunks
         except Exception as error:
             raise ValueError(

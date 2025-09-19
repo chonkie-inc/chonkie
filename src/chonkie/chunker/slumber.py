@@ -238,8 +238,7 @@ class SlumberChunker(BaseChunker):
         """Get the cumulative token counts for the splits."""
         return list(accumulate([0] + [split.token_count for split in splits]))
 
-    # TODO: Fix the type error later
-    def chunk(self, text: str) -> List[Chunk]: # type: ignore
+    def chunk(self, text: str) -> List[Chunk]:
         """Chunk the text with the SlumberChunker."""
         splits = self._recursive_split(text, level=0, offset=0)
 

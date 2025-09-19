@@ -166,21 +166,13 @@ SentenceChunker supports multiple tokenizer backends:
 
 ## Return Type
 
-SentenceChunker returns chunks as `SentenceChunk` objects with additional sentence metadata:
+SentenceChunker returns chunks as `Chunk` objects:
 
 ```python
 @dataclass
-class Sentence:
-    text: str           # The sentence text
-    start_index: int    # Starting position in original text
-    end_index: int      # Ending position in original text
-    token_count: int    # Number of tokens in sentence
-
-@dataclass
-class SentenceChunk(Chunk):
+class Chunk:
     text: str           # The chunk text
     start_index: int    # Starting position in original text
     end_index: int      # Ending position in original text
     token_count: int    # Number of tokens in chunk
-    sentences: List[Sentence]  # List of sentences in chunk
 ```
