@@ -37,17 +37,19 @@ from .fetcher import (
     BaseFetcher,
     FileFetcher,
 )
-from .friends import (
+from .handshakes import (
     BaseHandshake,
-    BasePorter,
     ChromaHandshake,
-    JSONPorter,
     MongoDBHandshake,
     PgvectorHandshake,
     PineconeHandshake,
     QdrantHandshake,
     TurbopufferHandshake,
     WeaviateHandshake,
+)
+from .porters import (
+    BasePorter,
+    JSONPorter,
 )
 from .genie import (
     BaseGenie,
