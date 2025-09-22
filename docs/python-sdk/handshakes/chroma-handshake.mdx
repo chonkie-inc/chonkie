@@ -69,7 +69,10 @@ from chonkie import ChromaHandshake
 
 # Initialize the handshake
 handshake = ChromaHandshake(collection_name="my_documents")
-embedding = handshake.embedding_function.embedding_model.embed("best chonker").tolist()
+
+# Generate an embedding using the handshake's configured embedding function
+embedding = handshake.embedding_function("best chonker").tolist()
+
 results = handshake.search(embedding=embedding, limit=2)
 for result in results:
     print(result["score"], result["text"])
@@ -82,16 +85,21 @@ from chonkie import ChromaHandshake, SemanticChunker
 handshake = ChromaHandshake(collection_name="my_documents")
 
 # Create some chunks
-chunker = SemanticChunker(embedding_model=handshake.embedding_function.embedding_model)
+chunker = SemanticChunker()
 chunks = chunker.chunk("Chonkie is the best chonker ever!")
 
-# Search the handshake using an embedding from a chunk
-results = handshake.search(
-    embedding=chunks.embedding,
-    limit=2,
-)
-for result in results:
-    print(result["score"], result["text"])
+# The chunker creates chunks but doesn't store their embeddings on the object.
+# We can generate an embedding from a chunk's text to use for the search.
+if chunks:
+    search_embedding = handshake.embedding_function(chunks.text).tolist()
+
+    # Search the handshake using the generated embedding
+    results = handshake.search(
+        embedding=search_embedding,
+        limit=2,
+    )
+    for result in results:
+        print(result["score"], result["text"])
 ```
 </CodeGroup>
 

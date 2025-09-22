@@ -204,44 +204,52 @@ class ChromaHandshake(BaseHandshake):
         if query is None and embedding is None:
             raise ValueError("Either 'query' or 'embedding' must be provided.")
 
+        # Determine the query embeddings based on the input
         if query:
-            # The embedding function can handle batching, but here we only have one query
             query_embeddings = [self.embedding_function(query).tolist()]
-            results = self.collection.query(
-                query_embeddings=query_embeddings,
-                n_results=limit,
-                include=["metadatas", "documents", "distances"],
-            )
         else:
-            # Embedding must be a list of lists for Chroma
-            query_embeddings = [embedding] # type: ignore[list-item]
-            results = self.collection.query(
-                query_embeddings=query_embeddings,
-                n_results=limit,
-                include=["metadatas", "documents", "distances"],
-            )
+            query_embeddings = [embedding]  # type: ignore[list-item]
+
+        # Perform the query
+        results = self.collection.query(
+            query_embeddings=query_embeddings,
+            n_results=limit,
+            include=["metadatas", "documents", "distances"],
+        )
 
         # Process and format the results
         matches = []
         if not results["ids"] or not results["ids"][0]:
             return []
 
+        # Get the distance metric from the collection's metadata, defaulting to 'l2'
+        distance_metric = self.collection.metadata.get("hnsw:space", "l2") if self.collection.metadata else "l2"
+
+        # Unpack results for cleaner iteration
         ids = results["ids"][0]
         distances = results["distances"][0]
         metadatas = results["metadatas"][0]
         documents = results["documents"][0]
 
-        for i in range(len(ids)):
-            # Convert distance to similarity score (assuming cosine distance, where similarity = 1 - distance)
-            similarity = 1.0 - distances[i] if distances[i] is not None else None
+        # Use zip for cleaner iteration
+        for id_val, distance, metadata, document in zip(ids, distances, metadatas, documents):
+            similarity = None
+            if distance is not None:
+                if distance_metric == "cosine":
+                    similarity = 1.0 - distance
+                elif distance_metric == "l2":
+                    # For normalized vectors, cosine_similarity = 1 - (l2_distance**2 / 2)
+                    similarity = 1.0 - (distance**2 / 2)
+                else:  # 'ip' (inner product) is already a similarity score
+                    similarity = distance
             
             match_data = {
-                "id": ids[i],
+                "id": id_val,
                 "score": similarity,
-                "text": documents[i],
+                "text": document,
             }
-            if metadatas[i]:
-                match_data.update(metadatas[i])
+            if metadata:
+                match_data.update(metadata)
             
             matches.append(match_data)
 
