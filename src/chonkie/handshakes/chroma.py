@@ -186,3 +186,65 @@ class ChromaHandshake(BaseHandshake):
     def __repr__(self) -> str:
         """Return the string representation of the ChromaHandshake."""
         return f"ChromaHandshake(collection_name={self.collection_name})"
+
+    def search(
+        self,
+        query: Optional[str] = None,
+        embedding: Optional[List[float]] = None,
+        limit: int = 5,
+    ) -> List[Dict[str, Any]]:
+        """Search the Chroma collection for similar chunks.
+
+        Args:
+            query: The query string to search for. If provided, `embedding` is ignored.
+            embedding: The embedding vector to search for.
+            limit: The maximum number of results to return.
+
+        Returns:
+            List[Dict[str, Any]]: A list of dictionaries containing the matching chunks and their metadata.
+        """
+        if query is None and embedding is None:
+            raise ValueError("Either 'query' or 'embedding' must be provided.")
+
+        if query:
+            # The embedding function can handle batching, but here we only have one query
+            query_embeddings = [self.embedding_function(query).tolist()]
+            results = self.collection.query(
+                query_embeddings=query_embeddings,
+                n_results=limit,
+                include=["metadatas", "documents", "distances"],
+            )
+        else:
+            # Embedding must be a list of lists for Chroma
+            query_embeddings = [embedding] # type: ignore[list-item]
+            results = self.collection.query(
+                query_embeddings=query_embeddings,
+                n_results=limit,
+                include=["metadatas", "documents", "distances"],
+            )
+
+        # Process and format the results
+        matches = []
+        if not results["ids"] or not results["ids"][0]:
+            return []
+
+        ids = results["ids"][0]
+        distances = results["distances"][0]
+        metadatas = results["metadatas"][0]
+        documents = results["documents"][0]
+
+        for i in range(len(ids)):
+            # Convert distance to similarity score (assuming cosine distance, where similarity = 1 - distance)
+            similarity = 1.0 - distances[i] if distances[i] is not None else None
+            
+            match_data = {
+                "id": ids[i],
+                "score": similarity,
+                "text": documents[i],
+            }
+            if metadatas[i]:
+                match_data.update(metadatas[i])
+            
+            matches.append(match_data)
+
+        return matches
