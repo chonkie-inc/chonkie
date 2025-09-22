@@ -50,6 +50,51 @@ chunks = chunker("Chonkie is the best chonker ever!")
 handshake.write(chunks)
 ```
 
+### Searching Chunks in ChromaDB
+
+You can retrieve the most similar chunks from your ChromaDB collection using the `search` method:
+<CodeGroup>
+```python search using a query
+from chonkie import ChromaHandshake
+
+# Initialize the handshake
+handshake = ChromaHandshake(collection_name="my_documents")
+results = handshake.search(query="best chonker", limit=2)
+for result in results:
+    print(result["score"], result["text"])
+```
+
+```python search using embedding
+from chonkie import ChromaHandshake
+
+# Initialize the handshake
+handshake = ChromaHandshake(collection_name="my_documents")
+embedding = handshake.embedding_function.embedding_model.embed("best chonker").tolist()
+results = handshake.search(embedding=embedding, limit=2)
+for result in results:
+    print(result["score"], result["text"])
+```
+
+```python search using chonkie chunks
+from chonkie import ChromaHandshake, SemanticChunker
+
+# Initialize the handshake
+handshake = ChromaHandshake(collection_name="my_documents")
+
+# Create some chunks
+chunker = SemanticChunker(embedding_model=handshake.embedding_function.embedding_model)
+chunks = chunker.chunk("Chonkie is the best chonker ever!")
+
+# Search the handshake using an embedding from a chunk
+results = handshake.search(
+    embedding=chunks.embedding,
+    limit=2,
+)
+for result in results:
+    print(result["score"], result["text"])
+```
+</CodeGroup>
+
 ## Parameters
 
 <ParamField
