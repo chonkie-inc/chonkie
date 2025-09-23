@@ -28,9 +28,7 @@ jobs:
         env:
           CIBW_BUILD: "cp39-* cp310-* cp311-* cp312-*"
           CIBW_SKIP: "pp* *musllinux*"
-          # soporta Apple Silicon y x86_64
           CIBW_ARCHS_MACOS: "x86_64 arm64 universal2"
-          # soporta 64 bits en Linux y Windows
           CIBW_ARCHS_LINUX: "x86_64 aarch64"
           CIBW_ARCHS_WINDOWS: "AMD64"
 
@@ -39,28 +37,4 @@ jobs:
         with:
           name: wheels-${{ matrix.os }}
           path: wheelhouse/*
-
-  # Opcional: Publicar automáticamente en PyPI al hacer tag v*
-  upload_pypi:
-    needs: build_wheels
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/download-artifact@v4
-        with:
-          name: wheels-ubuntu-latest
-          path: dist
-      - uses: actions/download-artifact@v4
-        with:
-          name: wheels-windows-latest
-          path: dist
-      - uses: actions/download-artifact@v4
-        with:
-          name: wheels-macos-latest
-          path: dist
-
-      - name: Publish to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          user: __token__
-          password: ${{ secrets.PYPI_API_TOKEN }}
 
