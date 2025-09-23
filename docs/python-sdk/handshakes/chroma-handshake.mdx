@@ -40,17 +40,42 @@ handshake = ChromaHandshake(client=client, collection_name="my_collection")
 ### Writing Chunks to ChromaDB
 
 ```python
-from chonkie import ChromaHandshake, SemanticChunker
+from chonkie import ChromaHandshake, Chonker
 
 handshake = ChromaHandshake() # Initializes a new Chroma client
 
-chunker = SemanticChunker()
+chunker = Chonker()
 chunks = chunker("Chonkie is the best chonker ever!")
 
+# Now, we write the chunks to the Chroma collection
 handshake.write(chunks)
 ```
 
-## Parameters
+### Searching for Chunks
+
+After writing chunks to the Chroma collection, you can use the `search` method to find the most relevant chunks to a given query.
+
+```python
+from chonkie import ChromaHandshake, Chonker
+
+handshake = ChromaHandshake()
+
+# First, let's write some chunks to the collection
+chunker = Chonker()
+
+# Write some chunks to the collection
+text_to_chunk = "Chonkie is a library for chunking text. It is a simple and easy to use library that can be used to chunk text into smaller pieces. It is a great tool for NLP tasks."
+
+chunks = chunker(text_to_chunk)
+
+handshake.write(chunks)
+
+# Now, we can search for the most relevant chunks
+results = handshake.search(query_texts=["What is Chonkie?"], n_results=1)
+
+# The results are a dictionary containing the metadatas, documents, and distances
+print(results)
+```
 
 <ParamField
     path="client"

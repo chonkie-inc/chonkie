@@ -256,6 +256,30 @@ def test_chroma_handshake_repr() -> None:
     # Clean up
     handshake.client.delete_collection(handshake.collection_name)
 
+def test_chroma_handshake_search() -> None:
+    """Test the search method."""
+    handshake = ChromaHandshake()
+    handshake.write(SAMPLE_CHUNKS)
+
+    query = "What is the second chunk?"
+    n_results = 1
+    results = handshake.search(query_texts=[query], n_results=n_results)
+
+    assert "ids" in results
+    assert "documents" in results
+    assert "metadatas" in results
+    assert "distances" in results
+    assert "similarity_scores" in results
+    assert len(results["ids"][0]) == n_results
+    assert len(results["documents"][0]) == n_results
+    assert len(results["metadatas"][0]) == n_results
+    assert len(results["distances"][0]) == n_results
+    assert len(results["similarity_scores"][0]) == n_results
+    assert isinstance(results["similarity_scores"][0][0], float)
+
+    # Clean up
+    handshake.client.delete_collection(handshake.collection_name)
+
 # Note: Testing the embedding function directly might require significant setup 
 # or mocking, which was explicitly excluded. The write tests implicitly cover 
 # that the embedding function is called during collection creation and potentially during upsert.

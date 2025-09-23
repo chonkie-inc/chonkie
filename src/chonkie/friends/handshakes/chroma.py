@@ -132,16 +132,20 @@ class ChromaHandshake(BaseHandshake):
 
     def _is_available(self) -> bool:
         """Check if the dependencies are available."""
-        return importutil.find_spec("chromadb") is not None
+        return all(
+            importutil.find_spec(dep) is not None for dep in ["chromadb", "numpy"]
+        )
 
     def _import_dependencies(self) -> None:
         """Lazy import the dependencies."""
         if self._is_available():
-            global chromadb
+            global chromadb, np
             import chromadb
+            import numpy as np
         else:
-            raise ImportError("ChromaDB is not installed. " +
-                              "Please install it with `pip install chonkie[chroma]`.")
+            raise ImportError(
+                "ChromaDB or numpy is not installed. Please install it with `pip install chonkie[chroma]`."
+            )
 
 
     def _generate_id(self, index: int, chunk: Chunk) -> str:
@@ -180,6 +184,65 @@ class ChromaHandshake(BaseHandshake):
         )
 
         print(f"🦛 Chonkie wrote {len(chunks)} Chunks to the Chroma collection: {self.collection_name}")
+
+    def _calculate_similarity_score(
+        self, distances: "np.ndarray", metric: str
+    ) -> "np.ndarray":
+        """Calculate similarity score based on the distance metric."""
+        if metric == "l2":
+            return 1.0 - distances
+        elif metric == "cosine":
+            return 1.0 - distances
+        elif metric == "ip":
+            return distances
+        else:
+            raise ValueError(f"Unknown distance metric: {metric}")
+
+    def search(
+        self,
+        query_texts: List[str],
+        n_results: int = 5,
+        where: Optional[Dict[str, Any]] = None,
+        include: List[str] = ["metadatas", "documents", "distances"],
+        *args,
+        **kwargs,
+    ) -> Dict[str, Any]:
+        """Search the Chroma collection for the given query texts.
+
+        Args:
+            query_texts: The texts to search for.
+            n_results: The number of results to return.
+            where: The where clause to filter the results.
+            include: The fields to include in the results.
+            *args: Additional arguments to pass to the query method.
+            **kwargs: Additional keyword arguments to pass to the query method.
+
+        Returns:
+            The results of the query, including similarity scores.
+
+        """
+        if "distances" not in include:
+            include.append("distances")
+
+        results = self.collection.query(
+            query_texts=query_texts,
+            n_results=n_results,
+            where=where,
+            include=include,
+            *args,
+            **kwargs,
+        )
+
+        if results.get("distances"):
+            metric = (self.collection.metadata or {}).get("hnsw:space", "l2")
+
+            distances_np = np.array(results["distances"])
+
+            similarity_scores = self._calculate_similarity_score(distances_np, metric)
+
+            results["similarity_scores"] = similarity_scores.tolist()
+
+        return results
     
     def __repr__(self) -> str:
         """Return the string representation of the ChromaHandshake."""
