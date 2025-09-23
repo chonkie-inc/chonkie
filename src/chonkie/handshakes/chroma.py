@@ -1,8 +1,7 @@
 """Chroma Handshake to export Chonkie's Chunks into a Chroma collection."""
 
 import importlib.util as importutil
-from typing import TYPE_CHECKING, Any, Dict, List, Literal, Optional, Sequence, Union
-from uuid import NAMESPACE_OID, uuid5
+from typing import TYPE_CHECKING, Any, cast, Dict, List, Literal, Optional, Sequence, Union
 
 from chonkie.embeddings import AutoEmbeddings, BaseEmbeddings
 from chonkie.pipeline.registry import handshake
@@ -202,13 +201,15 @@ class ChromaHandshake(BaseHandshake):
 
         Returns:
             List[Dict[str, Any]]: A list of dictionaries containing the matching chunks and their metadata.
+
         """
         if query is None and embedding is None:
             raise ValueError("Either 'query' or 'embedding' must be provided.")
 
         # Determine the query embeddings based on the input
         if query:
-            query_embeddings = [self.embedding_function(query).tolist()]
+            query_embedding_result = cast("np.ndarray", self.embedding_function(query))
+            query_embeddings = [query_embedding_result.tolist()]
         else:
             query_embeddings = [embedding]  # type: ignore[list-item]
 
@@ -219,28 +220,29 @@ class ChromaHandshake(BaseHandshake):
             include=["metadatas", "documents", "distances"],
         )
 
+        # Safely extract results, checking for None values
+        ids_list = results.get("ids")
+        distances_list = results.get("distances")
+        metadatas_list = results.get("metadatas")
+        documents_list = results.get("documents")
+
+        # Ensure all required result lists are present
+        if not all((ids_list, distances_list, metadatas_list, documents_list)):
+            return []
+        
+        # We queried with one vector, so we get the first list of results
+        ids, distances, metadatas, documents = ids_list[0], distances_list[0], metadatas_list[0], documents_list[0]
+
         # Process and format the results
         matches = []
-        if not results["ids"] or not results["ids"][0]:
-            return []
-
-        # Get the distance metric from the collection's metadata, defaulting to 'l2'
         distance_metric = self.collection.metadata.get("hnsw:space", "l2") if self.collection.metadata else "l2"
 
-        # Unpack results for cleaner iteration
-        ids = results["ids"][0]
-        distances = results["distances"][0]
-        metadatas = results["metadatas"][0]
-        documents = results["documents"][0]
-
-        # Use zip for cleaner iteration
         for id_val, distance, metadata, document in zip(ids, distances, metadatas, documents):
             similarity = None
             if distance is not None:
                 if distance_metric == "cosine":
                     similarity = 1.0 - distance
                 elif distance_metric == "l2":
-                    # For normalized vectors, cosine_similarity = 1 - (l2_distance**2 / 2)
                     similarity = 1.0 - (distance**2 / 2)
                 else:  # 'ip' (inner product) is already a similarity score
                     similarity = distance
