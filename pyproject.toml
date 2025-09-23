@@ -199,7 +199,7 @@ check_untyped_defs = true
 show_error_codes = true
 
 [tool.cibuildwheel]
-# Python versions 
+# Python versions to build
 build = "cp39-* cp310-* cp311-* cp312-* cp313-*"
 # Archs: x86_64 + arm64 by OS
 archs = ["auto"]
