@@ -197,3 +197,11 @@ ignore_missing_imports = true
 no_implicit_optional = true
 check_untyped_defs = true
 show_error_codes = true
+
+[tool.cibuildwheel]
+# Python versions 
+build = "cp39-* cp310-* cp311-* cp312-* cp313-*"
+# Archs: x86_64 + arm64 by OS
+archs = ["auto"]
+
+test-command = "python -c 'import chonkie; print(chonkie.__version__)'"
