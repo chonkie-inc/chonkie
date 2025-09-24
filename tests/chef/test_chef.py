@@ -90,14 +90,13 @@ class TestTableChef:
         assert df.iloc[0]["A"] == 1
 
     def test_process_markdown_table(self, table_chef, markdown_tables):
-        dfs = table_chef.process(markdown_tables)
-        # Should return a DataFrame or list of DataFrames
-        assert dfs is not None
-        if isinstance(dfs, list):
-            df = dfs[0]
-        else:
-            df = dfs
-        assert "Name" in df.columns or df.shape[1] > 0
+        df = table_chef.process(markdown_tables)
+        assert isinstance(df, pd.DataFrame)
+        assert not df.empty
+        # Note: column names and values will have surrounding spaces due to the markdown format
+        assert list(df.columns) == [' Name ', ' Age ', ' City ']
+        assert df.shape == (2, 3)
+        assert df.iloc[0][' Name '] == ' Alice '
 
     def test_process_batch_csv(self, table_chef, csv_content, tmp_path):
         csv1 = tmp_path / "a.csv"
