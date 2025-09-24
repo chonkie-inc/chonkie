@@ -2,6 +2,7 @@
 
 import importlib.util as importutil
 from typing import TYPE_CHECKING, Any, cast, Dict, List, Literal, Optional, Sequence, Union
+from uuid import NAMESPACE_OID, uuid5
 
 from chonkie.embeddings import AutoEmbeddings, BaseEmbeddings
 from chonkie.types import Chunk
