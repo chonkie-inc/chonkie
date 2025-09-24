@@ -33,7 +33,7 @@ class TableChef(BaseChef):
         # if file exists
         if Path(path).is_file():
             str_path = str(path)
-            if str_path.endswith(".csv"): 
+            if str_path.endswith(".csv"):
                 return pd.read_csv(str_path, **kwargs)
             elif str_path.endswith(".xls") or str_path.endswith(".xlsx"):
                 return pd.read_excel(str_path, **kwargs)
@@ -45,19 +45,23 @@ class TableChef(BaseChef):
                 print("No tables found in the provided markdown.")
             # one table
             elif len(table_mds) == 1:
-                df=  pd.read_csv(
+                df = pd.read_csv(
                     StringIO(table_mds[0]), sep="|", header=0, skipinitialspace=True
                 )
-                df = df.iloc[1:, 1:-1]  # remove first and last empty columns and first row
+                df = df.iloc[
+                    1:, 1:-1
+                ]  # remove first and last empty columns and first row
             # multiple tables
             elif len(table_mds) > 1:
                 out = []
                 for table_md in table_mds:
                     df = pd.read_csv(
-                            StringIO(table_md), sep="|", header=0, skipinitialspace=True
-                        )
+                        StringIO(table_md), sep="|", header=0, skipinitialspace=True
+                    )
                     out.append(
-                        df.iloc[1:, 1:-1]  # remove first and last empty columns and first row
+                        df.iloc[
+                            1:, 1:-1
+                        ]  # remove first and last empty columns and first row
                     )
                 return out
 
