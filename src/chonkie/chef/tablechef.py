@@ -82,7 +82,7 @@ class TableChef(BaseChef):
 
     def __call__(
         self, path: Union[str, Path, List[str], List[Path]], **kwargs
-    ) -> Union["pd.DataFrame", List["pd.DataFrame"]]:
+    ) -> Union["pd.DataFrame", List["pd.DataFrame"], None, List[Union["pd.DataFrame", List["pd.DataFrame"], None]]]:
         """Process one or more CSV files and return DataFrame(s)."""
         if isinstance(path, (list, tuple)):
             return self.process_batch(path, **kwargs)
