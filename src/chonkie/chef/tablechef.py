@@ -1,4 +1,4 @@
-"""TableChef is a chef that processes tabular data (CSV) and returns a pandas DataFrame."""
+"""TableChef is a chef that processes tabular data from files (e.g., CSV, Excel) and markdown strings."""
 
 import re
 from io import StringIO
