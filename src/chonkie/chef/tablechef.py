@@ -14,6 +14,8 @@ if TYPE_CHECKING:
 class TableChef(BaseChef):
     """TableChef processes CSV files and returns pandas DataFrames."""
 
+    table_pattern = re.compile(r"(\|.*?\n(?:\|[-: ]+\|.*?\n)?(?:\|.*?\n)+)")
+
     def _lazy_import_pandas(self):
         global pd
         import pandas as pd
@@ -82,7 +84,12 @@ class TableChef(BaseChef):
 
     def __call__(
         self, path: Union[str, Path, List[str], List[Path]], **kwargs
-    ) -> Union["pd.DataFrame", List["pd.DataFrame"], None, List[Union["pd.DataFrame", List["pd.DataFrame"], None]]]:
+    ) -> Union[
+        "pd.DataFrame",
+        List["pd.DataFrame"],
+        None,
+        List[Union["pd.DataFrame", List["pd.DataFrame"], None]],
+    ]:
         """Process one or more CSV files and return DataFrame(s)."""
         if isinstance(path, (list, tuple)):
             return self.process_batch(path, **kwargs)
@@ -101,9 +108,8 @@ class TableChef(BaseChef):
             List[str]: A list of strings, each representing a markdown table found in the input.
 
         """
-        table_pattern = re.compile(r"(\|.*?\n(?:\|[-: ]+\|.*?\n)?(?:\|.*?\n)+)")
         tables: List[str] = []
-        for match in table_pattern.finditer(markdown):
+        for match in self.table_pattern.finditer(markdown):
             tables.append(match.group(0))
         return tables
 
