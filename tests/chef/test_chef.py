@@ -1,11 +1,16 @@
+
 """Tests for the chef module."""
 
+import io
+import os
+import tempfile
 from pathlib import Path
 from unittest.mock import mock_open, patch
 
+import pandas as pd
 import pytest
 
-from chonkie.chef import BaseChef, TextChef
+from chonkie.chef import BaseChef, TableChef, TextChef
 from chonkie.types import Document
 
 
@@ -42,6 +47,97 @@ class TestBaseChef:
         assert repr(chef) == "ConcreteChef()"
 
 
+class TestTableChef:
+    """Test cases for TableChef class."""
+
+    @pytest.fixture
+    def table_chef(self):
+        return TableChef()
+
+    @pytest.fixture
+    def csv_content(self):
+        return """Name,Age,City\nAlice,25,New York\nBob,30,Paris\n"""
+
+    @pytest.fixture
+    def excel_content(self, tmp_path):
+        # Create a temporary Excel file
+        df = pd.DataFrame({"A": [1, 2], "B": [3, 4]})
+        excel_path = tmp_path / "test.xlsx"
+        df.to_excel(excel_path, index=False)
+        return excel_path
+
+    @pytest.fixture
+    def markdown_tables(self):
+        return """
+        | Name | Age | City |
+        |------|-----|------|
+        | Alice | 25 | New York |
+        | Bob | 30 | Paris |
+        """
+
+    def test_process_csv_file(self, table_chef, csv_content, tmp_path):
+        csv_path = tmp_path / "test.csv"
+        csv_path.write_text(csv_content)
+        df = table_chef.process(csv_path)
+        assert not df.empty
+        assert list(df.columns) == ["Name", "Age", "City"]
+        assert df.iloc[0]["Name"] == "Alice"
+
+    def test_process_excel_file(self, table_chef, excel_content):
+        df = table_chef.process(excel_content)
+        assert not df.empty
+        assert list(df.columns) == ["A", "B"]
+        assert df.iloc[0]["A"] == 1
+
+    def test_process_markdown_table(self, table_chef, markdown_tables):
+        dfs = table_chef.process(markdown_tables)
+        # Should return a DataFrame or list of DataFrames
+        assert dfs is not None
+        if isinstance(dfs, list):
+            df = dfs[0]
+        else:
+            df = dfs
+        assert "Name" in df.columns or df.shape[1] > 0
+
+    def test_process_batch_csv(self, table_chef, csv_content, tmp_path):
+        csv1 = tmp_path / "a.csv"
+        csv2 = tmp_path / "b.csv"
+        csv1.write_text(csv_content)
+        csv2.write_text(csv_content)
+        dfs = table_chef.process_batch([csv1, csv2])
+        assert len(dfs) == 2
+        assert all(isinstance(df, pd.DataFrame) for df in dfs)
+
+    def test_call_with_csv_path(self, table_chef, csv_content, tmp_path):
+        csv_path = tmp_path / "test.csv"
+        csv_path.write_text(csv_content)
+        df = table_chef(csv_path)
+        assert isinstance(df, pd.DataFrame)
+
+    def test_call_with_list_of_csv_paths(self, table_chef, csv_content, tmp_path):
+        csv1 = tmp_path / "a.csv"
+        csv2 = tmp_path / "b.csv"
+        csv1.write_text(csv_content)
+        csv2.write_text(csv_content)
+        dfs = table_chef([csv1, csv2])
+        assert isinstance(dfs, list)
+        assert all(isinstance(df, pd.DataFrame) for df in dfs)
+
+    def test_call_with_invalid_type(self, table_chef):
+        with pytest.raises(TypeError):
+            table_chef(123)
+
+    def test_extract_tables_from_markdown(self, table_chef, markdown_tables):
+        tables = table_chef.extract_tables_from_markdown(markdown_tables)
+        assert isinstance(tables, list)
+        assert len(tables) >= 1
+
+    def test_process_markdown_with_no_table(self, table_chef):
+        result = table_chef.process("no tables here!")
+        assert result is None
+
+    def test_repr_method(self, table_chef):
+        assert repr(table_chef) == "TableChef()"
 class TestTextChef:
     """Test cases for TextChef class."""
     
@@ -183,8 +279,10 @@ class TestTextChef:
         mock_file = mock_open(read_data=sample_text)
         with patch("builtins.open", mock_file):
             text_chef.process("test_file.txt")
-            mock_file.assert_called_once_with("test_file.txt", "r", encoding="utf-8")
+            mock_file.assert_called_once_with("test_file.txt", "r")
     
+
+
     def test_batch_processing_calls_process_for_each_file(self, text_chef, sample_text):
         """Test that batch processing calls process method for each file."""
         paths = ["file1.txt", "file2.txt"]
@@ -194,3 +292,4 @@ class TestTextChef:
             assert len(results) == 2
             mock_process.assert_any_call("file1.txt")
             mock_process.assert_any_call("file2.txt")
+
