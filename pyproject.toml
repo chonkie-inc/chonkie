@@ -140,6 +140,7 @@ all = [
     "pymongo",
     "voyageai>=0.3.2",
     "vecs>=0.4.0",
+    "pandas",
 ]
 dev = [
     "datasets>=1.14.0",
@@ -152,6 +153,7 @@ dev = [
     "ruff>=0.0.265",
     "mypy>=1.11.0",
     "cython>=3.0.0",
+    "pandas",
 ]
 
 [tool.pytest.ini_options]
