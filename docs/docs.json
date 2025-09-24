@@ -25,6 +25,13 @@
             ]
           },
           {
+            "group": "Chefs",
+            "pages": [
+              "python-sdk/chefs/overview",
+              "python-sdk/chefs/tablechef"
+            ]
+          },
+          {
             "group": "Chunkers",
             "pages": [
               "python-sdk/chunkers/overview",
