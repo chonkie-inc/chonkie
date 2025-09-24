@@ -42,7 +42,7 @@ class TableChef(BaseChef):
             table_mds = self.extract_tables_from_markdown(str(path))
             # no tables
             if len(table_mds) == 0:
-                print("No tables found in the provided markdown.")
+                return None
             # one table
             elif len(table_mds) == 1:
                 df = pd.read_csv(
