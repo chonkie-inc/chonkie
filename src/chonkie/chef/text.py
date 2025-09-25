@@ -21,8 +21,7 @@ class TextChef(BaseChef):
             Document: Processed text data.
 
         """
-        with open(path, "r") as file:
-            return Document(content=str(file.read()))
+        return Document(content=self.read(path))
 
     def process_batch(self, paths: Union[List[str], List[Path]]) -> List[Document]:
         """Process the text data in a batch.
