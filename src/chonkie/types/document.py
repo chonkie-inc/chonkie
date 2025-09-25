@@ -38,6 +38,6 @@ class Document:
     """
 
     id: Optional[str] = field(default_factory=str)
-    text: str = field(default_factory=str)
+    content: str = field(default_factory=str)
     chunks: List[Chunk] = field(default_factory=list)
     metadata: Dict[str, Any] = field(default_factory=dict)
