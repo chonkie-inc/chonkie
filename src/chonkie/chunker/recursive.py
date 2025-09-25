@@ -301,7 +301,7 @@ class RecursiveChunker(BaseChunker):
 
     def _recursive_chunk(
         self, text: str, level: int = 0, start_offset: int =0
-    ) -> Sequence[Chunk]:
+    ) -> List[Chunk]:
         """Recursive helper for core chunking."""
         if not text:
             return []
@@ -350,7 +350,7 @@ class RecursiveChunker(BaseChunker):
             current_offset += len(split)
         return chunks
 
-    def chunk(self, text: str) -> Sequence[Chunk]:
+    def chunk(self, text: str) -> List[Chunk]:
         """Recursively chunk text.
 
         Args:

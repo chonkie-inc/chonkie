@@ -85,7 +85,7 @@ class TurbopufferHandshake(BaseHandshake):
             )
         )
 
-    def write(self, chunks: Union[Chunk, Sequence[Chunk]]) -> None:
+    def write(self, chunks: Union[Chunk, List[Chunk]]) -> None:
         """Write the chunks to the Turbopuffer database."""
         if isinstance(chunks, Chunk):
             chunks = [chunks]
