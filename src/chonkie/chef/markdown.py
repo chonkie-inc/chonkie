@@ -26,7 +26,7 @@ class MarkdownChef(BaseChef):
     """Initialize the MarkdownChef."""
     super().__init__()
     self.code_pattern = re.compile(r"```([a-zA-Z0-9+\-_]*)\n?(.*?)\n?```", re.DOTALL)
-    self.table_pattern = re.compile(r"(\|.*?\n(?:\|[-: ]+\|.*?\n)?(?:\|.*?\n)+)")
+    self.table_pattern = re.compile(r"(\|.*?\n\|[-: ]+\|.*?\n(?:\|.*?\n)*)")
     self.image_pattern = re.compile(r"!\[([^\]]*)\]\(([^)]+)\)")
 
   def extract_tables(self, markdown: str) -> List[str]:
@@ -54,15 +54,12 @@ class MarkdownChef(BaseChef):
         List[MarkdownTable]: The list of tables with their start and end indices.
 
     """
-    # Extract the tables from the markdown
-    tables = self.extract_tables(markdown)
-    
-    # Convert the extracted tables into MarkdownTables
     markdown_tables: List[MarkdownTable] = []
-    for table in tables:
-      start_index = markdown.find(table)
-      end_index = start_index + len(table)
-      markdown_tables.append(MarkdownTable(content=table, start_index=start_index, end_index=end_index))
+    for match in self.table_pattern.finditer(markdown):
+        table_content = match.group(0)
+        start_index = match.start()
+        end_index = match.end()
+        markdown_tables.append(MarkdownTable(content=table_content, start_index=start_index, end_index=end_index))
     return markdown_tables
 
   def prepare_code(self, markdown: str) -> List[MarkdownCode]:
