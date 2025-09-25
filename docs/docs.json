@@ -132,6 +132,16 @@
         "openapi": "chonkie-cloud/openapi.json"
       },
       {
+        "tab": "Chonkie Parse",
+        "icon": "file-lines",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "pages": ["parse/introduction"]
+          }
+        ]
+      },
+      {
         "tab": "Changelog",
         "pages": ["changelog/changelog"]
       }
