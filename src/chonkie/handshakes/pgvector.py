@@ -1,7 +1,7 @@
 """Pgvector Handshake to export Chonkie's Chunks into a PostgreSQL database with pgvector using vecs."""
 
 import importlib.util as importutil
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Sequence, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 from uuid import NAMESPACE_OID, uuid5
 
 from chonkie.embeddings import AutoEmbeddings, BaseEmbeddings

@@ -8,7 +8,6 @@ from typing import (
     List,
     Literal,
     Optional,
-    Sequence,
     Union,
 )
 from urllib.parse import urlparse
