@@ -10,7 +10,7 @@ To use this legacy version:
 import importlib.util as importutil
 import warnings
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any, Dict, List, Literal, Optional, Sequence, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Literal, Optional, Sequence, Union, cast
 
 from chonkie.chunker.base import BaseChunker
 from chonkie.embeddings.base import BaseEmbeddings
@@ -688,7 +688,7 @@ class SemanticChunker(BaseChunker):
 
         return chunks
 
-    def chunk(self, text: str) -> Sequence[SemanticChunk]:
+    def chunk(self, text: str) -> List[Chunk]:
         """Split text into semantically coherent chunks using two-pass approach.
 
         First groups sentences by semantic similarity, then splits groups to respect
@@ -717,7 +717,7 @@ class SemanticChunker(BaseChunker):
         sentence_groups = self._group_sentences(sentences)
 
         # Second pass: Split groups into size-appropriate chunks
-        chunks = self._split_chunks(sentence_groups)
+        chunks = cast(List[Chunk], self._split_chunks(sentence_groups))
 
         return chunks
 
