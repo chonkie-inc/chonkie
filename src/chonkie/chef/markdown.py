@@ -25,7 +25,7 @@ class MarkdownChef(BaseChef):
   def __init__(self) -> None:
     """Initialize the MarkdownChef."""
     super().__init__()
-    self.code_pattern = re.compile(r"```([a-zA-Z0-9+\-_]*)\n(.*?)\n```", re.DOTALL)
+    self.code_pattern = re.compile(r"```([a-zA-Z0-9+\-_]*)\n?(.*?)\n?```", re.DOTALL)
     self.table_pattern = re.compile(r"(\|.*?\n(?:\|[-: ]+\|.*?\n)?(?:\|.*?\n)+)")
     self.image_pattern = re.compile(r"!\[([^\]]*)\]\(([^)]+)\)")
 
