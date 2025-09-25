@@ -29,21 +29,6 @@ class MarkdownChef(BaseChef):
     self.table_pattern = re.compile(r"(\|.*?\n\|[-: ]+\|.*?\n(?:\|.*?\n)*)")
     self.image_pattern = re.compile(r"!\[([^\]]*)\]\(([^)]+)\)")
 
-  def extract_tables(self, markdown: str) -> List[str]:
-    """Extract markdown tables from a markdown string.
-
-    Args:
-        markdown (str): The markdown text containing tables.
-
-    Returns:
-        List[str]: A list of strings, each representing a markdown table found in the input.
-
-    """
-    tables: List[str] = []
-    for match in self.table_pattern.finditer(markdown):
-        tables.append(match.group(0))
-    return tables
-
   def prepare_tables(self, markdown: str) -> List[MarkdownTable]:
     """Prepare the tables for the MarkdownDocument.
 
