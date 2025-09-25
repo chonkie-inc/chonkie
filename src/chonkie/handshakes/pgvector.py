@@ -157,7 +157,7 @@ class PgvectorHandshake(BaseHandshake):
             
         return metadata
 
-    def write(self, chunks: Union[Chunk, Sequence[Chunk]]) -> List[str]:
+    def write(self, chunks: Union[Chunk, List[Chunk]]) -> List[str]:
         """Write chunks to the PostgreSQL database using vecs.
         
         Args:

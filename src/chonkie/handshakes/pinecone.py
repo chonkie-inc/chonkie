@@ -144,7 +144,7 @@ class PineconeHandshake(BaseHandshake):
         }
 
     def _get_vectors(
-        self, chunks: Union[Chunk, Sequence[Chunk]]
+        self, chunks: Union[Chunk, List[Chunk]]
     ) -> List[Tuple[str, List[float], Dict[str, Any]]]:
         """Generate vectors for the chunks.
 
@@ -172,7 +172,7 @@ class PineconeHandshake(BaseHandshake):
             ))
         return vectors
 
-    def write(self, chunks: Union[Chunk, Sequence[Chunk]]) -> None:
+    def write(self, chunks: Union[Chunk, List[Chunk]]) -> None:
         """Write chunks to the Pinecone index.
 
         Args:
