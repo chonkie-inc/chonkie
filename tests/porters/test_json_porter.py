@@ -40,7 +40,6 @@ def sample_chunks() -> list[Chunk]:
 @pytest.fixture
 def chunks_with_context() -> list[Chunk]:
     """Create chunks with context for testing."""
-    
     return [
         Chunk(
             text="First chunk with context.",
