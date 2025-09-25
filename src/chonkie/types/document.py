@@ -16,9 +16,7 @@ This class is designed to be extended and might go through significant changes i
 from dataclasses import dataclass, field
 from typing import Any, Dict, List
 
-from chonkie.utils.id import generate_id
-
-from .base import Chunk
+from .base import Chunk, generate_id
 
 
 @dataclass

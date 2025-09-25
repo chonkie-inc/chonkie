@@ -2,10 +2,10 @@
 
 from .base import Chunk
 from .code import LanguageConfig, MergeRule, SplitRule
+from .document import Document
+from .markdown import MarkdownCode, MarkdownDocument, MarkdownTable
 from .recursive import RecursiveLevel, RecursiveRules
 from .sentence import Sentence
-from .document import Document
-from .markdown import MarkdownDocument, MarkdownTable, MarkdownCode
 
 __all__ = [
     "Chunk",

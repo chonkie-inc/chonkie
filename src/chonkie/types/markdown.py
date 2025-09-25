@@ -1,14 +1,14 @@
 """Markdown types for Chonkie."""
 
 from dataclasses import dataclass, field
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from .document import Document
 
 
 @dataclass 
 class MarkdownTable:
-    """MarkdownTable is a table found in th emiddle of a markdown document."""
+    """MarkdownTable is a table found in the middle of a markdown document."""
 
     content: str = field(default_factory=str)
     start_index: int = field(default_factory=int)
@@ -19,6 +19,7 @@ class MarkdownCode:
     """MarkdownCode is a code block found in the middle of a markdown document."""
 
     content: str = field(default_factory=str)
+    language: Optional[str] = field(default=None)
     start_index: int = field(default_factory=int)
     end_index: int = field(default_factory=int)
 
@@ -27,5 +28,5 @@ class MarkdownDocument(Document):
     """MarkdownDocument is a document that contains markdown content."""
 
     tables: List[MarkdownTable] = field(default_factory=list)
-    code_blocks: List[MarkdownCode] = field(default_factory=list)
+    code: List[MarkdownCode] = field(default_factory=list)
     images: Dict[str, str] = field(default_factory=dict)

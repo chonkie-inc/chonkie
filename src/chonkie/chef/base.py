@@ -11,6 +11,15 @@ class BaseChef(ABC):
     def process(self, path: Any) -> Any:
         """Process the data."""
         raise NotImplementedError("Subclasses must implement process()")
+    
+    def process_batch(self, paths: Any) -> Any:
+        """Process the data in a batch."""
+        return [self.process(path) for path in paths]
+
+    def read(self, path: Any) -> Any:
+        """Read the file content."""
+        with open(path, "r") as file:
+            return str(file.read())
 
     def __call__(self, path: Any) -> Any:
         """Call the chef to process the data."""

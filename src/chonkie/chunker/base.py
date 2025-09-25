@@ -8,7 +8,7 @@ from typing import Any, Callable, Sequence, Union
 from tqdm import tqdm
 
 from chonkie.tokenizer import Tokenizer
-from chonkie.types import Chunk
+from chonkie.types import Chunk, Document
 
 
 class BaseChunker(ABC):
@@ -139,3 +139,9 @@ class BaseChunker(ABC):
             return self._parallel_batch_processing(texts, show_progress)
         else:
             return self._sequential_batch_processing(texts, show_progress)
+    
+    def chunk_document(self, document: Document) -> Document: 
+        """Chunk a document."""
+        # Get the content from the document and chunk it
+        document.chunks = self.chunk(document.content)
+        return document
