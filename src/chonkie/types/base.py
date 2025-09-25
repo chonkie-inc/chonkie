@@ -101,7 +101,7 @@ class Chunk:
     def to_dict(self) -> dict:
         """Return the Chunk as a dictionary."""
         result = self.__dict__.copy()
-        result["context"] = self.context.to_dict() if self.context else None
+        result["context"] = self.context
         # Convert embedding to list if it has tolist method (numpy array)
         if self.embedding is not None:
             if hasattr(self.embedding, 'tolist'):
