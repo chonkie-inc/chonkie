@@ -5,6 +5,7 @@
 
 from .chef import (
     BaseChef,
+    MarkdownChef,
     TextChef,
 )
 from .chunker import (
@@ -86,8 +87,11 @@ from .tokenizer import (
 )
 from .types import (
     Chunk,
-    Context,
+    Document,
     LanguageConfig,
+    MarkdownCode,
+    MarkdownDocument,
+    MarkdownTable,
     MergeRule,
     RecursiveLevel,
     RecursiveRules,

@@ -2,11 +2,16 @@
 
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Iterator, List, Optional, Union
-
-from chonkie.utils.id import generate_id
+from uuid import uuid4
 
 if TYPE_CHECKING:
     import numpy as np
+
+# Function to generate the IDs for the Chonkie  types
+def generate_id(prefix: str) -> str:
+    """Generate a UUID for a given prefix."""
+    return f"{prefix}_{uuid4().hex}"
+
 
 @dataclass
 class Chunk:
