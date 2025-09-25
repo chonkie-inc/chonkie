@@ -9,7 +9,6 @@ from .sentence import Sentence
 
 __all__ = [
     "Chunk",
-    "Context",
     "RecursiveLevel",
     "RecursiveRules",
     "Sentence",
