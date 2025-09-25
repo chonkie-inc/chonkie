@@ -158,10 +158,9 @@ class PineconeHandshake(BaseHandshake):
         if isinstance(chunks, Chunk):
             chunks = [chunks]
         vectors = []
-        embedings = self.embedding_model.embed_batch([chunk.text for chunk in chunks])  # type: ignore
         for index, chunk in enumerate(chunks):
             # Handle both numpy arrays and lists
-            embedding = embedings[index]
+            embedding = self.embedding_model.embed(chunk.text)  # type: ignore
             if hasattr(embedding, "tolist"):
                 embedding_list: List[float] = embedding.tolist()
             else:
