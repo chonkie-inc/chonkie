@@ -3,7 +3,7 @@
 import warnings
 from abc import ABC, abstractmethod
 from multiprocessing import Pool, cpu_count
-from typing import Any, Callable, Sequence, Union
+from typing import Any, Callable, List, Sequence, Union
 
 from tqdm import tqdm
 

@@ -201,10 +201,10 @@ class SlumberChunker(BaseChunker):
     def _recursive_split(self, text: str, level: int = 0, offset: int=0) -> List[Chunk]:
         """Recursively split the text into chunks."""
         if not self.rules.levels or level >= len(self.rules.levels):
-            return [Chunk(text,
-                         offset,
-                         offset + len(text),
-                         self.tokenizer.count_tokens(text))]
+            return [Chunk(text=text,
+                         start_index=offset,
+                         end_index=offset + len(text),
+                         token_count=self.tokenizer.count_tokens(text))]
         
         # Do the first split based on the level provided
         splits = self._split_text(text, self.rules.levels[level]) if self.rules.levels else []
@@ -222,10 +222,10 @@ class SlumberChunker(BaseChunker):
                 child_chunks = self._recursive_split(split, level + 1, current_offset)
                 chunks.extend(child_chunks)
             else:
-                chunks.append(Chunk(split,
-                                    current_offset,
-                                    current_offset + len(split),
-                                    token_count))
+                chunks.append(Chunk(text=split,
+                                    start_index=current_offset,
+                                    end_index=current_offset + len(split),
+                                    token_count=token_count))
             
             # Add the offset as the length of the split
             current_offset += len(split)

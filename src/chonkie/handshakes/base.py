@@ -3,6 +3,7 @@
 from abc import ABC, abstractmethod
 from typing import (
     Any,
+    List,
     Sequence,
     Union,
 )

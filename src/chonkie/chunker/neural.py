@@ -195,10 +195,10 @@ class NeuralChunker(BaseChunker):
     current_index = 0
     token_counts = self.tokenizer.count_tokens_batch(splits)
     for split, token_count in zip(splits, token_counts): 
-      chunks.append(Chunk(split, 
-                          current_index,
-                          current_index + len(split),
-                          token_count))
+      chunks.append(Chunk(text=split,
+                          start_index=current_index,
+                          end_index=current_index + len(split),
+                          token_count=token_count))
       current_index += len(split)
     return chunks
 
