@@ -18,7 +18,7 @@ class BaseChef(ABC):
 
     def read(self, path: Any) -> Any:
         """Read the file content."""
-        with open(path, "r") as file:
+        with open(path, "r", encoding="utf-8") as file:
             return str(file.read())
 
     def __call__(self, path: Any) -> Any:
