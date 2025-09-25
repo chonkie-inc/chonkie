@@ -1,7 +1,17 @@
 """Chroma Handshake to export Chonkie's Chunks into a Chroma collection."""
 
 import importlib.util as importutil
-from typing import TYPE_CHECKING, Any, cast, Dict, List, Literal, Optional, Sequence, Union
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Dict,
+    List,
+    Literal,
+    Optional,
+    Sequence,
+    Union,
+    cast,
+)
 from uuid import NAMESPACE_OID, uuid5
 
 from chonkie.embeddings import AutoEmbeddings, BaseEmbeddings
