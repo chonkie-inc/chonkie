@@ -8,7 +8,7 @@ from unittest.mock import patch
 import pytest
 from datasets import Dataset
 
-from chonkie.friends.porters.datasets import DatasetsPorter
+from chonkie.porters.datasets import DatasetsPorter
 from chonkie.types import Chunk
 
 
