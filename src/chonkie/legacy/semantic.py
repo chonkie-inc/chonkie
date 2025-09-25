@@ -10,7 +10,16 @@ To use this legacy version:
 import importlib.util as importutil
 import warnings
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any, Dict, List, Literal, Optional, Sequence, Union, cast
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Dict,
+    List,
+    Literal,
+    Optional,
+    Union,
+    cast,
+)
 
 from chonkie.chunker.base import BaseChunker
 from chonkie.embeddings.base import BaseEmbeddings

@@ -8,7 +8,6 @@ from typing import (
     List,
     Literal,
     Optional,
-    Sequence,
     Union,
 )
 from uuid import NAMESPACE_OID, uuid5

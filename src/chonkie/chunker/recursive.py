@@ -6,7 +6,7 @@ Splits text into smaller chunks recursively. Express chunking logic through Recu
 from bisect import bisect_left
 from functools import lru_cache
 from itertools import accumulate
-from typing import Any, Callable, List, Optional, Sequence, Tuple, Union
+from typing import Any, Callable, List, Optional, Tuple, Union
 
 from chonkie.chunker.base import BaseChunker
 from chonkie.types import (
