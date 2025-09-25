@@ -46,7 +46,7 @@ class PineconeHandshake(BaseHandshake):
         client: Optional["pinecone.Pinecone"] = None,
         api_key: Optional[str] = None,
         index_name: Union[str, Literal["random"]] = "random",
-        spec: Optional['pinecone.ServerlessSpec'] = None,
+        spec: Optional["pinecone.ServerlessSpec"] = None,
         embedding_model: Union[str, BaseEmbeddings] = "minishlab/potion-retrieval-32M",
         embed: Optional[Dict[str, str]] = None,
         **kwargs: Any,
@@ -71,9 +71,11 @@ class PineconeHandshake(BaseHandshake):
         else:
             api_key = api_key or os.getenv("PINECONE_API_KEY")
             if api_key is None:
-                raise ValueError("Pinecone API key is not set. Please provide it as an argument or set the PINECONE_API_KEY environment variable.")
-            self.client = pinecone.Pinecone(api_key=api_key)
-        
+                raise ValueError(
+                    "Pinecone API key is not set. Please provide it as an argument or set the PINECONE_API_KEY environment variable."
+                )
+            self.client = pinecone.Pinecone(api_key=api_key, source_tag="chonkie")
+
         self.embed: Optional[Dict[str, str]] = embed
         if embed is not None:
             self.embedding_model = None
@@ -98,7 +100,7 @@ class PineconeHandshake(BaseHandshake):
             self.index_name = index_name
 
         # set default value for specs field if not present
-        self.spec = spec or pinecone.ServerlessSpec(cloud="aws", region="us-east-1") # type: ignore
+        self.spec = spec or pinecone.ServerlessSpec(cloud="aws", region="us-east-1")  # type: ignore
 
         # Create the index if it doesn't exist
         if not self.client.has_index(self.index_name):
@@ -108,7 +110,11 @@ class PineconeHandshake(BaseHandshake):
                 )
             else:
                 self.client.create_index(
-                    name=self.index_name, dimension=self.dimension, metric=self.metric, spec=self.spec, **kwargs
+                    name=self.index_name,
+                    dimension=self.dimension,
+                    metric=self.metric,
+                    spec=self.spec,
+                    **kwargs,
                 )
         self.index = self.client.Index(self.index_name)
 
@@ -137,7 +143,9 @@ class PineconeHandshake(BaseHandshake):
             "token_count": chunk.token_count,
         }
 
-    def _get_vectors(self, chunks: Union[Chunk, Sequence[Chunk]]) -> List[Tuple[str, List[float], Dict[str, Any]]]:
+    def _get_vectors(
+        self, chunks: Union[Chunk, Sequence[Chunk]]
+    ) -> List[Tuple[str, List[float], Dict[str, Any]]]:
         """Generate vectors for the chunks.
 
         Args:
@@ -150,11 +158,10 @@ class PineconeHandshake(BaseHandshake):
         if isinstance(chunks, Chunk):
             chunks = [chunks]
         vectors = []
-        embedings = self.embedding_model.embed_batch([chunk.text for chunk in chunks]) # type: ignore
         for index, chunk in enumerate(chunks):
             # Handle both numpy arrays and lists
-            embedding = embedings[index]
-            if hasattr(embedding, 'tolist'):
+            embedding = self.embedding_model.embed(chunk.text)  # type: ignore
+            if hasattr(embedding, "tolist"):
                 embedding_list: List[float] = embedding.tolist()
             else:
                 embedding_list = embedding  # type: ignore[assignment]
@@ -191,6 +198,7 @@ class PineconeHandshake(BaseHandshake):
 
         """
         return f"PineconeHandshake(index_name={self.index_name})"
+
     def search(
         self,
         query: Optional[str] = None,
@@ -201,7 +209,7 @@ class PineconeHandshake(BaseHandshake):
 
         Args:
             query: The query string to search for. If provided, `embedding` is ignored.
-            embedding: The embedding vector to search for. 
+            embedding: The embedding vector to search for.
             limit: The maximum number of results to return.
 
         Returns:
@@ -212,20 +220,22 @@ class PineconeHandshake(BaseHandshake):
             # Use Pinecone's integrated embedding model
             results = self.index.query(query=query, top_k=limit, include_metadata=True)
         elif query is None and embedding is None:
-            raise ValueError("Query string or embedding must be provided when using a custom embedding model.")
+            raise ValueError(
+                "Query string or embedding must be provided when using a custom embedding model."
+            )
         elif query is not None:
             # warning if both query and embedding are provided, query is used
             if embedding is not None:
                 print("⚠️ Warning: Both query and embedding provided. Using query.")
             # Use custom embedding model to embed the query
-            embedding = self.embedding_model.embed(query).tolist() # type: ignore
+            embedding = self.embedding_model.embed(query).tolist()  # type: ignore
         results = self.index.query(vector=embedding, top_k=limit, include_metadata=True)
 
         matches = []
-        for match in results.get('matches', []):
+        for match in results.get("matches", []):
             matches.append({
-                'id': match.get('id'),
-                'score': match.get('score'),
-                **match.get('metadata', {}),
+                "id": match.get("id"),
+                "score": match.get("score"),
+                **match.get("metadata", {}),
             })
         return matches
