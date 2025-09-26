@@ -4,7 +4,7 @@ from typing import List, Union
 
 from chonkie.chunker.base import BaseChunker
 from chonkie.embeddings import BaseEmbeddings
-from chonkie.types import MarkdownTable
+from chonkie.types import Chunk
 
 
 class TableChunker(BaseChunker):
@@ -27,7 +27,7 @@ class TableChunker(BaseChunker):
         self.embedding_model = embedding_model
         self.chunk_size = chunk_size
 
-    def chunk(self, table: str) -> List[MarkdownTable]:
+    def chunk(self, table: str) -> List[Chunk]:
         """Chunk the table into smaller tables based on the chunk size.
 
         Args:
@@ -63,4 +63,4 @@ class TableChunker(BaseChunker):
         if len(current_chunk) > 2:
             chunks.append("\n".join(current_chunk))
 
-        return [MarkdownTable(content=chunk) for chunk in chunks]
+        return [Chunk(text=chunk) for chunk in chunks]
