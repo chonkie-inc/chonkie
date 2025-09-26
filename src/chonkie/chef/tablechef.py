@@ -20,7 +20,9 @@ class TableChef(BaseChef):
         global pd
         import pandas as pd
 
-    def process(self, path: Union[str, Path], **kwargs) -> Union["pd.DataFrame", List["pd.DataFrame"], None]:
+    def process(
+        self, path: Union[str, Path], **kwargs
+    ) -> Union["pd.DataFrame", List["pd.DataFrame"], None]:
         """Process a CSV file and return a pandas DataFrame.
 
         Args:
