@@ -1,10 +1,10 @@
 """TableChef is a chef that processes tabular data from files (e.g., CSV, Excel) and markdown strings."""
 
 import re
-from io import StringIO
 from pathlib import Path
 from typing import TYPE_CHECKING, List, Union
 
+from ..types import MarkdownTable
 from .base import BaseChef
 
 if TYPE_CHECKING:
@@ -14,20 +14,22 @@ if TYPE_CHECKING:
 class TableChef(BaseChef):
     """TableChef processes CSV files and returns pandas DataFrames."""
 
-    table_pattern = re.compile(r"(\|.*?\n(?:\|[-: ]+\|.*?\n)?(?:\|.*?\n)+)")
+    def __init__(self) -> None:
+        """Initialize TableChef with a regex pattern for markdown tables."""
+        self.table_pattern = re.compile(r"(\|.*?\n(?:\|[-: ]+\|.*?\n)?(?:\|.*?\n)+)")
 
     def _lazy_import_pandas(self) -> None:
         global pd
         import pandas as pd
 
-    def process(self, path: Union[str, Path]) -> Union[str, List[str], None]:
+    def process(self, path: Union[str, Path]) -> Union[str, List[MarkdownTable], None]:
         """Process a CSV file and return a pandas DataFrame.
 
         Args:
             path (Union[str, Path]): Path to the CSV file.
 
         Returns:
-            Union[str, List[str], None]: Markdown string of the table or list of markdown tables.
+            Union[str, List[MarkdownTable], None]: Markdown string of the table or list of markdown tables.
 
         """
         self._lazy_import_pandas()
@@ -73,19 +75,22 @@ class TableChef(BaseChef):
         else:
             raise TypeError(f"Unsupported type: {type(path)}")
 
-    def extract_tables_from_markdown(self, markdown: str) -> List[str]:
+    def extract_tables_from_markdown(self, markdown: str) -> List[MarkdownTable]:
         """Extract markdown tables from a markdown string.
 
         Args:
             markdown (str): The markdown text containing tables.
 
         Returns:
-            List[str]: A list of strings, each representing a markdown table found in the input.
+            List[MarkdownTable]: A list of MarkdownTable objects, each representing a markdown table found in the input.
 
         """
-        tables: List[str] = []
+        tables: List[MarkdownTable] = []
         for match in self.table_pattern.finditer(markdown):
-            tables.append(match.group(0))
+            table_content = match.group(0)
+            start_index = match.start()
+            end_index = match.end()
+            tables.append(MarkdownTable(content=table_content, start_index=start_index, end_index=end_index))
         return tables
 
     def __repr__(self) -> str:
