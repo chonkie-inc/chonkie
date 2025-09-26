@@ -16,21 +16,18 @@ class TableChef(BaseChef):
 
     table_pattern = re.compile(r"(\|.*?\n(?:\|[-: ]+\|.*?\n)?(?:\|.*?\n)+)")
 
-    def _lazy_import_pandas(self):
+    def _lazy_import_pandas(self) -> None:
         global pd
         import pandas as pd
 
-    def process(
-        self, path: Union[str, Path], **kwargs
-    ) -> Union["pd.DataFrame", List["pd.DataFrame"], None]:
+    def process(self, path: Union[str, Path]) -> Union[str, List[str], None]:
         """Process a CSV file and return a pandas DataFrame.
 
         Args:
             path (Union[str, Path]): Path to the CSV file.
-            **kwargs: Additional keyword arguments for pandas.read_csv.
 
         Returns:
-            pandas.DataFrame: DataFrame containing the CSV data.
+            Union[str, List[str], None]: Markdown string of the table or list of markdown tables.
 
         """
         self._lazy_import_pandas()
@@ -38,54 +35,30 @@ class TableChef(BaseChef):
         if Path(path).is_file():
             str_path = str(path)
             if str_path.endswith(".csv"):
-                return pd.read_csv(str_path, **kwargs)
+                df = pd.read_csv(str_path)
+                return df.to_markdown(index=False)
             elif str_path.endswith(".xls") or str_path.endswith(".xlsx"):
-                return pd.read_excel(str_path, **kwargs)
-        # string is a markedown table
-        else:
-            table_mds = self.extract_tables_from_markdown(str(path))
-            # no tables
-            if len(table_mds) == 0:
-                return None
-            # one table
-            elif len(table_mds) == 1:
-                df = pd.read_csv(
-                    StringIO(table_mds[0]), sep="|", header=0, skipinitialspace=True
-                )
-                df = df.iloc[
-                    1:, 1:-1
-                ]  # remove first and last empty columns and first row
-            # multiple tables
-            elif len(table_mds) > 1:
-                out = []
-                for table_md in table_mds:
-                    df = pd.read_csv(
-                        StringIO(table_md), sep="|", header=0, skipinitialspace=True
-                    )
-                    out.append(
-                        df.iloc[
-                            1:, 1:-1
-                        ]  # remove first and last empty columns and first row
-                    )
-                return out
+                df = pd.read_excel(str_path)
+                return df.to_markdown(index=False)
+        # else string is a markedown table
+        return self.extract_tables_from_markdown(str(path))
 
     def process_batch(
-        self, paths: Union[List[str], List[Path]], **kwargs
+        self, paths: Union[List[str], List[Path]]
     ) -> List["pd.DataFrame"]:
         """Process multiple CSV files and return a list of DataFrames.
 
         Args:
             paths (Union[List[str], List[Path]]): Paths to the CSV files.
-            **kwargs: Additional keyword arguments for pandas.read_csv.
 
         Returns:
             List[pd.DataFrame]: List of DataFrames.
 
         """
-        return [self.process(path, **kwargs) for path in paths]
+        return [self.process(path) for path in paths]
 
     def __call__(
-        self, path: Union[str, Path, List[str], List[Path]], **kwargs
+        self, path: Union[str, Path, List[str], List[Path]]
     ) -> Union[
         "pd.DataFrame",
         List["pd.DataFrame"],
@@ -94,9 +67,9 @@ class TableChef(BaseChef):
     ]:
         """Process one or more CSV files and return DataFrame(s)."""
         if isinstance(path, (list, tuple)):
-            return self.process_batch(path, **kwargs)
+            return self.process_batch(path)
         elif isinstance(path, (str, Path)):
-            return self.process(path, **kwargs)
+            return self.process(path)
         else:
             raise TypeError(f"Unsupported type: {type(path)}")
 
