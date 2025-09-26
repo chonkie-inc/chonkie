@@ -28,7 +28,9 @@
             "group": "Chefs",
             "pages": [
               "python-sdk/chefs/overview",
-              "python-sdk/chefs/tablechef"
+              "python-sdk/chefs/tablechef",
+              "python-sdk/chefs/textchef",
+              "python-sdk/chefs/markdownchef"
             ]
           },
           {
