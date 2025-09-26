@@ -32,7 +32,7 @@ class TableChunker(BaseChunker):
 
         Args:
             table: The input markdown table as a string.
-            
+
         Returns:
             List[MarkdownTable]: A list of MarkdownTable chunks.
 
@@ -58,7 +58,7 @@ class TableChunker(BaseChunker):
             else:
                 current_chunk.append(row)
                 current_size += row_size
-        
+
         # final chunk if it exists
         if len(current_chunk) > 2:
             chunks.append("\n".join(current_chunk))
