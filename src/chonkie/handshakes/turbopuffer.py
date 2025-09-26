@@ -1,7 +1,7 @@
 """Turbopuffer Handshake to export Chonkie's Chunks into a Turbopuffer database."""
 import importlib.util as importutil
 import os
-from typing import TYPE_CHECKING, Any, Literal, Optional, Sequence, Union
+from typing import TYPE_CHECKING, Any, List, Literal, Optional, Union
 from uuid import NAMESPACE_OID, uuid5
 
 from chonkie.embeddings import AutoEmbeddings, BaseEmbeddings
@@ -85,7 +85,7 @@ class TurbopufferHandshake(BaseHandshake):
             )
         )
 
-    def write(self, chunks: Union[Chunk, Sequence[Chunk]]) -> None:
+    def write(self, chunks: Union[Chunk, List[Chunk]]) -> None:
         """Write the chunks to the Turbopuffer database."""
         if isinstance(chunks, Chunk):
             chunks = [chunks]

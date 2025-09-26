@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from chonkie import Chunk, Context
+from chonkie import Chunk
 
 try:
     import numpy as np  # noqa: F401
@@ -13,39 +13,13 @@ except ImportError:
     NUMPY_AVAILABLE = False
 
 
-def test_context_init():
-    """Test Context initialization."""
-    context = Context(text="test", token_count=1)
-    assert context.text == "test"
-    assert context.token_count == 1
-    assert context.start_index is None
-    assert context.end_index is None
+# Context tests removed - context is now a simple string field in Chunk
 
 
-def test_context_raises_error():
-    """Test Context raises error for illegal field values."""
-    with pytest.raises(ValueError):
-        Context(text=9000, token_count=1)
-
-    with pytest.raises(ValueError):
-        Context(text="test", token_count=-1, start_index="0")
-
-    with pytest.raises(TypeError):
-        Context(text="test", token_count="1")
-
-    with pytest.raises(ValueError):
-        Context(text="test", token_count=1, start_index=10, end_index=5)
+# Context error tests removed - context is now a simple string field
 
 
-def test_context_serialization():
-    """Test Context serialization/deserialization."""
-    context = Context(text="test", token_count=1, start_index=0, end_index=4)
-    context_dict = context.to_dict()
-    restored = Context.from_dict(context_dict)
-    assert context.text == restored.text
-    assert context.token_count == restored.token_count
-    assert context.start_index == restored.start_index
-    assert context.end_index == restored.end_index
+# Context serialization tests removed - context is now a simple string field
 
 
 # Chunk Tests
@@ -61,32 +35,30 @@ def test_chunk_init():
 
 def test_chunk_with_context():
     """Test Chunk with context."""
-    context = Context(text="context", token_count=1)
     chunk = Chunk(
         text="test chunk",
         start_index=0,
         end_index=10,
         token_count=2,
-        context=context,
+        context="context string",
     )
-    assert chunk.context == context
+    assert chunk.context == "context string"
 
 
 def test_chunk_serialization():
     """Test Chunk serialization/deserialization."""
-    context = Context(text="context", token_count=1)
     chunk = Chunk(
         text="test chunk",
         start_index=0,
         end_index=10,
         token_count=2,
-        context=context,
+        context="context string",
     )
     chunk_dict = chunk.to_dict()
     restored = Chunk.from_dict(chunk_dict)
     assert chunk.text == restored.text
     assert chunk.token_count == restored.token_count
-    assert chunk.context.text == restored.context.text
+    assert chunk.context == restored.context
 
 
 def test_chunk_with_embedding():

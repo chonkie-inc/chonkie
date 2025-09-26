@@ -279,7 +279,7 @@ class SentenceChunker(BaseChunker):
             token_count=token_count,
         )
 
-    def chunk(self, text: str) -> Sequence[Chunk]:
+    def chunk(self, text: str) -> List[Chunk]:
         """Split text into overlapping chunks based on sentences while respecting token limits.
 
         Args:
