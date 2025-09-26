@@ -3,7 +3,7 @@
 from .base import Chunk
 from .code import LanguageConfig, MergeRule, SplitRule
 from .document import Document
-from .markdown import MarkdownCode, MarkdownDocument, MarkdownTable
+from .markdown import MarkdownCode, MarkdownDocument, MarkdownImage, MarkdownTable
 from .recursive import RecursiveLevel, RecursiveRules
 from .sentence import Sentence
 
@@ -19,4 +19,5 @@ __all__ = [
     "MarkdownDocument",
     "MarkdownTable",
     "MarkdownCode",
+    "MarkdownImage",
 ]
