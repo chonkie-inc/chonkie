@@ -3,12 +3,12 @@
 import warnings
 from abc import ABC, abstractmethod
 from multiprocessing import Pool, cpu_count
-from typing import Any, Callable, Sequence, Union
+from typing import Any, Callable, List, Sequence, Union
 
 from tqdm import tqdm
 
 from chonkie.tokenizer import Tokenizer
-from chonkie.types import Chunk
+from chonkie.types import Chunk, Document
 
 
 class BaseChunker(ABC):
@@ -32,7 +32,7 @@ class BaseChunker(ABC):
 
     def __call__(
         self, text: Union[str, Sequence[str]], show_progress: bool = True
-    ) -> Union[Sequence[Chunk], Sequence[Sequence[Chunk]]]:
+    ) -> Union[List[Chunk], List[List[Chunk]]]:
         """Call the chunker with the given arguments.
 
         Args:
@@ -64,7 +64,7 @@ class BaseChunker(ABC):
 
     def _sequential_batch_processing(
         self, texts: Sequence[str], show_progress: bool = True
-    ) -> Sequence[Sequence[Chunk]]:
+    ) -> List[List[Chunk]]:
         """Process a batch of texts sequentially."""
         results = [
             self.chunk(t)
@@ -81,7 +81,7 @@ class BaseChunker(ABC):
 
     def _parallel_batch_processing(
         self, texts: Sequence[str], show_progress: bool = True
-    ) -> Sequence[Sequence[Chunk]]:
+    ) -> List[List[Chunk]]:
         """Process a batch of texts using multiprocessing."""
         num_workers = self._get_optimal_worker_count()
         total = len(texts)
@@ -103,21 +103,21 @@ class BaseChunker(ABC):
             return results
 
     @abstractmethod
-    def chunk(self, text: str) -> Sequence[Chunk]:
+    def chunk(self, text: str) -> List[Chunk]:
         """Chunk the given text.
 
         Args:
             text (str): The text to chunk.
 
         Returns:
-            Sequence[Chunk]: A list of Chunks.
+            List[Chunk]: A list of Chunks.
 
         """
         pass
 
     def chunk_batch(
         self, texts: Sequence[str], show_progress: bool = True
-    ) -> Sequence[Sequence[Chunk]]:
+    ) -> List[List[Chunk]]:
         """Chunk a batch of texts.
 
         Args:
@@ -125,7 +125,7 @@ class BaseChunker(ABC):
             show_progress (bool): Whether to show progress.
 
         Returns:
-            Sequence[Sequence[Chunk]]: A list of lists of Chunks.
+            List[List[Chunk]]: A list of lists of Chunks.
 
         """
         # simple handles of empty and single text cases
@@ -139,3 +139,9 @@ class BaseChunker(ABC):
             return self._parallel_batch_processing(texts, show_progress)
         else:
             return self._sequential_batch_processing(texts, show_progress)
+    
+    def chunk_document(self, document: Document) -> Document: 
+        """Chunk a document."""
+        # Get the content from the document and chunk it
+        document.chunks = self.chunk(document.content)
+        return document

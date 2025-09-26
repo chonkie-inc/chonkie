@@ -8,7 +8,6 @@ from typing import (
     List,
     Literal,
     Optional,
-    Sequence,
     Union,
 )
 from uuid import NAMESPACE_OID, uuid5
@@ -162,7 +161,7 @@ class QdrantHandshake(BaseHandshake):
             "token_count": chunk.token_count,
         }
 
-    def _get_points(self, chunks: Union[Chunk, Sequence[Chunk]]) -> List["PointStruct"]:
+    def _get_points(self, chunks: Union[Chunk, List[Chunk]]) -> List["PointStruct"]:
         """Get the points from the chunks."""
         # Normalize input to always be a sequence
         if isinstance(chunks, Chunk):
@@ -179,7 +178,7 @@ class QdrantHandshake(BaseHandshake):
             )
         return points
 
-    def write(self, chunks: Union[Chunk, Sequence[Chunk]]) -> None:
+    def write(self, chunks: Union[Chunk, List[Chunk]]) -> None:
         """Write the chunks to the collection."""
         if isinstance(chunks, Chunk):
             chunks = [chunks]

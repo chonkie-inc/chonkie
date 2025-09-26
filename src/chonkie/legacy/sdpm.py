@@ -13,8 +13,8 @@ To use this legacy version:
 from typing import Any, Dict, List, Literal, Optional, Union
 
 from chonkie.embeddings import BaseEmbeddings
-from chonkie.legacy.semantic import SemanticChunk, SemanticChunker
-from chonkie.types import Sentence
+from chonkie.legacy.semantic import SemanticChunker
+from chonkie.types import Chunk, Sentence
 from chonkie.utils import Hubbie
 
 
@@ -213,7 +213,7 @@ class SDPMChunker(SemanticChunker):
 
         return merged_groups
 
-    def chunk(self, text: str) -> List[SemanticChunk]:
+    def chunk(self, text: str) -> List[Chunk]:
         """Split text into semantically coherent chunks using two-pass approach.
 
         First groups sentences by semantic similarity, then splits groups to respect

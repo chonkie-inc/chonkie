@@ -11,6 +11,7 @@ import pandas as pd
 import pytest
 
 from chonkie.chef import BaseChef, TableChef, TextChef
+from chonkie.types import Document
 
 
 class ConcreteChef(BaseChef):
@@ -158,14 +159,14 @@ class TestTextChef:
         """Test processing a single file with string path."""
         with patch("builtins.open", mock_open(read_data=sample_text)):
             result = text_chef.process("test_file.txt")
-            assert result == sample_text
+            assert result.content == sample_text
     
     def test_process_single_file_path_object(self, text_chef, sample_text):
         """Test processing a single file with Path object."""
         path_obj = Path("test_file.txt")
         with patch("builtins.open", mock_open(read_data=sample_text)):
             result = text_chef.process(path_obj)
-            assert result == sample_text
+            assert result.content == sample_text
     
     def test_process_batch_string_paths(self, text_chef, sample_text):
         """Test processing multiple files with string paths."""
@@ -173,7 +174,7 @@ class TestTextChef:
         with patch("builtins.open", mock_open(read_data=sample_text)):
             results = text_chef.process_batch(paths)
             assert len(results) == 3
-            assert all(result == sample_text for result in results)
+            assert all(result.content == sample_text for result in results)
     
     def test_process_batch_path_objects(self, text_chef, sample_text):
         """Test processing multiple files with Path objects."""
@@ -181,7 +182,7 @@ class TestTextChef:
         with patch("builtins.open", mock_open(read_data=sample_text)):
             results = text_chef.process_batch(paths)
             assert len(results) == 3
-            assert all(result == sample_text for result in results)
+            assert all(result.content == sample_text for result in results)
     
     def test_process_batch_mixed_path_types(self, text_chef, sample_text):
         """Test processing multiple files with mixed path types."""
@@ -189,22 +190,22 @@ class TestTextChef:
         with patch("builtins.open", mock_open(read_data=sample_text)):
             results = text_chef.process_batch(paths)
             assert len(results) == 3
-            assert all(result == sample_text for result in results)
+            assert all(result.content == sample_text for result in results)
     
     def test_call_single_string_path(self, text_chef, sample_text):
         """Test __call__ method with single string path."""
         with patch("builtins.open", mock_open(read_data=sample_text)):
             result = text_chef("test_file.txt")
-            assert result == sample_text
-            assert isinstance(result, str)
+            assert result.content == sample_text
+            assert isinstance(result, Document)
     
     def test_call_single_path_object(self, text_chef, sample_text):
         """Test __call__ method with single Path object."""
         path_obj = Path("test_file.txt")
         with patch("builtins.open", mock_open(read_data=sample_text)):
             result = text_chef(path_obj)
-            assert result == sample_text
-            assert isinstance(result, str)
+            assert result.content == sample_text
+            assert isinstance(result, Document)
     
     def test_call_list_of_strings(self, text_chef, sample_text):
         """Test __call__ method with list of string paths."""
@@ -213,7 +214,7 @@ class TestTextChef:
             results = text_chef(paths)
             assert isinstance(results, list)
             assert len(results) == 2
-            assert all(result == sample_text for result in results)
+            assert all(result.content == sample_text for result in results)
     
     def test_call_list_of_path_objects(self, text_chef, sample_text):
         """Test __call__ method with list of Path objects."""
@@ -222,7 +223,7 @@ class TestTextChef:
             results = text_chef(paths)
             assert isinstance(results, list)
             assert len(results) == 2
-            assert all(result == sample_text for result in results)
+            assert all(result.content == sample_text for result in results)
     
     def test_call_tuple_of_paths(self, text_chef, sample_text):
         """Test __call__ method with tuple of paths."""
@@ -231,7 +232,7 @@ class TestTextChef:
             results = text_chef(paths)
             assert isinstance(results, list)
             assert len(results) == 2
-            assert all(result == sample_text for result in results)
+            assert all(result.content == sample_text for result in results)
     
     def test_call_invalid_type_raises_error(self, text_chef):
         """Test __call__ method with invalid input type raises TypeError."""
@@ -259,14 +260,14 @@ class TestTextChef:
         """Test processing empty file."""
         with patch("builtins.open", mock_open(read_data="")):
             result = text_chef.process("empty_file.txt")
-            assert result == ""
+            assert result.content == ""
     
     def test_file_with_unicode_content(self, text_chef):
         """Test processing file with unicode content."""
         unicode_text = "Hello 世界! 🌍 Café naïve résumé"
         with patch("builtins.open", mock_open(read_data=unicode_text)):
             result = text_chef.process("unicode_file.txt")
-            assert result == unicode_text
+            assert result.content == unicode_text
     
     def test_repr_method(self, text_chef):
         """Test __repr__ method returns correct string."""
@@ -277,7 +278,7 @@ class TestTextChef:
         mock_file = mock_open(read_data=sample_text)
         with patch("builtins.open", mock_file):
             text_chef.process("test_file.txt")
-            mock_file.assert_called_once_with("test_file.txt", "r")
+            mock_file.assert_called_once_with("test_file.txt", "r", encoding="utf-8")
     
 
 
