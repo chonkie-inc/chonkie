@@ -165,10 +165,9 @@ class TurbopufferHandshake(BaseHandshake):
             score = 1.0 - distance if distance is not None else None
             
             # The rest of the keys in `match` are the attributes we stored
-            match_data = {
+            matches.append({
                 "score": score,
                 **match,
-            }
-            matches.append(match_data)
+            })
             
         return matches
