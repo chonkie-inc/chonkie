@@ -142,6 +142,21 @@ class BaseChunker(ABC):
     
     def chunk_document(self, document: Document) -> Document: 
         """Chunk a document."""
-        # Get the content from the document and chunk it
-        document.chunks = self.chunk(document.content)
+        # If the document has chunks already, then we need to re-chunk the content
+        if document.chunks:
+            chunks: List[Chunk] = []
+            for old_chunk in document.chunks:
+                new_chunks: List[Chunk] = self.chunk(old_chunk.text)
+                for new_chunk in new_chunks:
+                    chunks.append(
+                        Chunk(
+                            text=new_chunk.text, 
+                            start_index=new_chunk.start_index + old_chunk.start_index,
+                            end_index=new_chunk.end_index + old_chunk.start_index,
+                            token_count=new_chunk.token_count,
+                        )
+                    )
+            document.chunks = chunks
+        else:
+            document.chunks = self.chunk(document.content)
         return document
