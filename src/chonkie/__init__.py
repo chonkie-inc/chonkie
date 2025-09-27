@@ -5,8 +5,8 @@
 
 from .chef import (
     BaseChef,
-    TableChef,
     MarkdownChef,
+    TableChef,
     TextChef,
 )
 from .chunker import (
