@@ -31,6 +31,7 @@ class MarkdownImage:
     content: str = field(default_factory=str)
     start_index: int = field(default_factory=int)
     end_index: int = field(default_factory=int)
+    link: Optional[str] = field(default=None)
 
 @dataclass
 class MarkdownDocument(Document):
