@@ -1,0 +1,19 @@
+---
+title: TextChef
+sidebarTitle: TextChef
+icon: file
+iconType: solid
+description: Process plain text files into Document objects.
+---
+
+The `TextChef` processes plain text files and returns structured `Document` objects for further processing.
+
+## Usage
+
+```python
+from chonkie import TextChef
+
+chef = TextChef()
+doc = chef.process("example.txt")
+print(doc.content)
+```
