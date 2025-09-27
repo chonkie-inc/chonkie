@@ -99,7 +99,7 @@ chunks = chunker.chunk("Chonkie chunks, turbopuffer puffs!")
 
 # Generate an embedding from a chunk's text to use for the search
 if chunks:
-    search_embedding = handshake.embedding_model.embed(chunks.text).tolist()
+        search_embedding = handshake.embedding_model.embed(chunks[0].text).tolist()
 
     # Search the handshake using the generated embedding
     results = handshake.search(
