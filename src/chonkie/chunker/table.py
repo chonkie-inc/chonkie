@@ -67,7 +67,6 @@ class TableChunker(BaseChunker):
                 current_size += row_size
 
         # final chunk
-        if len(current_chunk) > 2:
-            chunks.append("\n".join(current_chunk))
+        chunks.append("\n".join(current_chunk))
 
         return [Chunk(text=chunk) for chunk in chunks]
