@@ -17,6 +17,7 @@ from .chunker import (
     SemanticChunker,
     SentenceChunker,
     SlumberChunker,
+    TableChunker,
     TokenChunker,
 )
 from .cloud import (
