@@ -1,7 +1,16 @@
 """Turbopuffer Handshake to export Chonkie's Chunks into a Turbopuffer database."""
 import importlib.util as importutil
 import os
-from typing import TYPE_CHECKING, Any, List, Literal, Optional, Union
+from typing import (
+    TYPE_CHECKING,
+    Dict, 
+    Any, 
+    List, 
+    Literal, 
+    Optional,
+    Sequence, 
+    Union,
+)
 from uuid import NAMESPACE_OID, uuid5
 
 from chonkie.embeddings import AutoEmbeddings, BaseEmbeddings
@@ -115,3 +124,51 @@ class TurbopufferHandshake(BaseHandshake):
     def __repr__(self) -> str:
         """Return the representation of the Turbopuffer Handshake."""
         return f"TurbopufferHandshake(namespace={self.namespace.name})"  # type: ignore[attr-defined]
+
+    def search(
+        self,
+        query: Optional[str] = None,
+        embedding: Optional[List[float]] = None,
+        limit: int = 5,
+    ) -> List[Dict[str, Any]]:
+        """Search the Turbopuffer namespace for similar chunks.
+
+        Args:
+            query: The query string to search for. If provided, `embedding` is ignored.
+            embedding: The embedding vector to search for.
+            limit: The maximum number of results to return.
+
+        Returns:
+            List[Dict[str, Any]]: A list of dictionaries containing the matching chunks and their metadata.
+
+        """
+        if query is None and embedding is None:
+            raise ValueError("Either 'query' or 'embedding' must be provided.")
+
+        if query:
+            query_embedding = self.embedding_model.embed(query).tolist()
+        else:
+            query_embedding = embedding
+
+        # Turbopuffer's query returns a generator of dictionaries
+        results = self.namespace.query(  # type: ignore[attr-defined]
+            vector=query_embedding,
+            top_k=limit,
+            # The distance metric is part of the query result
+            include_vectors=False, 
+        )
+
+        matches = []
+        for match in results:
+            # Turbopuffer's default is Cosine Distance. Similarity = 1 - Distance.
+            distance = match.pop("distance", None)
+            score = 1.0 - distance if distance is not None else None
+            
+            # The rest of the keys in `match` are the attributes we stored
+            match_data = {
+                "score": score,
+                **match,
+            }
+            matches.append(match_data)
+            
+        return matches
