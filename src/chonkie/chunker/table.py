@@ -6,7 +6,7 @@ from typing import Any, Callable, List, Union
 from typing_extensions import Tuple
 
 from chonkie.chunker.base import BaseChunker
-from chonkie.types import Chunk
+from chonkie.types import Chunk, Document, MarkdownDocument
 
 
 class TableChunker(BaseChunker):
@@ -118,7 +118,21 @@ class TableChunker(BaseChunker):
             chunks.append(chunk)
         
         return chunks
-
+    
+    def chunk_document(self, document: Document) -> Document:
+        """Chunk a document."""
+        if isinstance(document, MarkdownDocument) and document.tables:
+            for table in document.tables:
+                chunks = self.chunk(table.content)
+                for chunk in chunks:
+                    chunk.start_index = table.start_index + chunk.start_index
+                    chunk.end_index = table.start_index + chunk.end_index
+                document.chunks.extend(chunks)
+            document.chunks.sort(key=lambda x: x.start_index)
+        else: 
+            document.chunks = self.chunk(document.content)
+        return document
+    
     def __repr__(self) -> str:
         """Return a string representation of the TableChunker."""
         return f"TableChunker(tokenizer={self.tokenizer}, chunk_size={self.chunk_size})"
