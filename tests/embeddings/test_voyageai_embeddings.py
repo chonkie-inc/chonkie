@@ -29,7 +29,7 @@ class TestVoyageAIEmbeddingsInitialization:
         """Test initialization with default model."""
         with patch.dict(os.environ, {"VOYAGE_API_KEY": "test_key"}):
             embeddings = VoyageAIEmbeddings()
-            assert embeddings.model == "voyage-3"
+            assert embeddings.model == "voyage-3.5"
             assert embeddings.output_dimension == 1024
             assert embeddings._dimension == 1024
             assert embeddings._token_limit == 32000
@@ -39,21 +39,21 @@ class TestVoyageAIEmbeddingsInitialization:
     def test_initialization_with_custom_model(self) -> None:
         """Test initialization with custom model."""
         with patch.dict(os.environ, {"VOYAGE_API_KEY": "test_key"}):
-            embeddings = VoyageAIEmbeddings(model="voyage-3-large")
-            assert embeddings.model == "voyage-3-large"
+            embeddings = VoyageAIEmbeddings(model="voyage-3.5-lite")
+            assert embeddings.model == "voyage-3.5-lite"
             assert embeddings._dimension == 1024  # first in allowed dims
             assert embeddings._token_limit == 32000
 
     def test_initialization_with_api_key_parameter(self) -> None:
         """Test initialization with API key parameter."""
         embeddings = VoyageAIEmbeddings(api_key="test_key")
-        assert embeddings.model == "voyage-3"
+        assert embeddings.model == "voyage-3.5"
 
     def test_initialization_with_env_var_api_key(self) -> None:
         """Test initialization with environment variable API key."""
         with patch.dict(os.environ, {"VOYAGE_API_KEY": "env_test_key"}):
             embeddings = VoyageAIEmbeddings()
-            assert embeddings.model == "voyage-3"
+            assert embeddings.model == "voyage-3.5"
 
     def test_initialization_no_api_key_raises_error(self) -> None:
         """Test that initialization without API key raises ValueError."""
@@ -86,7 +86,7 @@ class TestVoyageAIEmbeddingsInitialization:
     def test_initialization_output_dimension_valid(self) -> None:
         """Test initialization with valid output dimension."""
         embeddings = VoyageAIEmbeddings(
-            model="voyage-3-large", 
+            model="voyage-3.5",
             api_key="test_key", 
             output_dimension=512
         )
@@ -96,7 +96,7 @@ class TestVoyageAIEmbeddingsInitialization:
         """Test that initialization with invalid output dimension raises ValueError."""
         with pytest.raises(ValueError, match="Invalid output_dimension=300"):
             VoyageAIEmbeddings(
-                model="voyage-3", 
+                model="voyage-law-2",
                 api_key="test_key", 
                 output_dimension=300
             )
@@ -116,7 +116,7 @@ class TestVoyageAIEmbeddingsProperties:
 
     def test_repr(self, embeddings: VoyageAIEmbeddings) -> None:
         """Test string representation."""
-        expected = "VoyageAIEmbeddings(model=voyage-3, dimension=1024)"
+        expected = "VoyageAIEmbeddings(model=voyage-3.5, dimension=1024)"
         assert repr(embeddings) == expected
 
     def test_get_tokenizer_or_token_counter(self, embeddings: VoyageAIEmbeddings) -> None:
@@ -147,14 +147,17 @@ class TestVoyageAIEmbeddingsProperties:
     def test_available_models_class_attribute(self) -> None:
         """Test that AVAILABLE_MODELS contains expected models."""
         expected_models = {
-            "voyage-3-large", "voyage-3", "voyage-3-lite", 
-            "voyage-code-3", "voyage-finance-2", "voyage-law-2", "voyage-code-2"
+            "voyage-3.5", "voyage-3.5-lite", "voyage-3-large", "voyage-code-3",
+            "voyage-finance-2", "voyage-law-2", "voyage-multilingual-2", "voyage-3",
+            "voyage-3-lite", "voyage-code-2", "voyage-large-2-instruct", "voyage-large-2",
+            "voyage-2", "voyage-lite-02-instruct", "voyage-02", "voyage-01",
+            "voyage-lite-01", "voyage-lite-01-instruct"
         }
         assert set(VoyageAIEmbeddings.AVAILABLE_MODELS.keys()) == expected_models
 
     def test_default_model_class_attribute(self) -> None:
         """Test DEFAULT_MODEL class attribute."""
-        assert VoyageAIEmbeddings.DEFAULT_MODEL == "voyage-3"
+        assert VoyageAIEmbeddings.DEFAULT_MODEL == "voyage-3.5"
 
 
 class TestVoyageAIEmbeddingsAPIMocking:
@@ -194,7 +197,7 @@ class TestVoyageAIEmbeddingsAPIMocking:
             
             embeddings._client.embed.assert_called_once_with(
                 texts=["Test text"],
-                model="voyage-3",
+                model="voyage-3.5",
                 input_type=None,
                 truncation=True,
                 output_dimension=1024
@@ -211,7 +214,7 @@ class TestVoyageAIEmbeddingsAPIMocking:
             
             embeddings._client.embed.assert_called_once_with(
                 texts=["Test query"],
-                model="voyage-3",
+                model="voyage-3.5",
                 input_type="query",
                 truncation=True,
                 output_dimension=1024
@@ -409,7 +412,7 @@ class TestVoyageAIEmbeddingsErrorHandling:
     def test_tokenizer_initialization_error(self) -> None:
         """Test error handling when tokenizer initialization fails."""
         with patch('tokenizers.Tokenizer.from_pretrained', side_effect=Exception("Tokenizer error")):
-            with pytest.raises(ValueError, match="Failed to initialize tokenizer for model voyage-3: Tokenizer error"):
+            with pytest.raises(ValueError, match="Failed to initialize tokenizer for model voyage-3.5: Tokenizer error"):
                 VoyageAIEmbeddings(api_key="test_key")
 
     def test_import_dependencies_missing_packages(self) -> None:
@@ -533,13 +536,14 @@ class TestVoyageAIEmbeddingsEdgeCases:
     def test_different_output_dimensions(self) -> None:
         """Test initialization with different valid output dimensions."""
         # Test voyage-3-large which supports multiple dimensions
-        for dim in [256, 512, 1024, 2048]:
-            embeddings = VoyageAIEmbeddings(
-                model="voyage-3-large", 
-                api_key="test_key", 
-                output_dimension=dim
-            )
-            assert embeddings.output_dimension == dim
+        for model_name in ["voyage-3-large", "voyage-3.5", "voyage-3.5-lite"]:
+            for dim in [256, 512, 1024, 2048]:
+                embeddings = VoyageAIEmbeddings(
+                    model=model_name,
+                    api_key="test_key",
+                    output_dimension=dim
+                )
+                assert embeddings.output_dimension == dim
 
     def test_truncation_disabled(self, embeddings: VoyageAIEmbeddings) -> None:
         """Test behavior when truncation is disabled."""
