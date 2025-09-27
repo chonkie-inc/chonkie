@@ -35,7 +35,7 @@ class MarkdownChef(BaseChef):
     self.tokenizer = tokenizer if isinstance(tokenizer, Tokenizer) else Tokenizer(tokenizer)
     self.code_pattern = re.compile(r"```([a-zA-Z0-9+\-_]*)\n?(.*?)\n?```", re.DOTALL)
     self.table_pattern = re.compile(r"(\|.*?\n\|[-: ]+\|.*?\n(?:\|.*?\n)*)")
-    self.image_pattern = re.compile(r"!\[([^\]]*)\]\(([^)]+)\)")
+    self.image_pattern = re.compile(r"(\[)?!\[([^\]]*)\]\(([^)]+)\)(?(1)\]\(([^)]+)\)|)")
 
   def prepare_tables(self, markdown: str) -> List[MarkdownTable]:
     """Prepare the tables for the MarkdownDocument.
@@ -97,9 +97,9 @@ class MarkdownChef(BaseChef):
     images: List[MarkdownImage] = []
 
     for match in self.image_pattern.finditer(markdown):
-        alt_text = match.group(1)
-        image_src = match.group(2)
-
+        # Extract the match groups
+        _, alt_text, image_src, link_url = match.groups()
+        
         # Determine the key for the image
         if alt_text:
             key = alt_text
@@ -119,7 +119,13 @@ class MarkdownChef(BaseChef):
             key = f"{original_key}_{counter}"
             counter += 1
 
-        images.append(MarkdownImage(alias=key, content=image_src, start_index=match.start(), end_index=match.end()))
+        images.append(MarkdownImage(
+            alias=key,
+            content=image_src,
+            start_index=match.start(),
+            end_index=match.end(),
+            link=link_url
+        ))
 
     return images
 
@@ -168,8 +174,11 @@ class MarkdownChef(BaseChef):
       start_index = index[0]
       end_index = index[1]
       text = markdown[start_index:end_index]
-      token_count = self.tokenizer.count_tokens(text)
-      chunks.append(Chunk(text=text, start_index=start_index, end_index=end_index, token_count=token_count))
+
+      # Only create chunk if it contains meaningful content (not just whitespace)
+      if text.strip():
+        token_count = self.tokenizer.count_tokens(text)
+        chunks.append(Chunk(text=text, start_index=start_index, end_index=end_index, token_count=token_count))
 
     return chunks
 
