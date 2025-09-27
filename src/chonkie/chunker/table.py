@@ -11,7 +11,7 @@ class TableChunker(BaseChunker):
 
     def __init__(
         self,
-        tokenizer: Union[str, Callable[[str], int], Any] = "minishlab/potion-base-32M",
+        tokenizer: Union[str, Callable[[str], int], Any] = "character",
         chunk_size: int = 2048,
     ) -> None:
         """Initialize the TableChunker with configuration parameters.
@@ -23,6 +23,10 @@ class TableChunker(BaseChunker):
         """
         if isinstance(tokenizer, str):
             super().__init__(tokenizer)
+        
+        if chunk_size <= 0:
+            raise ValueError("Chunk size must be greater than 0.")
+        
         self.chunk_size = chunk_size
 
     def chunk(self, table: str) -> List[Chunk]:
@@ -35,6 +39,12 @@ class TableChunker(BaseChunker):
             List[MarkdownTable]: A list of MarkdownTable chunks.
 
         """
+        # Check if the table size is smaller than the chunk size
+        table_token_count = self.tokenizer.count_tokens(table)
+        if table_token_count <= self.chunk_size:
+            return [Chunk(text=table, token_count=table_token_count, start_index=0, end_index=len(table))]
+        
+        # If the table is larger than the chunk size, we need to split it into smaller chunks
         rows = table.strip().split("\n")
         if len(rows) < 2:
             raise ValueError("Table must have at least a header and one row.")
@@ -69,4 +79,17 @@ class TableChunker(BaseChunker):
         # final chunk
         chunks.append("\n".join(current_chunk))
 
-        return [Chunk(text=chunk) for chunk in chunks]
+        # Convert the chunks into chunk objects
+        current_index = 0
+        final_chunks = []
+        for chunk in chunks:
+            final_chunks.append(
+                Chunk(
+                    text=chunk, 
+                    token_count=self.tokenizer.count_tokens(chunk),
+                    start_index=current_index,
+                    end_index=current_index + len(chunk)
+                )
+            )
+            current_index += len(chunk)
+        return final_chunks
