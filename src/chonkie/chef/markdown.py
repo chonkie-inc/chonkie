@@ -35,7 +35,7 @@ class MarkdownChef(BaseChef):
     self.tokenizer = tokenizer if isinstance(tokenizer, Tokenizer) else Tokenizer(tokenizer)
     self.code_pattern = re.compile(r"```([a-zA-Z0-9+\-_]*)\n?(.*?)\n?```", re.DOTALL)
     self.table_pattern = re.compile(r"(\|.*?\n\|[-: ]+\|.*?\n(?:\|.*?\n)*)")
-    self.image_pattern = re.compile(r"(\[)?!\[([^\]]*)\]\(([^)]+)\)(?:\]\(([^)]+)\))?")
+    self.image_pattern = re.compile(r"(\[)?!\[([^\]]*)\]\(([^)]+)\)(?(1)\]\(([^)]+)\)|)")
 
   def prepare_tables(self, markdown: str) -> List[MarkdownTable]:
     """Prepare the tables for the MarkdownDocument.
@@ -97,11 +97,9 @@ class MarkdownChef(BaseChef):
     images: List[MarkdownImage] = []
 
     for match in self.image_pattern.finditer(markdown):
-        match.group(1)  # '[' for wrapped images, None for regular
-        alt_text = match.group(2)         # Alt text
-        image_src = match.group(3)        # Image URL
-        link_url = match.group(4)         # Link URL (None if not wrapped)
-
+        # Extract the match groups
+        _, alt_text, image_src, link_url = match.groups()
+        
         # Determine the key for the image
         if alt_text:
             key = alt_text
