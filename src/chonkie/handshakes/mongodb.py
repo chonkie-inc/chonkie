@@ -8,7 +8,6 @@ from typing import (
     List,
     Literal,
     Optional,
-    Sequence,
     Union,
 )
 from uuid import NAMESPACE_OID, uuid5
@@ -152,7 +151,7 @@ class MongoDBHandshake(BaseHandshake):
             "embedding": embedding,
         }
 
-    def write(self, chunks: Union[Chunk, Sequence[Chunk]]) -> None:
+    def write(self, chunks: Union[Chunk, List[Chunk]]) -> None:
         """Write chunks to the MongoDB collection."""
         if isinstance(chunks, Chunk):
             chunks = [chunks]

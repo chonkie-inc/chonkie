@@ -274,9 +274,9 @@ class TestSlumberChunkerInternalMethods:
         chunker = SlumberChunker(genie=mock_genie)
         
         chunks = [
-            Chunk("First chunk", 0, 11, 2),
-            Chunk("Second chunk\nwith newline", 11, 35, 4),
-            Chunk("Third chunk", 35, 46, 2)
+            Chunk(text="First chunk", start_index=0, end_index=11, token_count=2),
+            Chunk(text="Second chunk\nwith newline", start_index=11, end_index=35, token_count=4),
+            Chunk(text="Third chunk", start_index=35, end_index=46, token_count=2)
         ]
         
         prepared = chunker._prepare_splits(chunks)
@@ -291,9 +291,9 @@ class TestSlumberChunkerInternalMethods:
         chunker = SlumberChunker(genie=mock_genie)
         
         chunks = [
-            Chunk("First", 0, 5, 1),
-            Chunk("Second", 5, 11, 2),
-            Chunk("Third", 11, 16, 3)
+            Chunk(text="First", start_index=0, end_index=5, token_count=1),
+            Chunk(text="Second", start_index=5, end_index=11, token_count=2),
+            Chunk(text="Third", start_index=11, end_index=16, token_count=3)
         ]
         
         cumulative = chunker._get_cumulative_token_counts(chunks)

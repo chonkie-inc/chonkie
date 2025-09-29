@@ -5,6 +5,7 @@
 
 from .chef import (
     BaseChef,
+    MarkdownChef,
     TextChef,
 )
 from .chunker import (
@@ -16,6 +17,7 @@ from .chunker import (
     SemanticChunker,
     SentenceChunker,
     SlumberChunker,
+    TableChunker,
     TokenChunker,
 )
 from .cloud import (
@@ -69,8 +71,11 @@ from .tokenizer import (
 )
 from .types import (
     Chunk,
-    Context,
+    Document,
     LanguageConfig,
+    MarkdownCode,
+    MarkdownDocument,
+    MarkdownTable,
     MergeRule,
     RecursiveLevel,
     RecursiveRules,
@@ -83,6 +88,6 @@ from .utils import (
 )
 
 # This hippo grows with every release 🦛✨~
-__version__ = "1.3.0"
+__version__ = "1.3.1"
 __name__ = "chonkie"
 __author__ = "🦛 Chonkie Inc"

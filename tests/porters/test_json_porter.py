@@ -8,7 +8,7 @@ from typing import Generator
 
 import pytest
 
-from chonkie import Chunk, Context
+from chonkie import Chunk
 from chonkie.porters.json import JSONPorter
 
 
@@ -40,23 +40,20 @@ def sample_chunks() -> list[Chunk]:
 @pytest.fixture
 def chunks_with_context() -> list[Chunk]:
     """Create chunks with context for testing."""
-    context1 = Context(text="Context for chunk 1", token_count=4)
-    context2 = Context(text="Context for chunk 2", token_count=4)
-    
     return [
         Chunk(
             text="First chunk with context.",
             start_index=0,
             end_index=25,
             token_count=5,
-            context=context1,
+            context="Context for chunk 1",
         ),
         Chunk(
             text="Second chunk with context.",
             start_index=25,
             end_index=51,
             token_count=5,
-            context=context2,
+            context="Context for chunk 2",
         ),
     ]
 
@@ -155,8 +152,7 @@ def test_json_porter_with_context(chunks_with_context: list[Chunk], temp_dir: st
     # Verify context is included
     for i, chunk_data in enumerate(data):
         assert "context" in chunk_data
-        assert chunk_data["context"]["text"] == chunks_with_context[i].context.text
-        assert chunk_data["context"]["token_count"] == chunks_with_context[i].context.token_count
+        assert chunk_data["context"] == chunks_with_context[i].context
 
 
 def test_json_porter_call_method(sample_chunks: list[Chunk], temp_dir: str) -> None:

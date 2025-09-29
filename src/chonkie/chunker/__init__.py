@@ -8,6 +8,7 @@ from .recursive import RecursiveChunker
 from .semantic import SemanticChunker
 from .sentence import SentenceChunker
 from .slumber import SlumberChunker
+from .table import TableChunker
 from .token import TokenChunker
 
 __all__ = [
@@ -19,5 +20,6 @@ __all__ = [
     "LateChunker",
     "CodeChunker",
     "SlumberChunker",
+    "TableChunker",
     "NeuralChunker",
 ]

@@ -171,7 +171,7 @@ class ChromaHandshake(BaseHandshake):
         }
 
 
-    def write(self, chunks: Union[Chunk, Sequence[Chunk]]) -> None:
+    def write(self, chunks: Union[Chunk, List[Chunk]]) -> None:
         """Write the Chunks to the Chroma collection."""
         if isinstance(chunks, Chunk):
             chunks = [chunks]

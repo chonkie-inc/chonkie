@@ -4,7 +4,7 @@ This module provides a TokenChunker class for splitting text into chunks of a sp
 
 """
 
-from typing import Any, Generator, List, Sequence, Union
+from typing import Any, Callable, Generator, List, Sequence, Union
 
 from tqdm import trange
 
@@ -24,7 +24,7 @@ class TokenChunker(BaseChunker):
 
     def __init__(
         self,
-        tokenizer: Union[str, Any] = "character",
+        tokenizer: Union[str, Callable[[str], int], Any] = "character",
         chunk_size: int = 2048,
         chunk_overlap: Union[int, float] = 0,
     ) -> None:
@@ -60,7 +60,7 @@ class TokenChunker(BaseChunker):
         chunk_texts: Sequence[str],
         token_groups: List[List[int]],
         token_counts: List[int],
-    ) -> Sequence[Chunk]:
+    ) -> List[Chunk]:
         """Create chunks from a list of texts."""
         # Find the overlap lengths for index calculation
         if self.chunk_overlap > 0:
@@ -106,7 +106,7 @@ class TokenChunker(BaseChunker):
             if end == len(tokens):
                 break
 
-    def chunk(self, text: str) -> Sequence[Chunk]:
+    def chunk(self, text: str) -> List[Chunk]:
         """Split text into overlapping chunks of specified token size.
 
         Args:
@@ -134,7 +134,7 @@ class TokenChunker(BaseChunker):
 
         return chunks
 
-    def _process_batch(self, texts: List[str]) -> Sequence[Sequence[Chunk]]:
+    def _process_batch(self, texts: List[str]) -> List[List[Chunk]]:
         """Process a batch of texts."""
         # encode the texts into tokens in a batch
         tokens_list = self.tokenizer.encode_batch(texts)
@@ -165,7 +165,7 @@ class TokenChunker(BaseChunker):
         texts: List[str],
         batch_size: int = 1,
         show_progress_bar: bool = True,
-    ) -> Sequence[Sequence[Chunk]]:
+    ) -> List[List[Chunk]]:
         """Split a batch of texts into their respective chunks.
 
         Args:
@@ -197,7 +197,7 @@ class TokenChunker(BaseChunker):
         text: Union[str, List[str]],
         batch_size: int = 1,
         show_progress_bar: bool = True,
-    ) -> Union[Sequence[Chunk], Sequence[Sequence[Chunk]]]:
+    ) -> Union[List[Chunk], List[List[Chunk]]]:
         """Make the TokenChunker callable directly.
 
         Args:
