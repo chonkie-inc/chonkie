@@ -19,8 +19,11 @@ class TableChef(BaseChef):
         self.table_pattern = re.compile(r"(\|.*?\n(?:\|[-: ]+\|.*?\n)?(?:\|.*?\n)+)")
 
     def _lazy_import_pandas(self) -> None:
-        global pd
-        import pandas as pd
+        try: 
+            global pd
+            import pandas as pd
+        except ImportError as e:
+            raise ImportError("Pandas is required to use TableChef. Please install it with `pip install chonkie[table]`.") from e
 
     def process(self, path: Union[str, Path]) -> Union[str, List[MarkdownTable], None]:
         """Process a CSV file and return a pandas DataFrame.
@@ -61,7 +64,7 @@ class TableChef(BaseChef):
 
     def __call__(
         self, path: Union[str, Path, List[str], List[Path]]
-    ) -> Union[str, List[MarkdownTable], None]:
+    ) -> Union[str, List[MarkdownTable], None, List[Union[str, List[MarkdownTable], None]]]:
         """Process one or more CSV files and return DataFrame(s)."""
         if isinstance(path, (list, tuple)):
             return self.process_batch(path)

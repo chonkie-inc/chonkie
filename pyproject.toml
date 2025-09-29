@@ -148,6 +148,7 @@ all = [
     "voyageai>=0.3.2",
     "vecs>=0.4.0",
     "pandas",
+    "tabulate",
 ]
 dev = [
     "datasets>=1.14.0",
@@ -161,6 +162,7 @@ dev = [
     "mypy>=1.11.0",
     "cython>=3.0.0",
     "pandas",
+    "tabulate",
 ]
 
 [tool.pytest.ini_options]
