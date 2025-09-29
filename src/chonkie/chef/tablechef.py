@@ -4,8 +4,8 @@ import re
 from pathlib import Path
 from typing import TYPE_CHECKING, List, Union
 
-from ..types import MarkdownTable
-from .base import BaseChef
+from chonkie.chef.base import BaseChef
+from chonkie.types import MarkdownTable
 
 if TYPE_CHECKING:
     import pandas as pd
@@ -47,7 +47,7 @@ class TableChef(BaseChef):
 
     def process_batch(
         self, paths: Union[List[str], List[Path]]
-    ) -> List["pd.DataFrame"]:
+    ) -> List[Union[str, List[MarkdownTable], None]]:
         """Process multiple CSV files and return a list of DataFrames.
 
         Args:
@@ -61,12 +61,7 @@ class TableChef(BaseChef):
 
     def __call__(
         self, path: Union[str, Path, List[str], List[Path]]
-    ) -> Union[
-        "pd.DataFrame",
-        List["pd.DataFrame"],
-        None,
-        List[Union["pd.DataFrame", List["pd.DataFrame"], None]],
-    ]:
+    ) -> Union[str, List[MarkdownTable], None]:
         """Process one or more CSV files and return DataFrame(s)."""
         if isinstance(path, (list, tuple)):
             return self.process_batch(path)

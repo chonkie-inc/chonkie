@@ -58,6 +58,9 @@ Documentation = "https://docs.chonkie.ai"
 hub = ["huggingface-hub>=0.24.0", "jsonschema>=4.23.0"]
 viz = ["rich>=13.0.0"]
 
+# Optional dependencies for table chef
+table  = ["pandas", "numpy","tabulate"]
+
 # Optional dependencies for tokenizers
 tokenizers = ["tokenizers>=0.16.0"]
 tiktoken = ["tiktoken>=0.5.0"]
