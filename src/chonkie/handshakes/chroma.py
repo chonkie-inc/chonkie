@@ -134,7 +134,7 @@ class ChromaHandshake(BaseHandshake):
         if collection_name != "random":
             self.collection_name = collection_name
             self.collection = self.client.get_or_create_collection(
-                self.collection_name, embedding_function=self.embedding_function
+                self.collection_name, embedding_function=self.embedding_function # type: ignore[arg-type]
             )  # type: ignore[arg-type]
         else:
             # Keep generating random collection names until we find one that doesn't exist
@@ -142,7 +142,7 @@ class ChromaHandshake(BaseHandshake):
                 self.collection_name = generate_random_collection_name()
                 try:
                     self.collection = self.client.create_collection(
-                        self.collection_name, embedding_function=self.embedding_function
+                        self.collection_name, embedding_function=self.embedding_function # type: ignore[arg-type]
                     )  # type: ignore[arg-type]
                     break
                 except Exception:
@@ -248,8 +248,13 @@ class ChromaHandshake(BaseHandshake):
         metadatas_list = results.get("metadatas")
         documents_list = results.get("documents")
 
-        # Ensure all required result lists are present
-        if not all((ids_list, distances_list, metadatas_list, documents_list)):
+        # Ensure all required result lists are present and not None
+        if (
+            ids_list is None
+            or distances_list is None
+            or metadatas_list is None
+            or documents_list is None
+        ):
             return []
 
         # We queried with one vector, so we get the first list of results
