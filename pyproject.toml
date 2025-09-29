@@ -59,7 +59,7 @@ hub = ["huggingface-hub>=0.24.0", "jsonschema>=4.23.0"]
 viz = ["rich>=13.0.0"]
 
 # Optional dependencies for table chef
-table  = ["pandas", "numpy","tabulate"]
+table  = ["pandas", "numpy","tabulate", "openpyxl"]
 
 # Optional dependencies for tokenizers
 tokenizers = ["tokenizers>=0.16.0"]
@@ -149,6 +149,7 @@ all = [
     "vecs>=0.4.0",
     "pandas",
     "tabulate",
+    "openpyxl"
 ]
 dev = [
     "datasets>=1.14.0",
@@ -163,6 +164,7 @@ dev = [
     "cython>=3.0.0",
     "pandas",
     "tabulate",
+    "openpyxl",
 ]
 
 [tool.pytest.ini_options]
