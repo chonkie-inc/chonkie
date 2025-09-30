@@ -230,7 +230,7 @@ class CohereEmbeddings(BaseEmbeddings):
         """Return the embedding dimension."""
         return self._dimension
 
-    def get_tokenizer_or_token_counter(self) -> "tokenizers.Tokenizer":
+    def get_tokenizer(self) -> "tokenizers.Tokenizer":
         """Return a tokenizers tokenizer object of the current model."""
         return self._tokenizer
 

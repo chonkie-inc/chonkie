@@ -64,7 +64,7 @@ class Model2VecEmbeddings(BaseEmbeddings):
             np.dot(u, v), np.linalg.norm(u) * np.linalg.norm(v), dtype=np.float32
         )
 
-    def get_tokenizer_or_token_counter(self) -> "Tokenizer":
+    def get_tokenizer(self) -> "Tokenizer":
         """Get the tokenizer or token counter for the model."""
         return self.model.tokenizer
 

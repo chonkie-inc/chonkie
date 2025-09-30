@@ -5,9 +5,11 @@ from typing import Any, Callable
 import pytest
 import tiktoken
 from tokenizers import Tokenizer as HFTokenizer
-from transformers import AutoTokenizer, PreTrainedTokenizerFast
+from transformers import AutoTokenizer as HFAutoTokenizer
+from transformers import PreTrainedTokenizerFast
 
 from chonkie.tokenizer import (
+    AutoTokenizer,
     CharacterTokenizer,
     Tokenizer,
     WordTokenizer,
@@ -81,7 +83,7 @@ def tiktoken_tokenizer() -> tiktoken.Encoding:
 @pytest.fixture
 def transformers_tokenizer() -> PreTrainedTokenizerFast:
     """Create a Transformer tokenizer fixture."""
-    tokenizer: PreTrainedTokenizerFast = AutoTokenizer.from_pretrained("gpt2")
+    tokenizer: PreTrainedTokenizerFast = HFAutoTokenizer.from_pretrained("gpt2")
     return tokenizer
 
 
@@ -102,7 +104,7 @@ def callable_tokenizer() -> Callable[[str], int]:
 def test_backend_selection(request: pytest.FixtureRequest, backend_str: str) -> None:
     """Test that the tokenizer correctly selects the backend based on given string."""
     try:
-        tokenizer = Tokenizer(request.getfixturevalue(backend_str))
+        tokenizer = AutoTokenizer(request.getfixturevalue(backend_str))
     except Exception as e:
         pytest.skip(f"Skipping test with backend {backend_str}: {str(e)}")
 
@@ -120,7 +122,7 @@ def test_backend_selection(request: pytest.FixtureRequest, backend_str: str) -> 
 def test_string_init(model_name: str) -> None:
     """Test initialization of tokenizer with different model strings."""
     try:
-        tokenizer = Tokenizer(model_name)
+        tokenizer = AutoTokenizer(model_name)
         assert tokenizer is not None
         assert tokenizer._backend in [
             "transformers",
@@ -146,7 +148,7 @@ def test_encode_decode(
     """Test encoding and decoding with different backends."""
     try:
         tokenizer = request.getfixturevalue(backend_str)
-        tokenizer = Tokenizer(tokenizer)
+        tokenizer = AutoTokenizer(tokenizer)
     except Exception as e:
         pytest.skip(f"Skipping test with backend {backend_str}: {str(e)}")
 
@@ -168,7 +170,7 @@ def test_encode_decode(
 def test_string_init_encode_decode(model_name: str) -> None:
     """Test basic functionality of string initialized models."""
     try:
-        tokenizer = Tokenizer(model_name)
+        tokenizer = AutoTokenizer(model_name)
         assert tokenizer is not None
         assert tokenizer._backend in [
             "transformers",
@@ -218,7 +220,7 @@ def test_token_counting(
     """Test token counting with different backends."""
     try:
         tokenizer = request.getfixturevalue(backend_str)
-        tokenizer = Tokenizer(tokenizer)
+        tokenizer = AutoTokenizer(tokenizer)
     except Exception as e:
         pytest.skip(f"Skipping test with backend {backend_str}: {str(e)}")
 
@@ -243,7 +245,7 @@ def test_batch_encode_decode(
     """Test batch encoding and decoding with different backends."""
     try:
         tokenizer = request.getfixturevalue(backend_str)
-        tokenizer = Tokenizer(tokenizer)
+        tokenizer = AutoTokenizer(tokenizer)
     except Exception as e:
         pytest.skip(f"Skipping test with backend {backend_str}: {str(e)}")
 
@@ -276,7 +278,7 @@ def test_batch_counting(
     """Test batch token counting with different backends."""
     try:
         tokenizer = request.getfixturevalue(backend_str)
-        tokenizer = Tokenizer(tokenizer)
+        tokenizer = AutoTokenizer(tokenizer)
     except Exception as e:
         pytest.skip(f"Skipping test with backend {backend_str}: {str(e)}")
 
@@ -296,14 +298,14 @@ def test_batch_counting(
 
 
 def test_tokenizer_raises_error_with_invalid_tokenizer() -> None:
-    """Test if Tokenizer raises ValueError when initialized with an invalid tokenizer."""
+    """Test if AutoTokenizer raises ValueError when initialized with an invalid tokenizer."""
     with pytest.raises(ValueError):
-        Tokenizer(object())
+        AutoTokenizer(object())
 
 
 def test_raises_correct_error() -> None:
     """Test if tokenizers raise expected errors."""
-    tokenizer = Tokenizer(lambda x: len(x))
+    tokenizer = AutoTokenizer(lambda x: len(x))
 
     assert tokenizer.count_tokens("test") == 4
 
@@ -688,18 +690,18 @@ def test_tokenizer_numeric_content() -> None:
 def test_tokenizer_backend_detection_accuracy() -> None:
     """Test that backend detection is accurate for different tokenizer types."""
     # Test character tokenizer backend detection
-    char_tokenizer = Tokenizer(CharacterTokenizer())
+    char_tokenizer = AutoTokenizer(CharacterTokenizer())
     assert char_tokenizer._backend == "chonkie"
     
     # Test word tokenizer backend detection
-    word_tokenizer = Tokenizer(WordTokenizer())
+    word_tokenizer = AutoTokenizer(WordTokenizer())
     assert word_tokenizer._backend == "chonkie"
 
 
 def test_tokenizer_with_non_standard_callable() -> None:
     """Test tokenizer with various callable types."""
     # Test with lambda
-    lambda_tokenizer = Tokenizer(lambda x: len(x.split()))
+    lambda_tokenizer = AutoTokenizer(lambda x: len(x.split()))
     assert lambda_tokenizer._backend == "callable"
     assert lambda_tokenizer.count_tokens("hello world") == 2
     
@@ -708,7 +710,7 @@ def test_tokenizer_with_non_standard_callable() -> None:
         def __call__(self, text: str) -> int:
             return len(text.split(","))
     
-    custom_tokenizer = Tokenizer(CustomTokenizer())
+    custom_tokenizer = AutoTokenizer(CustomTokenizer())
     assert custom_tokenizer._backend == "callable"
     assert custom_tokenizer.count_tokens("a,b,c") == 3
 
@@ -716,18 +718,18 @@ def test_tokenizer_with_non_standard_callable() -> None:
 def test_tokenizer_initialization_edge_cases() -> None:
     """Test tokenizer initialization with edge cases."""
     # Test initialization with character string
-    char_tokenizer = Tokenizer("character")
+    char_tokenizer = AutoTokenizer("character")
     assert isinstance(char_tokenizer.tokenizer, CharacterTokenizer)
     
     # Test initialization with word string
-    word_tokenizer = Tokenizer("word")
+    word_tokenizer = AutoTokenizer("word")
     assert isinstance(word_tokenizer.tokenizer, WordTokenizer)
 
 
 def test_tokenizer_batch_operations_consistency() -> None:
     """Test that batch operations are consistent with single operations."""
     try:
-        tokenizer = Tokenizer("gpt2")
+        tokenizer = AutoTokenizer("gpt2")
     except Exception:
         pytest.skip("GPT-2 tokenizer not available")
     
@@ -752,7 +754,7 @@ def test_tokenizer_batch_operations_consistency() -> None:
 
 def test_tokenizer_error_propagation() -> None:
     """Test that errors are properly propagated from underlying tokenizers."""
-    char_tokenizer = Tokenizer(CharacterTokenizer())
+    char_tokenizer = AutoTokenizer(CharacterTokenizer())
     
     # Test that decoding invalid tokens raises appropriate error
     with pytest.raises(ValueError):
@@ -763,7 +765,7 @@ def test_tokenizer_error_propagation() -> None:
 def test_tokenizer_invalid_initialization(invalid_input: Any) -> None:
     """Test tokenizer initialization with invalid inputs."""
     with pytest.raises(ValueError):
-        Tokenizer(invalid_input)
+        AutoTokenizer(invalid_input)
 
 
 ### Additional Coverage Tests ###
@@ -771,13 +773,13 @@ def test_tokenizer_invalid_initialization(invalid_input: Any) -> None:
 def test_tokenizer_fallback_warnings() -> None:
     """Test that appropriate warnings are issued during tokenizer fallbacks."""
     import warnings
-    
+
     # Test with a non-existent model to trigger fallbacks
     with warnings.catch_warnings(record=True) as w:
         warnings.simplefilter("always")
         try:
             # This should trigger warning fallbacks
-            Tokenizer("non_existent_model_12345")
+            AutoTokenizer("non_existent_model_12345")
         except ValueError:
             # Expected to fail eventually, but should generate warnings
             pass
@@ -791,7 +793,7 @@ def test_tokenizer_fallback_warnings() -> None:
 
 def test_tokenizer_decode_batch_callable_error() -> None:
     """Test that decode_batch raises NotImplementedError for callable tokenizers."""
-    callable_tokenizer = Tokenizer(lambda x: len(x.split()))
+    callable_tokenizer = AutoTokenizer(lambda x: len(x.split()))
     
     with pytest.raises(NotImplementedError, match="Batch decoding not implemented"):
         callable_tokenizer.decode_batch([[1, 2], [3, 4]])
@@ -799,7 +801,7 @@ def test_tokenizer_decode_batch_callable_error() -> None:
 
 def test_tokenizer_encode_batch_callable_error() -> None:
     """Test that encode_batch raises NotImplementedError for callable tokenizers."""
-    callable_tokenizer = Tokenizer(lambda x: len(x.split()))
+    callable_tokenizer = AutoTokenizer(lambda x: len(x.split()))
     
     with pytest.raises(NotImplementedError, match="Batch encoding not implemented"):
         callable_tokenizer.encode_batch(["hello world", "test"])
@@ -807,7 +809,7 @@ def test_tokenizer_encode_batch_callable_error() -> None:
 
 def test_base_tokenizer_abstract_methods() -> None:
     """Test that BaseTokenizer cannot be instantiated with missing abstract methods."""
-    from chonkie.tokenizer import BaseTokenizer
+    from chonkie.tokenizer import Tokenizer as BaseTokenizer
     
     # Create a class that doesn't implement abstract methods
     class IncompleteTokenizer(BaseTokenizer):
@@ -822,7 +824,7 @@ def test_base_tokenizer_abstract_methods() -> None:
 
 def test_base_tokenizer_not_implemented_errors() -> None:
     """Test BaseTokenizer raises NotImplementedError for abstract methods."""
-    from chonkie.tokenizer import BaseTokenizer
+    from chonkie.tokenizer import Tokenizer as BaseTokenizer
     
     # Create a partial implementation that only implements __repr__
     class PartialTokenizer(BaseTokenizer):
@@ -844,33 +846,33 @@ def test_base_tokenizer_not_implemented_errors() -> None:
     class TestTokenizer(BaseTokenizer):
         def __repr__(self) -> str:
             return "TestTokenizer"
-        
+
+        def tokenize(self, text: str):
+            return super().tokenize(text)  # Should raise NotImplementedError
+
         def encode(self, text: str):
             return super().encode(text)  # Should raise NotImplementedError
-        
+
         def decode(self, tokens):
             return super().decode(tokens)  # Should raise NotImplementedError
-        
-        def count_tokens(self, text: str):
-            return super().count_tokens(text)  # Should raise NotImplementedError
-    
+
     tokenizer = TestTokenizer()
-    
+
     # Test that each abstract method raises NotImplementedError
+    with pytest.raises(NotImplementedError, match="Tokenization not implemented"):
+        tokenizer.tokenize("test")
+
     with pytest.raises(NotImplementedError, match="Encoding not implemented"):
         tokenizer.encode("test")
-    
+
     with pytest.raises(NotImplementedError, match="Decoding not implemented"):
         tokenizer.decode([1, 2, 3])
-    
-    with pytest.raises(NotImplementedError, match="Counting tokens not implemented"):
-        tokenizer.count_tokens("test")
 
 
 def test_tokenizer_unsupported_backend_errors() -> None:
     """Test error handling for unsupported backends in various methods."""
     # Create a tokenizer and manually set an unsupported backend
-    tokenizer = Tokenizer(CharacterTokenizer())
+    tokenizer = AutoTokenizer(CharacterTokenizer())
     tokenizer._backend = "unsupported_backend"
     
     # Test that all methods raise ValueError for unsupported backend
@@ -923,7 +925,7 @@ def test_tokenizer_transformers_batch_decode_path() -> None:
     """Test the transformers-specific batch decode path."""
     try:
         # Try to create a transformers tokenizer
-        tokenizer = Tokenizer("gpt2")
+        tokenizer = AutoTokenizer("gpt2")
         if tokenizer._backend == "transformers":
             # Test batch decode specifically for transformers
             texts = ["hello", "world"]
@@ -940,7 +942,7 @@ def test_tokenizer_tiktoken_batch_operations() -> None:
     """Test tiktoken-specific batch operations."""
     try:
         import tiktoken
-        tokenizer = Tokenizer(tiktoken.get_encoding("gpt2"))
+        tokenizer = AutoTokenizer(tiktoken.get_encoding("gpt2"))
         if tokenizer._backend == "tiktoken":
             texts = ["hello", "world"]
             
@@ -966,7 +968,7 @@ def test_tokenizer_tokenizers_batch_operations() -> None:
     try:
         from tokenizers import Tokenizer as HFTokenizer
         hf_tokenizer = HFTokenizer.from_pretrained("gpt2")
-        tokenizer = Tokenizer(hf_tokenizer)
+        tokenizer = AutoTokenizer(hf_tokenizer)
         if tokenizer._backend == "tokenizers":
             texts = ["hello", "world"]
             
@@ -989,8 +991,8 @@ def test_tokenizer_tokenizers_batch_operations() -> None:
 
 def test_tokenizer_chonkie_backend_paths() -> None:
     """Test chonkie-specific backend paths in unified tokenizer."""
-    char_tokenizer = Tokenizer(CharacterTokenizer())
-    word_tokenizer = Tokenizer(WordTokenizer())
+    char_tokenizer = AutoTokenizer(CharacterTokenizer())
+    word_tokenizer = AutoTokenizer(WordTokenizer())
     
     # Test that chonkie backend is detected
     assert char_tokenizer._backend == "chonkie"
@@ -1030,12 +1032,12 @@ def test_tokenizer_error_paths_comprehensive() -> None:
     # Test invalid tokenizer creation with non-existent model
     with pytest.raises(ValueError, match="Tokenizer not found"):
         # This should try all backends and fail
-        Tokenizer("definitely_not_a_real_model_name_12345_xyz")
+        AutoTokenizer("definitely_not_a_real_model_name_12345_xyz")
 
 
 def test_decode_batch_fallthrough_error() -> None:
     """Test decode_batch fallthrough error path."""
-    tokenizer = Tokenizer(CharacterTokenizer())
+    tokenizer = AutoTokenizer(CharacterTokenizer())
     # Manually set an invalid backend to trigger the fallthrough error
     original_backend = tokenizer._backend
     tokenizer._backend = "unknown_backend"
@@ -1049,8 +1051,8 @@ def test_decode_batch_fallthrough_error() -> None:
 
 def test_tokenizer_decode_batch_chonkie_path() -> None:
     """Test decode_batch specifically for chonkie backend."""
-    char_tokenizer = Tokenizer(CharacterTokenizer())
-    word_tokenizer = Tokenizer(WordTokenizer())
+    char_tokenizer = AutoTokenizer(CharacterTokenizer())
+    word_tokenizer = AutoTokenizer(WordTokenizer())
     
     # Test chonkie backend decode_batch
     texts = ["hello", "world"]

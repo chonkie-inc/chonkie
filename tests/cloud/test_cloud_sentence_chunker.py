@@ -61,19 +61,19 @@ def test_cloud_sentence_chunker_initialization(mock_requests_get) -> None:
     # Check if the chunk_size < 0 raises an error
     with pytest.raises(ValueError):
         SentenceChunker(
-            tokenizer_or_token_counter="gpt2", chunk_size=-1, chunk_overlap=0, api_key="test_key"
+            tokenizer="gpt2", chunk_size=-1, chunk_overlap=0, api_key="test_key"
         )
 
     # Check if the chunk_overlap < 0 raises an error
     with pytest.raises(ValueError):
         SentenceChunker(
-            tokenizer_or_token_counter="gpt2", chunk_size=512, chunk_overlap=-1, api_key="test_key"
+            tokenizer="gpt2", chunk_size=512, chunk_overlap=-1, api_key="test_key"
         )
 
     # Check if the min_sentences_per_chunk < 1 raises an error
     with pytest.raises(ValueError):
         SentenceChunker(
-            tokenizer_or_token_counter="gpt2",
+            tokenizer="gpt2",
             chunk_size=512,
             chunk_overlap=0,
             min_sentences_per_chunk=-1,
@@ -83,7 +83,7 @@ def test_cloud_sentence_chunker_initialization(mock_requests_get) -> None:
     # Check if the min_characters_per_sentence < 1 raises an error
     with pytest.raises(ValueError):
         SentenceChunker(
-            tokenizer_or_token_counter="gpt2",
+            tokenizer="gpt2",
             chunk_size=512,
             chunk_overlap=0,
             min_characters_per_sentence=-1,
@@ -93,7 +93,7 @@ def test_cloud_sentence_chunker_initialization(mock_requests_get) -> None:
     # Check if the approximate is not a boolean
     with pytest.raises(ValueError):
         SentenceChunker(
-            tokenizer_or_token_counter="gpt2",
+            tokenizer="gpt2",
             chunk_size=512,
             chunk_overlap=0,
             approximate="not_a_boolean",
@@ -103,7 +103,7 @@ def test_cloud_sentence_chunker_initialization(mock_requests_get) -> None:
     # Check if the include_delim is not a string
     with pytest.raises(ValueError):
         SentenceChunker(
-            tokenizer_or_token_counter="gpt2",
+            tokenizer="gpt2",
             chunk_size=512,
             chunk_overlap=0,
             include_delim="not_a_string",
@@ -112,7 +112,7 @@ def test_cloud_sentence_chunker_initialization(mock_requests_get) -> None:
 
     # Finally, check if the attributes are set correctly
     chunker = SentenceChunker(
-        tokenizer_or_token_counter="gpt2", chunk_size=512, chunk_overlap=0, api_key="test_key"
+        tokenizer="gpt2", chunk_size=512, chunk_overlap=0, api_key="test_key"
     )
     assert chunker.tokenizer_or_token_counter == "gpt2"
     assert chunker.chunk_size == 512
@@ -135,7 +135,7 @@ def test_cloud_sentence_chunker_simple(mock_requests_get, mock_requests_post, mo
     mock_requests_post.return_value = mock_response
     
     sentence_chunker = SentenceChunker(
-        tokenizer_or_token_counter="gpt2",
+        tokenizer="gpt2",
         chunk_size=512,
         chunk_overlap=0,
         api_key="test_key"
@@ -182,7 +182,7 @@ def test_cloud_sentence_chunker_multiple_sentences(mock_requests_get, mock_reque
     mock_requests_post.return_value = mock_response
     
     sentence_chunker = SentenceChunker(
-        tokenizer_or_token_counter="gpt2",
+        tokenizer="gpt2",
         chunk_size=5,
         chunk_overlap=0,
         api_key="test_key"
@@ -210,7 +210,7 @@ def test_cloud_sentence_chunker_batch(mock_requests_get, mock_requests_post, moc
     mock_requests_post.return_value = mock_response
     
     sentence_chunker = SentenceChunker(
-        tokenizer_or_token_counter="gpt2",
+        tokenizer="gpt2",
         chunk_size=512,
         chunk_overlap=0,
         api_key="test_key"

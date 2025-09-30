@@ -69,12 +69,12 @@ def test_cloud_slumber_chunker_initialization(mock_requests_get) -> None:
     """Test that the slumber chunker can be initialized."""
     # Check if chunk_size <= 0 raises an error
     with pytest.raises(ValueError, match="Chunk size must be greater than 0."):
-        SlumberChunker(tokenizer_or_token_counter="gpt2", chunk_size=-1, api_key="test_key")
+        SlumberChunker(tokenizer="gpt2", chunk_size=-1, api_key="test_key")
 
     # Check if candidate_size <= 0 raises an error
     with pytest.raises(ValueError, match="Candidate size must be greater than 0."):
         SlumberChunker(
-            tokenizer_or_token_counter="gpt2",
+            tokenizer="gpt2",
             chunk_size=1024,
             candidate_size=-1,
             api_key="test_key"
@@ -83,7 +83,7 @@ def test_cloud_slumber_chunker_initialization(mock_requests_get) -> None:
     # Check if min_characters_per_chunk < 1 raises an error
     with pytest.raises(ValueError, match="Minimum characters per chunk must be greater than 0."):
         SlumberChunker(
-            tokenizer_or_token_counter="gpt2",
+            tokenizer="gpt2",
             chunk_size=1024,
             min_characters_per_chunk=0,
             api_key="test_key"
@@ -108,7 +108,7 @@ def test_cloud_slumber_chunker_single_sentence(mock_requests_get, mock_requests_
     mock_requests_post.return_value = mock_response
     
     slumber_chunker = SlumberChunker(
-        tokenizer_or_token_counter="gpt2",
+        tokenizer="gpt2",
         chunk_size=512,
         api_key="test_key"
     )
@@ -138,7 +138,7 @@ def test_cloud_slumber_chunker_batch(mock_requests_get, mock_requests_post, mock
     mock_requests_post.return_value = mock_response
     
     slumber_chunker = SlumberChunker(
-        tokenizer_or_token_counter="gpt2",
+        tokenizer="gpt2",
         chunk_size=512,
         api_key="test_key"
     )
@@ -182,7 +182,7 @@ def test_cloud_slumber_chunker_empty_text(mock_requests_get, mock_requests_post)
     mock_requests_post.return_value = mock_response
     
     slumber_chunker = SlumberChunker(
-        tokenizer_or_token_counter="gpt2",
+        tokenizer="gpt2",
         chunk_size=512,
         api_key="test_key"
     )
@@ -218,7 +218,7 @@ def test_cloud_slumber_chunker_long_text(mock_requests_get, mock_requests_post, 
     mock_requests_post.return_value = mock_response
     
     slumber_chunker = SlumberChunker(
-        tokenizer_or_token_counter="gpt2",
+        tokenizer="gpt2",
         chunk_size=100,  # Small chunk size to force splitting
         api_key="test_key"
     )
@@ -245,7 +245,7 @@ def test_cloud_slumber_chunker_real_api(mock_requests_get, mock_requests_post, m
     mock_requests_post.return_value = mock_response
     
     slumber_chunker = SlumberChunker(
-        tokenizer_or_token_counter="gpt2",
+        tokenizer="gpt2",
         chunk_size=512,
         api_key="test_key"
     )
