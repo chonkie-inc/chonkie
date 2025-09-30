@@ -136,7 +136,7 @@ class TableChunker(BaseChunker):
             else:
                 warnings.warn("No tables found in MarkdownDocument. Returning document with original chunks.")
         else:
-            # Don't change the current chunks; assume it would be an empty list if no chunks are present
+            # For non-MarkdownDocument types, chunk the entire content and add to existing chunks
             document.chunks.extend(self.chunk(document.content))
             document.chunks.sort(key=lambda x: x.start_index)
         return document
