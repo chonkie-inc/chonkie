@@ -114,7 +114,7 @@ def test_cloud_sentence_chunker_initialization(mock_requests_get) -> None:
     chunker = SentenceChunker(
         tokenizer="gpt2", chunk_size=512, chunk_overlap=0, api_key="test_key"
     )
-    assert chunker.tokenizer_or_token_counter == "gpt2"
+    assert chunker.tokenizer == "gpt2"
     assert chunker.chunk_size == 512
     assert chunker.chunk_overlap == 0
     assert chunker.min_sentences_per_chunk == 1

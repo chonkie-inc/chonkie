@@ -19,7 +19,7 @@ class SlumberChunker(CloudChunker):
 
     def __init__(
         self,
-        tokenizer_or_token_counter: Union[str, Callable] = "gpt2",
+        tokenizer: str = "gpt2",
         chunk_size: int = 1024,
         recipe: str = "default",
         lang: str = "en",
@@ -30,7 +30,7 @@ class SlumberChunker(CloudChunker):
         """Initialize the SlumberChunker.
 
         Args:
-            tokenizer_or_token_counter (Union[str, Callable]): The tokenizer or token counter to use.
+            tokenizer (str): The tokenizer to use.
             chunk_size (int): The target size of the chunks.
             recipe (str): The recipe to use.
             lang (str): The language to use.
@@ -53,7 +53,7 @@ class SlumberChunker(CloudChunker):
         if min_characters_per_chunk < 1:
             raise ValueError("Minimum characters per chunk must be greater than 0.")
 
-        self.tokenizer_or_token_counter = tokenizer_or_token_counter
+        self.tokenizer = tokenizer
         self.chunk_size = chunk_size
         self.recipe = recipe
         self.lang = lang
@@ -90,7 +90,7 @@ class SlumberChunker(CloudChunker):
         if text is not None:
             payload = {
                 "text": text,
-                "tokenizer_or_token_counter": self.tokenizer_or_token_counter,
+                "tokenizer_or_token_counter": self.tokenizer,
                 "chunk_size": self.chunk_size,
                 "recipe": self.recipe,
                 "lang": self.lang,
@@ -104,7 +104,7 @@ class SlumberChunker(CloudChunker):
                     "type": "document",
                     "content": file_response.name,
                 },
-                "tokenizer_or_token_counter": self.tokenizer_or_token_counter,
+                "tokenizer_or_token_counter": self.tokenizer,
                 "chunk_size": self.chunk_size,
                 "recipe": self.recipe,
                 "lang": self.lang,
@@ -176,7 +176,7 @@ class SlumberChunker(CloudChunker):
         """Return a string representation of the SlumberChunker."""
         return (
             f"SlumberChunker(api_key={'********' if self.api_key else None}, "
-            f"tokenizer_or_token_counter='{self.tokenizer_or_token_counter}', "
+            f"tokenizer='{self.tokenizer}', "
             f"chunk_size={self.chunk_size}, "
             f"recipe='{self.recipe}', "
             f"lang='{self.lang}', "

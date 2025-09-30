@@ -91,7 +91,7 @@ def test_cloud_slumber_chunker_initialization(mock_requests_get) -> None:
 
     # Check default initialization
     chunker = SlumberChunker(api_key="test_key")
-    assert chunker.tokenizer_or_token_counter == "gpt2"
+    assert chunker.tokenizer == "gpt2"
     assert chunker.chunk_size == 1024  # Default is 1024, not 512
     assert chunker.candidate_size == 128  # Default is 128, not 512
     assert chunker.min_characters_per_chunk == 24  # Default is 24, not 10

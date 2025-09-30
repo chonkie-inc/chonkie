@@ -157,7 +157,7 @@ def test_cloud_code_chunker_initialization(mock_requests_get: Any) -> None:
         language="python",
         api_key="test_key"
     )
-    assert chunker.tokenizer_or_token_counter == "gpt2"
+    assert chunker.tokenizer == "gpt2"
     assert chunker.chunk_size == 512
     assert chunker.language == "python"
 

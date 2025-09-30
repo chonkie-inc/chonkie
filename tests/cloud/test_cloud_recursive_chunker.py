@@ -72,7 +72,7 @@ def test_cloud_recursive_chunker_initialization(mock_requests_get) -> None:
 
     # Finally, check if the attributes are set correctly
     chunker = RecursiveChunker(tokenizer="gpt2", chunk_size=512, api_key="test_key")
-    assert chunker.tokenizer_or_token_counter == "gpt2"
+    assert chunker.tokenizer == "gpt2"
     assert chunker.chunk_size == 512
     assert chunker.min_characters_per_chunk == 12
 
