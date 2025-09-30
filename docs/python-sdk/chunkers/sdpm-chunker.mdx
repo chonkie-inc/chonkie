@@ -60,7 +60,7 @@ from chonkie.legacy import SDPMChunker
 
 # Legacy initialization
 chunker = SDPMChunker(
-    embedding_model="minishlab/potion-base-8M",
+    embedding_model="minishlab/potion-base-32M",
     threshold=0.5,                              
     chunk_size=2048,                             
     min_sentences=1,                            
@@ -90,7 +90,7 @@ The legacy SDPMChunker uses these parameters (many now renamed in the new Semant
 from chonkie.legacy import SDPMChunker
 
 chunker = SDPMChunker(
-    embedding_model="minishlab/potion-base-8M",
+    embedding_model="minishlab/potion-base-32M",
     mode="window",
     threshold="auto",
     chunk_size=512,
@@ -109,7 +109,7 @@ for chunk in chunks:
 from chonkie import SemanticChunker
 
 chunker = SemanticChunker(
-    embedding_model="minishlab/potion-base-8M",
+    embedding_model="minishlab/potion-base-32M",
     threshold=0.7,  # Explicit threshold instead of "auto"
     chunk_size=512,
     min_sentences_per_chunk=1,  # Renamed parameter
@@ -158,7 +158,7 @@ from chonkie.legacy import SDPMChunker
 
 # All original parameters still work
 chunker = SDPMChunker(
-    embedding_model="minishlab/potion-base-8M",
+    embedding_model="minishlab/potion-base-32M",
     mode="window",
     threshold="auto",
     chunk_size=2048,

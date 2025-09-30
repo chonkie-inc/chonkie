@@ -9,15 +9,45 @@ To use this legacy version:
 
 import importlib.util as importutil
 import warnings
-from typing import TYPE_CHECKING, Any, Dict, List, Literal, Optional, Sequence, Union
+from dataclasses import dataclass, field
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Dict,
+    List,
+    Literal,
+    Optional,
+    Union,
+    cast,
+)
 
 from chonkie.chunker.base import BaseChunker
 from chonkie.embeddings.base import BaseEmbeddings
-from chonkie.types.semantic import SemanticChunk, SemanticSentence
+from chonkie.types import Chunk, Sentence
 from chonkie.utils import Hubbie
 
 if TYPE_CHECKING:
     import numpy as np
+
+
+# Legacy types for backward compatibility
+# SemanticSentence is now just an alias for Sentence since Sentence has embedding field
+SemanticSentence = Sentence
+
+
+@dataclass
+class SemanticChunk(Chunk):
+    """Legacy SemanticChunk type for backward compatibility."""
+
+    sentences: List[SemanticSentence] = field(default_factory=list)
+
+    def __repr__(self) -> str:
+        """Return a string representation of the SemanticChunk."""
+        return (
+            f"SemanticChunk(text={self.text}, start_index={self.start_index}, "
+            f"end_index={self.end_index}, token_count={self.token_count}, "
+            f"sentences={self.sentences})"
+        )
 
 # Import the unified split function
 try:
@@ -53,7 +83,7 @@ class SemanticChunker(BaseChunker):
 
     def __init__(
         self,
-        embedding_model: Union[str, BaseEmbeddings] = "minishlab/potion-base-8M",
+        embedding_model: Union[str, BaseEmbeddings] = "minishlab/potion-base-32M",
         mode: str = "window",
         threshold: Union[str, float, int] = "auto",
         chunk_size: int = 2048,
@@ -171,7 +201,7 @@ class SemanticChunker(BaseChunker):
                     name: str = "default", 
                     lang: Optional[str] = "en", 
                     path: Optional[str] = None, 
-                    embedding_model: Union[str, BaseEmbeddings] = "minishlab/potion-base-8M",
+                    embedding_model: Union[str, BaseEmbeddings] = "minishlab/potion-base-32M",
                     mode: str = "window",
                     threshold: Union[str, float, int] = "auto",
                     chunk_size: int = 2048,
@@ -359,15 +389,15 @@ class SemanticChunker(BaseChunker):
         return sentences
 
     def _get_semantic_similarity(
-        self, embedding1: "np.ndarray", embedding2: "np.ndarray"
+        self, embedding1: Union[List[float], "np.ndarray"], embedding2: Union[List[float], "np.ndarray"]
     ) -> float:
         """Compute cosine similarity between two embeddings."""
-        similarity = self.embedding_model.similarity(embedding1, embedding2)
+        similarity = self.embedding_model.similarity(embedding1, embedding2)  # type: ignore[arg-type]
         return float(similarity)
 
     def _compute_group_embedding(
         self, sentences: List[SemanticSentence]
-    ) -> "np.ndarray":
+    ) -> Union[List[float], "np.ndarray"]:
         """Compute mean embedding for a group of sentences."""
         if len(sentences) == 1:
             embedding = sentences[0].embedding
@@ -382,7 +412,7 @@ class SemanticChunker(BaseChunker):
             # TODO: Account for embedding model truncating to max_seq_length, which causes a mismatch in the token count.
             return np.divide(
                 np.sum(
-                    [(sent.embedding * sent.token_count) for sent in sentences if sent.embedding is not None],
+                    [(sent.embedding * sent.token_count) for sent in sentences if sent.embedding is not None],  # type: ignore[operator, arg-type]
                     axis=0,
                 ),
                 np.sum([sent.token_count for sent in sentences]),
@@ -576,7 +606,7 @@ class SemanticChunker(BaseChunker):
                 current_group = [sentence]
                 if sentence.embedding is None:
                     raise ValueError("Sentence embedding is None")
-                current_embedding = sentence.embedding
+                current_embedding = sentence.embedding  # type: ignore[assignment]
 
         # Add final group
         if current_group:
@@ -667,7 +697,7 @@ class SemanticChunker(BaseChunker):
 
         return chunks
 
-    def chunk(self, text: str) -> Sequence[SemanticChunk]:
+    def chunk(self, text: str) -> List[Chunk]:
         """Split text into semantically coherent chunks using two-pass approach.
 
         First groups sentences by semantic similarity, then splits groups to respect
@@ -696,7 +726,7 @@ class SemanticChunker(BaseChunker):
         sentence_groups = self._group_sentences(sentences)
 
         # Second pass: Split groups into size-appropriate chunks
-        chunks = self._split_chunks(sentence_groups)
+        chunks = cast(List[Chunk], self._split_chunks(sentence_groups))
 
         return chunks
 

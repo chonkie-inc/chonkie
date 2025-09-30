@@ -11,7 +11,7 @@ from chonkie.types import Chunk
 try:
     import pymongo
     pymongo_available = True
-    from chonkie.friends.handshakes.mongodb import MongoDBHandshake
+    from chonkie.handshakes.mongodb import MongoDBHandshake
 except ImportError:
     pymongo = None
     pymongo_available = False

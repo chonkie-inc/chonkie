@@ -123,16 +123,15 @@ batch_chunks = chunker(["Text 1. More text.", "Text 2. More."])
 
 ## Return Type
 
-The RecursiveChunker returns chunks as `RecursiveChunk` objects with additional sentence metadata:
+The RecursiveChunker returns chunks as `Chunk` objects:
 
 ```python
 @dataclass
-class RecursiveChunk(Chunk):
+class Chunk:
     text: str           # The chunk text
     start_index: int    # Starting position in original text
     end_index: int      # Ending position in original text
     token_count: int    # Number of tokens in Chunk
-    level: int          # Level of the chunk in the recursive tree
 ```
 
 

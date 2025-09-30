@@ -2,7 +2,7 @@
 
 import pytest
 
-from chonkie import RecursiveChunk, RecursiveLevel, RecursiveRules
+from chonkie import RecursiveLevel, RecursiveRules
 
 
 def test_recursive_level_init() -> None:
@@ -70,33 +70,6 @@ def test_recursive_rules_serialization() -> None:
     assert all(isinstance(level, RecursiveLevel) for level in reconstructed.levels)
 
 
-# RecursiveChunk Tests
-def test_recursive_chunk_init() -> None:
-    """Test RecursiveChunk initialization."""
-    chunk = RecursiveChunk(
-        text="test chunk",
-        start_index=0,
-        end_index=10,
-        token_count=2,
-        level=1,
-    )
-    assert chunk.text == "test chunk"
-    assert chunk.level == 1
-
-
-def test_recursive_chunk_serialization() -> None:
-    """Test RecursiveChunk serialization/deserialization."""
-    chunk = RecursiveChunk(
-        text="test chunk",
-        start_index=0,
-        end_index=10,
-        token_count=2,
-        level=1,
-    )
-    chunk_dict = chunk.to_dict()
-    reconstructed = RecursiveChunk.from_dict(chunk_dict)
-    assert reconstructed.level == 1
-    assert reconstructed.text == chunk.text
 
 def test_recursive_level_from_recipe() -> None:
     """Test RecursiveLevel from recipe."""

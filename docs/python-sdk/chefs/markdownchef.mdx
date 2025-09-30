@@ -1,0 +1,21 @@
+---
+title: MarkdownChef
+sidebarTitle: MarkdownChef
+icon: markdown
+iconType: solid
+description: Process markdown files, extracting tables, code blocks, and images.
+---
+
+The `MarkdownChef` processes markdown files, extracting tables, code blocks, and images into a structured `MarkdownDocument`.
+
+## Usage
+
+```python
+from chonkie import MarkdownChef
+
+chef = MarkdownChef()
+doc = chef.process("example.md")
+print(doc.tables)
+print(doc.code)
+print(doc.images)
+```

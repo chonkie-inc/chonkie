@@ -18,22 +18,26 @@ Before using the MongoDB handshake, make sure to install the required dependenci
 pip install chonkie[mongodb]
 ```
 
-## Basic Usage
-
-### Initialization
-
-```python
+## Initialization
+<CodeGroup>
+```python Initialize using chonkie
 from chonkie import MongoDBHandshake
 
 # Initialize with default settings (auto-generated database/collection)
 handshake = MongoDBHandshake(uri="mongodb://localhost:27017")
+```
 
-# Or connect to an existing MongoDB client
+```python initialize using the client
 import pymongo
 client = pymongo.MongoClient("mongodb://localhost:27017")
-handshake = MongoDBHandshake(client=client, db_name="my_db", collection_name="my_collection")
+handshake = MongoDBHandshake(
+    client=client, 
+    db_name="my_db", 
+    collection_name="my_collection"
+)
+```
 
-# Specify embedding model and connection details
+```python specify connection and embedding
 handshake = MongoDBHandshake(
     uri="mongodb://localhost:27017",
     db_name="my_db",
@@ -41,24 +45,9 @@ handshake = MongoDBHandshake(
     embedding_model="minishlab/potion-retrieval-32M"
 )
 ```
+</CodeGroup>
 
-### Writing Chunks to MongoDB
-
-```python
-from chonkie import MongoDBHandshake, SemanticChunker    
-
-# Initialize the handshake
-handshake = MongoDBHandshake(uri="mongodb://localhost:27017", db_name="my_documents")
-
-# Create some chunks
-chunker = SemanticChunker()
-chunks = chunker.chunk("Chonkie loves to chonk your texts!")
-
-# Write chunks to MongoDB
-handshake.write(chunks)
-```
-
-## Parameters
+### Parameters
 
 <ParamField
     path="client"
@@ -139,3 +128,81 @@ handshake.write(chunks)
 >
     Additional keyword arguments to pass to the MongoDB client or collection creation.
 </ParamField>
+
+## Writing Chunks to MongoDB
+
+```python
+from chonkie import MongoDBHandshake, SemanticChunker    
+
+# Initialize the handshake
+handshake = MongoDBHandshake(
+    uri="mongodb://localhost:27017",
+    db_name="my_documents",
+    collection_name="my_collection"
+)
+
+# Create some chunks
+chunker = SemanticChunker()
+chunks = chunker.chunk("Chonkie loves to chonk your texts!")
+
+# Write chunks to MongoDB
+handshake.write(chunks)
+```
+
+## Searching Chunks in MongoDB
+
+You can retrieve the most similar chunks from your MongoDB collection using the `search` method:
+<CodeGroup>
+```python search using a query
+from chonkie import MongoDBHandshake
+
+# Initialize the handshake
+handshake = MongoDBHandshake(
+    uri="mongodb://localhost:27017",
+    db_name="my_documents",
+    collection_name="my_collection"
+)
+results = handshake.search(query="chonk your texts", limit=2)
+for result in results:
+    print(result["score"], result["text"])
+```
+
+```python search using embedding
+from chonkie import MongoDBHandshake
+
+# Initialize the handshake
+handshake = MongoDBHandshake(
+    uri="mongodb://localhost:27017",
+    db_name="my_documents",
+    collection_name="my_collection"
+)
+embedding = handshake.embedding_model.embed("chonk your texts").tolist()
+results = handshake.search(embedding=embedding, limit=2)
+for result in results:
+    print(result["score"], result["text"])
+```
+
+```python search using chonkie chunks
+from chonkie import MongoDBHandshake, SemanticChunker
+
+# Initialize the handshake
+handshake = MongoDBHandshake(
+    uri="mongodb://localhost:27017",
+    db_name="my_documents",
+    collection_name="my_collection"
+)
+
+# Create some chunks
+chunker = SemanticChunker(embedding_model=handshake.embedding_model)
+chunks = chunker.chunk("Chonkie loves to chonk your texts!")
+
+# Search the handshake
+results = handshake.search(
+    embedding=chunks[0].sentences[0].embedding, 
+    limit=2,
+)
+for result in results:
+    print(result["score"], result["text"])
+```
+</CodeGroup>
+

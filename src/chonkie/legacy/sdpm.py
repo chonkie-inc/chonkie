@@ -5,7 +5,7 @@ This chunker uses the Semantic Double-Pass Merging algorithm to chunk text.
 .. deprecated:: 1.2.0
     The merging capabilities of SDPMChunker are now integrated into the new
     SemanticChunker. Use `from chonkie.chunker import SemanticChunker` instead.
-    
+
 To use this legacy version:
     from chonkie.legacy import SDPMChunker
 """
@@ -14,7 +14,7 @@ from typing import Any, Dict, List, Literal, Optional, Union
 
 from chonkie.embeddings import BaseEmbeddings
 from chonkie.legacy.semantic import SemanticChunker
-from chonkie.types import SemanticChunk, Sentence
+from chonkie.types import Chunk, Sentence
 from chonkie.utils import Hubbie
 
 
@@ -42,7 +42,7 @@ class SDPMChunker(SemanticChunker):
 
     def __init__(
         self,
-        embedding_model: Union[str, BaseEmbeddings] = "minishlab/potion-base-8M",
+        embedding_model: Union[str, BaseEmbeddings] = "minishlab/potion-base-32M",
         chunk_size: int = 2048,
         mode: str = "window",
         threshold: Union[str, float, int] = "auto",
@@ -94,23 +94,24 @@ class SDPMChunker(SemanticChunker):
         # Disable the multiprocessing flag for this class
         self._use_multiprocessing = False
 
-    
     @classmethod
-    def from_recipe(cls,  # type: ignore[override]
-                    name: str = "default", 
-                    lang: Optional[str] = "en", 
-                    path: Optional[str] = None, 
-                    embedding_model: Union[str, BaseEmbeddings] = "minishlab/potion-base-8M",
-                    mode: str = "window",
-                    threshold: Union[str, float, int] = "auto",
-                    chunk_size: int = 2048,
-                    similarity_window: int = 1,
-                    min_sentences: int = 1,
-                    min_chunk_size: int = 2,
-                    min_characters_per_sentence: int = 12,
-                    threshold_step: float = 0.01,
-                    skip_window: int = 1,
-                    **kwargs: Dict[str, Any]) -> "SDPMChunker":  # type: ignore
+    def from_recipe( # type: ignore[override]
+        cls,  
+        name: str = "default",
+        lang: Optional[str] = "en",
+        path: Optional[str] = None,
+        embedding_model: Union[str, BaseEmbeddings] = "minishlab/potion-base-32M",
+        mode: str = "window",
+        threshold: Union[str, float, int] = "auto",
+        chunk_size: int = 2048,
+        similarity_window: int = 1,
+        min_sentences: int = 1,
+        min_chunk_size: int = 2,
+        min_characters_per_sentence: int = 12,
+        threshold_step: float = 0.01,
+        skip_window: int = 1,
+        **kwargs: Dict[str, Any],
+    ) -> "SDPMChunker":  # type: ignore
         """Create a SDPMChunker from a recipe.
 
         Args:
@@ -212,7 +213,7 @@ class SDPMChunker(SemanticChunker):
 
         return merged_groups
 
-    def chunk(self, text: str) -> List[SemanticChunk]:
+    def chunk(self, text: str) -> List[Chunk]:
         """Split text into semantically coherent chunks using two-pass approach.
 
         First groups sentences by semantic similarity, then splits groups to respect

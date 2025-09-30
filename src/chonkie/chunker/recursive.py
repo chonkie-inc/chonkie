@@ -6,11 +6,11 @@ Splits text into smaller chunks recursively. Express chunking logic through Recu
 from bisect import bisect_left
 from functools import lru_cache
 from itertools import accumulate
-from typing import Any, Callable, List, Optional, Sequence, Tuple, Union
+from typing import Any, Callable, List, Optional, Tuple, Union
 
 from chonkie.chunker.base import BaseChunker
 from chonkie.types import (
-    RecursiveChunk,
+    Chunk,
     RecursiveLevel,
     RecursiveRules,
 )
@@ -188,8 +188,8 @@ class RecursiveChunker(BaseChunker):
         token_count: int,
         level: int,
         start_offset: int
-    ) -> RecursiveChunk:
-        """Create a RecursiveChunk object with indices based on the current offset.
+    ) -> Chunk:
+        """Create a Chunk object with indices based on the current offset.
 
         This method calculates the start and end indices of the chunk using the provided start_offset and the length of the text,
         avoiding a slower full-text search for efficiency.
@@ -201,15 +201,14 @@ class RecursiveChunker(BaseChunker):
             start_offset (int): The starting offset in the original text.
 
         Returns:
-            RecursiveChunk: A chunk object with calculated start and end indices, text, token count and level.
+            Chunk: A chunk object with calculated start and end indices, text, and token count.
 
         """
-        return RecursiveChunk(
+        return Chunk(
             text=text,
             start_index=start_offset,
             end_index=start_offset + len(text),
             token_count=token_count,
-            level=level,
         )
 
     def _merge_splits(
@@ -302,7 +301,7 @@ class RecursiveChunker(BaseChunker):
 
     def _recursive_chunk(
         self, text: str, level: int = 0, start_offset: int =0
-    ) -> Sequence[RecursiveChunk]:
+    ) -> List[Chunk]:
         """Recursive helper for core chunking."""
         if not text:
             return []
@@ -339,7 +338,7 @@ class RecursiveChunker(BaseChunker):
             )
 
         # Chunk long merged splits
-        chunks: List[RecursiveChunk] = []
+        chunks: List[Chunk] = []
         current_offset = start_offset
         for split, token_count in zip(merged, combined_token_counts):
             if token_count > self.chunk_size:
@@ -351,7 +350,7 @@ class RecursiveChunker(BaseChunker):
             current_offset += len(split)
         return chunks
 
-    def chunk(self, text: str) -> Sequence[RecursiveChunk]:
+    def chunk(self, text: str) -> List[Chunk]:
         """Recursively chunk text.
 
         Args:

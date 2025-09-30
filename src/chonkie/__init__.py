@@ -1,7 +1,12 @@
 """Main package for Chonkie."""
 
+# ruff: noqa: F401
+# Imports are intentionally unused to expose the package's public API.
+
 from .chef import (
     BaseChef,
+    MarkdownChef,
+    TableChef,
     TextChef,
 )
 from .chunker import (
@@ -14,10 +19,10 @@ from .chunker import (
     SemanticChunker,
     SentenceChunker,
     SlumberChunker,
+    TableChunker,
     TokenChunker,
 )
 from .cloud import (
-    auth,
     chunker,
     refineries,
 )
@@ -36,11 +41,14 @@ from .fetcher import (
     BaseFetcher,
     FileFetcher,
 )
-from .friends import (
+from .genie import (
+    BaseGenie,
+    GeminiGenie,
+    OpenAIGenie,
+)
+from .handshakes import (
     BaseHandshake,
-    BasePorter,
     ChromaHandshake,
-    JSONPorter,
     MongoDBHandshake,
     PgvectorHandshake,
     PineconeHandshake,
@@ -48,10 +56,10 @@ from .friends import (
     TurbopufferHandshake,
     WeaviateHandshake,
 )
-from .genie import (
-    BaseGenie,
-    GeminiGenie,
-    OpenAIGenie,
+from .porters import (
+    BasePorter,
+    DatasetsPorter,
+    JSONPorter,
 )
 from .refinery import (
     BaseRefinery,
@@ -65,18 +73,15 @@ from .tokenizer import (
 )
 from .types import (
     Chunk,
-    CodeChunk,
-    Context,
+    Document,
     LanguageConfig,
-    LateChunk,
+    MarkdownCode,
+    MarkdownDocument,
+    MarkdownTable,
     MergeRule,
-    RecursiveChunk,
     RecursiveLevel,
     RecursiveRules,
-    SemanticChunk,
-    SemanticSentence,
     Sentence,
-    SentenceChunk,
     SplitRule,
 )
 from .utils import (
@@ -85,7 +90,7 @@ from .utils import (
 )
 
 # This hippo grows with every release 🦛✨~
-__version__ = "1.2.1"
+__version__ = "1.3.1"
 __name__ = "chonkie"
 __author__ = "🦛 Chonkie Inc"
 

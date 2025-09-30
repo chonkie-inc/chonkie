@@ -19,6 +19,8 @@ Unfortunately, we do need docs for Chonkie (we tried!). While official docs are 
 - [📦 Installation](#-installation)
   - [Optional Dependencies](#optional-dependencies)
 - [Usage](#usage)
+- [Types and Data Structures](#types-and-data-structures)
+  - [The `Chunk` Type](#the-chunk-type)
 - [CHONKosophy](#chonkosophy)
   - [How does Chonkie think about chunking?](#how-does-chonkie-think-about-chunking)
 - [Chunkers](#chunkers)
@@ -128,7 +130,41 @@ for chunk in chunks:
     print(chunk.end_index)
 ```
 
-Refer to the types reference below for more information on the `Chunk` object.
+## Types and Data Structures
+
+### The `Chunk` Type
+
+All chunkers in Chonkie now return the base `Chunk` type for consistency and simplicity. The `Chunk` type is a dataclass with the following attributes:
+
+```python
+@dataclass
+class Chunk:
+    text: str                                        # The text content of the chunk
+    start_index: int                                 # Starting position in original text
+    end_index: int                                   # Ending position in original text
+    token_count: int                                 # Number of tokens in the chunk
+    context: Optional[Context] = None               # Optional context metadata
+    embedding: Union[List[float], "np.ndarray", None] = None  # Optional embedding vector (list or numpy array)
+```
+
+The `embedding` attribute can store embedding vectors (as lists or numpy arrays) which are automatically added when using `EmbeddingsRefinery` or certain chunkers like `LateChunker`.
+
+### The `Sentence` Type
+
+The `Sentence` type is used internally by sentence-based chunkers and represents individual sentences with metadata:
+
+```python
+@dataclass
+class Sentence:
+    text: str                                        # The sentence text
+    start_index: int                                 # Starting position in original text
+    end_index: int                                   # Ending position in original text
+    token_count: int                                 # Number of tokens in the sentence
+    embedding: Union[List[float], "np.ndarray", None] = None  # Optional embedding vector
+```
+
+> [!NOTE]
+> As of version 1.3.0, all specialized types have been simplified. The specialized chunk types (`SentenceChunk`, `RecursiveChunk`, `SemanticChunk`, `CodeChunk`, and `LateChunk`) have been removed - all chunkers now return the base `Chunk` type. Similarly, `SemanticSentence` has been removed as the base `Sentence` type now includes an optional `embedding` field. This simplifies the API and makes it easier to chain different components together.
 
 ## CHONKosophy
 
@@ -249,10 +285,10 @@ The `SentenceChunker` is a chunker that splits the text into sentences and then 
 
 **Methods:**
 
-- `chunk(text: str) -> List[SentenceChunk]`: Chunks a string into a list of `SentenceChunk` objects.
-- `chunk_batch(texts: List[str]) -> List[List[SentenceChunk]]`: Chunks a list of strings into a list of lists of `SentenceChunk` objects. (Inherited)
+- `chunk(text: str) -> List[Chunk]`: Chunks a string into a list of `Chunk` objects. Returns the base `Chunk` type.
+- `chunk_batch(texts: List[str]) -> List[List[Chunk]]`: Chunks a list of strings into a list of lists of `Chunk` objects. (Inherited)
 - `from_recipe(name: str, lang: str, **kwargs) -> SentenceChunker`: Creates a `SentenceChunker` instance using pre-defined recipes from the [Chonkie Recipe Store](https://huggingface.co/datasets/chonkie-ai/recipes). This allows easy configuration for specific languages or splitting behaviors.
-- `__call__(text: str) -> Union[List[SentenceChunk], List[List[SentenceChunk]]]`: Chunks a string or list of strings. Calls `chunk` or `chunk_batch` depending on input type. (Inherited)
+- `__call__(text: str) -> Union[List[Chunk], List[List[Chunk]]]`: Chunks a string or list of strings. Calls `chunk` or `chunk_batch` depending on input type. (Inherited)
 
 **Examples:**
 
@@ -276,7 +312,7 @@ for chunk in chunks:
     print(f"Token Count: {chunk.token_count}")
     print(f"Start Index: {chunk.start_index}")
     print(f"End Index: {chunk.end_index}")
-    print(f"Number of Sentences: {len(chunk.sentences)}") # SentenceChunk specific attribute
+    # All chunkers now return the base Chunk type for consistency
     print("-" * 10)
 ```
 
@@ -359,7 +395,7 @@ For both of the above strategies, in `auto` mode, we determine the `threshold` v
 
 **Parameters:**
 
-- `embedding_model (Union[str, BaseEmbeddings])`: The embedding model to use for semantic chunking. Can be a string identifier (e.g., from Hugging Face Hub like `"minishlab/potion-base-8M"`) or an instantiated `BaseEmbeddings` object. Defaults to `"minishlab/potion-base-8M"`. Requires appropriate extras like `chonkie[semantic]` or specific model providers (`chonkie[st]`, `chonkie[openai]`, etc.).
+- `embedding_model (Union[str, BaseEmbeddings])`: The embedding model to use for semantic chunking. Can be a string identifier (e.g., from Hugging Face Hub like `"minishlab/potion-base-32M"`) or an instantiated `BaseEmbeddings` object. Defaults to `"minishlab/potion-base-32M"`. Requires appropriate extras like `chonkie[semantic]` or specific model providers (`chonkie[st]`, `chonkie[openai]`, etc.).
 - `mode (str)`: The strategy for comparing sentence similarity. `"window"` compares adjacent sentences (or within a small window), while `"cumulative"` compares a new sentence to the mean embedding of the current group. Defaults to `"window"`.
 - `threshold (Union[str, float, int])`: The similarity threshold for splitting sentences. Can be `"auto"` (uses a binary search to find an optimal threshold based on `chunk_size`), a float between 0.0 and 1.0 (direct cosine similarity threshold), or an int between 1 and 100 (percentile threshold). Defaults to `"auto"`.
 - `chunk_size (int)`: The target maximum number of tokens per chunk. Defaults to `512`.
@@ -1413,7 +1449,7 @@ print("Created HNSW index")
 results = handshake.search(
     "metadata filtering",
     limit=2,
-    filters={"chunk_type": {"$eq": "SentenceChunk"}}
+    filters={"chunk_type": {"$eq": "Chunk"}}
 )
 
 for result in results:

@@ -46,7 +46,7 @@ chunker = LateChunker(
 You can also initialize the LateChunker using a recipe. Recipes are pre-defined rules for common chunking tasks.
 Find all available recipes on our Hugging Face Hub [here](https://huggingface.co/datasets/chonkie-ai/recipes).
 ```python
-from chonkie import LateChunk
+from chonkie import LateChunker
 
 # Initialize the late chunker to chunk Markdown
 chunker = LateChunker.from_recipe("markdown", lang="en")
@@ -105,7 +105,7 @@ chunks = chunker(text)
 for chunk in chunks:
     print(f"Chunk text: {chunk.text}")
     print(f"Token count: {chunk.token_count}")
-    print(f"Number of sentences: {len(chunk.sentences)}")
+    print(f"Embedding shape: {chunk.embedding.shape}")
 ```
 
 ### Batch Chunking
@@ -121,25 +121,25 @@ batch_chunks = chunker(texts)
 for chunk in batch_chunks:
     print(f"Chunk text: {chunk.text}")
     print(f"Token count: {chunk.token_count}")
-    print(f"Number of sentences: {len(chunk.sentences)}")
+    print(f"Embedding shape: {chunk.embedding.shape}")
 ```
 
 ## Return Type
 
-LateChunker returns `LateChunk` objects with optimized storage using slots:
+LateChunker returns chunks as `Chunk` objects:
 
 ```python
 @dataclass
-class LateChunk(SentenceChunk):
-    text: str  # The text of the chunk.
-    start_index: int  # The start index of the chunk.
-    end_index: int  # The end index of the chunk.
-    token_count: int  # The number of tokens in the chunk.
-    start_token: int  # The start token of the chunk.
-    end_token: int  # The end token of the chunk.
-    sentences: list[LateSentence]  # The sentences in the chunk.
-    embedding: Optional[np.ndarray]  # The embedding of the chunk.
+class Chunk:
+    text: str           # The chunk text
+    start_index: int    # Starting position in original text
+    end_index: int      # Ending position in original text
+    token_count: int    # Number of tokens in chunk
+    context: Optional[Context] = None    # Optional context metadata
+    embedding: Union[List[float], "np.ndarray", None] = None  # Optional embedding vector
 ```
+
+<Note>As of version 1.3.0, LateChunker returns the base `Chunk` type instead of the specialized `LateChunk` type. The embedding is automatically populated by the LateChunker during the chunking process.</Note>
 
 ## Additional Information
 

@@ -1,11 +1,12 @@
 """Sentence Chunking for Chonkie API."""
 
 import os
-from typing import Dict, List, Literal, Optional, Union, cast
+from typing import Any, Dict, List, Literal, Optional, Union, cast
 
 import requests
 
-from chonkie.types import SentenceChunk
+from chonkie.cloud.file import FileManager
+from chonkie.types import Chunk
 
 from .base import CloudChunker
 
@@ -70,20 +71,43 @@ class SentenceChunker(CloudChunker):
                 + "If the issue persists, please contact support at support@chonkie.ai or raise an issue on GitHub."
             )
 
-    def chunk(self, text: Union[str, List[str]]) -> Union[List[SentenceChunk], List[List[SentenceChunk]]]:
-        """Chunk the text via sentence boundaries."""
+        # Initialize the file manager to upload files if needed
+        self.file_manager = FileManager(api_key=self.api_key)
+
+    def chunk(self, text: Optional[Union[str, List[str]]] = None, file: Optional[str] = None) -> Union[List[Chunk], List[List[Chunk]]]:
+        """Chunk the text or file via sentence boundaries."""
         # Define the payload for the request
-        payload = {
-            "text": text,
-            "tokenizer": self.tokenizer_or_token_counter,
-            "chunk_size": self.chunk_size,
-            "chunk_overlap": self.chunk_overlap,
-            "min_sentences_per_chunk": self.min_sentences_per_chunk,
-            "min_characters_per_sentence": self.min_characters_per_sentence,
-            "approximate": self.approximate,
-            "delim": self.delim,
-            "include_delim": self.include_delim,
-        }
+        payload: Dict[str, Any]
+        if text is not None:
+            payload = {
+                "text": text,
+                "tokenizer": self.tokenizer_or_token_counter,
+                "chunk_size": self.chunk_size,
+                "chunk_overlap": self.chunk_overlap,
+                "min_sentences_per_chunk": self.min_sentences_per_chunk,
+                "min_characters_per_sentence": self.min_characters_per_sentence,
+                "approximate": self.approximate,
+                "delim": self.delim,
+                "include_delim": self.include_delim,
+            }
+        elif file is not None:
+            file_response = self.file_manager.upload(file)
+            payload = {
+                "file": {
+                    "type": "document",
+                    "content": file_response.name,
+                },
+                "tokenizer": self.tokenizer_or_token_counter,
+                "chunk_size": self.chunk_size,
+                "chunk_overlap": self.chunk_overlap,
+                "min_sentences_per_chunk": self.min_sentences_per_chunk,
+                "min_characters_per_sentence": self.min_characters_per_sentence,
+                "approximate": self.approximate,
+                "delim": self.delim,
+                "include_delim": self.include_delim,
+            }
+        else:
+            raise ValueError("No text or file provided. Please provide either text or a file path.")
 
         # Make the request to the Chonkie API
         response = requests.post(
@@ -96,16 +120,16 @@ class SentenceChunker(CloudChunker):
         try:
             if isinstance(text, list):
                 batch_result: List[List[Dict]] = cast(List[List[Dict]], response.json())
-                batch_chunks: List[List[SentenceChunk]] = []
+                batch_chunks: List[List[Chunk]] = []
                 for chunk_list in batch_result:
-                    curr_chunks: List[SentenceChunk] = []
+                    curr_chunks: List[Chunk] = []
                     for chunk in chunk_list:
-                        curr_chunks.append(SentenceChunk.from_dict(chunk))
+                        curr_chunks.append(Chunk.from_dict(chunk))
                     batch_chunks.append(curr_chunks)
                 return batch_chunks
             else:
                 single_result: List[Dict] = cast(List[Dict], response.json())
-                single_chunks: List[SentenceChunk] = [SentenceChunk.from_dict(chunk) for chunk in single_result]
+                single_chunks: List[Chunk] = [Chunk.from_dict(chunk) for chunk in single_result]
                 return single_chunks
         except Exception as error:
             raise ValueError(
@@ -114,6 +138,6 @@ class SentenceChunker(CloudChunker):
                 + "If the issue persists, please contact support at support@chonkie.ai."
             ) from error
 
-    def __call__(self, text: Union[str, List[str]]) -> Union[List[SentenceChunk], List[List[SentenceChunk]]]:
+    def __call__(self, text: Optional[Union[str, List[str]]] = None, file: Optional[str] = None) -> Union[List[Chunk], List[List[Chunk]]]:
         """Call the SentenceChunker."""
-        return self.chunk(text)
+        return self.chunk(text=text, file=file)
