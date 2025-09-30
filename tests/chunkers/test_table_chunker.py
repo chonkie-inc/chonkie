@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from chonkie import Chunk, TableChunker, RecursiveChunker
+from chonkie import Chunk, RecursiveChunker, TableChunker
 from chonkie.types import Document, MarkdownDocument, MarkdownTable
 
 
