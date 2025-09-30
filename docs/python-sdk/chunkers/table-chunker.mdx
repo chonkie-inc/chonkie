@@ -1,0 +1,100 @@
+---
+title: 'Table Chunker'
+description: 'Split markdown tables into manageable chunks by row, preserving headers.'
+icon: 'table-cells'
+iconType: 'solid'
+---
+
+The `TableChunker` splits large markdown tables into smaller, manageable chunks by row, always preserving the header. This is especially useful for processing, indexing, or embedding tabular data in LLM and RAG pipelines.
+
+## API Reference
+To use the `TableChunker` via the API, check out the [API reference documentation](../../api-reference/table-chunker).
+
+## Installation
+
+TableChunker is included in the base installation of Chonkie. No additional dependencies are required.
+
+<Info>For installation instructions, see the [Installation Guide](/getting-started/installation).</Info>
+
+## Initialization
+
+```python
+from chonkie import TableChunker
+
+# Basic initialization with default parameters
+chunker = TableChunker(
+	tokenizer="character",  # Default tokenizer (or use "gpt2", etc.)
+	chunk_size=2048         # Maximum tokens or characters per chunk
+)
+```
+
+## Parameters
+
+<ParamField
+	path="tokenizer"
+	type="Union[str, Callable, Any]"
+	default="character"
+>
+	Tokenizer to use. Can be a string identifier ("character", "word", "gpt2", etc.) or a tokenizer instance.
+</ParamField>
+
+<ParamField
+	path="chunk_size"
+	type="int"
+	default="2048"
+>
+	Maximum number of tokens or characters per chunk.
+</ParamField>
+
+## Usage
+
+```python
+from chonkie import TableChunker
+
+table = """
+| Name   | Age | City     |
+|--------|-----|----------|
+| Alice  | 30  | New York |
+| Bob    | 25  | London   |
+| Carol  | 28  | Paris    |
+| Dave   | 35  | Berlin   |
+"""
+
+chunker = TableChunker(chunk_size=16)
+chunks = chunker.chunk(table)
+for chunk in chunks:
+	print(chunk.text)
+```
+
+## Example Output
+
+Each chunk is a valid markdown table segment, always including the header. For the example above and `chunk_size=16`, you might get:
+
+```markdown
+| Name   | Age | City     |
+|--------|-----|----------|
+| Alice  | 30  | New York |
+| Bob    | 25  | London   |
+```
+
+```markdown
+| Name   | Age | City     |
+|--------|-----|----------|
+| Carol  | 28  | Paris    |
+| Dave   | 35  | Berlin   |
+```
+
+## Methods
+
+- `chunk(table: str) -> List[Chunk]`: Chunk a markdown table string.
+- `chunk_document(document: Document) -> Document`: Chunk all tables in a `MarkdownDocument`.
+
+## Notes
+
+- Requires at least a header, separator, and one data row.
+- If the table fits within the chunk size, it is returned as a single chunk.
+- For advanced use, pass a custom tokenizer for token-based chunking.
+
+---
+
+See also: [Chunkers Overview](/python-sdk/chunkers/overview)
