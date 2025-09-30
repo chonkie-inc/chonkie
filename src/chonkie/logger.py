@@ -33,6 +33,7 @@ from loguru import logger
 # Track if we've configured the logger
 _configured = False
 _enabled = True
+_handler_id: Optional[int] = None
 
 # Default configuration
 DEFAULT_LOG_LEVEL = "INFO"
@@ -83,13 +84,20 @@ def _parse_log_setting(value: Optional[str]) -> Tuple[bool, str]:
 
 def _configure_default():
     """Configure logger with default settings if not already configured."""
-    global _configured, _enabled
+    global _configured, _enabled, _handler_id
 
     if _configured:
         return
 
-    # Remove default handler
-    logger.remove()
+    # Remove the library's specific handler if it exists
+    if _handler_id is not None:
+        try:
+            logger.remove(_handler_id)
+        except ValueError:
+            pass  # Handler already removed
+    else:
+        # On first configuration, remove the default handler
+        logger.remove()
 
     # Parse CHONKIE_LOG environment variable
     enabled, level = _parse_log_setting(os.getenv("CHONKIE_LOG"))
@@ -100,8 +108,8 @@ def _configure_default():
         _configured = True
         return
 
-    # Add stderr handler with formatting
-    logger.add(
+    # Add stderr handler with formatting and store its ID
+    _handler_id = logger.add(
         sys.stderr,
         format=DEFAULT_FORMAT,
         level=level,
@@ -164,10 +172,14 @@ def configure_logging(
         >>> configure_logging("info")  # Re-enable at INFO level
 
     """
-    global _configured, _enabled
+    global _configured, _enabled, _handler_id
 
-    # Remove all existing handlers
-    logger.remove()
+    # Remove the library's specific handler if it exists
+    if _handler_id is not None:
+        try:
+            logger.remove(_handler_id)
+        except ValueError:
+            pass  # Handler already removed
 
     # Parse the level setting
     enabled, log_level = _parse_log_setting(level)
@@ -181,8 +193,8 @@ def configure_logging(
     # Use provided format or default
     log_format = format or DEFAULT_FORMAT
 
-    # Add stderr handler
-    logger.add(
+    # Add stderr handler and store its ID
+    _handler_id = logger.add(
         sys.stderr,
         format=log_format,
         level=log_level,
