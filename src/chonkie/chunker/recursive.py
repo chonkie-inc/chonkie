@@ -112,7 +112,7 @@ class RecursiveChunker(BaseChunker):
         logger.info("Loading RecursiveChunker recipe", name=name, lang=lang)
         # Create a recursive rules object
         rules = RecursiveRules.from_recipe(name, lang, path)
-        logger.debug(f"Recipe loaded successfully with {len(rules.levels)} levels")
+        logger.debug(f"Recipe loaded successfully with {len(rules.levels or [])} levels")
         return cls(
             tokenizer_or_token_counter=tokenizer_or_token_counter,
             rules=rules,

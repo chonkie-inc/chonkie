@@ -26,7 +26,7 @@ Example:
 
 import os
 import sys
-from typing import Optional, Tuple
+from typing import Any, Optional, Tuple
 
 from loguru import logger
 
@@ -82,7 +82,7 @@ def _parse_log_setting(value: Optional[str]) -> Tuple[bool, str]:
     return True, DEFAULT_LOG_LEVEL
 
 
-def _configure_default():
+def _configure_default() -> None:
     """Configure logger with default settings if not already configured."""
     global _configured, _enabled, _handler_id
 
@@ -120,7 +120,7 @@ def _configure_default():
     _configured = True
 
 
-def get_logger(module_name: str):
+def get_logger(module_name: str) -> Any:
     """Get a logger instance for a specific module.
 
     This function returns a loguru logger bound with the module name as context.

@@ -110,7 +110,7 @@ class LateChunker(RecursiveChunker):
         logger.info("Loading LateChunker recipe", name=name, lang=lang)
         # Create a hubbie instance
         rules = RecursiveRules.from_recipe(name, lang, path)
-        logger.debug(f"Recipe loaded successfully with {len(rules.levels)} levels")
+        logger.debug(f"Recipe loaded successfully with {len(rules.levels or [])} levels")
         return cls(
             embedding_model=embedding_model,
             chunk_size=chunk_size,
