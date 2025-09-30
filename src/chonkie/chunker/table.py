@@ -1,9 +1,12 @@
 """Table chunker for processing markdown tables."""
 
+import re
 from typing import Any, Callable, List, Union
 
+from typing_extensions import Tuple
+
 from chonkie.chunker.base import BaseChunker
-from chonkie.types import Chunk
+from chonkie.types import Chunk, Document, MarkdownDocument
 
 
 class TableChunker(BaseChunker):
@@ -28,6 +31,16 @@ class TableChunker(BaseChunker):
             raise ValueError("Chunk size must be greater than 0.")
         
         self.chunk_size = chunk_size
+        self.newline_pattern = re.compile(r"\n(?=\|)")
+        self.sep = "✄"
+    
+    def _split_table(self, table: str) -> Tuple[str, List[str]]:
+        # insert separator right after the newline that precedes a pipe
+        raw = self.newline_pattern.sub(rf"\n{self.sep}", table)
+        chunks = [c for c in raw.split(self.sep) if c]   # keep empty strings away
+        header = "".join(chunks[:2])      # header line + separator line
+        rows   = chunks[2:]                # data rows still contain their trailing \n
+        return header, rows
 
     def chunk(self, table: str) -> List[Chunk]:
         """Chunk the table into smaller tables based on the chunk size.
@@ -39,57 +52,87 @@ class TableChunker(BaseChunker):
             List[MarkdownTable]: A list of MarkdownTable chunks.
 
         """
-        # Check if the table size is smaller than the chunk size
-        table_token_count = self.tokenizer.count_tokens(table)
-        if table_token_count <= self.chunk_size:
-            return [Chunk(text=table, token_count=table_token_count, start_index=0, end_index=len(table))]
-        
-        # If the table is larger than the chunk size, we need to split it into smaller chunks
-        rows = table.strip().split("\n")
-        if len(rows) < 2:
+        # Basic validation
+        if not table.strip():
             raise ValueError("Table must have at least a header and one row.")
 
-        header = "\n".join(rows[0:2])  # header and separators
-        data_rows = rows[2:]
+        rows = table.strip().split("\n")
+        if len(rows) < 3:  # Need header, separator, and at least one data row
+            raise ValueError("Table must have at least a header and one row.")
 
-        chunks = []
+        # Check if the table size is smaller than the chunk size
+        table_token_count = self.tokenizer.count_tokens(table.strip())
+        if table_token_count <= self.chunk_size:
+            return [Chunk(text=table, token_count=table_token_count, start_index=0, end_index=len(table))]
+
+        header, data_rows = self._split_table(table)
+
+        chunks: List[Chunk] = []
+        header_token_count = self.tokenizer.count_tokens(header)
+        current_token_count = header_token_count
+        current_index = 0
         current_chunk = [header]
-        current_size :int = self.tokenizer.count_tokens(header)
-        newline_size = self.tokenizer.count_tokens("\n")
 
         # split data rows into chunks
         for row in data_rows:
             row_size = self.tokenizer.count_tokens(row)
             # if adding this row exceeds chunk size
-            if current_size + newline_size + row_size >= self.chunk_size:
+            if current_token_count + row_size >= self.chunk_size and len(current_chunk) > 1:
                 # only create a new chunk if the current chunk has more than just the header
-                if len(current_chunk) > 2:
-                    chunks.append("\n".join(current_chunk))
-                    current_chunk = [header, row]
-                    current_size = self.tokenizer.count_tokens(header) + row_size
                 # if the current chunk only has the header, we need to add the row anyway
-                else:
-                    current_chunk.append(row)
-                    current_size += row_size
-            # if the current chunk is full, we need to create a new chunk
+                if chunks == []:
+                    chunk  = Chunk(
+                        text="".join(current_chunk),
+                        start_index=current_index,
+                        end_index=current_index + len("".join(current_chunk)),
+                        token_count=current_token_count
+                    )
+                    chunks.append(chunk)
+                    current_index = chunk.end_index
+                else:   
+                    chunk_len = len("".join(current_chunk)) - len(header)
+                    chunk = Chunk(
+                        text="".join(current_chunk),
+                        start_index=current_index,
+                        end_index=current_index + chunk_len,
+                        token_count=current_token_count
+                    )
+                    chunks.append(chunk)
+                    current_index = chunk.end_index
+                current_chunk = [header, row]
+                current_token_count = header_token_count + row_size
+            # if the current chunk is not full, we need to add the row to the current chunk
             else:
                 current_chunk.append(row)
-                current_size += row_size
-
-        # final chunk
-        chunks.append("\n".join(current_chunk))
-
-        # Convert the chunks into chunk objects
-        current_index = 0
-        final_chunks = []
-        for chunk in chunks:
-            final_chunks.append(
-                Chunk(
-                    text=chunk, 
-                    token_count=self.tokenizer.count_tokens(chunk),
-                    start_index=current_index,
-                    end_index=current_index + len(chunk)
-                )
+                current_token_count += row_size
+        
+        # if the current chunk is not full, we need to add the row to the current chunk
+        if len(current_chunk) > 1:
+            chunk_len = len("".join(current_chunk)) - len(header) if chunks != [] else len("".join(current_chunk))
+            chunk = Chunk(
+                text="".join(current_chunk),
+                start_index=current_index,
+                end_index=current_index + chunk_len,
+                token_count=current_token_count
             )
-            current_index += len(chunk)
-        return final_chunks
+            chunks.append(chunk)
+        
+        return chunks
+    
+    def chunk_document(self, document: Document) -> Document:
+        """Chunk a document."""
+        if isinstance(document, MarkdownDocument) and document.tables:
+            for table in document.tables:
+                chunks = self.chunk(table.content)
+                for chunk in chunks:
+                    chunk.start_index = table.start_index + chunk.start_index
+                    chunk.end_index = table.start_index + chunk.end_index
+                document.chunks.extend(chunks)
+            document.chunks.sort(key=lambda x: x.start_index)
+        else: 
+            document.chunks = self.chunk(document.content)
+        return document
+    
+    def __repr__(self) -> str:
+        """Return a string representation of the TableChunker."""
+        return f"TableChunker(tokenizer={self.tokenizer}, chunk_size={self.chunk_size})"
