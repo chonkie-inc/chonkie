@@ -138,6 +138,7 @@ class TableChunker(BaseChunker):
         else:
             # Don't change the current chunks; assume it would be an empty list if no chunks are present
             document.chunks.extend(self.chunk(document.content))
+            document.chunks.sort(key=lambda x: x.start_index)
         return document
     
     def __repr__(self) -> str:
