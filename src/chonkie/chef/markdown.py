@@ -14,8 +14,11 @@ from chonkie.types import (
   MarkdownImage,
   MarkdownTable,
 )
+from chonkie.logger import get_logger
 
 from .base import BaseChef
+
+logger = get_logger(__name__)
 
 
 class MarkdownChef(BaseChef):
@@ -192,8 +195,10 @@ class MarkdownChef(BaseChef):
         MarkdownDocument: The processed markdown document.
 
     """
+    logger.debug(f"Processing markdown file: {path}")
     # Read the markdown file
     markdown = self.read(path)
+    logger.debug(f"Read {len(markdown)} characters from markdown file")
 
     # Extract all the tables, code snippets, and images
     tables = self.prepare_tables(markdown)
@@ -203,6 +208,7 @@ class MarkdownChef(BaseChef):
     # Extract the chunks
     chunks: List[Chunk] = self.extract_chunks(markdown, tables, code, images)
 
+    logger.info(f"Markdown processing complete: extracted {len(tables)} tables, {len(code)} code blocks, {len(images)} images, {len(chunks)} chunks")
     return MarkdownDocument(
       content=markdown,
       tables=tables,

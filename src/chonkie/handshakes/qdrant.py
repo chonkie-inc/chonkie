@@ -14,9 +14,12 @@ from uuid import NAMESPACE_OID, uuid5
 
 from chonkie.embeddings import AutoEmbeddings, BaseEmbeddings
 from chonkie.types import Chunk
+from chonkie.logger import get_logger
 
 from .base import BaseHandshake
 from .utils import generate_random_collection_name
+
+logger = get_logger(__name__)
 
 if TYPE_CHECKING:
     import qdrant_client
@@ -183,6 +186,7 @@ class QdrantHandshake(BaseHandshake):
         if isinstance(chunks, Chunk):
             chunks = [chunks]
 
+        logger.debug(f"Writing {len(chunks)} chunks to Qdrant collection: {self.collection_name}")
         points = self._get_points(chunks)
 
         # Write the points to the collection
@@ -190,6 +194,7 @@ class QdrantHandshake(BaseHandshake):
             collection_name=self.collection_name, points=points, wait=True
         )
 
+        logger.info(f"Successfully wrote {len(chunks)} chunks to Qdrant collection: {self.collection_name}")
         print(
             f"🦛 Chonkie wrote {len(chunks)} chunks to Qdrant collection: {self.collection_name}"
         )
@@ -215,6 +220,7 @@ class QdrantHandshake(BaseHandshake):
             List[Dict[str, Any]]: The list of most similar chunks with their metadata.
 
         """
+        logger.debug(f"Searching Qdrant collection: {self.collection_name} with limit={limit}")
         if embedding is None and query is None:
             raise ValueError("Either query or embedding must be provided")
         if query is not None:
@@ -226,7 +232,9 @@ class QdrantHandshake(BaseHandshake):
             limit=limit,
             with_payload=True,
         )
-        return [
+        matches = [
             {"id": result["id"], "score": result["score"], **result["payload"]}
             for result in results.dict()["points"]
         ]
+        logger.info(f"Search complete: found {len(matches)} matching chunks")
+        return matches

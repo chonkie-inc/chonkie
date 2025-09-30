@@ -6,6 +6,9 @@ from typing import TYPE_CHECKING, List, Union
 
 from chonkie.chef.base import BaseChef
 from chonkie.types import MarkdownTable
+from chonkie.logger import get_logger
+
+logger = get_logger(__name__)
 
 if TYPE_CHECKING:
     import pandas as pd
@@ -35,18 +38,28 @@ class TableChef(BaseChef):
             Union[str, List[MarkdownTable], None]: Markdown string of the table or list of markdown tables.
 
         """
+        logger.debug(f"Processing table file/string: {path}")
         self._lazy_import_pandas()
         # if file exists
         if Path(path).is_file():
             str_path = str(path)
             if str_path.endswith(".csv"):
+                logger.debug("Processing CSV file")
                 df = pd.read_csv(str_path)
-                return df.to_markdown(index=False)
+                markdown = df.to_markdown(index=False)
+                logger.info(f"CSV processing complete: converted {len(df)} rows to markdown")
+                return markdown
             elif str_path.endswith(".xls") or str_path.endswith(".xlsx"):
+                logger.debug("Processing Excel file")
                 df = pd.read_excel(str_path)
-                return df.to_markdown(index=False)
+                markdown = df.to_markdown(index=False)
+                logger.info(f"Excel processing complete: converted {len(df)} rows to markdown")
+                return markdown
         # else string is a markedown table
-        return self.extract_tables_from_markdown(str(path))
+        logger.debug("Extracting tables from markdown string")
+        tables = self.extract_tables_from_markdown(str(path))
+        logger.info(f"Markdown table extraction complete: found {len(tables)} tables")
+        return tables
 
     def process_batch(
         self, paths: Union[List[str], List[Path]]

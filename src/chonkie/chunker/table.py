@@ -7,6 +7,9 @@ from typing_extensions import Tuple
 
 from chonkie.chunker.base import BaseChunker
 from chonkie.types import Chunk, Document, MarkdownDocument
+from chonkie.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 class TableChunker(BaseChunker):
@@ -52,6 +55,7 @@ class TableChunker(BaseChunker):
             List[MarkdownTable]: A list of MarkdownTable chunks.
 
         """
+        logger.debug(f"Starting table chunking for table of length {len(table)}")
         # Basic validation
         if not table.strip():
             raise ValueError("Table must have at least a header and one row.")
@@ -116,12 +120,15 @@ class TableChunker(BaseChunker):
                 token_count=current_token_count
             )
             chunks.append(chunk)
-        
+
+        logger.info(f"Created {len(chunks)} table chunks from markdown table")
         return chunks
     
     def chunk_document(self, document: Document) -> Document:
         """Chunk a document."""
+        logger.debug(f"Chunking document with {len(document.content) if hasattr(document, 'content') else 0} characters")
         if isinstance(document, MarkdownDocument) and document.tables:
+            logger.debug(f"Processing MarkdownDocument with {len(document.tables)} tables")
             for table in document.tables:
                 chunks = self.chunk(table.content)
                 for chunk in chunks:
@@ -129,8 +136,9 @@ class TableChunker(BaseChunker):
                     chunk.end_index = table.start_index + chunk.end_index
                 document.chunks.extend(chunks)
             document.chunks.sort(key=lambda x: x.start_index)
-        else: 
+        else:
             document.chunks = self.chunk(document.content)
+        logger.info(f"Document chunking complete: {len(document.chunks)} chunks created")
         return document
     
     def __repr__(self) -> str:

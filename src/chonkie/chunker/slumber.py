@@ -8,8 +8,11 @@ from tqdm import tqdm
 
 from chonkie.genie import BaseGenie, GeminiGenie
 from chonkie.types import Chunk, RecursiveLevel, RecursiveRules
+from chonkie.logger import get_logger
 
 from .base import BaseChunker
+
+logger = get_logger(__name__)
 
 try:
     from .c_extensions.split import split_text
@@ -240,7 +243,9 @@ class SlumberChunker(BaseChunker):
 
     def chunk(self, text: str) -> List[Chunk]:
         """Chunk the text with the SlumberChunker."""
+        logger.debug(f"Starting slumber chunking for text of length {len(text)}")
         splits = self._recursive_split(text, level=0, offset=0)
+        logger.debug(f"Created {len(splits)} initial splits for LLM-based semantic boundary detection")
 
         # Add the IDS to the splits
         prepared_split_texts = self._prepare_splits(splits)
@@ -293,6 +298,7 @@ class SlumberChunker(BaseChunker):
             if self.verbose:
                 progress_bar.update(current_pos - progress_bar.n)
 
+        logger.info(f"Created {len(chunks)} chunks using LLM-guided semantic splitting")
         return chunks
 
     def _import_dependencies(self) -> None:

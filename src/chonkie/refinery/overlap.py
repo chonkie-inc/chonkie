@@ -7,6 +7,9 @@ from typing import Any, Callable, List, Literal, Union
 from chonkie.refinery.base import BaseRefinery
 from chonkie.tokenizer import Tokenizer
 from chonkie.types import Chunk, RecursiveLevel, RecursiveRules
+from chonkie.logger import get_logger
+
+logger = get_logger(__name__)
 
 # TODO: Fix the way that float context size is handled.
 # Currently, it just estimates the context size to token count
@@ -411,7 +414,7 @@ class OverlapRefinery(BaseRefinery):
 
     def refine(self, chunks: List[Chunk]) -> List[Chunk]:
         """Refine the chunks based on the overlap.
-        
+
         Args:
             chunks: The chunks to refine.
 
@@ -419,8 +422,10 @@ class OverlapRefinery(BaseRefinery):
             The refined chunks.
 
         """
+        logger.debug(f"Starting overlap refinery for {len(chunks)} chunks with method={self.method}, mode={self.mode}")
         # Check if the chunks are empty
         if not chunks:
+            logger.debug("No chunks to refine, returning empty list")
             return chunks
 
         # Check if all the chunks are of the same type
@@ -436,11 +441,14 @@ class OverlapRefinery(BaseRefinery):
 
         # Refine the chunks based on the method
         if self.method == "prefix":
-            return self._refine_prefix(chunks, effective_context_size)
+            refined_chunks = self._refine_prefix(chunks, effective_context_size)
         elif self.method == "suffix":
-            return self._refine_suffix(chunks, effective_context_size)
+            refined_chunks = self._refine_suffix(chunks, effective_context_size)
         else:
             raise ValueError("Method must be one of: prefix, suffix.")
+
+        logger.info(f"Overlap refinement complete: added context to {len(refined_chunks)} chunks")
+        return refined_chunks
         
     def __repr__(self) -> str:
         """Return the string representation of the refinery."""
