@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from chonkie import Chunk, TableChunker
+from chonkie import Chunk, TableChunker, RecursiveChunker
+from chonkie.types import Document, MarkdownDocument, MarkdownTable
 
 
 @pytest.fixture
@@ -158,20 +159,23 @@ def test_table_chunker_invalid_table() -> None:
     invalid_table = """| Name | Value |
 |------|-------|"""
 
-    with pytest.raises(ValueError, match="Table must have at least a header and one row"):
-        chunker.chunk(invalid_table)
+    with pytest.warns(UserWarning, match="Table must have at least a header, separator, and one data row"):
+        chunks = chunker.chunk(invalid_table)
+        assert len(chunks) == 0
 
     # Single line (no table structure)
-    with pytest.raises(ValueError, match="Table must have at least a header and one row"):
-        chunker.chunk("Just a single line")
+    with pytest.warns(UserWarning, match="Table must have at least a header, separator, and one data row"):
+        chunks = chunker.chunk("Just a single line")
+        assert len(chunks) == 0
 
 
 def test_table_chunker_empty_input() -> None:
     """Test that the TableChunker handles empty input."""
     chunker = TableChunker(tokenizer="character", chunk_size=500)
 
-    with pytest.raises(ValueError, match="Table must have at least a header and one row"):
-        chunker.chunk("")
+    with pytest.warns(UserWarning, match="No table content found"):
+        chunks = chunker.chunk("")
+        assert len(chunks) == 0
 
 
 def test_table_chunker_exact_chunk_size() -> None:
@@ -239,3 +243,442 @@ def test_table_chunker_repr() -> None:
     repr_str = repr(chunker)
     assert "TableChunker" in repr_str
     assert "500" in repr_str
+
+
+# ==================== Edge Case Tests ====================
+
+
+def test_table_chunker_single_row() -> None:
+    """Test table with exactly one data row."""
+    table = """| Name | Value |
+|------|-------|
+| A | 1 |"""
+
+    chunker = TableChunker(tokenizer="character", chunk_size=100)
+    chunks = chunker.chunk(table)
+
+    assert len(chunks) == 1
+    assert chunks[0].text == table
+
+
+def test_table_chunker_very_wide_table() -> None:
+    """Test table with many columns that might cause formatting issues."""
+    table = """| C1 | C2 | C3 | C4 | C5 | C6 | C7 | C8 | C9 | C10 |
+|----|----|----|----|----|----|----|----|----|-----|
+| 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 |
+| 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 |"""
+
+    chunker = TableChunker(tokenizer="character", chunk_size=100)
+    chunks = chunker.chunk(table)
+
+    # Should chunk due to size constraint
+    assert len(chunks) >= 1
+    # All chunks should have header
+    for chunk in chunks:
+        assert "| C1 | C2 |" in chunk.text
+        assert "|----|----|" in chunk.text
+
+
+def test_table_chunker_very_long_row() -> None:
+    """Test table with a single row that exceeds chunk size."""
+    table = """| Name | Description |
+|------|-------------|
+| Item | This is an extremely long description that goes on and on and contains lots of information that will definitely exceed the chunk size limit we set for this test |"""
+
+    chunker = TableChunker(tokenizer="character", chunk_size=50)
+    chunks = chunker.chunk(table)
+
+    # Should create chunk even though row exceeds size
+    assert len(chunks) >= 1
+    # First chunk should contain the long row
+    assert "extremely long description" in chunks[0].text
+
+
+def test_table_chunker_irregular_spacing() -> None:
+    """Test table with irregular spacing and alignment."""
+    table = """| Name|Age|City |
+|---|---|---|
+|John  |25|NYC|
+| Alice|30| London   |
+|  Bob  | 35 |  Paris  |"""
+
+    chunker = TableChunker(tokenizer="character", chunk_size=500)
+    chunks = chunker.chunk(table)
+
+    assert len(chunks) >= 1
+    # Check that all rows are preserved
+    assert "John" in "".join(c.text for c in chunks)
+    assert "Alice" in "".join(c.text for c in chunks)
+    assert "Bob" in "".join(c.text for c in chunks)
+
+
+def test_table_chunker_special_characters() -> None:
+    """Test table containing special characters and symbols."""
+    table = """| Symbol | Meaning |
+|--------|---------|
+| @ | At sign |
+| # | Hash |
+| $ | Dollar |
+| % | Percent |
+| & | Ampersand |
+| * | Asterisk |
+| | | Pipe (escaped) |"""
+
+    chunker = TableChunker(tokenizer="character", chunk_size=80)
+    chunks = chunker.chunk(table)
+
+    # Verify all symbols are present
+    combined_text = "".join(c.text for c in chunks)
+    assert "@" in combined_text
+    assert "#" in combined_text
+    assert "$" in combined_text
+    assert "%" in combined_text
+
+
+def test_table_chunker_unicode_content() -> None:
+    """Test table with unicode and emoji content."""
+    table = """| Name | Country | Flag |
+|------|---------|------|
+| Tokyo | Japan | 🇯🇵 |
+| Paris | France | 🇫🇷 |
+| Berlin | Germany | 🇩🇪 |
+| Москва | Россия | 🇷🇺 |
+| 北京 | 中国 | 🇨🇳 |"""
+
+    chunker = TableChunker(tokenizer="character", chunk_size=100)
+    chunks = chunker.chunk(table)
+
+    # Verify unicode is preserved
+    combined_text = "".join(c.text for c in chunks)
+    assert "Tokyo" in combined_text
+    assert "Москва" in combined_text
+    assert "北京" in combined_text
+    assert "🇯🇵" in combined_text
+
+
+def test_table_chunker_empty_cells() -> None:
+    """Test table with empty cells."""
+    table = """| Name | Value | Description |
+|------|-------|-------------|
+| A | 1 | |
+| B | | Some text |
+| C | | |
+| D | 4 | Complete |"""
+
+    chunker = TableChunker(tokenizer="character", chunk_size=60)
+    chunks = chunker.chunk(table)
+
+    assert len(chunks) >= 1
+    # Verify structure is maintained
+    for chunk in chunks:
+        lines = chunk.text.strip().split('\n')
+        # Each line should have the same number of pipe characters
+        if len(lines) > 2:  # If there are data rows
+            pipe_counts = [line.count('|') for line in lines]
+            assert len(set(pipe_counts)) == 1  # All should be the same
+
+
+def test_table_chunker_exact_boundary_conditions() -> None:
+    """Test chunking at exact boundary conditions."""
+    # Create a table where rows fit exactly at chunk boundaries
+    table = """| A | B |
+|---|---|
+| 1 | 2 |
+| 3 | 4 |
+| 5 | 6 |"""
+
+    header_and_sep = "| A | B |\n|---|---|"
+    row_size = len("\n| 1 | 2 |")
+
+    # Set chunk size to fit header + exactly 2 rows
+    chunk_size = len(header_and_sep) + (row_size * 2)
+
+    chunker = TableChunker(tokenizer="character", chunk_size=chunk_size)
+    chunks = chunker.chunk(table)
+
+    # Should split into chunks respecting boundary
+    assert len(chunks) >= 1
+    for chunk in chunks:
+        assert "| A | B |" in chunk.text
+
+
+def test_table_chunker_whitespace_only_cells() -> None:
+    """Test table with cells containing only whitespace."""
+    table = """| Name | Value |
+|------|-------|
+| A |   |
+|   | B |
+|  |  |"""
+
+    chunker = TableChunker(tokenizer="character", chunk_size=100)
+    chunks = chunker.chunk(table)
+
+    assert len(chunks) >= 1
+    # Structure should be maintained
+    for chunk in chunks:
+        assert "|" in chunk.text
+
+
+def test_table_chunker_trailing_newlines() -> None:
+    """Test table with trailing newlines."""
+    table = """| Name | Value |
+|------|-------|
+| A | 1 |
+| B | 2 |
+
+"""
+
+    chunker = TableChunker(tokenizer="character", chunk_size=100)
+    chunks = chunker.chunk(table)
+
+    assert len(chunks) >= 1
+    # Should handle gracefully
+    assert "| A | 1 |" in "".join(c.text for c in chunks)
+
+
+def test_table_chunker_numeric_edge_cases() -> None:
+    """Test table with various numeric formats."""
+    table = """| Number | Value |
+|--------|-------|
+| 0 | Zero |
+| -1 | Negative |
+| 3.14159 | Pi |
+| 1e10 | Scientific |
+| 0xFF | Hex |"""
+
+    chunker = TableChunker(tokenizer="character", chunk_size=70)
+    chunks = chunker.chunk(table)
+
+    combined_text = "".join(c.text for c in chunks)
+    assert "0" in combined_text
+    assert "-1" in combined_text
+    assert "3.14159" in combined_text
+
+
+def test_table_chunker_markdown_document_empty_tables() -> None:
+    """Test MarkdownDocument with empty tables list."""
+    doc = MarkdownDocument(content="# Title\n\nSome text", tables=[])
+    chunker = TableChunker(tokenizer="character", chunk_size=100)
+
+    result = chunker.chunk_document(doc)
+
+    # Should return document with original chunks (empty in this case)
+    assert isinstance(result, MarkdownDocument)
+
+
+def test_table_chunker_markdown_document_multiple_tables() -> None:
+    """Test MarkdownDocument with multiple tables."""
+    table1 = """| A | B |
+|---|---|
+| 1 | 2 |"""
+
+    table2 = """| X | Y |
+|---|---|
+| 3 | 4 |"""
+
+    content = f"# Title\n\n{table1}\n\nSome text\n\n{table2}"
+
+    doc = MarkdownDocument(
+        content=content,
+        tables=[
+            MarkdownTable(content=table1, start_index=9, end_index=9 + len(table1)),
+            MarkdownTable(content=table2, start_index=9 + len(table1) + 12,
+                         end_index=9 + len(table1) + 12 + len(table2))
+        ]
+    )
+
+    chunker = TableChunker(tokenizer="character", chunk_size=100)
+    result = chunker.chunk_document(doc)
+
+    # Should process both tables
+    assert len(result.chunks) >= 2
+    # Chunks should be sorted by start_index
+    for i in range(len(result.chunks) - 1):
+        assert result.chunks[i].start_index <= result.chunks[i + 1].start_index
+
+
+def test_table_chunker_plain_document() -> None:
+    """Test that TableChunker handles plain Document objects."""
+    table = """| Name | Value |
+|------|-------|
+| A | 1 |
+| B | 2 |"""
+
+    doc = Document(content=table)
+    chunker = TableChunker(tokenizer="character", chunk_size=100)
+
+    result = chunker.chunk_document(doc)
+
+    assert isinstance(result, Document)
+    assert len(result.chunks) >= 1
+
+
+# ==================== Integration Tests ====================
+
+
+def test_table_chunker_after_recursive_chunker() -> None:
+    """Test using TableChunker after RecursiveChunker on a document with tables."""
+    # Create a document with text and tables mixed
+    table1 = """| Product | Price |
+|---------|-------|
+| Apple | $1.50 |
+| Banana | $0.75 |
+| Orange | $1.25 |"""
+
+    table2 = """| City | Population |
+|------|------------|
+| NYC | 8000000 |
+| LA | 4000000 |
+| Chicago | 2700000 |"""
+
+    content = f"""# Product Catalog
+
+This is our product catalog with fresh fruits.
+
+{table1}
+
+## City Statistics
+
+Here are some major cities and their populations.
+
+{table2}
+
+Thank you for shopping with us!"""
+
+    # First, create chunks using RecursiveChunker
+    recursive_chunker = RecursiveChunker(tokenizer_or_token_counter="character", chunk_size=200)
+    recursive_chunks = recursive_chunker.chunk(content)
+
+    # Verify recursive chunker created multiple chunks
+    assert len(recursive_chunks) > 1
+    initial_chunk_count = len(recursive_chunks)
+
+    # Now find which chunks contain tables
+    table1_start = content.index(table1)
+    table2_start = content.index(table2)
+
+    # Create MarkdownDocument with table locations
+    doc = MarkdownDocument(
+        content=content,
+        tables=[
+            MarkdownTable(content=table1, start_index=table1_start,
+                         end_index=table1_start + len(table1)),
+            MarkdownTable(content=table2, start_index=table2_start,
+                         end_index=table2_start + len(table2))
+        ],
+        chunks=recursive_chunks
+    )
+
+    # Apply TableChunker
+    table_chunker = TableChunker(tokenizer="character", chunk_size=100)
+    result = table_chunker.chunk_document(doc)
+
+    # Verify both chunkers' results are present
+    assert len(result.chunks) >= initial_chunk_count  # Should have at least as many chunks
+
+    # Verify chunks are sorted by start_index
+    for i in range(len(result.chunks) - 1):
+        assert result.chunks[i].start_index <= result.chunks[i + 1].start_index
+
+    # Verify table content is preserved
+    table_chunks = [c for c in result.chunks if "| Product |" in c.text or "| City |" in c.text]
+    assert len(table_chunks) > 0
+
+    # Verify content from both tables is present
+    all_text = "".join(c.text for c in result.chunks)
+    assert "Apple" in all_text
+    assert "NYC" in all_text
+
+
+def test_table_chunker_quality_after_recursive() -> None:
+    """Test the quality of results when TableChunker is used after RecursiveChunker."""
+    # Create a realistic document with mixed content
+    large_table = """| ID | Name | Email | Department | Salary |
+|-----|---------|-----------------|------------|--------|
+| 001 | Alice | alice@corp.com | Engineering | 120000 |
+| 002 | Bob | bob@corp.com | Sales | 95000 |
+| 003 | Carol | carol@corp.com | Marketing | 85000 |
+| 004 | David | david@corp.com | Engineering | 115000 |
+| 005 | Eve | eve@corp.com | HR | 75000 |
+| 006 | Frank | frank@corp.com | Sales | 92000 |
+| 007 | Grace | grace@corp.com | Engineering | 125000 |
+| 008 | Henry | henry@corp.com | Marketing | 88000 |"""
+
+    content = f"""# Employee Directory
+
+Welcome to our employee directory. Below you'll find information about all current employees.
+
+{large_table}
+
+## Notes
+
+All employee information is confidential. Please maintain appropriate data privacy standards.
+
+For questions about this directory, contact HR at hr@corp.com."""
+
+    # First pass: RecursiveChunker
+    recursive_chunker = RecursiveChunker(tokenizer_or_token_counter="character", chunk_size=300)
+    doc = Document(content=content)
+    recursive_result = recursive_chunker.chunk_document(doc)
+
+    # Second pass: Extract tables and apply TableChunker
+    table_start = content.index(large_table)
+    markdown_doc = MarkdownDocument(
+        content=content,
+        tables=[
+            MarkdownTable(content=large_table, start_index=table_start,
+                         end_index=table_start + len(large_table))
+        ],
+        chunks=recursive_result.chunks.copy()
+    )
+
+    table_chunker = TableChunker(tokenizer="character", chunk_size=200)
+    final_result = table_chunker.chunk_document(markdown_doc)
+
+    # Quality checks
+    # 1. No content should be lost
+    all_chunk_text = "".join(c.text for c in final_result.chunks)
+    assert "Alice" in all_chunk_text
+    assert "Henry" in all_chunk_text
+    assert "Welcome to our employee directory" in all_chunk_text
+
+    # 2. Table chunks should have headers
+    table_chunks = [c for c in final_result.chunks if "| ID | Name |" in c.text]
+    assert len(table_chunks) > 0
+
+    for table_chunk in table_chunks:
+        # Each table chunk should have header and separator
+        assert "| ID | Name | Email | Department | Salary |" in table_chunk.text
+        assert "|-----|" in table_chunk.text
+
+    # 3. Chunks should respect size constraints (with some tolerance for headers)
+    for chunk in final_result.chunks:
+        # Allow some overflow for table headers
+        assert chunk.token_count <= 300 or "| ID | Name |" in chunk.text
+
+    # 4. All chunks should be sorted by start index
+    sorted_chunks = sorted(final_result.chunks, key=lambda x: x.start_index)
+    assert final_result.chunks == sorted_chunks
+
+    # 5. Verify that we have chunks from both recursive and table chunkers
+    # Table chunks will have the table header
+    # Recursive chunks may or may not have table content
+    assert len(table_chunks) >= 1  # At least one table chunk from TableChunker
+
+
+def test_table_chunker_very_small_chunk_size() -> None:
+    """Test table chunker with chunk size smaller than header."""
+    table = """| Name | Value |
+|------|-------|
+| A | 1 |
+| B | 2 |"""
+
+    # Set chunk size smaller than header
+    chunker = TableChunker(tokenizer="character", chunk_size=20)
+    chunks = chunker.chunk(table)
+
+    # Should still create chunks (header must be in each)
+    assert len(chunks) > 0
+    # Every chunk should have the header even if it exceeds chunk_size
+    for chunk in chunks:
+        assert "| Name | Value |" in chunk.text
