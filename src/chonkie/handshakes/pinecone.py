@@ -15,8 +15,8 @@ from typing import (
 from uuid import NAMESPACE_OID, uuid5
 
 from chonkie.embeddings import AutoEmbeddings, BaseEmbeddings
-from chonkie.types import Chunk
 from chonkie.logger import get_logger
+from chonkie.types import Chunk
 
 from .base import BaseHandshake
 from .utils import generate_random_collection_name

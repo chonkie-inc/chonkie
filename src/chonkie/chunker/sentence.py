@@ -146,9 +146,9 @@ class SentenceChunker(BaseChunker):
         """
         # Create a hubbie instance
         hub = Hubbie()
-        logger.info(f"Loading SentenceChunker recipe", name=name, lang=lang)
+        logger.info("Loading SentenceChunker recipe", name=name, lang=lang)
         recipe = hub.get_recipe(name, lang, path)
-        logger.debug(f"Recipe loaded successfully", delim=recipe.get("delim"), include_delim=recipe.get("include_delim"))
+        logger.debug("Recipe loaded successfully", delim=recipe.get("delim"), include_delim=recipe.get("include_delim"))
         return cls(
             tokenizer_or_token_counter=tokenizer_or_token_counter,
             chunk_size=chunk_size,

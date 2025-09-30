@@ -5,8 +5,8 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 from uuid import NAMESPACE_OID, uuid5
 
 from chonkie.embeddings import AutoEmbeddings, BaseEmbeddings
-from chonkie.types import Chunk
 from chonkie.logger import get_logger
+from chonkie.types import Chunk
 
 from .base import BaseHandshake
 

@@ -7,8 +7,8 @@ from typing import Any, Callable, List, Optional, Union
 from tqdm import tqdm
 
 from chonkie.genie import BaseGenie, GeminiGenie
-from chonkie.types import Chunk, RecursiveLevel, RecursiveRules
 from chonkie.logger import get_logger
+from chonkie.types import Chunk, RecursiveLevel, RecursiveRules
 
 from .base import BaseChunker
 

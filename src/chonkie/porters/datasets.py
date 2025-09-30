@@ -6,8 +6,8 @@ import importlib
 import importlib.util as importutil
 from typing import TYPE_CHECKING, Any
 
-from chonkie.types import Chunk
 from chonkie.logger import get_logger
+from chonkie.types import Chunk
 
 from .base import BasePorter
 

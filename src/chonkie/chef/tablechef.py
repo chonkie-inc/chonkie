@@ -5,8 +5,8 @@ from pathlib import Path
 from typing import TYPE_CHECKING, List, Union
 
 from chonkie.chef.base import BaseChef
-from chonkie.types import MarkdownTable
 from chonkie.logger import get_logger
+from chonkie.types import MarkdownTable
 
 logger = get_logger(__name__)
 

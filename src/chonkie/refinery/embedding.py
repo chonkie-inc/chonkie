@@ -3,8 +3,8 @@
 from typing import Any, Dict, List, Union
 
 from chonkie.embeddings import AutoEmbeddings, BaseEmbeddings
-from chonkie.types import Chunk
 from chonkie.logger import get_logger
+from chonkie.types import Chunk
 
 from .base import BaseRefinery
 

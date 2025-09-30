@@ -10,9 +10,9 @@ from itertools import accumulate
 from typing import TYPE_CHECKING, Any, List, Literal, Tuple, Union
 
 from chonkie.chunker.base import BaseChunker
+from chonkie.logger import get_logger
 from chonkie.tokenizer import Tokenizer
 from chonkie.types import Chunk
-from chonkie.logger import get_logger
 
 logger = get_logger(__name__)
 

@@ -11,8 +11,8 @@ if TYPE_CHECKING:
     import numpy as np
 
 from chonkie.embeddings import AutoEmbeddings, BaseEmbeddings
-from chonkie.types import Chunk, Sentence
 from chonkie.logger import get_logger
+from chonkie.types import Chunk, Sentence
 from chonkie.utils import Hubbie
 
 from .base import BaseChunker

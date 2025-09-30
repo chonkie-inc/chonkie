@@ -6,6 +6,7 @@ from typing import Tuple, Union
 
 from typing_extensions import List
 
+from chonkie.logger import get_logger
 from chonkie.tokenizer import Tokenizer
 from chonkie.types import (
   Chunk,
@@ -14,7 +15,6 @@ from chonkie.types import (
   MarkdownImage,
   MarkdownTable,
 )
-from chonkie.logger import get_logger
 
 from .base import BaseChef
 

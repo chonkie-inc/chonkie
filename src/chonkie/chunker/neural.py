@@ -8,8 +8,8 @@ It trains an encoder style model on the task of token-classification (think: NER
 import importlib.util as importutil
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
-from chonkie.types import Chunk
 from chonkie.logger import get_logger
+from chonkie.types import Chunk
 
 from .base import BaseChunker
 

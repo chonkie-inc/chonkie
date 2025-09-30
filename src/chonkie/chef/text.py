@@ -3,8 +3,8 @@
 from pathlib import Path
 from typing import List, Union
 
-from chonkie.types import Document
 from chonkie.logger import get_logger
+from chonkie.types import Document
 
 from .base import BaseChef
 

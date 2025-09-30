@@ -4,10 +4,10 @@ import warnings
 from functools import lru_cache
 from typing import Any, Callable, List, Literal, Union
 
+from chonkie.logger import get_logger
 from chonkie.refinery.base import BaseRefinery
 from chonkie.tokenizer import Tokenizer
 from chonkie.types import Chunk, RecursiveLevel, RecursiveRules
-from chonkie.logger import get_logger
 
 logger = get_logger(__name__)
 

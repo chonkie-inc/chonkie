@@ -6,8 +6,8 @@ from typing import TYPE_CHECKING, Any, List, Optional, Union
 # Get all the Chonkie imports
 from chonkie.chunker.recursive import RecursiveChunker
 from chonkie.embeddings.sentence_transformer import SentenceTransformerEmbeddings
-from chonkie.types import Chunk, RecursiveRules
 from chonkie.logger import get_logger
+from chonkie.types import Chunk, RecursiveRules
 
 logger = get_logger(__name__)
 
@@ -107,7 +107,7 @@ class LateChunker(RecursiveChunker):
             ValueError: If the recipe is invalid or if the recipe is not found.
 
         """
-        logger.info(f"Loading LateChunker recipe", name=name, lang=lang)
+        logger.info("Loading LateChunker recipe", name=name, lang=lang)
         # Create a hubbie instance
         rules = RecursiveRules.from_recipe(name, lang, path)
         logger.debug(f"Recipe loaded successfully with {len(rules.levels)} levels")

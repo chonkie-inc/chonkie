@@ -69,7 +69,7 @@ class BaseChunker(ABC):
             warnings.warn(
                 f"Proceeding with 1 worker. Error calculating optimal worker count: {e}"
             )
-            logger.warning(f"Failed to calculate optimal worker count, using 1 worker", error=str(e))
+            logger.warning("Failed to calculate optimal worker count, using 1 worker", error=str(e))
             return 1
 
     def _sequential_batch_processing(

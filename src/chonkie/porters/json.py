@@ -2,8 +2,8 @@
 
 import json
 
-from chonkie.types import Chunk
 from chonkie.logger import get_logger
+from chonkie.types import Chunk
 
 from .base import BasePorter
 

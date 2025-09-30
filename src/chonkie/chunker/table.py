@@ -6,8 +6,8 @@ from typing import Any, Callable, List, Union
 from typing_extensions import Tuple
 
 from chonkie.chunker.base import BaseChunker
-from chonkie.types import Chunk, Document, MarkdownDocument
 from chonkie.logger import get_logger
+from chonkie.types import Chunk, Document, MarkdownDocument
 
 logger = get_logger(__name__)
 
