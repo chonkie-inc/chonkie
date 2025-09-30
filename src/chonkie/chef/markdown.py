@@ -182,19 +182,16 @@ class MarkdownChef(BaseChef):
 
     return chunks
 
-  def process(self, path: Union[str, Path]) -> MarkdownDocument:
-    """Process a markdown file into a MarkdownDocument.
+  def parse(self, markdown: str) -> MarkdownDocument:
+    """Parse markdown text directly into a MarkdownDocument.
 
     Args:
-        path (Union[str, Path]): The path to the markdown file.
+        markdown (str): The markdown text to parse.
 
     Returns:
         MarkdownDocument: The processed markdown document.
 
     """
-    # Read the markdown file
-    markdown = self.read(path)
-
     # Extract all the tables, code snippets, and images
     tables = self.prepare_tables(markdown)
     code = self.prepare_code(markdown)
@@ -210,3 +207,19 @@ class MarkdownChef(BaseChef):
       images=images,
       chunks=chunks
     )
+
+  def process(self, path: Union[str, Path]) -> MarkdownDocument:
+    """Process a markdown file into a MarkdownDocument.
+
+    Args:
+        path (Union[str, Path]): The path to the markdown file.
+
+    Returns:
+        MarkdownDocument: The processed markdown document.
+
+    """
+    # Read the markdown file
+    markdown = self.read(path)
+
+    # Use parse to process the content
+    return self.parse(markdown)
