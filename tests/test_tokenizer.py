@@ -11,7 +11,6 @@ from transformers import PreTrainedTokenizerFast
 from chonkie.tokenizer import (
     AutoTokenizer,
     CharacterTokenizer,
-    Tokenizer,
     WordTokenizer,
 )
 

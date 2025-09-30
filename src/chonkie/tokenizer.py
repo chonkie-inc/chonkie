@@ -27,6 +27,7 @@ class TokenizerProtocol(Protocol):
 
         Returns:
             Sequence of token IDs.
+
         """
         ...
 
@@ -38,6 +39,7 @@ class TokenizerProtocol(Protocol):
 
         Returns:
             Decoded text string.
+
         """
         ...
 
@@ -49,6 +51,7 @@ class TokenizerProtocol(Protocol):
 
         Returns:
             Sequence of tokens (strings or IDs).
+
         """
         ...
 

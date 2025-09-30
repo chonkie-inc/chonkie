@@ -2,7 +2,7 @@
 
 import importlib.util as importutil
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Any, Callable, List, Union
+from typing import TYPE_CHECKING, Any, List, Union
 
 # for type checking
 if TYPE_CHECKING:

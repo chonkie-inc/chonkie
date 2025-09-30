@@ -2,7 +2,7 @@
 
 from bisect import bisect_left
 from itertools import accumulate
-from typing import Any, List, Optional, Union
+from typing import List, Optional, Union
 
 from tqdm import tqdm
 

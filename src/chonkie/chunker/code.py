@@ -10,7 +10,7 @@ from itertools import accumulate
 from typing import TYPE_CHECKING, Any, List, Literal, Tuple, Union
 
 from chonkie.chunker.base import BaseChunker
-from chonkie.tokenizer import AutoTokenizer, TokenizerProtocol
+from chonkie.tokenizer import TokenizerProtocol
 from chonkie.types import Chunk
 
 if TYPE_CHECKING:
