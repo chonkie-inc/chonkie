@@ -1,7 +1,7 @@
 """Slumber Chunking for Chonkie API."""
 
 import os
-from typing import Any, Callable, Dict, List, Optional, Union, cast
+from typing import Any, Dict, List, Optional, Union, cast
 
 import requests
 
