@@ -1,6 +1,7 @@
 """Table chunker for processing markdown tables."""
 
 import re
+import warnings
 from typing import Any, Callable, List, Union
 
 from typing_extensions import Tuple
@@ -54,11 +55,13 @@ class TableChunker(BaseChunker):
         """
         # Basic validation
         if not table.strip():
-            raise ValueError("Table must have at least a header and one row.")
+            warnings.warn("No table content found. Skipping chunking.")
+            return []
 
         rows = table.strip().split("\n")
         if len(rows) < 3:  # Need header, separator, and at least one data row
-            raise ValueError("Table must have at least a header and one row.")
+            warnings.warn("Table must have at least a header, separator, and one data row. Skipping chunking.")
+            return []
 
         # Check if the table size is smaller than the chunk size
         table_token_count = self.tokenizer.count_tokens(table.strip())
@@ -121,16 +124,20 @@ class TableChunker(BaseChunker):
     
     def chunk_document(self, document: Document) -> Document:
         """Chunk a document."""
-        if isinstance(document, MarkdownDocument) and document.tables:
-            for table in document.tables:
-                chunks = self.chunk(table.content)
-                for chunk in chunks:
-                    chunk.start_index = table.start_index + chunk.start_index
-                    chunk.end_index = table.start_index + chunk.end_index
-                document.chunks.extend(chunks)
-            document.chunks.sort(key=lambda x: x.start_index)
-        else: 
-            document.chunks = self.chunk(document.content)
+        if isinstance(document, MarkdownDocument):
+            if document.tables:
+                for table in document.tables:
+                    chunks = self.chunk(table.content)
+                    for chunk in chunks:
+                        chunk.start_index = table.start_index + chunk.start_index
+                        chunk.end_index = table.start_index + chunk.end_index
+                    document.chunks.extend(chunks)
+                document.chunks.sort(key=lambda x: x.start_index)
+            else:
+                warnings.warn("No tables found in MarkdownDocument. Returning document with original chunks.")
+        else:
+            # Don't change the current chunks; assume it would be an empty list if no chunks are present
+            document.chunks.extend(self.chunk(document.content))
         return document
     
     def __repr__(self) -> str:
