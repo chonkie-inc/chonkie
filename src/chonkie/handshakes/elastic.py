@@ -1,6 +1,5 @@
 """Elasticsearch Handshake to export Chonkie's Chunks into an Elasticsearch index."""
 
-import importlib.util as importutil
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -173,6 +172,7 @@ class ElasticHandshake(BaseHandshake):
 
         Returns:
             A list of dictionaries, each containing a similar chunk, its metadata, and similarity score.
+
         """
         if embedding is None and query is None:
             raise ValueError("Either 'query' or 'embedding' must be provided.")

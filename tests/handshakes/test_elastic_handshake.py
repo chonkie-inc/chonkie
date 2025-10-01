@@ -1,6 +1,6 @@
 """Test the ElasticHandshake class."""
 import uuid
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -10,9 +10,9 @@ try:
 except ImportError:
     elasticsearch = None
 
+from chonkie.embeddings import BaseEmbeddings
 from chonkie.handshakes.elastic import ElasticHandshake
 from chonkie.types import Chunk
-from chonkie.embeddings import BaseEmbeddings
 
 # Mark all tests in this module to be skipped if elasticsearch is not installed
 pytestmark = pytest.mark.skipif(elasticsearch is None, reason="elasticsearch-py not installed")
