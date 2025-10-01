@@ -78,7 +78,7 @@ class ElasticHandshake(BaseHandshake):
                 self.index_name = generate_random_collection_name()
                 if not self.client.indices.exists(index=self.index_name):
                     break
-            logger.info(f"🦛 Chonkie will create a new index in Elasticsearch: {self.index_name}")
+            print(f"🦛 Chonkie will create a new index in Elasticsearch: {self.index_name}")
         else:
             self.index_name = index_name
 
