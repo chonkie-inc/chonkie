@@ -13,7 +13,7 @@ from .weaviate import WeaviateHandshake
 __all__ = [
     "BaseHandshake",
     "ChromaHandshake",
-    "ElasticHandshake"
+    "ElasticHandshake",
     "MongoDBHandshake",
     "PgvectorHandshake",
     "PineconeHandshake",

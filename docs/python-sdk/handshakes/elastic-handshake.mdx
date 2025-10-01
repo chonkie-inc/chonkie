@@ -142,7 +142,8 @@ handshake = ElasticHandshake(
 results = handshake.search(query="fast and efficient indexing", limit=2)
 
 for result in results:
-    print(f"Score: {result['score']:.4f}, Text: \"{result['text']}\"")```
+    print(f"Score: {result['score']:.4f}, Text: \"{result['text']}\"")
+```
 ```python Search using an Embedding Vector
 from chonkie import ElasticHandshake
 

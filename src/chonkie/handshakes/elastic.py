@@ -1,5 +1,6 @@
 """Elasticsearch Handshake to export Chonkie's Chunks into an Elasticsearch index."""
 
+import importlib.util
 from typing import (
     TYPE_CHECKING,
     Any,
