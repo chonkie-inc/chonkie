@@ -1,6 +1,7 @@
 """Table chunker for processing markdown tables."""
 
 import re
+import warnings
 from typing import Any, Callable, List, Union
 
 from typing_extensions import Tuple
@@ -58,11 +59,13 @@ class TableChunker(BaseChunker):
         logger.debug(f"Starting table chunking for table of length {len(table)}")
         # Basic validation
         if not table.strip():
-            raise ValueError("Table must have at least a header and one row.")
+            warnings.warn("No table content found. Skipping chunking.")
+            return []
 
         rows = table.strip().split("\n")
         if len(rows) < 3:  # Need header, separator, and at least one data row
-            raise ValueError("Table must have at least a header and one row.")
+            warnings.warn("Table must have at least a header, separator, and one data row. Skipping chunking.")
+            return []
 
         # Check if the table size is smaller than the chunk size
         table_token_count = self.tokenizer.count_tokens(table.strip())
@@ -138,6 +141,7 @@ class TableChunker(BaseChunker):
             document.chunks.sort(key=lambda x: x.start_index)
         else:
             document.chunks = self.chunk(document.content)
+             document.chunks.sort(key=lambda x: x.start_index)
         logger.info(f"Document chunking complete: {len(document.chunks)} chunks created")
         return document
     
