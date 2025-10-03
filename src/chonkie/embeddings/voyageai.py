@@ -18,15 +18,31 @@ class VoyageAIEmbeddings(BaseEmbeddings):
 
     # Supported models with (allowed dimension, max_tokens)
     AVAILABLE_MODELS = {
+        # Latest models
+        "voyage-3.5": ((1024, 256, 512, 2048), 32000),
+        "voyage-3.5-lite": ((1024, 256, 512, 2048), 32000),
         "voyage-3-large":  ((1024, 256, 512, 2048), 32000),
-        "voyage-3":        ((1024,),           32000), 
-        "voyage-3-lite":   ((512,),            32000),
         "voyage-code-3":   ((1024, 256, 512, 2048), 32000),
-        "voyage-finance-2":((1024,),           32000), 
+        "voyage-finance-2":((1024,),           32000),
         "voyage-law-2":    ((1024,),           16000),
+        "voyage-multilingual-2": ((1024,), 32000),
+
+        # Older models
+        "voyage-3":        ((1024,),           32000),
+        "voyage-3-lite":   ((512,),            32000),
         "voyage-code-2":   ((1536,),           16000),
+        "voyage-large-2-instruct": ((1024,), 16000),
+        "voyage-large-2": ((1536,), 16000),
+        "voyage-2": ((1024,), 4000),
+
+        # Deprecated models
+        "voyage-lite-02-instruct": ((1024,), 4000),
+        "voyage-02": ((1024,), 4000),
+        "voyage-01": ((1024,), 4000),
+        "voyage-lite-01": ((1024,), 4000),
+        "voyage-lite-01-instruct": ((1024,), 4000),
     }
-    DEFAULT_MODEL = "voyage-3"
+    DEFAULT_MODEL = "voyage-3.5"
 
     def __init__(
         self,
