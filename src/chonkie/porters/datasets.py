@@ -6,9 +6,12 @@ import importlib
 import importlib.util as importutil
 from typing import TYPE_CHECKING, Any
 
+from chonkie.logger import get_logger
 from chonkie.types import Chunk
 
 from .base import BasePorter
+
+logger = get_logger(__name__)
 
 if TYPE_CHECKING:
     from datasets import Dataset
@@ -53,9 +56,14 @@ class DatasetsPorter(BasePorter):
             Dataset: The Dataset object.
 
         """
+        logger.debug(f"Exporting {len(chunks)} chunks to HuggingFace Dataset")
         dataset = self.Dataset.from_list([chunk.to_dict() for chunk in chunks])
         if save_to_disk:
+            logger.debug(f"Saving dataset to disk: {path}")
             dataset.save_to_disk(path, **kwargs)
+            logger.info(f"Successfully exported {len(chunks)} chunks to Dataset and saved to: {path}")
+        else:
+            logger.info(f"Successfully exported {len(chunks)} chunks to Dataset (not saved to disk)")
         return dataset
 
     def __call__(  # type: ignore[override]

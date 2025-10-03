@@ -3,9 +3,12 @@
 from pathlib import Path
 from typing import List, Union
 
+from chonkie.logger import get_logger
 from chonkie.types import Document
 
 from .base import BaseChef
+
+logger = get_logger(__name__)
 
 
 class TextChef(BaseChef):
@@ -21,7 +24,10 @@ class TextChef(BaseChef):
             Document: Processed text data.
 
         """
-        return Document(content=self.read(path))
+        logger.debug(f"Processing text file: {path}")
+        content = self.read(path)
+        logger.info(f"Text processing complete: read {len(content)} characters from {path}")
+        return Document(content=content)
 
     def process_batch(self, paths: Union[List[str], List[Path]]) -> List[Document]:
         """Process the text data in a batch.
