@@ -190,7 +190,7 @@ class OpenAIEmbeddings(BaseEmbeddings):
         """Return the embedding dimension."""
         return self._dimension
 
-    def get_tokenizer_or_token_counter(self) -> "tiktoken.Encoding":
+    def get_tokenizer(self) -> "tiktoken.Encoding":
         """Return a tiktoken tokenizer object."""
         return self._tokenizer  # type: ignore[return-value]
 

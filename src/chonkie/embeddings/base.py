@@ -2,7 +2,7 @@
 
 import importlib.util as importutil
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Any, Callable, List, Union
+from typing import TYPE_CHECKING, Any, List, Union
 
 # for type checking
 if TYPE_CHECKING:
@@ -121,21 +121,18 @@ class BaseEmbeddings(ABC):
         return importutil.find_spec("numpy") is not None
 
     @abstractmethod
-    def get_tokenizer_or_token_counter(self) -> Union[Any, Callable[[str], int]]:
-        """Return the tokenizer or token counter object.
+    def get_tokenizer(self) -> Any:
+        """Return the tokenizer object.
 
-        By default, this method returns the count_tokens() method, which should be
-        implemented for embeddings models that require tokenization before embedding.
+        By default, this method should return a tokenizer object that implements
+        the TokenizerProtocol (encode, decode, tokenize methods).
 
         Returns:
-            Union[Any, Callable[[str], int]]: Tokenizer object or token counter function
+            Any: Tokenizer object implementing TokenizerProtocol
 
         Examples:
             # Get the tokenizer object
-            tokenizer = embeddings.get_tokenizer_or_token_counter()
-
-            # Get the token counter function
-            token_counter = embeddings.get_tokenizer_or_token_counter()
+            tokenizer = embeddings.get_tokenizer()
 
         """
         raise NotImplementedError

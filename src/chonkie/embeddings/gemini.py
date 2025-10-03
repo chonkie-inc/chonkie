@@ -212,7 +212,7 @@ class GeminiEmbeddings(BaseEmbeddings):
         """Return the embedding dimension."""
         return self._dimension
 
-    def get_tokenizer_or_token_counter(self) -> Any:
+    def get_tokenizer(self) -> Any:
         """Return the token counter function.
         
         Since Gemini doesn't provide a public tokenizer, we return the count_tokens method.

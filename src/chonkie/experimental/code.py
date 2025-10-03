@@ -31,10 +31,10 @@ class CodeChunker(BaseChunker):
     - Optional chunk size management with recursive splitting
   
   Args:
-    language (str): The programming language to parse. Defaults to "auto" for 
-      automatic detection. Supported languages: python, typescript, javascript, 
+    language (str): The programming language to parse. Defaults to "auto" for
+      automatic detection. Supported languages: python, typescript, javascript,
       rust, go, java, markdown, html, css, c, cpp, csharp.
-    tokenizer_or_token_counter (str): The tokenizer to use for token counting.
+    tokenizer (str): The tokenizer to use for token counting.
       Defaults to "character".
     chunk_size (Optional[int]): Maximum chunk size threshold. When specified,
       large code constructs will be recursively split to respect this limit.
@@ -45,18 +45,18 @@ class CodeChunker(BaseChunker):
 
   """
 
-  def __init__(self, language: str = "auto", tokenizer_or_token_counter: str = "character", chunk_size: Optional[int] = None, add_split_context: bool = True) -> None:
+  def __init__(self, language: str = "auto", tokenizer: str = "character", chunk_size: Optional[int] = None, add_split_context: bool = True) -> None:
     """Initialize the CodeChunker.
 
     Args:
       language (str): The language to chunk.
-      chunk_size (Optional[int]): Maximum chunk size threshold. Chunks may exceed 
+      chunk_size (Optional[int]): Maximum chunk size threshold. Chunks may exceed
         this size to preserve semantic structure and code coherence. Defaults to None.
-      tokenizer_or_token_counter (str): The tokenizer to use.
+      tokenizer (str): The tokenizer to use.
       add_split_context (bool): Whether to add the split context to the chunks.
 
     """
-    super().__init__(tokenizer_or_token_counter=tokenizer_or_token_counter)
+    super().__init__(tokenizer=tokenizer)
 
     # Import the dependencies
     self._import_dependencies()

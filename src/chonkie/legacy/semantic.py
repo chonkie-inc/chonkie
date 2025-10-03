@@ -191,7 +191,7 @@ class SemanticChunker(BaseChunker):
 
         # Keeping the tokenizer the same as the sentence model is important
         # for the group semantic meaning to be calculated properly
-        super().__init__(self.embedding_model.get_tokenizer_or_token_counter())
+        super().__init__(self.embedding_model.get_tokenizer())
 
         # Remove the multiprocessing flag from the base class
         self._use_multiprocessing = False

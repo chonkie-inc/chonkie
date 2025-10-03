@@ -5,7 +5,7 @@ import inspect
 import warnings
 from abc import ABC, abstractmethod
 from collections import defaultdict
-from typing import TYPE_CHECKING, Any, Callable, Dict, Sequence, Union
+from typing import TYPE_CHECKING, Any, Callable, Dict, Protocol, Sequence, Union
 
 if TYPE_CHECKING:
     import tiktoken
@@ -13,11 +13,58 @@ if TYPE_CHECKING:
     import transformers
 
 
-class BaseTokenizer(ABC):
-    """Base class for Character and Word tokenizers."""
+class TokenizerProtocol(Protocol):
+    """Protocol defining the interface for tokenizers.
+
+    Any object implementing these methods can be used as a tokenizer in Chonkie.
+    """
+
+    def encode(self, text: str) -> Sequence[int]:
+        """Encode text into token IDs.
+
+        Args:
+            text: The text to encode.
+
+        Returns:
+            Sequence of token IDs.
+
+        """
+        ...
+
+    def decode(self, tokens: Sequence[int]) -> str:
+        """Decode token IDs back to text.
+
+        Args:
+            tokens: Sequence of token IDs.
+
+        Returns:
+            Decoded text string.
+
+        """
+        ...
+
+    def tokenize(self, text: str) -> Sequence[Union[str, int]]:
+        """Tokenize text into tokens.
+
+        Args:
+            text: The text to tokenize.
+
+        Returns:
+            Sequence of tokens (strings or IDs).
+
+        """
+        ...
+
+
+class Tokenizer(ABC):
+    """Base class for tokenizers implementing the TokenizerProtocol.
+
+    This class provides a foundation for creating custom tokenizers with
+    vocabulary management and default implementations of common methods.
+    """
 
     def __init__(self) -> None:
-        """Initialize the BaseTokenizer."""
+        """Initialize the Tokenizer."""
         self.vocab: list[str] = []
         self.token2id: Dict[str, int] = defaultdict(self.defaulttoken2id)
         # Note: Using a lambda here would cause pickling issues:
@@ -27,14 +74,15 @@ class BaseTokenizer(ABC):
 
     def defaulttoken2id(self) -> int:
         """Return the default token ID.
-        
+
         This method is used as the default_factory for defaultdict.
         Using a named method instead of a lambda ensures the object can be pickled.
         """
         return len(self.vocab)
+
     @abstractmethod
     def __repr__(self) -> str:
-        """Return a string representation of the BaseTokenizer."""
+        """Return a string representation of the Tokenizer."""
         return f"{self.__class__.__name__}(vocab_size={len(self.vocab)})"
 
     def get_vocab(self) -> Sequence[str]:
@@ -72,8 +120,22 @@ class BaseTokenizer(ABC):
         raise NotImplementedError("Decoding not implemented for base tokenizer.")
 
     @abstractmethod
+    def tokenize(self, text: str) -> Sequence[Union[str, int]]:
+        """Tokenize the given text.
+
+        Args:
+            text (str): The text to tokenize.
+
+        Returns:
+            Sequence of tokens (strings or token IDs)
+
+        """
+        raise NotImplementedError("Tokenization not implemented for base tokenizer.")
+
     def count_tokens(self, text: str) -> int:
         """Count the number of tokens in the given text.
+
+        Default implementation uses tokenize() method.
 
         Args:
             text (str): The text to count tokens in.
@@ -82,7 +144,7 @@ class BaseTokenizer(ABC):
             Number of tokens
 
         """
-        raise NotImplementedError("Counting tokens not implemented for base tokenizer.")
+        return len(self.tokenize(text))
 
     def encode_batch(self, texts: Sequence[str]) -> Sequence[Sequence[int]]:
         """Batch encode a list of texts into tokens.
@@ -121,12 +183,24 @@ class BaseTokenizer(ABC):
         return [self.count_tokens(text) for text in texts]
 
 
-class CharacterTokenizer(BaseTokenizer):
+class CharacterTokenizer(Tokenizer):
     """Character-based tokenizer."""
 
     def __repr__(self) -> str:
         """Return a string representation of the CharacterTokenizer."""
         return f"CharacterTokenizer(vocab_size={len(self.vocab)})"
+
+    def tokenize(self, text: str) -> Sequence[str]:
+        """Tokenize text into individual characters.
+
+        Args:
+            text (str): The text to tokenize.
+
+        Returns:
+            List of characters
+
+        """
+        return list(text)
 
     def encode(self, text: str) -> Sequence[int]:
         """Encode the given text into tokens.
@@ -176,7 +250,7 @@ class CharacterTokenizer(BaseTokenizer):
         return len(text)
 
 
-class WordTokenizer(BaseTokenizer):
+class WordTokenizer(Tokenizer):
     """Word-based tokenizer."""
 
     def __repr__(self) -> str:
@@ -235,8 +309,12 @@ class WordTokenizer(BaseTokenizer):
         return len(self.tokenize(text))
 
 
-class Tokenizer:
-    """Unified tokenizer interface for Chonkie.
+class AutoTokenizer:
+    """Auto-loading tokenizer interface for Chonkie.
+
+    This class provides automatic loading of tokenizers from various sources
+    (string identifiers, HuggingFace models, tiktoken, etc.) and wraps them
+    with a unified interface.
 
     Args:
         tokenizer: Tokenizer identifier or instance.
@@ -247,7 +325,7 @@ class Tokenizer:
     """
 
     def __init__(self, tokenizer: Union[str, Callable, Any] = "character"):
-        """Initialize the Tokenizer with a specified tokenizer."""
+        """Initialize the AutoTokenizer with a specified tokenizer."""
         if isinstance(tokenizer, str):
             self.tokenizer = self._load_tokenizer(tokenizer)
         else:
@@ -275,9 +353,9 @@ class Tokenizer:
         # Try tokenizers first
         if importlib.util.find_spec("tokenizers") is not None:
             try:
-                from tokenizers import Tokenizer
+                from tokenizers import Tokenizer as HFTokenizer
 
-                return Tokenizer.from_pretrained(tokenizer)
+                return HFTokenizer.from_pretrained(tokenizer)
             except Exception:
                 warnings.warn(
                     "Could not load tokenizer with 'tokenizers'. Falling back to 'tiktoken'."

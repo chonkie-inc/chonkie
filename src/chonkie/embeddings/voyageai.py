@@ -296,7 +296,7 @@ class VoyageAIEmbeddings(BaseEmbeddings):
         """Return the embedding dimension."""
         return self._dimension
 
-    def get_tokenizer_or_token_counter(self) -> "Tokenizer":
+    def get_tokenizer(self) -> "Tokenizer":
         """Get the tokenizer instance used by the embeddings model.
 
         Returns:

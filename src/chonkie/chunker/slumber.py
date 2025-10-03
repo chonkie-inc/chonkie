@@ -2,11 +2,12 @@
 
 from bisect import bisect_left
 from itertools import accumulate
-from typing import Any, Callable, List, Optional, Union
+from typing import List, Optional, Union
 
 from tqdm import tqdm
 
 from chonkie.genie import BaseGenie, GeminiGenie
+from chonkie.tokenizer import TokenizerProtocol
 from chonkie.types import Chunk, RecursiveLevel, RecursiveRules
 
 from .base import BaseChunker
@@ -57,8 +58,8 @@ class SlumberChunker(BaseChunker):
     """SlumberChunker is a chunker based on the LumberChunker — but slightly different."""
 
     def __init__(self,
-                 genie: Optional[BaseGenie] = None, 
-                 tokenizer_or_token_counter: Union[str, Callable, Any] = "character",
+                 genie: Optional[BaseGenie] = None,
+                 tokenizer: Union[str, TokenizerProtocol] = "character",
                  chunk_size: int = 2048,
                  rules: RecursiveRules = RecursiveRules(),
                  candidate_size: int = 128,
@@ -68,7 +69,7 @@ class SlumberChunker(BaseChunker):
 
         Args:
             genie (Optional[BaseGenie]): The genie to use.
-            tokenizer_or_token_counter (Union[str, Callable, Any]): The tokenizer or token counter to use.
+            tokenizer: The tokenizer to use.
             chunk_size (int): The size of the chunks to create.
             rules (RecursiveRules): The rules to use to split the candidate chunks.
             candidate_size (int): The size of the candidate splits that the chunker will consider.
@@ -77,7 +78,7 @@ class SlumberChunker(BaseChunker):
 
         """
         # Since the BaseChunker sets and defines the tokenizer for us, we don't have to worry.
-        super().__init__(tokenizer_or_token_counter)
+        super().__init__(tokenizer)
 
         # Lazily import the dependencies
         self._import_dependencies()

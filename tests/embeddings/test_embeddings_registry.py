@@ -25,8 +25,8 @@ class MockEmbeddings(BaseEmbeddings):
     def dimension(self) -> int:
         """Return embedding dimension."""
         return 3
-    
-    def get_tokenizer_or_token_counter(self) -> Any:
+
+    def get_tokenizer(self) -> Any:
         """Return mock tokenizer."""
         return lambda x: len(x.split())
 

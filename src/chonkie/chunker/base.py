@@ -3,11 +3,11 @@
 import warnings
 from abc import ABC, abstractmethod
 from multiprocessing import Pool, cpu_count
-from typing import Any, Callable, List, Sequence, Union
+from typing import List, Sequence, Union
 
 from tqdm import tqdm
 
-from chonkie.tokenizer import Tokenizer
+from chonkie.tokenizer import AutoTokenizer, TokenizerProtocol
 from chonkie.types import Chunk, Document
 
 
@@ -15,16 +15,23 @@ class BaseChunker(ABC):
     """Base class for all chunkers."""
 
     def __init__(
-        self, tokenizer_or_token_counter: Union[str, Callable[[str], int], Any]
+        self, tokenizer: Union[str, TokenizerProtocol] = "gpt2"
     ):
         """Initialize the chunker with any necessary parameters.
 
         Args:
-            tokenizer_or_token_counter (Union[str, Callable[[str], int], Any]): The tokenizer or token counter to use.
+            tokenizer: The tokenizer to use. Can be:
+                - A string identifier (e.g., "gpt2", "character", "word")
+                - An object implementing TokenizerProtocol (encode, decode, tokenize methods)
 
         """
-        self.tokenizer = Tokenizer(tokenizer_or_token_counter)
+        self._tokenizer = AutoTokenizer(tokenizer)
         self._use_multiprocessing = True
+
+    @property
+    def tokenizer(self) -> AutoTokenizer:
+        """Get the tokenizer instance."""
+        return self._tokenizer
 
     def __repr__(self) -> str:
         """Return a string representation of the chunker."""

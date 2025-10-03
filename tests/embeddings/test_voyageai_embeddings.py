@@ -119,9 +119,9 @@ class TestVoyageAIEmbeddingsProperties:
         expected = "VoyageAIEmbeddings(model=voyage-3, dimension=1024)"
         assert repr(embeddings) == expected
 
-    def test_get_tokenizer_or_token_counter(self, embeddings: VoyageAIEmbeddings) -> None:
+    def test_get_tokenizer(self, embeddings: VoyageAIEmbeddings) -> None:
         """Test tokenizer retrieval."""
-        tokenizer = embeddings.get_tokenizer_or_token_counter()
+        tokenizer = embeddings.get_tokenizer()
         assert hasattr(tokenizer, "encode")
         assert hasattr(tokenizer, "encode_batch")
 

@@ -444,7 +444,7 @@ def test_recursive_chunker_from_recipe_custom_lang() -> None:
     chunker = RecursiveChunker.from_recipe(
         name="default",
         lang="en",
-        tokenizer_or_token_counter="character",
+        tokenizer="character",
         chunk_size=256,
         min_characters_per_chunk=32
     )

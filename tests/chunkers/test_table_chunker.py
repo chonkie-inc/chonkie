@@ -546,7 +546,7 @@ Here are some major cities and their populations.
 Thank you for shopping with us!"""
 
     # First, create chunks using RecursiveChunker
-    recursive_chunker = RecursiveChunker(tokenizer_or_token_counter="character", chunk_size=200)
+    recursive_chunker = RecursiveChunker(tokenizer="character", chunk_size=200)
     recursive_chunks = recursive_chunker.chunk(content)
 
     # Verify recursive chunker created multiple chunks
@@ -617,7 +617,7 @@ All employee information is confidential. Please maintain appropriate data priva
 For questions about this directory, contact HR at hr@corp.com."""
 
     # First pass: RecursiveChunker
-    recursive_chunker = RecursiveChunker(tokenizer_or_token_counter="character", chunk_size=300)
+    recursive_chunker = RecursiveChunker(tokenizer="character", chunk_size=300)
     doc = Document(content=content)
     recursive_result = recursive_chunker.chunk_document(doc)
 

@@ -67,8 +67,10 @@ from .refinery import (
     OverlapRefinery,
 )
 from .tokenizer import (
+    AutoTokenizer,
     CharacterTokenizer,
     Tokenizer,
+    TokenizerProtocol,
     WordTokenizer,
 )
 from .types import (

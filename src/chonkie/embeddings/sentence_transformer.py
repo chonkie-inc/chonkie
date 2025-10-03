@@ -131,7 +131,7 @@ class SentenceTransformerEmbeddings(BaseEmbeddings):
         """Compute cosine similarity between two embeddings."""
         return float(self.model.similarity(u, v).item())  # type: ignore[return-value]
 
-    def get_tokenizer_or_token_counter(self) -> "Tokenizer":
+    def get_tokenizer(self) -> "Tokenizer":
         """Return the tokenizer or token counter object."""
         return self.model.tokenizer
 

@@ -19,7 +19,7 @@ class SentenceChunker(CloudChunker):
 
     def __init__(
         self,
-        tokenizer_or_token_counter: str = "gpt2",
+        tokenizer: str = "gpt2",
         chunk_size: int = 512,
         chunk_overlap: int = 0,
         min_sentences_per_chunk: int = 1,
@@ -53,7 +53,7 @@ class SentenceChunker(CloudChunker):
             raise ValueError("Include delim must be either 'prev', 'next' or None.")
 
         # Assign all the attributes to the instance
-        self.tokenizer_or_token_counter = tokenizer_or_token_counter
+        self.tokenizer = tokenizer
         self.chunk_size = chunk_size
         self.chunk_overlap = chunk_overlap
         self.min_sentences_per_chunk = min_sentences_per_chunk
@@ -81,7 +81,7 @@ class SentenceChunker(CloudChunker):
         if text is not None:
             payload = {
                 "text": text,
-                "tokenizer": self.tokenizer_or_token_counter,
+                "tokenizer": self.tokenizer,
                 "chunk_size": self.chunk_size,
                 "chunk_overlap": self.chunk_overlap,
                 "min_sentences_per_chunk": self.min_sentences_per_chunk,
@@ -97,7 +97,7 @@ class SentenceChunker(CloudChunker):
                     "type": "document",
                     "content": file_response.name,
                 },
-                "tokenizer": self.tokenizer_or_token_counter,
+                "tokenizer": self.tokenizer,
                 "chunk_size": self.chunk_size,
                 "chunk_overlap": self.chunk_overlap,
                 "min_sentences_per_chunk": self.min_sentences_per_chunk,

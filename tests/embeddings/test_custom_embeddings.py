@@ -35,8 +35,8 @@ class CustomEmbeddings(BaseEmbeddings):
         # Very naive token counting—split by whitespace
         return len(text.split())
 
-    def get_tokenizer_or_token_counter(self) -> Callable[[str], int]:
-        """Return the tokenizer or token counter."""
+    def get_tokenizer(self) -> Callable[[str], int]:
+        """Return the tokenizer."""
         return self.count_tokens
 
     def similarity(self, u: "np.ndarray", v: "np.ndarray") -> float:
