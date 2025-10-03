@@ -87,6 +87,7 @@ openai = [
     "numpy>=2.0.0, <3.0",
     "pydantic>=2.0.0",
 ]
+mistralai = ["mistralai>=1.9.10"]
 semantic = ["tokenizers>=0.16.0", "model2vec>=0.3.0", "numpy>=2.0.0, <3.0"]
 gemini = ["pydantic>=2.0.0", "google-genai>=1.0.0"]
 azure-openai = [
@@ -112,7 +113,7 @@ mongodb = ["pymongo"]
 elastic = ["elasticsearch>=8.0.0"]
 
 # Optional dependencies for the genie
-genie = ["pydantic>=2.0.0", "google-genai>=1.0.0"]
+genie = ["pydantic>=2.0.0", "google-genai>=1.0.0", "mistralai>=1.9.10", "numpy>=2.0.0, <3.0"]
 
 # All dependencies
 all = [
@@ -125,6 +126,7 @@ all = [
     "sentence-transformers>=3.0.0",
     "numpy>=2.0.0, <3.0",
     "openai>=1.0.0",
+    "mistralai>=1.9.10",
     "model2vec>=0.3.0",
     "cohere>=5.13.0",
     "voyageai>=0.3.2",
