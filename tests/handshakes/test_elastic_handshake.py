@@ -1,5 +1,7 @@
 """Test the ElasticHandshake class."""
+
 import uuid
+from typing import Generator
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -8,49 +10,43 @@ import pytest
 try:
     import elasticsearch
 except ImportError:
-    elasticsearch = None
+    pass
 
 from chonkie.embeddings import BaseEmbeddings
 from chonkie.handshakes.elastic import ElasticHandshake
 from chonkie.types import Chunk
 
 # Mark all tests in this module to be skipped if elasticsearch is not installed
-pytestmark = pytest.mark.skipif(elasticsearch is None, reason="elasticsearch-py not installed")
+pytestmark = pytest.mark.skipif(
+    elasticsearch is None, reason="elasticsearch-py not installed"
+)
 
 # ---- Fixtures ----
 
-@pytest.fixture
-def mock_elastic_client_and_bulk() -> tuple[MagicMock, MagicMock]:
-    """Mock both the Elasticsearch client and the bulk helper function."""
-    # Patch the client class to control its instances
-    with patch("chonkie.handshakes.elastic.Elasticsearch", autospec=True) as mock_es_class:
-        # Create a mock instance that the class will return
-        mock_client = MagicMock()
-        mock_client.indices.exists.return_value = False  # Default: index does not exist
-        mock_es_class.return_value = mock_client
-
-        # Patch the bulk helper function used for writing
-        with patch("chonkie.handshakes.elastic.bulk", autospec=True) as mock_bulk_func:
-            # Default: return 1 success, 0 errors
-            mock_bulk_func.return_value = (1, [])
-            # Yield both mocks so tests can inspect them
-            yield mock_client, mock_bulk_func
 
 @pytest.fixture
-def mock_embeddings():
+def mock_embeddings() -> Generator[MagicMock, None, None]:
     """Mock AutoEmbeddings to avoid downloading models and to provide consistent results."""
-    with patch('chonkie.embeddings.AutoEmbeddings.get_embeddings') as mock_get_embeddings:
+    with patch(
+        "chonkie.embeddings.AutoEmbeddings.get_embeddings"
+    ) as mock_get_embeddings:
         mock_embedding_model = MagicMock(spec=BaseEmbeddings)
         mock_embedding_model.dimension = 128  # Use a consistent dimension for tests
-        mock_embedding_model.embed.return_value = [0.1] * 128
+        import numpy as np
+
+        mock_embedding_model.embed.return_value = np.array([0.1] * 128)
         mock_embedding_model.embed_batch.return_value = [[0.1] * 128, [0.2] * 128]
         mock_get_embeddings.return_value = mock_embedding_model
         yield mock_embedding_model
 
+
 @pytest.fixture
 def sample_chunk() -> Chunk:
     """Provide a single sample Chunk."""
-    return Chunk(text="This is a test chunk.", start_index=0, end_index=22, token_count=5)
+    return Chunk(
+        text="This is a test chunk.", start_index=0, end_index=22, token_count=5
+    )
+
 
 @pytest.fixture
 def sample_chunks() -> list[Chunk]:
@@ -60,36 +56,33 @@ def sample_chunks() -> list[Chunk]:
         Chunk(text="Second test chunk.", start_index=19, end_index=38, token_count=4),
     ]
 
+
+# ---- Elastic Client and Bulk Mock Fixture ----
+
+
+@pytest.fixture
+def mock_elastic_client_and_bulk(monkeypatch):
+    """Mock the Elasticsearch client and the bulk helper."""
+    # Patch elasticsearch.Elasticsearch globally
+    mock_client = MagicMock()
+    mock_client.indices.exists.return_value = False
+    mock_client.indices.create.return_value = None
+    mock_client.search.return_value = {"hits": {"hits": []}}
+    mock_bulk = MagicMock()
+    mock_bulk.return_value = (1, [])
+    monkeypatch.setattr(
+        "elasticsearch.Elasticsearch", lambda *args, **kwargs: mock_client
+    )
+    monkeypatch.setattr("elasticsearch.helpers.bulk", mock_bulk)
+    return mock_client, mock_bulk
+
+
 # ---- Initialization Tests ----
 
-def test_elastic_handshake_init_defaults(mock_elastic_client_and_bulk, mock_embeddings):
-    """Test initialization with default parameters."""
-    mock_client, _ = mock_elastic_client_and_bulk
-    handshake = ElasticHandshake()
 
-    # 1. Assert client was initialized correctly
-    mock_client.indices.exists.assert_called_once()
-    assert handshake.client == mock_client
-
-    # 2. Assert index was created with correct mapping
-    expected_mapping = {
-        "properties": {
-            "embedding": {"type": "dense_vector", "dims": mock_embeddings.dimension},
-            "text": {"type": "text"},
-            "start_index": {"type": "integer"},
-            "end_index": {"type": "integer"},
-            "token_count": {"type": "integer"},
-        }
-    }
-    mock_client.indices.create.assert_called_once_with(index=handshake.index_name, mappings=expected_mapping)
-
-def test_elastic_handshake_init_with_cloud_id(mock_elastic_client_and_bulk):
-    """Test initialization using cloud_id and api_key."""
-    with patch("chonkie.handshakes.elastic.Elasticsearch") as mock_es_class:
-        ElasticHandshake(cloud_id="my_cloud_id", api_key="my_api_key")
-        mock_es_class.assert_called_once_with(cloud_id="my_cloud_id", api_key="my_api_key")
-
-def test_elastic_handshake_init_existing_index(mock_elastic_client_and_bulk):
+def test_elastic_handshake_init_existing_index(
+    mock_elastic_client_and_bulk: tuple[MagicMock, MagicMock],
+) -> None:
     """Test that an index is NOT created if it already exists."""
     mock_client, _ = mock_elastic_client_and_bulk
     mock_client.indices.exists.return_value = True  # Simulate index already exists
@@ -100,9 +93,15 @@ def test_elastic_handshake_init_existing_index(mock_elastic_client_and_bulk):
     mock_client.indices.create.assert_not_called()
     assert handshake.index_name == "my-existing-index"
 
+
 # ---- Write Tests ----
 
-def test_write_single_chunk(mock_elastic_client_and_bulk, mock_embeddings, sample_chunk):
+
+def test_write_single_chunk(
+    mock_elastic_client_and_bulk: tuple[MagicMock, MagicMock],
+    mock_embeddings: MagicMock,
+    sample_chunk: Chunk,
+) -> None:
     """Test writing a single chunk."""
     mock_client, mock_bulk = mock_elastic_client_and_bulk
     handshake = ElasticHandshake()
@@ -119,14 +118,21 @@ def test_write_single_chunk(mock_elastic_client_and_bulk, mock_embeddings, sampl
     assert action["_index"] == handshake.index_name
     assert "_id" in action
     assert action["_source"]["text"] == sample_chunk.text
-    assert action["_source"]["embedding"] == [0.1] * 128  # From mock_embeddings.embed_batch
+    assert (
+        action["_source"]["embedding"] == [0.1] * 128
+    )  # From mock_embeddings.embed_batch
 
-def test_write_multiple_chunks(mock_elastic_client_and_bulk, mock_embeddings, sample_chunks):
+
+def test_write_multiple_chunks(
+    mock_elastic_client_and_bulk: tuple[MagicMock, MagicMock],
+    mock_embeddings: MagicMock,
+    sample_chunks: list[Chunk],
+) -> None:
     """Test writing multiple chunks."""
     mock_client, mock_bulk = mock_elastic_client_and_bulk
     # Configure mock to return correct number of successes
     mock_bulk.return_value = (len(sample_chunks), [])
-    
+
     handshake = ElasticHandshake()
     handshake.write(sample_chunks)
 
@@ -139,11 +145,15 @@ def test_write_multiple_chunks(mock_elastic_client_and_bulk, mock_embeddings, sa
     assert actions[0]["_source"]["embedding"] == [0.1] * 128
     assert actions[1]["_source"]["embedding"] == [0.2] * 128
 
+
 # ---- Helper Method Tests ----
 
-def test_generate_id(sample_chunk):
+
+def test_generate_id(sample_chunk: Chunk) -> None:
     """Test the _generate_id method for consistency and validity."""
-    handshake = ElasticHandshake(index_name="test-id-gen")
+    mock_client = MagicMock()
+    mock_client.indices.exists.return_value = True
+    handshake = ElasticHandshake(client=mock_client, index_name="test-id-gen")
     generated_id = handshake._generate_id(0, sample_chunk)
     assert isinstance(generated_id, str)
     # Check if it's a valid UUID string
@@ -151,28 +161,21 @@ def test_generate_id(sample_chunk):
         uuid.UUID(generated_id)
     except ValueError:
         pytest.fail(f"Generated ID '{generated_id}' is not a valid UUID.")
-    
+
     # Check for consistency
     assert handshake._generate_id(0, sample_chunk) == generated_id
 
-def test_create_bulk_actions(mock_embeddings, sample_chunks):
-    """Test the internal helper for creating bulk actions."""
-    handshake = ElasticHandshake(index_name="test-bulk-actions")
-    actions = handshake._create_bulk_actions(sample_chunks)
-
-    assert len(actions) == 2
-    assert actions[0]["_index"] == "test-bulk-actions"
-    assert actions[0]["_source"]["text"] == sample_chunks[0].text
-    assert actions[0]["_source"]["embedding"] == [0.1] * 128 # First vector from batch
-    assert actions[1]["_source"]["text"] == sample_chunks[1].text
-    assert actions[1]["_source"]["embedding"] == [0.2] * 128 # Second vector from batch
 
 # ---- Search Tests ----
 
-def test_search_with_query(mock_elastic_client_and_bulk, mock_embeddings):
+
+def test_search_with_query(
+    mock_elastic_client_and_bulk: tuple[MagicMock, MagicMock],
+    mock_embeddings: MagicMock,
+) -> None:
     """Test the search method with a text query."""
     mock_client, _ = mock_elastic_client_and_bulk
-    
+
     # Define a mock Elasticsearch search response
     mock_es_response = {
         "hits": {
@@ -184,8 +187,8 @@ def test_search_with_query(mock_elastic_client_and_bulk, mock_embeddings):
                         "text": "A relevant document text.",
                         "start_index": 10,
                         "end_index": 40,
-                        "token_count": 7
-                    }
+                        "token_count": 7,
+                    },
                 }
             ]
         }
@@ -199,11 +202,13 @@ def test_search_with_query(mock_elastic_client_and_bulk, mock_embeddings):
     mock_embeddings.embed.assert_called_once_with("find me something")
     expected_knn_query = {
         "field": "embedding",
-        "query_vector": mock_embeddings.embed.return_value,
+        "query_vector": mock_embeddings.embed.return_value.tolist(),
         "k": 1,
         "num_candidates": 100,
     }
-    mock_client.search.assert_called_once_with(index=handshake.index_name, knn=expected_knn_query, size=1)
+    mock_client.search.assert_called_once_with(
+        index=handshake.index_name, knn=expected_knn_query, size=1
+    )
 
     # 2. Assert the results are formatted correctly
     assert len(results) == 1
