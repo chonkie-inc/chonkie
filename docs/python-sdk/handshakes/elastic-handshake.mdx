@@ -33,7 +33,7 @@ handshake = ElasticHandshake()
 from chonkie import ElasticHandshake
 
 handshake = ElasticHandshake(
-    cloud_id="YOUR_CLOUD_ID",
+    hosts="YOUR_CLOUD_ID",
     api_key="YOUR_API_KEY",
     index_name="my_document_index"
 )
@@ -92,7 +92,7 @@ handshake = ElasticHandshake(client=client, index_name="my_document_index")
     type="Optional[str]"
     default="None"
 >
-    The Cloud ID for connecting to an Elastic Cloud deployment. Used with `api_key`.
+    The Cloud ID for connecting to an Elastic Cloud deployment.
 </ParamField>
 
 <ParamField
@@ -134,22 +134,19 @@ from chonkie import ElasticHandshake
 
 # Initialize the handshake to connect to your index
 handshake = ElasticHandshake(
-    cloud_id="YOUR_CLOUD_ID",
+    hosts="YOUR_CLOUD_ID",
     api_key="YOUR_API_KEY",
     index_name="my_documents",
 )
 
 results = handshake.search(query="fast and efficient indexing", limit=2)
-
-for result in results:
-    print(f"Score: {result['score']:.4f}, Text: \"{result['text']}\"")
 ```
 ```python Search using an Embedding Vector
 from chonkie import ElasticHandshake
 
 # Initialize the handshake
 handshake = ElasticHandshake(
-    cloud_id="YOUR_CLOUD_ID",
+    hosts="YOUR_CLOUD_ID",
     api_key="YOUR_API_KEY",
     index_name="my_documents",
 )
@@ -158,8 +155,5 @@ handshake = ElasticHandshake(
 embedding = handshake.embedding_model.embed("fast and efficient indexing").tolist()
 
 results = handshake.search(embedding=embedding, limit=2)
-
-for result in results:
-    print(f"Score: {result['score']:.4f}, Text: \"{result['text']}\"")
 ```
 </CodeGroup>
