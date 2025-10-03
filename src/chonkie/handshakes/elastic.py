@@ -58,12 +58,12 @@ class ElasticHandshake(BaseHandshake):
         if client:
             self.client = client
         elif cloud_id and api_key:
-            self.client = Elasticsearch(cloud_id=cloud_id, api_key=api_key, **kwargs)
+            self.client = Elasticsearch(cloud_id=cloud_id, api_key=api_key, **kwargs) # type: ignore
         elif hosts:
-            self.client = Elasticsearch(hosts=hosts, **kwargs)
+            self.client = Elasticsearch(hosts=hosts, api_key=api_key, **kwargs) # type: ignore
         else:
             # Default to a standard local client if no other connection info is provided
-            self.client = Elasticsearch("http://localhost:9200", **kwargs)
+            self.client = Elasticsearch("http://localhost:9200", **kwargs) # type: ignore
 
         # 2. Initialize the embedding model
         if isinstance(embedding_model, str):
@@ -147,9 +147,9 @@ class ElasticHandshake(BaseHandshake):
         success, errors = bulk(self.client, actions, raise_on_error=False)
 
         if errors:
-            print(f"⚠️ Encountered {len(errors)} errors during bulk indexing.")
+            print(f"⚠️ Encountered {len(errors)} errors during bulk indexing.") # type: ignore
             # Optionally log the first few errors for debugging
-            for i, error in enumerate(errors[:5]):
+            for i, error in enumerate(errors[:5]): # type: ignore
                 print(f"  Error {i+1}: {error}")
 
         print(f"🦛 Chonkie wrote {success} chunks to Elasticsearch index: {self.index_name}")

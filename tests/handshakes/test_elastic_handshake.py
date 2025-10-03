@@ -20,8 +20,8 @@ pytestmark = pytest.mark.skipif(elasticsearch is None, reason="elasticsearch-py 
 # ---- Fixtures ----
 
 @pytest.fixture
-def mock_elastic_client_and_bulk():
-    """Mocks both the Elasticsearch client and the bulk helper function."""
+def mock_elastic_client_and_bulk() -> tuple[MagicMock, MagicMock]:
+    """Mock both the Elasticsearch client and the bulk helper function."""
     # Patch the client class to control its instances
     with patch("chonkie.handshakes.elastic.Elasticsearch", autospec=True) as mock_es_class:
         # Create a mock instance that the class will return
