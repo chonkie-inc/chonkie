@@ -497,6 +497,10 @@ class Pipeline:
         kwargs = step["kwargs"]
         step_type = step["type"]
 
+        # Extract recipe parameters before splitting (they're meta-parameters, not component params)
+        recipe_name = kwargs.pop('recipe', None)
+        recipe_lang = kwargs.pop('lang', 'en')
+
         # Auto-detect parameter separation
         try:
             init_kwargs, call_kwargs = Pipeline._split_parameters(
@@ -519,10 +523,7 @@ class Pipeline:
         if component_key not in self._component_instances:
             try:
                 # Check if recipe-based initialization is requested
-                if 'recipe' in init_kwargs and hasattr(component_info.component_class, 'from_recipe'):
-                    recipe_name = init_kwargs.pop('recipe')
-                    recipe_lang = init_kwargs.pop('lang', 'en')  # Default to 'en'
-
+                if recipe_name and hasattr(component_info.component_class, 'from_recipe'):
                     # Create instance using from_recipe with remaining params
                     self._component_instances[component_key] = component_info.component_class.from_recipe(
                         name=recipe_name,
