@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Type, Union
 
 from chonkie.types import Document
+from chonkie.utils import Hubbie
 
 from .registry import ComponentRegistry
 
@@ -47,6 +48,49 @@ class Pipeline:
         self._steps: List[Dict[str, Any]] = []
         self._data: Any = None
         self._component_instances: Dict[tuple[str, tuple[tuple[str, Any], ...]], Any] = {}  # Cache for component instances
+
+    @classmethod
+    def from_recipe(cls, name: str, path: Optional[str] = None) -> "Pipeline":
+        """Create pipeline from a pre-defined recipe.
+
+        Recipes are loaded from the Chonkie Hub (chonkie-ai/recipes repo)
+        under the 'pipelines' subfolder.
+
+        Args:
+            name: Name of the pipeline recipe (e.g., 'markdown')
+            path: Optional local path to recipe file (overrides hub download)
+
+        Returns:
+            Configured Pipeline instance
+
+        Raises:
+            ValueError: If recipe is not found or invalid
+            ImportError: If huggingface_hub is not installed
+
+        Examples:
+            ```python
+            # Load from hub
+            pipeline = Pipeline.from_recipe('markdown')
+
+            # Load from local file
+            pipeline = Pipeline.from_recipe('custom', path='my_recipe.json')
+
+            # Run the pipeline
+            doc = pipeline.run(texts='Your markdown here')
+            ```
+
+        """
+        # Create Hubbie instance to load recipe
+        hubbie = Hubbie()
+        recipe = hubbie.get_pipeline_recipe(name, path=path)
+
+        # Extract steps from recipe
+        steps = recipe.get("steps", [])
+        if not steps:
+            raise ValueError(f"Pipeline recipe '{name}' has no steps defined.")
+
+        # Create pipeline from steps
+        return cls.from_config(steps)
 
     @classmethod
     def from_config(cls, config: Union[str, List[Union[tuple[Any, ...], Dict[str, Any]]]]) -> "Pipeline":
