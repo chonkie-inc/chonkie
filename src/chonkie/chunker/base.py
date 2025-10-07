@@ -140,8 +140,16 @@ class BaseChunker(ABC):
         else:
             return self._sequential_batch_processing(texts, show_progress)
     
-    def chunk_document(self, document: Document) -> Document: 
-        """Chunk a document."""
+    def chunk_document(self, document: Document) -> Document:
+        """Chunk a document.
+
+        Args:
+            document: The document to chunk.
+
+        Returns:
+            The document with chunks populated.
+
+        """
         # If the document has chunks already, then we need to re-chunk the content
         if document.chunks:
             chunks: List[Chunk] = []

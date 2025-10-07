@@ -554,45 +554,48 @@ class Pipeline:
         elif step_type == "process":
             # Chef.process(path) → Document (from file)
             # OR Chef.parse(text) → Document (from raw text)
+            # Note: process/parse don't accept **kwargs (all config in __init__)
             if isinstance(input_data, list):
                 # Check if list contains paths or raw text/Documents
                 if input_data and isinstance(input_data[0], str):
                     # Could be paths or text - try to detect
                     if Path(input_data[0]).exists():
                         # File paths
-                        return [component.process(path, **kwargs) for path in input_data]
+                        return [component.process(path) for path in input_data]
                     else:
                         # Raw text strings
-                        return [component.parse(text, **kwargs) for text in input_data]
+                        return [component.parse(text) for text in input_data]
                 else:
                     # Assume paths
-                    return [component.process(path, **kwargs) for path in input_data]
+                    return [component.process(path) for path in input_data]
             else:
                 # Single input - check if it's a path or text
                 if isinstance(input_data, str) and not Path(input_data).exists():
                     # Raw text (not a file)
-                    return component.parse(input_data, **kwargs)
+                    return component.parse(input_data)
                 else:
                     # File path
-                    return component.process(input_data, **kwargs)
+                    return component.process(input_data)
 
         elif step_type == "chunk":
             # Chunker.chunk_document(document) → Document (with chunks)
+            # Note: chunk_document doesn't accept **kwargs (all config in __init__)
             if isinstance(input_data, list):
                 # List of Documents
-                return [component.chunk_document(doc, **kwargs) for doc in input_data]
+                return [component.chunk_document(doc) for doc in input_data]
             else:
                 # Single Document
-                return component.chunk_document(input_data, **kwargs)
+                return component.chunk_document(input_data)
 
         elif step_type == "refine":
             # Refinery.refine_document(document) → Document (with refined chunks)
+            # Note: refine_document doesn't accept **kwargs (all config in __init__)
             if isinstance(input_data, list):
                 # List of Documents
-                return [component.refine_document(doc, **kwargs) for doc in input_data]
+                return [component.refine_document(doc) for doc in input_data]
             else:
                 # Single Document
-                return component.refine_document(input_data, **kwargs)
+                return component.refine_document(input_data)
 
         elif step_type == "export":
             # Porter.export(chunks, **kwargs) → None (return input for chaining)
