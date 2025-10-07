@@ -1,6 +1,7 @@
 """Core Pipeline class for chonkie."""
 
 import inspect
+import json
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Type, Union
 
@@ -47,7 +48,7 @@ class Pipeline:
         """Initialize a new Pipeline."""
         self._steps: List[Dict[str, Any]] = []
         self._data: Any = None
-        self._component_instances: Dict[tuple[str, tuple[tuple[str, Any], ...]], Any] = {}  # Cache for component instances
+        self._component_instances: Dict[tuple[str, str], Any] = {}  # Cache: (name, json_kwargs) -> instance
 
     @classmethod
     def from_recipe(cls, name: str, path: Optional[str] = None) -> "Pipeline":
@@ -507,10 +508,30 @@ class Pipeline:
             ) from e
 
         # Create component instance with init parameters only
-        component_key = (component_info.name, tuple(sorted(init_kwargs.items())))
+        # Use JSON serialization for cache key to handle unhashable types (lists, dicts)
+        try:
+            kwargs_json = json.dumps(init_kwargs, sort_keys=True)
+        except (TypeError, ValueError):
+            # If kwargs can't be JSON serialized, use repr as fallback
+            kwargs_json = repr(sorted(init_kwargs.items()))
+
+        component_key = (component_info.name, kwargs_json)
         if component_key not in self._component_instances:
             try:
-                self._component_instances[component_key] = component_info.component_class(**init_kwargs)
+                # Check if recipe-based initialization is requested
+                if 'recipe' in init_kwargs and hasattr(component_info.component_class, 'from_recipe'):
+                    recipe_name = init_kwargs.pop('recipe')
+                    recipe_lang = init_kwargs.pop('lang', 'en')  # Default to 'en'
+
+                    # Create instance using from_recipe with remaining params
+                    self._component_instances[component_key] = component_info.component_class.from_recipe(
+                        name=recipe_name,
+                        lang=recipe_lang,
+                        **init_kwargs
+                    )
+                else:
+                    # Normal initialization
+                    self._component_instances[component_key] = component_info.component_class(**init_kwargs)
             except Exception as e:
                 raise ValueError(
                     f"Failed to create {component_info.component_class.__name__} with parameters {init_kwargs}: {e}"
