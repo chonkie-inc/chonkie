@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, List, Union
 
 from chonkie.chef.base import BaseChef
 from chonkie.pipeline import chef
-from chonkie.types import MarkdownDocument, MarkdownTable
+from chonkie.types import Document, MarkdownDocument, MarkdownTable
 
 if TYPE_CHECKING:
     import pandas as pd
@@ -72,7 +72,7 @@ class TableChef(BaseChef):
 
     def process_batch(
         self, paths: Union[List[str], List[Path]]
-    ) -> List[MarkdownDocument]:
+    ) -> List[Document]:  # type: ignore[override]
         """Process multiple CSV files and return a list of DataFrames.
 
         Args:
@@ -84,16 +84,17 @@ class TableChef(BaseChef):
         """
         return [self.process(path) for path in paths]
 
-    def __call__(
-        self, path: Union[str, Path, List[str], List[Path]]
-    ) -> Union[MarkdownDocument, List[MarkdownDocument]]:
-        """Process one or more CSV files and return DataFrame(s)."""
-        if isinstance(path, (list, tuple)):
-            return self.process_batch(path)
-        elif isinstance(path, (str, Path)):
-            return self.process(path)
-        else:
-            raise TypeError(f"Unsupported type: {type(path)}")
+    def __call__(self, path: Union[str, Path]) -> Document:
+        """Process a CSV/Excel/markdown file.
+
+        Args:
+            path: Path to the file to process.
+
+        Returns:
+            MarkdownDocument created from the file.
+
+        """
+        return self.process(path)
 
     def extract_tables_from_markdown(self, markdown: str) -> List[MarkdownTable]:
         """Extract markdown tables from a markdown string.

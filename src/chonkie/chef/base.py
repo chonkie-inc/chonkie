@@ -1,7 +1,8 @@
 """Base class for chefs."""
 
 from abc import ABC, abstractmethod
-from typing import Any
+from pathlib import Path
+from typing import List, Union
 
 from chonkie.types import Document
 
@@ -10,7 +11,7 @@ class BaseChef(ABC):
     """Base class for chefs."""
 
     @abstractmethod
-    def process(self, path: Any) -> Document:
+    def process(self, path: Union[str, Path]) -> Document:
         """Process the data from a file path.
 
         Args:
@@ -35,17 +36,41 @@ class BaseChef(ABC):
         """
         raise NotImplementedError("Subclasses must implement parse()")
 
-    def process_batch(self, paths: Any) -> Any:
-        """Process the data in a batch."""
+    def process_batch(self, paths: Union[List[str], List[Path]]) -> List[Document]:
+        """Process multiple files in a batch.
+
+        Args:
+            paths: List of file paths to process.
+
+        Returns:
+            List of Documents created from the files.
+
+        """
         return [self.process(path) for path in paths]
 
-    def read(self, path: Any) -> Any:
-        """Read the file content."""
+    def read(self, path: Union[str, Path]) -> str:
+        """Read the file content.
+
+        Args:
+            path: Path to the file to read.
+
+        Returns:
+            File content as string.
+
+        """
         with open(path, "r", encoding="utf-8") as file:
             return str(file.read())
 
-    def __call__(self, path: Any) -> Any:
-        """Call the chef to process the data."""
+    def __call__(self, path: Union[str, Path]) -> Document:
+        """Call the chef to process the data.
+
+        Args:
+            path: Path to the file to process.
+
+        Returns:
+            Document created from the file.
+
+        """
         return self.process(path)
 
     def __repr__(self) -> str:
