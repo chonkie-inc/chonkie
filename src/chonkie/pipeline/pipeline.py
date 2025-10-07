@@ -19,21 +19,25 @@ class Pipeline:
         ```python
         from chonkie.pipeline import Pipeline
 
-        # Simple pipeline
-        chunks = (Pipeline()
+        # Simple pipeline - returns Document with chunks
+        doc = (Pipeline()
             .fetch_from("file", path="document.txt")
             .process_with("text")
             .chunk_with("recursive", chunk_size=512)
-            .execute())
+            .run())
+
+        # Access chunks via doc.chunks
+        for chunk in doc.chunks:
+            print(chunk.text)
 
         # Complex pipeline with refinement and export
-        (Pipeline()
+        doc = (Pipeline()
             .fetch_from("file", path="document.txt")
             .process_with("text")
             .chunk_with("recursive", chunk_size=512)
-            .refine_with("overlap", merge_threshold=0.8)
-            .export_with("json", output_path="chunks.json")
-            .execute())
+            .refine_with("overlap", context_size=50)
+            .export_with("json", file="chunks.json")
+            .run())
         ```
 
     """
@@ -287,22 +291,27 @@ class Pipeline:
 
         Examples:
             ```python
-            # Traditional fetcher-based pipeline
+            # Traditional fetcher-based pipeline - returns Document
             pipeline = (Pipeline()
                 .fetch_from("file", path="doc.txt")
                 .process_with("text")
                 .chunk_with("recursive", chunk_size=512))
-            chunks = pipeline.run()
-
+            doc = pipeline.run()
+            print(f"Chunked into {len(doc.chunks)} chunks")
 
             # Direct text input (fetcher optional)
             pipeline = (Pipeline()
                 .process_with("text")
                 .chunk_with("recursive", chunk_size=512))
-            chunks = pipeline.run(texts="Hello world")
+            doc = pipeline.run(texts="Hello world")
 
-            # Multiple texts
-            chunks = pipeline.run(texts=["Text 1", "Text 2", "Text 3"])
+            # Access chunks via doc.chunks
+            for chunk in doc.chunks:
+                print(chunk.text)
+
+            # Multiple texts - returns List[Document]
+            docs = pipeline.run(texts=["Text 1", "Text 2", "Text 3"])
+            all_chunks = [chunk for doc in docs for chunk in doc.chunks]
             ```
 
         """
