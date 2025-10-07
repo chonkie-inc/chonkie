@@ -184,26 +184,26 @@ class MarkdownChef(BaseChef):
 
     return chunks
 
-  def parse(self, markdown: str) -> MarkdownDocument:
+  def parse(self, text: str) -> MarkdownDocument:
     """Parse markdown text directly into a MarkdownDocument.
 
     Args:
-        markdown (str): The markdown text to parse.
+        text (str): The markdown text to parse.
 
     Returns:
         MarkdownDocument: The processed markdown document.
 
     """
     # Extract all the tables, code snippets, and images
-    tables = self.prepare_tables(markdown)
-    code = self.prepare_code(markdown)
-    images = self.extract_images(markdown)
+    tables = self.prepare_tables(text)
+    code = self.prepare_code(text)
+    images = self.extract_images(text)
 
     # Extract the chunks
-    chunks: List[Chunk] = self.extract_chunks(markdown, tables, code, images)
+    chunks: List[Chunk] = self.extract_chunks(text, tables, code, images)
 
     return MarkdownDocument(
-      content=markdown,
+      content=text,
       tables=tables,
       code=code,
       images=images,
