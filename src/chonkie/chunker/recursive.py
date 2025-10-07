@@ -9,6 +9,7 @@ from itertools import accumulate
 from typing import Any, Callable, List, Optional, Tuple, Union
 
 from chonkie.chunker.base import BaseChunker
+from chonkie.pipeline import chunker
 from chonkie.types import (
     Chunk,
     RecursiveLevel,
@@ -30,6 +31,7 @@ except ImportError:
     MERGE_CYTHON_AVAILABLE = False
 
 
+@chunker("recursive")
 class RecursiveChunker(BaseChunker):
     """Chunker that recursively splits text into smaller chunks, based on the provided RecursiveRules.
 

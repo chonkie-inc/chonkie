@@ -4,6 +4,7 @@ import warnings
 from functools import lru_cache
 from typing import Any, Callable, List, Literal, Union
 
+from chonkie.pipeline import refinery
 from chonkie.refinery.base import BaseRefinery
 from chonkie.tokenizer import Tokenizer
 from chonkie.types import Chunk, RecursiveLevel, RecursiveRules
@@ -16,6 +17,7 @@ from chonkie.types import Chunk, RecursiveLevel, RecursiveRules
 # both prefix and suffix overlap.
 
 
+@refinery("overlap")
 class OverlapRefinery(BaseRefinery):
     """Refinery for adding overlap to chunks.
     

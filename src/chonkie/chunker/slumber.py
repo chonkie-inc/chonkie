@@ -7,6 +7,7 @@ from typing import Any, Callable, List, Optional, Union
 from tqdm import tqdm
 
 from chonkie.genie import BaseGenie, GeminiGenie
+from chonkie.pipeline import chunker
 from chonkie.types import Chunk, RecursiveLevel, RecursiveRules
 
 from .base import BaseChunker
@@ -53,6 +54,7 @@ Follow the following rules while finding the splitting passage:
 """
 
 
+@chunker("slumber")
 class SlumberChunker(BaseChunker):
     """SlumberChunker is a chunker based on the LumberChunker — but slightly different."""
 

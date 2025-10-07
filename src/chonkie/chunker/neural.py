@@ -8,6 +8,7 @@ It trains an encoder style model on the task of token-classification (think: NER
 import importlib.util as importutil
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
+from chonkie.pipeline import chunker
 from chonkie.types import Chunk
 
 from .base import BaseChunker
@@ -35,6 +36,7 @@ if TYPE_CHECKING:
 # TODO: Add stride parameters for the pipeline (also does the pipeline do it sequentially or in parallel?)
 # If they do it sequentially, then we are making a huge mistake by not batching and processing multiple texts at once. 
 
+@chunker("neural")
 class NeuralChunker(BaseChunker):
   """Class for chunking text using a complete Neural Approach.
   

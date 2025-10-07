@@ -3,9 +3,12 @@
 from pathlib import Path
 from typing import List, Optional
 
+from chonkie.pipeline import fetcher
+
 from .base import BaseFetcher
 
 
+@fetcher("file")
 class FileFetcher(BaseFetcher):
     """FileFetcher is a fetcher that fetches paths of files from local directories."""
 

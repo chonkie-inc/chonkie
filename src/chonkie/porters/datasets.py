@@ -6,6 +6,7 @@ import importlib
 import importlib.util as importutil
 from typing import TYPE_CHECKING, Any
 
+from chonkie.pipeline import porter
 from chonkie.types import Chunk
 
 from .base import BasePorter
@@ -14,6 +15,7 @@ if TYPE_CHECKING:
     from datasets import Dataset
 
 
+@porter("datasets")
 class DatasetsPorter(BasePorter):
     """Porter to convert Chunks into datasets format for storage."""
 

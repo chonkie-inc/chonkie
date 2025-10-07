@@ -3,11 +3,13 @@
 from typing import Any, Dict, List, Union
 
 from chonkie.embeddings import AutoEmbeddings, BaseEmbeddings
+from chonkie.pipeline import refinery
 from chonkie.types import Chunk
 
 from .base import BaseRefinery
 
 
+@refinery("embeddings")
 class EmbeddingsRefinery(BaseRefinery):
     """Embedding Refinery.
     

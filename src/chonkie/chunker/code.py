@@ -10,6 +10,7 @@ from itertools import accumulate
 from typing import TYPE_CHECKING, Any, List, Literal, Tuple, Union
 
 from chonkie.chunker.base import BaseChunker
+from chonkie.pipeline import chunker
 from chonkie.tokenizer import Tokenizer
 from chonkie.types import Chunk
 
@@ -24,6 +25,7 @@ if TYPE_CHECKING:
             pass
 
 
+@chunker("code")
 class CodeChunker(BaseChunker):
     """Chunker that recursively splits the code based on code context.
     

@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Any, List, Literal, Optional, Union
 from uuid import NAMESPACE_OID, uuid5
 
 from chonkie.embeddings import AutoEmbeddings, BaseEmbeddings
+from chonkie.pipeline import handshake
 from chonkie.types import Chunk
 
 from .base import BaseHandshake
@@ -14,6 +15,7 @@ if TYPE_CHECKING:
     pass
 
 
+@handshake("turbopuffer")
 class TurbopufferHandshake(BaseHandshake):
     """Turbopuffer Handshake to export Chonkie's Chunks into a Turbopuffer database."""
 

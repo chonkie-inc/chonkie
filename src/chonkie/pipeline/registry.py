@@ -11,7 +11,8 @@ class _ComponentRegistry:
     def __init__(self) -> None:
         """Initialize the component registry."""
         self._components: Dict[str, Component] = {}
-        self._aliases: Dict[str, str] = {}  # alias -> name mapping
+        # Scoped aliases: (component_type, alias) -> name mapping
+        self._aliases: Dict[tuple[ComponentType, str], str] = {}
         self._component_types: Dict[ComponentType, List[str]] = {
             ct: [] for ct in ComponentType
         }
@@ -47,12 +48,13 @@ class _ComponentRegistry:
                     f"Component name '{name}' already registered with different class"
                 )
 
-        # Check for alias conflicts
-        if alias in self._aliases:
-            existing_name = self._aliases[alias]
+        # Check for alias conflicts within the same component type
+        alias_key = (component_type, alias)
+        if alias_key in self._aliases:
+            existing_name = self._aliases[alias_key]
             if existing_name != name:
                 raise ValueError(
-                    f"Alias '{alias}' already used by component '{existing_name}'"
+                    f"Alias '{alias}' already used by {component_type.value} component '{existing_name}'"
                 )
 
         # Create component info
@@ -65,14 +67,17 @@ class _ComponentRegistry:
 
         # Register the component
         self._components[name] = info
-        self._aliases[alias] = name
+        self._aliases[alias_key] = name
         self._component_types[component_type].append(name)
 
-    def get_component(self, name_or_alias: str) -> Component:
+    def get_component(
+        self, name_or_alias: str, component_type: Optional[ComponentType] = None
+    ) -> Component:
         """Get component info by name or alias.
 
         Args:
             name_or_alias: Component name or alias
+            component_type: Optional component type to scope alias lookup
 
         Returns:
             Component for the requested component
@@ -81,20 +86,45 @@ class _ComponentRegistry:
             ValueError: If component is not found
 
         """
-        # Try alias first, then name
-        if name_or_alias in self._aliases:
-            name = self._aliases[name_or_alias]
-        else:
-            name = name_or_alias
+        # If component_type provided, try scoped alias lookup first
+        if component_type:
+            alias_key = (component_type, name_or_alias)
+            if alias_key in self._aliases:
+                name = self._aliases[alias_key]
+                return self._components[name]
 
-        if name not in self._components:
-            available_aliases = list(self._aliases.keys())
+        # Try unscoped: check if it's a direct name match
+        if name_or_alias in self._components:
+            comp = self._components[name_or_alias]
+            # If type specified, verify it matches
+            if component_type and comp.component_type != component_type:
+                raise ValueError(
+                    f"Component '{name_or_alias}' is a {comp.component_type.value}, "
+                    f"not a {component_type.value}"
+                )
+            return comp
+
+        # Try to find by alias across all types (ambiguous lookup)
+        matches = []
+        for (ctype, alias), name in self._aliases.items():
+            if alias == name_or_alias:
+                matches.append((ctype, name))
+
+        if len(matches) == 1:
+            return self._components[matches[0][1]]
+        elif len(matches) > 1:
+            types = [m[0].value for m in matches]
             raise ValueError(
-                f"Unknown component: '{name_or_alias}'. "
-                f"Available components: {available_aliases}"
+                f"Ambiguous alias '{name_or_alias}' found in multiple types: {types}. "
+                f"Specify component_type to disambiguate."
             )
 
-        return self._components[name]
+        # Not found
+        available = [f"{ct.value}:{alias}" for (ct, alias) in self._aliases.keys()]
+        raise ValueError(
+            f"Unknown component: '{name_or_alias}'. "
+            f"Available: {sorted(available)[:10]}..."
+        )
 
     def list_components(
         self, component_type: Optional[ComponentType] = None
@@ -124,9 +154,8 @@ class _ComponentRegistry:
 
         """
         if component_type:
-            names = self._component_types[component_type]
-            return [self._components[name].alias for name in names]
-        return list(self._aliases.keys())
+            return [alias for (ctype, alias) in self._aliases.keys() if ctype == component_type]
+        return [alias for (_, alias) in self._aliases.keys()]
 
     def get_fetcher(self, alias: str) -> Component:
         """Get a fetcher component by alias.
@@ -141,10 +170,7 @@ class _ComponentRegistry:
             ValueError: If fetcher not found
 
         """
-        component = self.get_component(alias)
-        if component.component_type != ComponentType.FETCHER:
-            raise ValueError(f"'{alias}' is not a fetcher component")
-        return component
+        return self.get_component(alias, ComponentType.FETCHER)
 
     def get_chef(self, alias: str) -> Component:
         """Get a chef component by alias.
@@ -159,10 +185,7 @@ class _ComponentRegistry:
             ValueError: If chef not found
 
         """
-        component = self.get_component(alias)
-        if component.component_type != ComponentType.CHEF:
-            raise ValueError(f"'{alias}' is not a chef component")
-        return component
+        return self.get_component(alias, ComponentType.CHEF)
 
     def get_chunker(self, alias: str) -> Component:
         """Get a chunker component by alias.
@@ -177,10 +200,7 @@ class _ComponentRegistry:
             ValueError: If chunker not found
 
         """
-        component = self.get_component(alias)
-        if component.component_type != ComponentType.CHUNKER:
-            raise ValueError(f"'{alias}' is not a chunker component")
-        return component
+        return self.get_component(alias, ComponentType.CHUNKER)
 
     def get_refinery(self, alias: str) -> Component:
         """Get a refinery component by alias.
@@ -195,10 +215,7 @@ class _ComponentRegistry:
             ValueError: If refinery not found
 
         """
-        component = self.get_component(alias)
-        if component.component_type != ComponentType.REFINERY:
-            raise ValueError(f"'{alias}' is not a refinery component")
-        return component
+        return self.get_component(alias, ComponentType.REFINERY)
 
     def get_porter(self, alias: str) -> Component:
         """Get a porter component by alias.
@@ -213,10 +230,7 @@ class _ComponentRegistry:
             ValueError: If porter not found
 
         """
-        component = self.get_component(alias)
-        if component.component_type != ComponentType.PORTER:
-            raise ValueError(f"'{alias}' is not a porter component")
-        return component
+        return self.get_component(alias, ComponentType.PORTER)
 
     def get_handshake(self, alias: str) -> Component:
         """Get a handshake component by alias.
@@ -231,10 +245,7 @@ class _ComponentRegistry:
             ValueError: If handshake not found
 
         """
-        component = self.get_component(alias)
-        if component.component_type != ComponentType.HANDSHAKE:
-            raise ValueError(f"'{alias}' is not a handshake component")
-        return component
+        return self.get_component(alias, ComponentType.HANDSHAKE)
 
     def is_registered(self, name_or_alias: str) -> bool:
         """Check if a component is registered.
@@ -248,29 +259,31 @@ class _ComponentRegistry:
         """
         return name_or_alias in self._aliases or name_or_alias in self._components
 
-    def unregister(self, name_or_alias: str) -> None:
+    def unregister(self, name_or_alias: str, component_type: Optional[ComponentType] = None) -> None:
         """Unregister a component (mainly for testing).
 
         Args:
             name_or_alias: Component name or alias to unregister
+            component_type: Optional component type for scoped alias lookup
 
         """
-        if name_or_alias in self._aliases:
-            name = self._aliases[name_or_alias]
-            alias = name_or_alias
-        elif name_or_alias in self._components:
-            name = name_or_alias
-            alias = self._components[name].alias
-        else:
+        # Try to find the component
+        comp = None
+        try:
+            comp = self.get_component(name_or_alias, component_type)
+        except ValueError:
             return  # Component not registered
 
-        # Remove from all tracking structures
-        component_info = self._components[name]
-        component_type = component_info.component_type
+        name = comp.name
+        alias = comp.alias
+        ctype = comp.component_type
 
+        # Remove from all tracking structures
         del self._components[name]
-        del self._aliases[alias]
-        self._component_types[component_type].remove(name)
+        alias_key = (ctype, alias)
+        if alias_key in self._aliases:
+            del self._aliases[alias_key]
+        self._component_types[ctype].remove(name)
 
     def clear(self) -> None:
         """Clear all registered components (mainly for testing)."""

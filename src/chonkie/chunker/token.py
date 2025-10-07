@@ -9,9 +9,11 @@ from typing import Any, Callable, Generator, List, Sequence, Union
 from tqdm import trange
 
 from chonkie.chunker.base import BaseChunker
+from chonkie.pipeline import chunker
 from chonkie.types import Chunk
 
 
+@chunker("token")
 class TokenChunker(BaseChunker):
     """Chunker that splits text into chunks of a specified token size.
 

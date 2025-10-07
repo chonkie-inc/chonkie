@@ -5,12 +5,14 @@ from pathlib import Path
 from typing import TYPE_CHECKING, List, Union
 
 from chonkie.chef.base import BaseChef
+from chonkie.pipeline import chef
 from chonkie.types import MarkdownTable
 
 if TYPE_CHECKING:
     import pandas as pd
 
 
+@chef("table")
 class TableChef(BaseChef):
     """TableChef processes CSV files and returns pandas DataFrames."""
 

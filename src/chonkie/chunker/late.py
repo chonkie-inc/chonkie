@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Any, List, Optional, Union
 # Get all the Chonkie imports
 from chonkie.chunker.recursive import RecursiveChunker
 from chonkie.embeddings.sentence_transformer import SentenceTransformerEmbeddings
+from chonkie.pipeline import chunker
 from chonkie.types import Chunk, RecursiveRules
 
 if TYPE_CHECKING:
@@ -18,6 +19,7 @@ if TYPE_CHECKING:
             pass
 
 
+@chunker("late")
 class LateChunker(RecursiveChunker):
     """A chunker that chunks texts based on late interaction.
 

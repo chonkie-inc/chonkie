@@ -2,6 +2,7 @@
 
 import json
 
+from chonkie.pipeline import porter
 from chonkie.types import Chunk
 
 from .base import BasePorter
@@ -10,6 +11,7 @@ from .base import BasePorter
 # right now, except the ability to load in lines or not. 
 
 
+@porter("json")
 class JSONPorter(BasePorter):
     """Porter to convert Chunks into JSON format for storage."""
 

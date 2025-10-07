@@ -7,9 +7,11 @@ from typing import Any, Callable, List, Union
 from typing_extensions import Tuple
 
 from chonkie.chunker.base import BaseChunker
+from chonkie.pipeline import chunker
 from chonkie.types import Chunk, Document, MarkdownDocument
 
 
+@chunker("table")
 class TableChunker(BaseChunker):
     """Chunker that chunks tables based on character count on each row."""
 

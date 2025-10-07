@@ -15,6 +15,7 @@ from typing import (
 from uuid import NAMESPACE_OID, uuid5
 
 from chonkie.embeddings import AutoEmbeddings, BaseEmbeddings
+from chonkie.pipeline import handshake
 from chonkie.types import Chunk
 
 from .base import BaseHandshake
@@ -24,6 +25,7 @@ if TYPE_CHECKING:
     import pinecone
 
 
+@handshake("pinecone")
 class PineconeHandshake(BaseHandshake):
     """Pinecone Handshake to export Chonkie's Chunks into a Pinecone index.
 
