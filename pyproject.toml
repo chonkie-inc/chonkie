@@ -188,6 +188,7 @@ packages = [
     "chonkie.experimental",
     "chonkie.fetcher",
     "chonkie.chef",
+    "chonkie.pipeline"
 ]
 
 [tool.setuptools.package-data]
