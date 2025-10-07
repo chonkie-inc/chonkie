@@ -9,6 +9,7 @@ import pandas as pd
 import pytest
 
 from chonkie.chef import TableChef
+from chonkie.types import MarkdownDocument
 
 
 class TestTableChef:
@@ -55,10 +56,11 @@ class TestTableChef:
 
         monkeypatch.setattr(pd, "read_csv", fake_read_csv)
         result = table_chef.process(str(csv_file))
-        assert isinstance(result, str)
+        assert isinstance(result, MarkdownDocument)
         # Check for column names and values, not exact formatting
-        assert "col1" in result and "col2" in result
-        assert "1" in result and "2" in result and "3" in result and "4" in result
+        assert "col1" in result.content and "col2" in result.content
+        assert "1" in result.content and "2" in result.content
+        assert len(result.tables) > 0
         assert called["called"]
 
     def test_process_excel_file(
@@ -77,19 +79,20 @@ class TestTableChef:
 
         monkeypatch.setattr(pd, "read_excel", fake_read_excel)
         result = table_chef.process(str(excel_file))
-        assert isinstance(result, str)
-        assert "col1" in result and "col2" in result
-        assert "1" in result and "2" in result and "3" in result and "4" in result
+        assert isinstance(result, MarkdownDocument)
+        assert "col1" in result.content and "col2" in result.content
+        assert "1" in result.content and "2" in result.content
+        assert len(result.tables) > 0
         assert called["called"]
 
     def test_process_markdown_table_string(
         self: "TestTableChef", table_chef: TableChef, markdown_table: str
     ) -> None:
         """Test processing a markdown table string."""
-        tables = table_chef.process(markdown_table)
-        assert isinstance(tables, list)
-        assert len(tables) == 1
-        assert hasattr(tables[0], "content")
+        result = table_chef.process(markdown_table)
+        assert isinstance(result, MarkdownDocument)
+        assert len(result.tables) == 1
+        assert hasattr(result.tables[0], "content")
 
     def test_process_batch(
         self: "TestTableChef", table_chef: TableChef, csv_content: str, tmp_path: Path
@@ -103,13 +106,9 @@ class TestTableChef:
         assert isinstance(results, list)
         assert len(results) == 2
         for r in results:
-            if isinstance(r, str):
-                assert "col1" in r and "col2" in r
-                assert "1" in r and "2" in r and "3" in r and "4" in r
-            elif isinstance(r, list):
-                assert all(hasattr(t, "content") for t in r)
-            else:
-                assert False, f"Unexpected result type: {type(r)}"
+            assert isinstance(r, MarkdownDocument)
+            assert "col1" in r.content and "col2" in r.content
+            assert len(r.tables) > 0
 
     def test_call_with_list(
         self: "TestTableChef", table_chef: TableChef, csv_content: str, tmp_path: Path
@@ -123,13 +122,9 @@ class TestTableChef:
         assert isinstance(results, list)
         assert len(results) == 2
         for r in results:
-            if isinstance(r, str):
-                assert "col1" in r and "col2" in r
-                assert "1" in r and "2" in r and "3" in r and "4" in r
-            elif isinstance(r, list):
-                assert all(hasattr(t, "content") for t in r)
-            else:
-                assert False, f"Unexpected result type: {type(r)}"
+            assert isinstance(r, MarkdownDocument)
+            assert "col1" in r.content and "col2" in r.content
+            assert len(r.tables) > 0
 
     def test_call_with_single(
         self: "TestTableChef", table_chef: TableChef, csv_content: str, tmp_path: Path
@@ -138,9 +133,10 @@ class TestTableChef:
         file1 = tmp_path / "a.csv"
         file1.write_text(csv_content)
         result = table_chef(str(file1))
-        assert isinstance(result, str)
-        assert "col1" in result and "col2" in result
-        assert "1" in result and "2" in result and "3" in result and "4" in result
+        assert isinstance(result, MarkdownDocument)
+        assert "col1" in result.content and "col2" in result.content
+        assert len(result.tables) > 0
+        assert "1" in result.content and "2" in result.content
 
     def test_call_invalid_type(self: "TestTableChef", table_chef: TableChef) -> None:
         """Test that TableChef raises TypeError on invalid input type."""

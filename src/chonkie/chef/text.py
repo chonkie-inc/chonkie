@@ -49,17 +49,22 @@ class TextChef(BaseChef):
         """
         return [self.process(path) for path in paths]
 
-    def __call__(self, path: Union[str, Path]) -> Document:
-        """Process the text data from given file.
+    def __call__(self, path: Union[str, Path, List[str], List[Path]]) -> Union[Document, List[Document]]:  # type: ignore[override]
+        """Process the text data from given file(s).
 
         Args:
-            path: Path to the file to process.
+            path: Path to file(s) to process. Can be single path or list of paths.
 
         Returns:
-            Document created from the file.
+            Document or List[Document] created from the file(s).
 
         """
-        return self.process(path)
+        if isinstance(path, (list, tuple)):
+            return self.process_batch(path)
+        elif isinstance(path, (str, Path)):
+            return self.process(path)
+        else:
+            raise TypeError(f"Unsupported type: {type(path)}")
 
     def __repr__(self) -> str:
         """Return a string representation of the chef."""

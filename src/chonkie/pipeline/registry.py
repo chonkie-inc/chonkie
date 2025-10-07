@@ -323,23 +323,25 @@ def pipeline_component(
     """
 
     def decorator(cls: Type[Any]) -> Type[Any]:
-        # Validate that the class has required methods
+        # Validate that the class has ALL required methods
         required_methods = {
             ComponentType.FETCHER: ["fetch"],
-            ComponentType.CHEF: ["process"],
-            ComponentType.CHUNKER: ["chunk"],
-            ComponentType.REFINERY: ["refine"],
+            ComponentType.CHEF: ["process", "parse"],  # Both required!
+            ComponentType.CHUNKER: ["chunk", "chunk_document"],
+            ComponentType.REFINERY: ["refine", "refine_document"],
             ComponentType.PORTER: ["export"],
             ComponentType.HANDSHAKE: ["write"],
         }
 
         required = required_methods.get(component_type, [])
-        for method_name in required:
-            if not hasattr(cls, method_name):
-                raise ValueError(
-                    f"{cls.__name__} must implement {method_name}() method "
-                    f"to be registered as {component_type.value}"
-                )
+        missing_methods = [m for m in required if not hasattr(cls, m)]
+
+        if missing_methods:
+            raise ValueError(
+                f"{cls.__name__} must implement {missing_methods} method(s) "
+                f"to be registered as {component_type.value}. "
+                f"Required methods: {required}"
+            )
 
         # Register the component
         ComponentRegistry.register(

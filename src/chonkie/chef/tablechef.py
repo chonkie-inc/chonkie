@@ -84,17 +84,22 @@ class TableChef(BaseChef):
         """
         return [self.process(path) for path in paths]
 
-    def __call__(self, path: Union[str, Path]) -> Document:
-        """Process a CSV/Excel/markdown file.
+    def __call__(self, path: Union[str, Path, List[str], List[Path]]) -> Union[Document, List[Document]]:  # type: ignore[override]
+        """Process CSV/Excel/markdown file(s).
 
         Args:
-            path: Path to the file to process.
+            path: Path to file(s) to process. Can be single path or list of paths.
 
         Returns:
-            MarkdownDocument created from the file.
+            MarkdownDocument or List[MarkdownDocument] created from the file(s).
 
         """
-        return self.process(path)
+        if isinstance(path, (list, tuple)):
+            return self.process_batch(path)
+        elif isinstance(path, (str, Path)):
+            return self.process(path)
+        else:
+            raise TypeError(f"Unsupported type: {type(path)}")
 
     def extract_tables_from_markdown(self, markdown: str) -> List[MarkdownTable]:
         """Extract markdown tables from a markdown string.
