@@ -16,7 +16,6 @@ class _ComponentRegistry:
         self._component_types: Dict[ComponentType, List[str]] = {
             ct: [] for ct in ComponentType
         }
-        self._initialized = False
 
     def register(
         self,

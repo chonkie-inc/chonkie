@@ -117,7 +117,7 @@ class Pipeline:
                     pipeline.refine_with(component_name, **kwargs)
                 elif step_type == 'export':
                     pipeline.export_with(component_name, **kwargs)
-                elif step_type == 'store':
+                elif step_type == 'write':
                     pipeline.store_in(component_name, **kwargs)
                 else:
                     raise ValueError(f"Unknown step type: '{step_type}'")
@@ -266,7 +266,7 @@ class Pipeline:
 
         """
         component = ComponentRegistry.get_handshake(handshake_type)
-        self._steps.append({"type": "store", "component": component, "kwargs": kwargs})
+        self._steps.append({"type": "write", "component": component, "kwargs": kwargs})
         return self
 
     def run(self, texts: Optional[Union[str, List[str]]] = None) -> Union[Document, List[Document]]:
@@ -369,11 +369,11 @@ class Pipeline:
         # Define the correct order of component types
         type_order = {
             "fetch": 0,
-            "process": 1, 
+            "process": 1,
             "chunk": 2,
             "refine": 3,
             "export": 4,
-            "store": 5
+            "write": 5
         }
         
         # Group steps by type
@@ -390,7 +390,7 @@ class Pipeline:
         # Add steps in the correct order
         for step_type in sorted(type_order.keys(), key=lambda x: type_order[x]):
             if step_type in steps_by_type:
-                if step_type in ["refine", "fetch", "chunk", "export", "store"]:
+                if step_type in ["refine", "fetch", "chunk", "export", "write"]:
                     # Multiple allowed: maintain the order they were added
                     ordered_steps.extend(steps_by_type[step_type])
                 else:
@@ -424,7 +424,7 @@ class Pipeline:
                 f"Only one chef is allowed per pipeline."
             )
 
-        # Multiple allowed for: fetch, chunk, refine, export, store
+        # Multiple allowed for: fetch, chunk, refine, export, write
 
         # Check that we have at least a chunker (minimum viable pipeline)
         if "chunk" not in step_types:
@@ -498,26 +498,15 @@ class Pipeline:
             ValueError: If unknown parameters are provided
 
         """
-        # Map step types to method names
-        method_map = {
-            "fetch": "fetch",
-            "process": "process",
-            "chunk": "chunk",
-            "refine": "refine",
-            "export": "export",
-            "store": "write",
-        }
-
         try:
             # Get __init__ signature to determine init params
             init_sig = inspect.signature(component_class.__init__)
             init_param_names = set(init_sig.parameters.keys()) - {"self"}
 
-            # Get method signature if available
-            method_name = method_map.get(step_type, "")
+            # Get method signature (step_type matches method name directly)
             method_param_names: set[str] = set()
-            if method_name and hasattr(component_class, method_name):
-                method = getattr(component_class, method_name)
+            if hasattr(component_class, step_type):
+                method = getattr(component_class, step_type)
                 method_sig = inspect.signature(method)
                 method_param_names = set(method_sig.parameters.keys()) - {"self", "chunks", "chunk", "text", "document", "path"}
 
@@ -531,7 +520,7 @@ class Pipeline:
                 error_msg = (
                     f"Unknown parameters for {component_class.__name__}: {list(unknown.keys())}.\n"
                     f"  Available __init__ parameters: {sorted(init_param_names)}\n"
-                    f"  Available {method_name}() parameters: {sorted(method_param_names) if method_param_names else 'none (only positional args)'}"
+                    f"  Available {step_type}() parameters: {sorted(method_param_names) if method_param_names else 'none (only positional args)'}"
                 )
                 raise ValueError(error_msg)
 
@@ -550,7 +539,7 @@ class Pipeline:
 
         Args:
             component: The component instance to call
-            step_type: Type of step (fetch, process, chunk, refine, export, store)
+            step_type: Type of step (fetch, process, chunk, refine, export, write)
             input_data: Input data from previous step
             kwargs: Additional keyword arguments
 
@@ -617,7 +606,7 @@ class Pipeline:
                 component.export(input_data.chunks, **kwargs)
             return input_data  # Return Documents for potential further processing
 
-        elif step_type == "store":
+        elif step_type == "write":
             # Handshake.write(chunks) → result
             # Extract chunks from Document(s)
             if isinstance(input_data, list):
