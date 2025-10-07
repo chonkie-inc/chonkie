@@ -1,6 +1,6 @@
 """Component registry for pipeline components."""
 
-from typing import Callable, Dict, List, Optional, Type
+from typing import Any, Callable, Dict, List, Optional, Type
 
 from .component import Component, ComponentType
 
@@ -22,7 +22,7 @@ class _ComponentRegistry:
         self,
         name: str,
         alias: str,
-        component_class: Type,
+        component_class: Type[Any],
         component_type: ComponentType,
     ) -> None:
         """Register a component in the registry.
@@ -257,7 +257,14 @@ class _ComponentRegistry:
             True if component is registered, False otherwise
 
         """
-        return name_or_alias in self._aliases or name_or_alias in self._components
+        # Check if exists in components dict or in any alias tuple
+        if name_or_alias in self._components:
+            return True
+        # Check aliases - need to check if name_or_alias matches any alias value
+        for (_, alias) in self._aliases.keys():
+            if alias == name_or_alias:
+                return True
+        return False
 
     def unregister(self, name_or_alias: str, component_type: Optional[ComponentType] = None) -> None:
         """Unregister a component (mainly for testing).
@@ -296,7 +303,7 @@ class _ComponentRegistry:
 def pipeline_component(
     alias: str,
     component_type: ComponentType,
-) -> Callable[[Type], Type]:
+) -> Callable[[Type[Any]], Type[Any]]:
     """Register a class as a pipeline component.
 
     Args:
@@ -316,7 +323,7 @@ def pipeline_component(
 
     """
 
-    def decorator(cls: Type) -> Type:
+    def decorator(cls: Type[Any]) -> Type[Any]:
         # Validate that the class has required methods
         required_methods = {
             ComponentType.FETCHER: ["fetch"],
@@ -355,7 +362,7 @@ def pipeline_component(
 
 
 # Specialized decorators for each component type
-def fetcher(alias: str) -> Callable[[Type], Type]:
+def fetcher(alias: str) -> Callable[[Type[Any]], Type[Any]]:
     """Register a fetcher component.
 
     Args:
@@ -373,7 +380,7 @@ def fetcher(alias: str) -> Callable[[Type], Type]:
     return pipeline_component(alias=alias, component_type=ComponentType.FETCHER)
 
 
-def chef(alias: str) -> Callable[[Type], Type]:
+def chef(alias: str) -> Callable[[Type[Any]], Type[Any]]:
     """Register a chef component.
 
     Args:
@@ -391,7 +398,7 @@ def chef(alias: str) -> Callable[[Type], Type]:
     return pipeline_component(alias=alias, component_type=ComponentType.CHEF)
 
 
-def chunker(alias: str) -> Callable[[Type], Type]:
+def chunker(alias: str) -> Callable[[Type[Any]], Type[Any]]:
     """Register a chunker component.
 
     Args:
@@ -409,7 +416,7 @@ def chunker(alias: str) -> Callable[[Type], Type]:
     return pipeline_component(alias=alias, component_type=ComponentType.CHUNKER)
 
 
-def refinery(alias: str) -> Callable[[Type], Type]:
+def refinery(alias: str) -> Callable[[Type[Any]], Type[Any]]:
     """Register a refinery component.
 
     Args:
@@ -427,7 +434,7 @@ def refinery(alias: str) -> Callable[[Type], Type]:
     return pipeline_component(alias=alias, component_type=ComponentType.REFINERY)
 
 
-def porter(alias: str) -> Callable[[Type], Type]:
+def porter(alias: str) -> Callable[[Type[Any]], Type[Any]]:
     """Register a porter component.
 
     Args:
@@ -445,7 +452,7 @@ def porter(alias: str) -> Callable[[Type], Type]:
     return pipeline_component(alias=alias, component_type=ComponentType.PORTER)
 
 
-def handshake(alias: str) -> Callable[[Type], Type]:
+def handshake(alias: str) -> Callable[[Type[Any]], Type[Any]]:
     """Register a handshake component.
 
     Args:

@@ -1,7 +1,10 @@
 """Base class for all refinery classes."""
 
 from abc import ABC, abstractmethod
-from typing import List
+from typing import TYPE_CHECKING, List
+
+if TYPE_CHECKING:
+    from chonkie.types import Document
 
 from chonkie.types import Chunk
 
@@ -20,21 +23,42 @@ class BaseRefinery(ABC):
 
     @abstractmethod
     def refine(self, chunks: List[Chunk]) -> List[Chunk]:
-        """Refine the chunk."""
-        raise NotImplementedError("Subclasses must implement this method.")
-    
-    def __repr__(self) -> str:
-        """Return the string representation of the refinery."""
-        return f"{self.__class__.__name__}()"
-    
-    def __call__(self, chunks: List[Chunk]) -> List[Chunk]:
-        """Call the refinery.
-        
+        """Refine the chunks.
+
         Args:
             chunks: The chunks to refine.
 
         Returns:
             The refined chunks.
-            
+
+        """
+        raise NotImplementedError("Subclasses must implement this method.")
+
+    def refine_document(self, document: "Document") -> "Document":
+        """Refine the chunks within a document.
+
+        Args:
+            document: The document whose chunks should be refined.
+
+        Returns:
+            The document with refined chunks.
+
+        """
+        document.chunks = self.refine(document.chunks)
+        return document
+
+    def __repr__(self) -> str:
+        """Return the string representation of the refinery."""
+        return f"{self.__class__.__name__}()"
+
+    def __call__(self, chunks: List[Chunk]) -> List[Chunk]:
+        """Call the refinery.
+
+        Args:
+            chunks: The chunks to refine.
+
+        Returns:
+            The refined chunks.
+
         """
         return self.refine(chunks)

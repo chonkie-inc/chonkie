@@ -14,6 +14,7 @@ The CHOMP pipeline stages are:
 """
 
 from .component import Component, ComponentType
+from .pipeline import Pipeline
 from .registry import (
     ComponentRegistry,
     chef,
@@ -30,6 +31,7 @@ __all__ = [
     "Component",
     "ComponentType",
     "ComponentRegistry",
+    "Pipeline",
     # Decorators
     "pipeline_component",
     "fetcher",

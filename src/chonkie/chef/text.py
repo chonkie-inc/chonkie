@@ -25,6 +25,18 @@ class TextChef(BaseChef):
         """
         return Document(content=self.read(path))
 
+    def parse(self, text: str) -> Document:
+        """Parse raw text into a Document.
+
+        Args:
+            text: Raw text to parse.
+
+        Returns:
+            Document: Document created from the text.
+
+        """
+        return Document(content=text)
+
     def process_batch(self, paths: Union[List[str], List[Path]]) -> List[Document]:
         """Process the text data in a batch.
 
