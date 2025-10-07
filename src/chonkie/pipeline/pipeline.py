@@ -318,11 +318,12 @@ class Pipeline:
         if not self._steps:
             raise ValueError("Pipeline has no steps to execute")
 
+        # Validate the pipeline configuration BEFORE reordering
+        # (reordering may drop duplicates, so validate on original list)
+        self._validate_pipeline(self._steps, has_text_input=(texts is not None))
+
         # Reorder steps according to CHOMP pipeline flow
         ordered_steps = self._reorder_steps()
-        
-        # Validate the pipeline configuration (considering text input)
-        self._validate_pipeline(ordered_steps, has_text_input=(texts is not None))
 
         # Initialize data based on input
         data: Any
@@ -389,12 +390,12 @@ class Pipeline:
         # Add steps in the correct order
         for step_type in sorted(type_order.keys(), key=lambda x: type_order[x]):
             if step_type in steps_by_type:
-                if step_type == "refine":
-                    # For refineries, maintain the order they were added
+                if step_type in ["refine", "fetch", "chunk", "export", "store"]:
+                    # Multiple allowed: maintain the order they were added
                     ordered_steps.extend(steps_by_type[step_type])
                 else:
-                    # For other types, there should typically be only one
-                    # If multiple exist, use the last one defined (most recent)
+                    # process (chef) - should only have one (validated earlier)
+                    # If somehow multiple exist, use the last one defined
                     ordered_steps.append(steps_by_type[step_type][-1])
         
         return ordered_steps
