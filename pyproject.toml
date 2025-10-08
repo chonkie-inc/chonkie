@@ -110,6 +110,7 @@ datasets = ["datasets>=4.0.0"]
 pinecone = ["pinecone"]
 mongodb = ["pymongo"]
 elastic = ["elasticsearch>=8.0.0"]
+milvus = ["pymilvus>=2.1.0"]
 
 # Optional dependencies for the genie
 genie = ["pydantic>=2.0.0", "google-genai>=1.0.0"]
@@ -147,7 +148,8 @@ all = [
     "pandas",
     "tabulate",
     "openpyxl",
-    "elasticsearch>=8.0.0"
+    "elasticsearch>=8.0.0",
+    "pymilvus>=2.1.0"
 ]
 dev = [
     "datasets>=1.14.0",
