@@ -1,10 +1,10 @@
 """Test the MilvusHandshake class."""
 
 from typing import Generator
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
-import pytest
 import numpy as np
+import pytest
 
 # Try to import pymilvus, skip all tests in this module if it's not installed
 try:

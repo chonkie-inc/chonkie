@@ -1,6 +1,6 @@
 """Milvus Handshake to export Chonkie's Chunks into a Milvus collection."""
 
-import importlib.util as importutil
+import importlib.util
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -19,7 +19,14 @@ from .utils import generate_random_collection_name
 
 if TYPE_CHECKING:
     import numpy as np
-    from pymilvus import Collection, CollectionSchema, DataType, FieldSchema, connections, utility
+    from pymilvus import (
+        Collection,
+        CollectionSchema,
+        DataType,
+        FieldSchema,
+        connections,
+        utility,
+    )
 
 
 class MilvusHandshake(BaseHandshake):
@@ -36,6 +43,7 @@ class MilvusHandshake(BaseHandshake):
         port: The port of the Milvus instance. Defaults to "19530".
         alias: The connection alias to use. Defaults to "default".
         **kwargs: Additional keyword arguments for future use.
+        
     """
 
     def __init__(
@@ -90,6 +98,8 @@ class MilvusHandshake(BaseHandshake):
         """Lazy import the dependencies."""
         if self._is_available():
             global Collection, CollectionSchema, DataType, FieldSchema, connections, utility, np
+
+            import numpy as np
             from pymilvus import (
                 Collection,
                 CollectionSchema,
@@ -98,7 +108,6 @@ class MilvusHandshake(BaseHandshake):
                 connections,
                 utility,
             )
-            import numpy as np
         else:
             raise ImportError(
                 "Milvus is not installed. "
