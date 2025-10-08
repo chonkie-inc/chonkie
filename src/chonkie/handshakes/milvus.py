@@ -54,7 +54,7 @@ class MilvusHandshake(BaseHandshake):
         host: str = "localhost",
         port: str = "19530",
         alias: str = "default",
-        **kwargs: Dict[str, Any],
+        **kwargs: Any,
     ) -> None:
         """Initialize the Milvus Handshake."""
         super().__init__()
@@ -65,7 +65,7 @@ class MilvusHandshake(BaseHandshake):
         try:
             # Check if a connection with this alias already exists
             connections.get_connection_addr(self.alias) # type: ignore
-        except Exception:
+        except ConnectionNotExistException:
             # If not, create a new one
             if uri:
                 connections.connect(alias=self.alias, uri=uri, **kwargs) # type: ignore
@@ -97,7 +97,7 @@ class MilvusHandshake(BaseHandshake):
     def _import_dependencies(self) -> None:
         """Lazy import the dependencies."""
         if self._is_available():
-            global Collection, CollectionSchema, DataType, FieldSchema, connections, utility, np
+            global Collection, CollectionSchema, DataType, FieldSchema, connections, utility, np, ConnectionNotExistException
 
             import numpy as np
             from pymilvus import (
@@ -108,6 +108,7 @@ class MilvusHandshake(BaseHandshake):
                 connections,
                 utility,
             )
+            from pymilvus.exceptions import ConnectionNotExistException
         else:
             raise ImportError(
                 "Milvus is not installed. "
@@ -186,7 +187,7 @@ class MilvusHandshake(BaseHandshake):
             if isinstance(embedding, np.ndarray):
                 embedding = embedding.tolist()
             # If it's a flat list, wrap it in another list
-            if embedding and isinstance(embedding[0], float):
+            if embedding and len(embedding) > 0 and isinstance(embedding[0], float):
                 query_vectors = [embedding]
             else:
                 query_vectors = embedding # type: ignore
