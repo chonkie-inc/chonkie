@@ -1,25 +1,58 @@
 ---
-title: 'Installation'
-description: 'Installing Chonkie and its various components'
-icon: 'download'
-iconType: 'solid'
+title: "Installation"
+description: "Installing Chonkie and its various components"
+icon: "download"
+iconType: "solid"
 ---
 
 Chonkie follows a modular approach to dependencies, keeping the base installation lightweight while allowing you to add extra features as needed.
 
 ## Basic Installation
 
-For basic token and sentence chunking capabilities:
+For basic token and sentence chunking capabilities.
 
-```bash
+### Python
+
+<CodeGroup>
+```bash pip
 pip install chonkie
 ```
+
+```bash uv
+uv add chonkie
+```
+
+</CodeGroup>
+
+### JavaScript
+
+Install the core package for local chunking
+
+<CodeGroup>
+```bash npm
+npm install @chonkiejs/core
+```
+
+```bash pnpm
+pnpm add @chonkiejs/core
+```
+
+```bash bun
+bun add @chonkiejs/core
+```
+
+```bash yarn
+yarn add @chonkiejs/core
+```
+
+</CodeGroup>
 
 ## Installation Options
 
 Chonkie provides several installation options to match your specific needs:
 
-```bash
+<CodeGroup>
+```bash Python
 # Basic installation (TokenChunker, SentenceChunker, RecursiveChunker)
 pip install chonkie
 
@@ -58,56 +91,65 @@ pip install "chonkie[st, code, genie]"
 
 # For all features
 pip install "chonkie[all]"
-```
+
+````
+
+```bash JavaScript
+# Basic installation for local chunking
+npm install @chonkiejs/core
+
+# To use the API
+npm install @chonkiejs/cloud
+````
+
+</CodeGroup>
 
 ## Chunker Availability
 
 The following table shows which chunkers are available with different installation options:
 
-| Chunker         | Default | embeddings | 'all' |
-|-----------------|:-------:|:----------:|:-----:|
-| TokenChunker    | ✅      | ✅         | ✅    |
-| RecursiveChunker| ✅      | ✅         | ✅    |
-| SentenceChunker | ✅      | ✅         | ✅    |
-| SemanticChunker | ❌      | ✅         | ❌    |
-| SDPMChunker     | ❌      | ✅         | ❌    |
-| LateChunker     | ❌      | ✅         | ❌    |
-| CodeChunker     | ❌      | ❌         | ✅    |
-| NeuralChunker   | ❌      | ✅         | ✅    |
-| SlumberChunker  | ❌      | ✅         | ✅    |
-
+| Chunker          |                        Default                         |                       embeddings                       |                         'all'                          |
+| ---------------- | :----------------------------------------------------: | :----------------------------------------------------: | :----------------------------------------------------: |
+| TokenChunker     | <Icon icon="check" color="#005c00" iconType="solid" /> | <Icon icon="check" color="#005c00" iconType="solid" /> | <Icon icon="check" color="#005c00" iconType="solid" /> |
+| RecursiveChunker | <Icon icon="check" color="#005c00" iconType="solid" /> | <Icon icon="check" color="#005c00" iconType="solid" /> | <Icon icon="check" color="#005c00" iconType="solid" /> |
+| SentenceChunker  | <Icon icon="check" color="#005c00" iconType="solid" /> | <Icon icon="check" color="#005c00" iconType="solid" /> | <Icon icon="check" color="#005c00" iconType="solid" /> |
+| SemanticChunker  |   <Icon icon="x" color="#ff0000" iconType="solid" />   | <Icon icon="check" color="#005c00" iconType="solid" /> | <Icon icon="check" color="#005c00" iconType="solid" /> |
+| LateChunker      |   <Icon icon="x" color="#ff0000" iconType="solid" />   | <Icon icon="check" color="#005c00" iconType="solid" /> | <Icon icon="check" color="#005c00" iconType="solid" /> |
+| CodeChunker      |   <Icon icon="x" color="#ff0000" iconType="solid" />   |   <Icon icon="x" color="#ff0000" iconType="solid" />   | <Icon icon="check" color="#005c00" iconType="solid" /> |
+| NeuralChunker    |   <Icon icon="x" color="#ff0000" iconType="solid" />   | <Icon icon="check" color="#005c00" iconType="solid" /> | <Icon icon="check" color="#005c00" iconType="solid" /> |
+| SlumberChunker   |   <Icon icon="x" color="#ff0000" iconType="solid" />   | <Icon icon="check" color="#005c00" iconType="solid" /> | <Icon icon="check" color="#005c00" iconType="solid" /> |
 
 ## Embeddings Availability
 
 Different embedding providers are available with different installation options:
 
-| Embeddings Provider           | Default | 'model2vec' | 'st' | 'openai' | 'semantic'| 'all' |
-|-------------------------------|:-------:|:-----------:|:----:|:--------:|:---------:|:-----:|
-| Model2VecEmbeddings           | ❌      | ✅          | ❌   | ❌       | ✅        | ✅    |
-| SentenceTransformerEmbeddings | ❌      | ❌          | ✅   | ❌       | ❌        | ✅    |
-| OpenAIEmbeddings              | ❌      | ❌          | ❌   | ✅       | ❌        | ✅    |
+| Embeddings Provider           |                      Default                       |                      'model2vec'                       |                          'st'                          |                        'openai'                        |                       'semantic'                       |                         'all'                          |
+| ----------------------------- | :------------------------------------------------: | :----------------------------------------------------: | :----------------------------------------------------: | :----------------------------------------------------: | :----------------------------------------------------: | :----------------------------------------------------: |
+| Model2VecEmbeddings           | <Icon icon="x" color="#ff0000" iconType="solid" /> | <Icon icon="check" color="#005c00" iconType="solid" /> |   <Icon icon="x" color="#ff0000" iconType="solid" />   |   <Icon icon="x" color="#ff0000" iconType="solid" />   | <Icon icon="check" color="#005c00" iconType="solid" /> | <Icon icon="check" color="#005c00" iconType="solid" /> |
+| SentenceTransformerEmbeddings | <Icon icon="x" color="#ff0000" iconType="solid" /> |   <Icon icon="x" color="#ff0000" iconType="solid" />   | <Icon icon="check" color="#005c00" iconType="solid" /> |   <Icon icon="x" color="#ff0000" iconType="solid" />   |   <Icon icon="x" color="#ff0000" iconType="solid" />   | <Icon icon="check" color="#005c00" iconType="solid" /> |
+| OpenAIEmbeddings              | <Icon icon="x" color="#ff0000" iconType="solid" /> |   <Icon icon="x" color="#ff0000" iconType="solid" />   |   <Icon icon="x" color="#ff0000" iconType="solid" />   | <Icon icon="check" color="#005c00" iconType="solid" /> |   <Icon icon="x" color="#ff0000" iconType="solid" />   | <Icon icon="check" color="#005c00" iconType="solid" /> |
 
 ## Dependencies
 
 Here's what each installation option adds:
 
-| Installation Option | Additional Dependencies                                     |
-|---------------------|-------------------------------------------------------------|
-| Default             | autotiktokenizer                                            |
-| 'hub'               | + huggingface-hub, jsonschema                               |
-| 'viz'               | + rich                                                      |
-| 'model2vec'         | + model2vec, numpy                                          |
-| 'st'                | + sentence-transformers, numpy, accelerate                  |
-| 'openai'            | + openai, tiktoken, numpy                                   |
-| 'cohere'            | + cohere, numpy                                             |
-| 'jina'              | + numpy                                                     |
-| 'semantic'          | + model2vec, numpy                                          |
-| 'code'              | + tree-sitter, tree-sitter-language-pack, magika            |
-| 'neural'            | + transformers, torch (or tensorflow/flax), sentencepiece   |
-| 'genie'             | + pydantic, google-genai                                    |
-| 'all'               | all above dependencies                                      |
+| Installation Option | Additional Dependencies                                   |
+| ------------------- | --------------------------------------------------------- |
+| Default             | autotiktokenizer                                          |
+| 'hub'               | + huggingface-hub, jsonschema                             |
+| 'viz'               | + rich                                                    |
+| 'model2vec'         | + model2vec, numpy                                        |
+| 'st'                | + sentence-transformers, numpy, accelerate                |
+| 'openai'            | + openai, tiktoken, numpy                                 |
+| 'cohere'            | + cohere, numpy                                           |
+| 'jina'              | + numpy                                                   |
+| 'semantic'          | + model2vec, numpy                                        |
+| 'code'              | + tree-sitter, tree-sitter-language-pack, magika          |
+| 'neural'            | + transformers, torch (or tensorflow/flax), sentencepiece |
+| 'genie'             | + pydantic, google-genai                                  |
+| 'all'               | all above dependencies                                    |
 
-*(Note: Specific dependencies for `[genie]` might vary slightly based on implementation details and chosen models/APIs.)*
+_(Note: Specific dependencies for `[genie]` might vary slightly based on implementation details and chosen models/APIs.)_
 
 ## Important Notes
 
