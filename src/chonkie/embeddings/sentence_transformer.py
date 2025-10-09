@@ -73,7 +73,7 @@ class SentenceTransformerEmbeddings(BaseEmbeddings):
             return np.array([])
 
         # Use the model's tokenizer to encode the text
-        encodings = self.model.tokenizer(text, add_special_tokens=False)["input_ids"]
+        encodings = self.model.tokenizer(text)["input_ids"]
 
         max_seq_length = self.max_seq_length
         token_splits = []
@@ -86,7 +86,7 @@ class SentenceTransformerEmbeddings(BaseEmbeddings):
         split_texts = self.model.tokenizer.batch_decode(token_splits)
         # Get the token embeddings
         token_embeddings = self.model.encode(
-            split_texts, output_value="token_embeddings", add_special_tokens=False
+            split_texts, output_value="token_embeddings"
         )
 
         # Since SentenceTransformer doesn't automatically convert embeddings into
@@ -106,11 +106,6 @@ class SentenceTransformerEmbeddings(BaseEmbeddings):
 
         # Concatenate the token embeddings
         token_embeddings = np.concatenate(token_embeddings, axis=0)
-
-        # Assertion always fails because of special tokens added by encode process
-        # assert token_embeddings.shape[0] == len(encodings), \
-        #     (f"The number of token embeddings should be equal to the number of tokens in the text"
-        #      f"Expected: {len(encodings)}, Got: {token_embeddings.shape[0]}")
 
         return token_embeddings  # type: ignore
 
