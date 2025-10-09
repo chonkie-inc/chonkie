@@ -2,11 +2,11 @@
 
 import warnings
 from functools import lru_cache
-from typing import Any, Callable, List, Literal, Union
+from typing import List, Literal, Union
 
 from chonkie.logger import get_logger
 from chonkie.refinery.base import BaseRefinery
-from chonkie.tokenizer import Tokenizer
+from chonkie.tokenizer import AutoTokenizer, TokenizerProtocol
 from chonkie.types import Chunk, RecursiveLevel, RecursiveRules
 
 logger = get_logger(__name__)
@@ -29,7 +29,7 @@ class OverlapRefinery(BaseRefinery):
 
     def __init__(
         self,
-        tokenizer_or_token_counter: Union[str, Callable, Any] = "character",
+        tokenizer: Union[str, TokenizerProtocol] = "character",
         context_size: Union[int, float] = 0.25,
         mode: Literal["token", "recursive"] = "token",
         method: Literal["suffix", "prefix"] = "suffix",
@@ -39,12 +39,11 @@ class OverlapRefinery(BaseRefinery):
     ) -> None:
         """Initialize the refinery.
 
-        When a tokenizer or token counter is not provided, the refinery 
-        defaults to character-level overlap. Otherwise, the refinery will
-        use the tokenizer or token counter to calculate the overlap.
-        
+        When a tokenizer is not provided, the refinery defaults to character-level
+        overlap. Otherwise, the refinery will use the tokenizer to calculate the overlap.
+
         Args:
-            tokenizer_or_token_counter: The tokenizer or token counter to use. Defaults to None.
+            tokenizer: The tokenizer to use. Defaults to "character".
             context_size: The size of the context to add to the chunks.
             mode: The mode to use for overlapping. Could be token or recursive.
             method: The method to use for the context. Could be suffix or prefix.
@@ -68,7 +67,7 @@ class OverlapRefinery(BaseRefinery):
             raise ValueError("Inplace must be a boolean.")
 
         # Initialize the refinery
-        self.tokenizer = Tokenizer(tokenizer_or_token_counter)
+        self.tokenizer = AutoTokenizer(tokenizer)
         self.context_size = context_size
         self.mode = mode
         self.method = method

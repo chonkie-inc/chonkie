@@ -105,8 +105,7 @@ class SemanticChunker(BaseChunker):
         self._import_dependencies()
 
         # Initialize the tokenizer and chunker
-        tokenizer = self.embedding_model.get_tokenizer_or_token_counter()
-        self.tokenizer = tokenizer  # type: ignore[assignment]
+        tokenizer = self.embedding_model.get_tokenizer()
         super().__init__(tokenizer)
         
         # Initialize the chunker parameters

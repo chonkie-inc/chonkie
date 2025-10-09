@@ -71,7 +71,7 @@ class LateChunker(RecursiveChunker):
 
         # Initialize the RecursiveChunker with the embedding_model's tokenizer
         super().__init__(
-            tokenizer_or_token_counter=self.embedding_model.get_tokenizer_or_token_counter(),
+            tokenizer=self.embedding_model.get_tokenizer(),
             chunk_size=chunk_size,
             rules=rules,
             min_characters_per_chunk=min_characters_per_chunk,

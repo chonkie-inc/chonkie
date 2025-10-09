@@ -9,9 +9,10 @@ allows customization of sentence boundary delimiters and minimum sentence length
 import warnings
 from bisect import bisect_left
 from itertools import accumulate
-from typing import Any, Callable, List, Literal, Optional, Sequence, Union
+from typing import List, Literal, Optional, Sequence, Union
 
 from chonkie.logger import get_logger
+from chonkie.tokenizer import TokenizerProtocol
 from chonkie.types import Chunk, Sentence
 from chonkie.utils import Hubbie
 
@@ -38,7 +39,7 @@ class SentenceChunker(BaseChunker):
     """SentenceChunker splits the sentences in a text based on token limits and sentence boundaries.
 
     Args:
-        tokenizer_or_token_counter: The tokenizer instance to use for encoding/decoding
+        tokenizer: The tokenizer instance to use for encoding/decoding
         chunk_size: Maximum number of tokens per chunk
         chunk_overlap: Number of tokens to overlap between chunks
         min_sentences_per_chunk: Minimum number of sentences per chunk (defaults to 1)
@@ -54,7 +55,7 @@ class SentenceChunker(BaseChunker):
 
     def __init__(
         self,
-        tokenizer_or_token_counter: Union[str, Callable, Any] = "character",
+        tokenizer: Union[str, TokenizerProtocol] = "character",
         chunk_size: int = 2048,
         chunk_overlap: int = 0,
         min_sentences_per_chunk: int = 1,
@@ -68,7 +69,7 @@ class SentenceChunker(BaseChunker):
         SentenceChunker splits the sentences in a text based on token limits and sentence boundaries.
 
         Args:
-            tokenizer_or_token_counter: The tokenizer instance to use for encoding/decoding (defaults to "character")
+            tokenizer: The tokenizer instance to use for encoding/decoding (defaults to "character")
             chunk_size: Maximum number of tokens per chunk (defaults to 2048)
             chunk_overlap: Number of tokens to overlap between chunks (defaults to 0)
             min_sentences_per_chunk: Minimum number of sentences per chunk (defaults to 1)
@@ -81,7 +82,7 @@ class SentenceChunker(BaseChunker):
             ValueError: If parameters are invalid
 
         """
-        super().__init__(tokenizer_or_token_counter=tokenizer_or_token_counter)
+        super().__init__(tokenizer=tokenizer)
 
         if chunk_size <= 0:
             raise ValueError("chunk_size must be positive")
@@ -113,7 +114,7 @@ class SentenceChunker(BaseChunker):
         name: Optional[str] = "default",
         lang: Optional[str] = "en",
         path: Optional[str] = None,
-        tokenizer_or_token_counter: Union[str, Callable, Any] = "character",
+        tokenizer: Union[str, TokenizerProtocol] = "character",
         chunk_size: int = 2048,
         chunk_overlap: int = 0,
         min_sentences_per_chunk: int = 1,
@@ -130,7 +131,7 @@ class SentenceChunker(BaseChunker):
             name: The name of the recipe to use.
             lang: The language that the recipe should support.
             path: The path to the recipe to use.
-            tokenizer_or_token_counter: The tokenizer or token counter to use.
+            tokenizer: The tokenizer to use.
             chunk_size: The chunk size to use.
             chunk_overlap: The chunk overlap to use.
             min_sentences_per_chunk: The minimum number of sentences per chunk to use.
@@ -150,7 +151,7 @@ class SentenceChunker(BaseChunker):
         recipe = hub.get_recipe(name, lang, path)
         logger.debug("Recipe loaded successfully", delim=recipe.get("delim"), include_delim=recipe.get("include_delim"))
         return cls(
-            tokenizer_or_token_counter=tokenizer_or_token_counter,
+            tokenizer=tokenizer,
             chunk_size=chunk_size,
             chunk_overlap=chunk_overlap,
             min_sentences_per_chunk=min_sentences_per_chunk,
