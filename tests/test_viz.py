@@ -10,7 +10,6 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from chonkie.types import Chunk
-# This is the corrected import path
 from chonkie.utils.viz import (
     BODY_BACKGROUND_COLOR_DARK,
     BODY_BACKGROUND_COLOR_LIGHT,
