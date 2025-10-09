@@ -20,8 +20,7 @@
               "python-sdk/getting-started/introduction",
               "python-sdk/getting-started/installation",
               "common/concepts",
-              "common/cloud-overview",
-              "common/pricing"
+              "common/cloud-overview"
             ]
           },
           {
@@ -112,26 +111,21 @@
         ]
       },
       {
-        "tab": "Typescript SDK",
+        "tab": "Javascript SDK",
         "icon": "book",
         "groups": [
           {
             "group": "Getting Started",
             "pages": [
-              "typescript-sdk/getting-started/introduction",
-              "common/concepts",
-              "common/cloud-overview",
-              "common/pricing"
+              "javascript-sdk/getting-started/introduction",
+              "javascript-sdk/getting-started/api"
             ]
           },
           {
             "group": "Chunkers",
             "pages": [
-              "typescript-sdk/chunkers/overview",
-              "typescript-sdk/chunkers/token-chunker",
-              "typescript-sdk/chunkers/sentence-chunker",
-              "typescript-sdk/chunkers/recursive-chunker",
-              "typescript-sdk/chunkers/code-chunker"
+              "javascript-sdk/chunkers/overview",
+              "javascript-sdk/chunkers/recursive-chunker"
             ]
           }
         ]
