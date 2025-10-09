@@ -195,10 +195,7 @@ class MarkdownChef(BaseChef):
         MarkdownDocument: The processed markdown document.
 
     """
-    logger.debug(f"Processing markdown file: {path}")
-    # Read the markdown file
-    markdown = self.read(path)
-    logger.debug(f"Read {len(markdown)} characters from markdown file")
+    logger.debug(f"Processing markdown text: {len(markdown)} characters")
 
     # Extract all the tables, code snippets, and images
     tables = self.prepare_tables(markdown)

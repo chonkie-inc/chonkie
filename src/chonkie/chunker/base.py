@@ -32,7 +32,7 @@ class BaseChunker(ABC):
         self._use_multiprocessing = True
         logger.debug(
             f"Initialized {self.__class__.__name__}",
-            tokenizer=str(tokenizer_or_token_counter)[:50],
+            tokenizer=str(tokenizer)[:50],
         )
 
     @property

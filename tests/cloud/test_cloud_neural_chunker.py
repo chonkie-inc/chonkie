@@ -73,12 +73,10 @@ def test_cloud_neural_chunker_initialization(mock_requests_get_success: Any) -> 
     custom_chunker = NeuralChunker(
         model=custom_model,
         min_characters_per_chunk=5,
-        stride=128,
         api_key="test_key",
     )
     assert custom_chunker.model == custom_model
     assert custom_chunker.min_characters_per_chunk == 5
-    assert custom_chunker.stride == 128
     assert custom_chunker.api_key == "test_key"
 
     # Test initialization without API key (should raise ValueError if not in env)

@@ -86,7 +86,7 @@ class SentenceTransformerEmbeddings(BaseEmbeddings):
         split_texts = self.model.tokenizer.batch_decode(token_splits)
         # Get the token embeddings
         token_embeddings = self.model.encode(
-            split_texts, output_value="token_embeddings", add_special_tokens=False
+            split_texts, output_value="token_embeddings"
         )
 
         # Since SentenceTransformer doesn't automatically convert embeddings into

@@ -141,7 +141,7 @@ class TableChunker(BaseChunker):
             document.chunks.sort(key=lambda x: x.start_index)
         else:
             document.chunks = self.chunk(document.content)
-             document.chunks.sort(key=lambda x: x.start_index)
+            document.chunks.sort(key=lambda x: x.start_index)
         logger.info(f"Document chunking complete: {len(document.chunks)} chunks created")
         return document
     

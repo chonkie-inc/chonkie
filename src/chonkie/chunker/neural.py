@@ -99,7 +99,7 @@ class NeuralChunker(BaseChunker):
       raise ValueError(f"Error initializing tokenizer: {e}")
 
     # Initialize the Parent class with the tokenizer
-    super().__init__(tokenizer)
+    super().__init__(tokenizer)  # type: ignore[arg-type]
 
     # Initialize the model and stride
     try:
