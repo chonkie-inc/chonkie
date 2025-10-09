@@ -115,9 +115,9 @@ class TestJinaEmbeddingsProperties:
         assert embeddings.dimension == 2048
         assert isinstance(embeddings.dimension, int)
 
-    def test_get_tokenizer_or_token_counter(self, embeddings: JinaEmbeddings) -> None:
-        """Test get_tokenizer_or_token_counter returns tokenizer instance."""
-        tokenizer = embeddings.get_tokenizer_or_token_counter()
+    def test_get_tokenizer(self, embeddings: JinaEmbeddings) -> None:
+        """Test get_tokenizer returns tokenizer instance."""
+        tokenizer = embeddings.get_tokenizer()
         assert tokenizer is embeddings._tokenizer
         # Since we're using a mock, check that it has the expected methods
         assert hasattr(tokenizer, "encode")

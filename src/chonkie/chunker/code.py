@@ -10,7 +10,7 @@ from itertools import accumulate
 from typing import TYPE_CHECKING, Any, List, Literal, Tuple, Union
 
 from chonkie.chunker.base import BaseChunker
-from chonkie.tokenizer import Tokenizer
+from chonkie.tokenizer import TokenizerProtocol
 from chonkie.types import Chunk
 
 if TYPE_CHECKING:
@@ -26,9 +26,9 @@ if TYPE_CHECKING:
 
 class CodeChunker(BaseChunker):
     """Chunker that recursively splits the code based on code context.
-    
+
     Args:
-        tokenizer_or_token_counter: The tokenizer or token counter to use.
+        tokenizer: The tokenizer to use.
         chunk_size: The size of the chunks to create.
         language: The language of the code to parse. Accepts any of the languages supported by tree-sitter-language-pack.
         include_nodes: Whether to include the nodes in the returned chunks.
@@ -36,14 +36,14 @@ class CodeChunker(BaseChunker):
     """
 
     def __init__(self,
-                 tokenizer_or_token_counter: Union[str, List, Any] = "character",
+                 tokenizer: Union[str, TokenizerProtocol] = "character",
                  chunk_size: int = 2048,
                  language: Union[Literal["auto"], Any] = "auto",
                  include_nodes: bool = False) -> None:
         """Initialize a CodeChunker object.
-        
+
         Args:
-            tokenizer_or_token_counter: The tokenizer or token counter to use.
+            tokenizer: The tokenizer to use.
             chunk_size: The size of the chunks to create.
             language: The language of the code to parse. Accepts any of the languages supported by tree-sitter-language-pack.
             include_nodes: Whether to include the nodes in the returned chunks.
@@ -56,8 +56,10 @@ class CodeChunker(BaseChunker):
         # Lazy import dependencies to avoid importing them when not needed
         self._import_dependencies()
 
-        # Initialize all the values
-        self.tokenizer = Tokenizer(tokenizer_or_token_counter)
+        # Initialize the base chunker
+        super().__init__(tokenizer=tokenizer)
+
+        # Initialize chunker-specific values
         self.chunk_size = chunk_size
         self.include_nodes = include_nodes
 
