@@ -14,9 +14,9 @@ This class is designed to be extended and might go through significant changes i
 """
 
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
-from .base import Chunk
+from .base import Chunk, generate_id
 
 
 @dataclass
@@ -37,7 +37,7 @@ class Document:
         
     """
 
-    id: Optional[str] = field(default_factory=str)
-    text: str = field(default_factory=str)
+    id: str = field(default_factory=lambda: generate_id("doc"))
+    content: str = field(default_factory=str)
     chunks: List[Chunk] = field(default_factory=list)
     metadata: Dict[str, Any] = field(default_factory=dict)

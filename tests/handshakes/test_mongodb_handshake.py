@@ -11,7 +11,7 @@ from chonkie.types import Chunk
 try:
     import pymongo
     pymongo_available = True
-    from chonkie.friends.handshakes.mongodb import MongoDBHandshake
+    from chonkie.handshakes.mongodb import MongoDBHandshake
 except ImportError:
     pymongo = None
     pymongo_available = False
@@ -47,7 +47,7 @@ def mock_embeddings():
             def embed_batch(self, texts):
                 return [[0.1] * self._dimension for _ in texts]
 
-            def get_tokenizer_or_token_counter(self):
+            def get_tokenizer(self):
                 return lambda x: len(x.split())
 
             def _is_available(self):

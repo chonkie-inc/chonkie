@@ -12,7 +12,7 @@ try:
 except ImportError:
     weaviate = None
 
-from chonkie.friends.handshakes.weaviate import WeaviateHandshake
+from chonkie.handshakes.weaviate import WeaviateHandshake
 from chonkie.types import Chunk
 
 # Mark all tests in this module to be skipped if weaviate is not installed

@@ -11,7 +11,7 @@ import qdrant_client
 from qdrant_client.http.models import Distance, VectorParams
 
 from chonkie.embeddings import AutoEmbeddings, BaseEmbeddings
-from chonkie.friends.handshakes.qdrant import QdrantHandshake
+from chonkie.handshakes.qdrant import QdrantHandshake
 from chonkie.types import Chunk
 
 # Define the default model name for clarity
@@ -41,10 +41,10 @@ def mock_embeddings():
             
             def embed_batch(self, texts):
                 return [[0.1] * 512] * len(texts)  # Match the dimension
-            
-            def get_tokenizer_or_token_counter(self):
+
+            def get_tokenizer(self):
                 return Mock()
-            
+
             def _is_available(self):
                 return True
         

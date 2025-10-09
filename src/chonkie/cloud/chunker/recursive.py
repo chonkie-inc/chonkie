@@ -1,12 +1,12 @@
 """Recursive Chunking for Chonkie API."""
 
 import os
-from typing import Any, Callable, Dict, List, Optional, Union, cast
+from typing import Any, Dict, List, Optional, Union, cast
 
 import requests
 
 from chonkie.cloud.file import FileManager
-from chonkie.types import RecursiveChunk
+from chonkie.types import Chunk
 
 from .base import CloudChunker
 
@@ -19,7 +19,7 @@ class RecursiveChunker(CloudChunker):
 
     def __init__(
         self,
-        tokenizer_or_token_counter: Union[str, Callable] = "gpt2",
+        tokenizer: str = "gpt2",
         chunk_size: int = 512,
         min_characters_per_chunk: int = 12,
         recipe: str = "default",
@@ -27,9 +27,9 @@ class RecursiveChunker(CloudChunker):
         api_key: Optional[str] = None,
     ) -> None:
         """Initialize the RecursiveChunker.
-        
+
         Args:
-            tokenizer_or_token_counter: The tokenizer or token counter to use.
+            tokenizer: The tokenizer to use.
             chunk_size: The target maximum size of each chunk (in tokens, as defined by the tokenizer).
             min_characters_per_chunk: The minimum number of characters a chunk should have.
             recipe: The name of the recursive rules recipe to use. Find all available recipes at https://hf.co/datasets/chonkie-ai/recipes
@@ -52,7 +52,7 @@ class RecursiveChunker(CloudChunker):
             raise ValueError("Minimum characters per chunk must be greater than 0.")
 
         # Add attributes
-        self.tokenizer_or_token_counter = tokenizer_or_token_counter
+        self.tokenizer = tokenizer
         self.chunk_size = chunk_size
         self.min_characters_per_chunk = min_characters_per_chunk
         self.recipe = recipe
@@ -77,7 +77,7 @@ class RecursiveChunker(CloudChunker):
         if text is not None:
             payload = {
                 "text": text,
-                "tokenizer_or_token_counter": self.tokenizer_or_token_counter,
+                "tokenizer_or_token_counter": self.tokenizer,
                 "chunk_size": self.chunk_size,
                 "min_characters_per_chunk": self.min_characters_per_chunk,
                 "recipe": self.recipe,
@@ -90,7 +90,7 @@ class RecursiveChunker(CloudChunker):
                     "type": "document",
                     "content": file_response.name,
                 },
-                "tokenizer_or_token_counter": self.tokenizer_or_token_counter,
+                "tokenizer_or_token_counter": self.tokenizer,
                 "chunk_size": self.chunk_size,
                 "min_characters_per_chunk": self.min_characters_per_chunk,
                 "recipe": self.recipe,
@@ -109,16 +109,16 @@ class RecursiveChunker(CloudChunker):
         try:
             if isinstance(text, list):
                 batch_result: List[List[Dict]] = cast(List[List[Dict]], response.json())
-                batch_chunks: List[List[RecursiveChunk]] = []
+                batch_chunks: List[List[Chunk]] = []
                 for chunk_list in batch_result:
                     curr_chunks = []
                     for chunk in chunk_list:
-                        curr_chunks.append(RecursiveChunk.from_dict(chunk))
+                        curr_chunks.append(Chunk.from_dict(chunk))
                     batch_chunks.append(curr_chunks)
                 return batch_chunks
             else:
                 single_result: List[Dict] = cast(List[Dict], response.json())
-                single_chunks: List[RecursiveChunk] = [RecursiveChunk.from_dict(chunk) for chunk in single_result]
+                single_chunks: List[Chunk] = [Chunk.from_dict(chunk) for chunk in single_result]
                 return single_chunks
         except Exception as error:
             raise ValueError(

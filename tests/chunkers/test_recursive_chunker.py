@@ -115,7 +115,7 @@ def test_recursive_chunker_chunking(
     assert all(chunk.text is not None for chunk in chunks)
     assert all(chunk.start_index is not None for chunk in chunks)
     assert all(chunk.end_index is not None for chunk in chunks)
-    assert all(chunk.level is not None for chunk in chunks)
+    # Note: level information is no longer directly accessible in the base Chunk type
 
 
 def test_recursive_chunker_token_count_default_rules(
@@ -405,7 +405,7 @@ def test_recursive_chunker_single_character(default_rules: RecursiveRules) -> No
     assert chunks[0].text == "a"
     assert chunks[0].start_index == 0
     assert chunks[0].end_index == 1
-    assert chunks[0].level == 0
+    # Note: level information is no longer directly accessible in the base Chunk type
 
 
 def test_recursive_chunker_min_characters_per_chunk(sample_text: str) -> None:
@@ -444,7 +444,7 @@ def test_recursive_chunker_from_recipe_custom_lang() -> None:
     chunker = RecursiveChunker.from_recipe(
         name="default",
         lang="en",
-        tokenizer_or_token_counter="character",
+        tokenizer="character",
         chunk_size=256,
         min_characters_per_chunk=32
     )

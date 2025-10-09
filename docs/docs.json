@@ -25,12 +25,22 @@
             ]
           },
           {
+            "group": "Chefs",
+            "pages": [
+              "python-sdk/chefs/overview",
+              "python-sdk/chefs/tablechef",
+              "python-sdk/chefs/textchef",
+              "python-sdk/chefs/markdownchef"
+            ]
+          },
+          {
             "group": "Chunkers",
             "pages": [
               "python-sdk/chunkers/overview",
               "python-sdk/chunkers/token-chunker",
               "python-sdk/chunkers/sentence-chunker",
               "python-sdk/chunkers/recursive-chunker",
+              "python-sdk/chunkers/table-chunker",
               "python-sdk/chunkers/code-chunker",
               "python-sdk/chunkers/semantic-chunker",
               "python-sdk/chunkers/late-chunker",
@@ -72,7 +82,8 @@
               "python-sdk/handshakes/tubropuffer-handshake",
               "python-sdk/handshakes/pinecone-handshake",
               "python-sdk/handshakes/pgvector-handshake",
-              "python-sdk/handshakes/mongodb-handshake"
+              "python-sdk/handshakes/mongodb-handshake",
+              "python-sdk/handshakes/elastic-handshake"
             ]
           },
           {
@@ -129,6 +140,18 @@
         "tab": "Chonkie Cloud",
         "icon": "cloud",
         "openapi": "chonkie-cloud/openapi.json"
+      },
+      {
+        "tab": "Chonkie Parse",
+        "icon": "file-lines",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "pages": [
+              "parse/introduction"
+            ]
+          }
+        ]
       }
     ],
     "global": {

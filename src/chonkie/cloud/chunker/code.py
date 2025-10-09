@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Literal, Optional, Union, cast
 import requests
 
 from chonkie.cloud.file import FileManager
-from chonkie.types import CodeChunk
+from chonkie.types import Chunk
 
 from .base import CloudChunker
 
@@ -19,19 +19,19 @@ class CodeChunker(CloudChunker):
 
     def __init__(
         self,
-        tokenizer_or_token_counter: str = "gpt2",
+        tokenizer: str = "gpt2",
         chunk_size: int = 512,
         language: Union[Literal["auto"], str] = "auto",
         api_key: Optional[str] = None,
     ) -> None:
         """Initialize the Cloud CodeChunker.
-        
+
         Args:
-            tokenizer_or_token_counter: The tokenizer or token counter to use.
+            tokenizer: The tokenizer to use.
             chunk_size: The size of the chunks to create.
             language: The language of the code to parse. Accepts any of the languages supported by tree-sitter-language-pack.
             api_key: The API key for the Chonkie API.
-            
+
         Raises:
             ValueError: If the API key is not provided or if parameters are invalid.
 
@@ -49,7 +49,7 @@ class CodeChunker(CloudChunker):
             raise ValueError("Chunk size must be greater than 0.")
 
         # Assign all the attributes to the instance
-        self.tokenizer_or_token_counter = tokenizer_or_token_counter
+        self.tokenizer = tokenizer
         self.chunk_size = chunk_size
         self.language = language
 
@@ -65,7 +65,7 @@ class CodeChunker(CloudChunker):
         # Initialize the file manager to upload files if needed
         self.file_manager = FileManager(api_key=self.api_key)
 
-    def chunk(self, text: Optional[Union[str, List[str]]] = None, file: Optional[str] = None) -> Union[List[CodeChunk], List[List[CodeChunk]]]:
+    def chunk(self, text: Optional[Union[str, List[str]]] = None, file: Optional[str] = None) -> Union[List[Chunk], List[List[Chunk]]]:
         """Chunk the code into a list of chunks.
 
         Args:
@@ -73,7 +73,7 @@ class CodeChunker(CloudChunker):
             file: The path to a file to chunk.
 
         Returns:
-            A list of CodeChunk objects containing the chunked code.
+            A list of Chunk objects containing the chunked code.
 
         Raises:
             ValueError: If the API request fails or returns invalid data.
@@ -84,7 +84,7 @@ class CodeChunker(CloudChunker):
         if text is not None:
             payload = {
                 "text": text,
-                "tokenizer_or_token_counter": self.tokenizer_or_token_counter,
+                "tokenizer_or_token_counter": self.tokenizer,
                 "chunk_size": self.chunk_size,
                 "language": self.language,
                 "lang": self.language, # For backward compatibility
@@ -97,7 +97,7 @@ class CodeChunker(CloudChunker):
                     "type": "document",
                     "content": file_response.name,
                 },
-                "tokenizer_or_token_counter": self.tokenizer_or_token_counter,
+                "tokenizer_or_token_counter": self.tokenizer,
                 "chunk_size": self.chunk_size,
                 "language": self.language,
                 "lang": self.language, # For backward compatibility
@@ -123,20 +123,20 @@ class CodeChunker(CloudChunker):
         try:
             if isinstance(text, list):
                 batch_result: List[List[Dict]] = cast(List[List[Dict]], response.json())
-                batch_chunks: List[List[CodeChunk]] = []
+                batch_chunks: List[List[Chunk]] = []
                 for chunk_list in batch_result:
                     curr_chunks = []
                     for chunk in chunk_list:
-                        curr_chunks.append(CodeChunk.from_dict(chunk))
+                        curr_chunks.append(Chunk.from_dict(chunk))
                     batch_chunks.append(curr_chunks)
                 return batch_chunks
             else:
                 single_result: List[Dict] = cast(List[Dict], response.json())
-                single_chunks: List[CodeChunk] = [CodeChunk.from_dict(chunk) for chunk in single_result]
+                single_chunks: List[Chunk] = [Chunk.from_dict(chunk) for chunk in single_result]
                 return single_chunks
         except Exception as error:
             raise ValueError(f"Error parsing the response: {error}") from error
 
-    def __call__(self, text: Optional[Union[str, List[str]]] = None, file: Optional[str] = None) -> Union[List[CodeChunk], List[List[CodeChunk]]]:
+    def __call__(self, text: Optional[Union[str, List[str]]] = None, file: Optional[str] = None) -> Union[List[Chunk], List[List[Chunk]]]:
         """Call the chunker."""
         return self.chunk(text=text, file=file)

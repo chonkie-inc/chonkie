@@ -8,7 +8,6 @@ from typing import (
     List,
     Literal,
     Optional,
-    Sequence,
     Union,
 )
 from urllib.parse import urlparse
@@ -295,7 +294,7 @@ class WeaviateHandshake(BaseHandshake):
 
         return properties
 
-    def write(self, chunks: Union[Chunk, Sequence[Chunk]]) -> List[str]:
+    def write(self, chunks: Union[Chunk, List[Chunk]]) -> List[str]:
         """Write chunks to the Weaviate collection.
 
         Args:

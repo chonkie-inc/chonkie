@@ -2,11 +2,12 @@
 
 from bisect import bisect_left
 from itertools import accumulate
-from typing import Any, Callable, List, Optional, Union
+from typing import List, Optional, Union
 
 from tqdm import tqdm
 
 from chonkie.genie import BaseGenie, GeminiGenie
+from chonkie.tokenizer import TokenizerProtocol
 from chonkie.types import Chunk, RecursiveLevel, RecursiveRules
 
 from .base import BaseChunker
@@ -57,8 +58,8 @@ class SlumberChunker(BaseChunker):
     """SlumberChunker is a chunker based on the LumberChunker — but slightly different."""
 
     def __init__(self,
-                 genie: Optional[BaseGenie] = None, 
-                 tokenizer_or_token_counter: Union[str, Callable, Any] = "character",
+                 genie: Optional[BaseGenie] = None,
+                 tokenizer: Union[str, TokenizerProtocol] = "character",
                  chunk_size: int = 2048,
                  rules: RecursiveRules = RecursiveRules(),
                  candidate_size: int = 128,
@@ -68,7 +69,7 @@ class SlumberChunker(BaseChunker):
 
         Args:
             genie (Optional[BaseGenie]): The genie to use.
-            tokenizer_or_token_counter (Union[str, Callable, Any]): The tokenizer or token counter to use.
+            tokenizer: The tokenizer to use.
             chunk_size (int): The size of the chunks to create.
             rules (RecursiveRules): The rules to use to split the candidate chunks.
             candidate_size (int): The size of the candidate splits that the chunker will consider.
@@ -77,7 +78,7 @@ class SlumberChunker(BaseChunker):
 
         """
         # Since the BaseChunker sets and defines the tokenizer for us, we don't have to worry.
-        super().__init__(tokenizer_or_token_counter)
+        super().__init__(tokenizer)
 
         # Lazily import the dependencies
         self._import_dependencies()
@@ -199,10 +200,10 @@ class SlumberChunker(BaseChunker):
     def _recursive_split(self, text: str, level: int = 0, offset: int=0) -> List[Chunk]:
         """Recursively split the text into chunks."""
         if not self.rules.levels or level >= len(self.rules.levels):
-            return [Chunk(text,
-                         offset,
-                         offset + len(text),
-                         self.tokenizer.count_tokens(text))]
+            return [Chunk(text=text,
+                         start_index=offset,
+                         end_index=offset + len(text),
+                         token_count=self.tokenizer.count_tokens(text))]
         
         # Do the first split based on the level provided
         splits = self._split_text(text, self.rules.levels[level]) if self.rules.levels else []
@@ -220,10 +221,10 @@ class SlumberChunker(BaseChunker):
                 child_chunks = self._recursive_split(split, level + 1, current_offset)
                 chunks.extend(child_chunks)
             else:
-                chunks.append(Chunk(split,
-                                    current_offset,
-                                    current_offset + len(split),
-                                    token_count))
+                chunks.append(Chunk(text=split,
+                                    start_index=current_offset,
+                                    end_index=current_offset + len(split),
+                                    token_count=token_count))
             
             # Add the offset as the length of the split
             current_offset += len(split)
@@ -238,8 +239,7 @@ class SlumberChunker(BaseChunker):
         """Get the cumulative token counts for the splits."""
         return list(accumulate([0] + [split.token_count for split in splits]))
 
-    # TODO: Fix the type error later
-    def chunk(self, text: str) -> List[Chunk]: # type: ignore
+    def chunk(self, text: str) -> List[Chunk]:
         """Chunk the text with the SlumberChunker."""
         splits = self._recursive_split(text, level=0, offset=0)
 

@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any, List, Optional, Union
 # Get all the Chonkie imports
 from chonkie.chunker.recursive import RecursiveChunker
 from chonkie.embeddings.sentence_transformer import SentenceTransformerEmbeddings
-from chonkie.types import LateChunk, RecursiveRules
+from chonkie.types import Chunk, RecursiveRules
 
 if TYPE_CHECKING:
     try:
@@ -68,7 +68,7 @@ class LateChunker(RecursiveChunker):
 
         # Initialize the RecursiveChunker with the embedding_model's tokenizer
         super().__init__(
-            tokenizer_or_token_counter=self.embedding_model.get_tokenizer_or_token_counter(),
+            tokenizer=self.embedding_model.get_tokenizer(),
             chunk_size=chunk_size,
             rules=rules,
             min_characters_per_chunk=min_characters_per_chunk,
@@ -129,7 +129,7 @@ class LateChunker(RecursiveChunker):
             )
         return embs
 
-    def chunk(self, text: str) -> List[LateChunk]: # type: ignore
+    def chunk(self, text: str) -> List[Chunk]:
         """Chunk the text via LateChunking."""
         # This would first call upon the _recursive_chunk method
         # and then use the embedding model to get the token token_embeddings
@@ -163,12 +163,12 @@ class LateChunker(RecursiveChunker):
         # Split the token embeddings into chunks based on the token counts
         late_embds = self._get_late_embeddings(token_embeddings, token_counts)
 
-        # Wrap it all up in LateChunks
+        # Wrap it all up in Chunks with embeddings
         result = []
         for chunk, token_count, embedding in zip(chunks, token_counts, late_embds):
-            # Note: LateChunker always returns chunks, so chunk is always a RecursiveChunk
+            # Note: LateChunker always returns chunks, so chunk is always a Chunk
             result.append(
-                LateChunk(
+                Chunk(
                     text=chunk.text,  # type: ignore[attr-defined]
                     start_index=chunk.start_index,  # type: ignore[attr-defined]
                     end_index=chunk.end_index,  # type: ignore[attr-defined]

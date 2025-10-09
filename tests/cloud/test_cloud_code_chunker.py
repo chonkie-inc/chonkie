@@ -6,7 +6,7 @@ from unittest.mock import Mock, patch
 import pytest
 
 from chonkie.cloud import CodeChunker
-from chonkie.types import CodeChunk
+from chonkie.types import Chunk
 
 
 @pytest.fixture
@@ -145,19 +145,19 @@ def test_cloud_code_chunker_initialization(mock_requests_get: Any) -> None:
     """Test that the code chunker can be initialized."""
     # Check if the chunk_size <= 0 raises an error
     with pytest.raises(ValueError):
-        CodeChunker(tokenizer_or_token_counter="gpt2", chunk_size=-1, api_key="test_key")
+        CodeChunker(tokenizer="gpt2", chunk_size=-1, api_key="test_key")
 
     with pytest.raises(ValueError):
-        CodeChunker(tokenizer_or_token_counter="gpt2", chunk_size=0, api_key="test_key")
+        CodeChunker(tokenizer="gpt2", chunk_size=0, api_key="test_key")
 
     # Finally, check if the attributes are set correctly
     chunker = CodeChunker(
-        tokenizer_or_token_counter="gpt2", 
+        tokenizer="gpt2", 
         chunk_size=512, 
         language="python",
         api_key="test_key"
     )
-    assert chunker.tokenizer_or_token_counter == "gpt2"
+    assert chunker.tokenizer == "gpt2"
     assert chunker.chunk_size == 512
     assert chunker.language == "python"
 
@@ -173,7 +173,7 @@ def test_cloud_code_chunker_simple(mock_requests_get: Any, mock_requests_post: A
     mock_requests_post.return_value = mock_response
     
     code_chunker = CodeChunker(
-        tokenizer_or_token_counter="gpt2",
+        tokenizer="gpt2",
         chunk_size=512,
         language="python",
         api_key="test_key"
@@ -182,7 +182,7 @@ def test_cloud_code_chunker_simple(mock_requests_get: Any, mock_requests_post: A
 
     # Check the result
     assert isinstance(result, list) and len(result) >= 1
-    assert isinstance(result[0], CodeChunk)
+    assert isinstance(result[0], Chunk)
     assert result[0].text
     assert result[0].token_count
     assert result[0].start_index is not None
@@ -202,7 +202,7 @@ def test_cloud_code_chunker_python_complex(mock_requests_get: Any, mock_requests
     mock_requests_post.return_value = mock_response
     
     code_chunker = CodeChunker(
-        tokenizer_or_token_counter="gpt2",
+        tokenizer="gpt2",
         chunk_size=50,
         language="python",
         api_key="test_key"
@@ -212,7 +212,7 @@ def test_cloud_code_chunker_python_complex(mock_requests_get: Any, mock_requests
     # Check the result
     assert isinstance(result, list)
     assert len(result) > 1  # Should be split into multiple chunks
-    assert all(isinstance(item, CodeChunk) for item in result)
+    assert all(isinstance(item, Chunk) for item in result)
     assert all(isinstance(item.text, str) for item in result)
     assert all(isinstance(item.token_count, int) for item in result)
     assert all(isinstance(item.start_index, int) for item in result)
@@ -232,7 +232,7 @@ def test_cloud_code_chunker_javascript(mock_requests_get: Any, mock_requests_pos
     mock_requests_post.return_value = mock_response
     
     code_chunker = CodeChunker(
-        tokenizer_or_token_counter="gpt2",
+        tokenizer="gpt2",
         chunk_size=40,
         language="javascript",
         api_key="test_key"
@@ -242,7 +242,7 @@ def test_cloud_code_chunker_javascript(mock_requests_get: Any, mock_requests_pos
     # Check the result
     assert isinstance(result, list)
     assert len(result) > 1  # Should be split into multiple chunks
-    assert all(isinstance(item, CodeChunk) for item in result)
+    assert all(isinstance(item, Chunk) for item in result)
     assert all(isinstance(item.text, str) for item in result)
     assert all(isinstance(item.token_count, int) for item in result)
 
@@ -260,7 +260,7 @@ def test_cloud_code_chunker_auto_language(mock_requests_get: Any, mock_requests_
     mock_requests_post.return_value = mock_response
     
     code_chunker = CodeChunker(
-        tokenizer_or_token_counter="gpt2",
+        tokenizer="gpt2",
         chunk_size=100,
         language="auto",
         api_key="test_key"
@@ -270,7 +270,7 @@ def test_cloud_code_chunker_auto_language(mock_requests_get: Any, mock_requests_
     # Check the result
     assert isinstance(result, list)
     assert len(result) >= 1
-    assert all(isinstance(item, CodeChunk) for item in result)
+    assert all(isinstance(item, Chunk) for item in result)
     assert all(isinstance(item.text, str) for item in result)
 
     # Check that chunks can be reconstructed
@@ -289,7 +289,7 @@ def test_cloud_code_chunker_no_nodes_support(mock_requests_get: Any, mock_reques
     mock_requests_post.return_value = mock_response
     
     code_chunker = CodeChunker(
-        tokenizer_or_token_counter="gpt2",
+        tokenizer="gpt2",
         chunk_size=512,
         language="python",
         api_key="test_key"
@@ -298,7 +298,7 @@ def test_cloud_code_chunker_no_nodes_support(mock_requests_get: Any, mock_reques
 
     # Check the result - should not contain nodes since API doesn't support them
     assert isinstance(result, list) and len(result) >= 1
-    assert isinstance(result[0], CodeChunk)
+    assert isinstance(result[0], Chunk)
     assert result[0].text
     # API doesn't support tree-sitter nodes, so they shouldn't be in response
 
@@ -314,7 +314,7 @@ def test_cloud_code_chunker_batch(mock_requests_get: Any, mock_requests_post: An
     mock_requests_post.return_value = mock_response
     
     code_chunker = CodeChunker(
-        tokenizer_or_token_counter="gpt2",
+        tokenizer="gpt2",
         chunk_size=100,
         language="auto",
         api_key="test_key"
@@ -327,8 +327,8 @@ def test_cloud_code_chunker_batch(mock_requests_get: Any, mock_requests_post: An
     assert all(isinstance(item, list) for item in result), (
         f"Expected a list of lists, got {type(result)}"
     )
-    assert all(isinstance(chunk, CodeChunk) for batch in result for chunk in batch), (
-        "Expected lists of CodeChunks"
+    assert all(isinstance(chunk, Chunk) for batch in result for chunk in batch), (
+        "Expected lists of Chunks"
     )
     assert all(isinstance(chunk.text, str) for batch in result for chunk in batch), (
         "Expected chunks with text field"
@@ -347,7 +347,7 @@ def test_cloud_code_chunker_empty_text(mock_requests_get: Any, mock_requests_pos
     mock_requests_post.return_value = mock_response
     
     code_chunker = CodeChunker(
-        tokenizer_or_token_counter="gpt2",
+        tokenizer="gpt2",
         chunk_size=512,
         language="python",
         api_key="test_key"
@@ -366,7 +366,7 @@ def test_cloud_code_chunker_whitespace_text(mock_requests_get: Any, mock_request
     mock_requests_post.return_value = mock_response
     
     code_chunker = CodeChunker(
-        tokenizer_or_token_counter="gpt2",
+        tokenizer="gpt2",
         chunk_size=512,
         language="python",
         api_key="test_key"
@@ -391,7 +391,7 @@ def test_cloud_code_chunker_chunk_size_adherence(mock_requests_get: Any, mock_re
     mock_requests_post.return_value = mock_response
     
     code_chunker = CodeChunker(
-        tokenizer_or_token_counter="gpt2",
+        tokenizer="gpt2",
         chunk_size=chunk_size,
         language="python",
         api_key="test_key"
@@ -416,7 +416,7 @@ def test_cloud_code_chunker_indices_continuity(mock_requests_get: Any, mock_requ
     mock_requests_post.return_value = mock_response
     
     code_chunker = CodeChunker(
-        tokenizer_or_token_counter="gpt2",
+        tokenizer="gpt2",
         chunk_size=60,
         language="python",
         api_key="test_key"
@@ -449,7 +449,7 @@ def test_cloud_code_chunker_different_tokenizers(mock_requests_get: Any, mock_re
         mock_requests_post.return_value = mock_response
         
         code_chunker = CodeChunker(
-            tokenizer_or_token_counter=tokenizer,
+            tokenizer=tokenizer,
             chunk_size=512,
             language="python",
             api_key="test_key"
@@ -458,7 +458,7 @@ def test_cloud_code_chunker_different_tokenizers(mock_requests_get: Any, mock_re
         
         assert isinstance(result, list)
         assert len(result) >= 1
-        assert all(isinstance(chunk, CodeChunk) for chunk in result)
+        assert all(isinstance(chunk, Chunk) for chunk in result)
         assert all(chunk.text for chunk in result)
 
 
@@ -473,7 +473,7 @@ def test_cloud_code_chunker_real_api(mock_requests_get: Any, mock_requests_post:
     mock_requests_post.return_value = mock_response
     
     code_chunker = CodeChunker(
-        tokenizer_or_token_counter="gpt2",
+        tokenizer="gpt2",
         chunk_size=512,
         language="python",
         api_key="test_key",  # Use a test key to avoid env dependency
@@ -482,6 +482,6 @@ def test_cloud_code_chunker_real_api(mock_requests_get: Any, mock_requests_post:
 
     # Check the result
     assert isinstance(result, list) and len(result) >= 1
-    assert isinstance(result[0], CodeChunk)
+    assert isinstance(result[0], Chunk)
     assert result[0].text
     assert result[0].token_count

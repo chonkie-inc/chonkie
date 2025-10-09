@@ -6,11 +6,12 @@ Splits text into smaller chunks recursively. Express chunking logic through Recu
 from bisect import bisect_left
 from functools import lru_cache
 from itertools import accumulate
-from typing import Any, Callable, List, Optional, Sequence, Tuple, Union
+from typing import List, Optional, Tuple, Union
 
 from chonkie.chunker.base import BaseChunker
+from chonkie.tokenizer import TokenizerProtocol
 from chonkie.types import (
-    RecursiveChunk,
+    Chunk,
     RecursiveLevel,
     RecursiveRules,
 )
@@ -34,7 +35,7 @@ class RecursiveChunker(BaseChunker):
     """Chunker that recursively splits text into smaller chunks, based on the provided RecursiveRules.
 
     Args:
-        tokenizer_or_token_counter (Union[str, Callable, Any]): Tokenizer or token counter to use
+        tokenizer: Tokenizer to use
         rules (list[RecursiveLevel]): List of RecursiveLevel objects defining chunking rules at a level.
         chunk_size (int): Maximum size of each chunk.
         min_characters_per_chunk (int): Minimum number of characters per chunk.
@@ -43,7 +44,7 @@ class RecursiveChunker(BaseChunker):
 
     def __init__(
         self,
-        tokenizer_or_token_counter: Union[str, Callable, Any] = "character",
+        tokenizer: Union[str, TokenizerProtocol] = "character",
         chunk_size: int = 2048,
         rules: RecursiveRules = RecursiveRules(),
         min_characters_per_chunk: int = 24,
@@ -51,7 +52,7 @@ class RecursiveChunker(BaseChunker):
         """Create a RecursiveChunker object.
 
         Args:
-            tokenizer_or_token_counter (Union[str, Callable, Any]): Tokenizer or token counter to use
+            tokenizer: Tokenizer to use
             rules (list[RecursiveLevel]): List of RecursiveLevel objects defining chunking rules at a level.
             chunk_size (int): Maximum size of each chunk.
             min_characters_per_chunk (int): Minimum number of characters per chunk.
@@ -62,7 +63,7 @@ class RecursiveChunker(BaseChunker):
             ValueError: If recursive_rules is not a RecursiveRules object.
 
         """
-        super().__init__(tokenizer_or_token_counter=tokenizer_or_token_counter)
+        super().__init__(tokenizer=tokenizer)
 
         if chunk_size <= 0:
             raise ValueError("chunk_size must be greater than 0")
@@ -83,7 +84,7 @@ class RecursiveChunker(BaseChunker):
                     name: Optional[str] = 'default',
                     lang: Optional[str] = 'en',
                     path: Optional[str] = None,
-                    tokenizer_or_token_counter: Union[str, Callable, Any] = "character",
+                    tokenizer: Union[str, TokenizerProtocol] = "character",
                     chunk_size: int = 2048,
                     min_characters_per_chunk: int = 24,
                     ) -> "RecursiveChunker":
@@ -95,7 +96,7 @@ class RecursiveChunker(BaseChunker):
             name (Optional[str]): The name of the recipe.
             lang (Optional[str]): The language that the recursive chunker should support.
             path (Optional[str]): The path to the recipe.
-            tokenizer_or_token_counter (Union[str, Callable, Any]): The tokenizer or token counter to use.
+            tokenizer: The tokenizer to use.
             chunk_size (int): The chunk size.
             min_characters_per_chunk (int): The minimum number of characters per chunk.
 
@@ -109,7 +110,7 @@ class RecursiveChunker(BaseChunker):
         # Create a recursive rules object
         rules = RecursiveRules.from_recipe(name, lang, path)
         return cls(
-            tokenizer_or_token_counter=tokenizer_or_token_counter,
+            tokenizer=tokenizer,
             rules=rules,
             chunk_size=chunk_size,
             min_characters_per_chunk=min_characters_per_chunk,
@@ -188,8 +189,8 @@ class RecursiveChunker(BaseChunker):
         token_count: int,
         level: int,
         start_offset: int
-    ) -> RecursiveChunk:
-        """Create a RecursiveChunk object with indices based on the current offset.
+    ) -> Chunk:
+        """Create a Chunk object with indices based on the current offset.
 
         This method calculates the start and end indices of the chunk using the provided start_offset and the length of the text,
         avoiding a slower full-text search for efficiency.
@@ -201,15 +202,14 @@ class RecursiveChunker(BaseChunker):
             start_offset (int): The starting offset in the original text.
 
         Returns:
-            RecursiveChunk: A chunk object with calculated start and end indices, text, token count and level.
+            Chunk: A chunk object with calculated start and end indices, text, and token count.
 
         """
-        return RecursiveChunk(
+        return Chunk(
             text=text,
             start_index=start_offset,
             end_index=start_offset + len(text),
             token_count=token_count,
-            level=level,
         )
 
     def _merge_splits(
@@ -302,7 +302,7 @@ class RecursiveChunker(BaseChunker):
 
     def _recursive_chunk(
         self, text: str, level: int = 0, start_offset: int =0
-    ) -> Sequence[RecursiveChunk]:
+    ) -> List[Chunk]:
         """Recursive helper for core chunking."""
         if not text:
             return []
@@ -339,7 +339,7 @@ class RecursiveChunker(BaseChunker):
             )
 
         # Chunk long merged splits
-        chunks: List[RecursiveChunk] = []
+        chunks: List[Chunk] = []
         current_offset = start_offset
         for split, token_count in zip(merged, combined_token_counts):
             if token_count > self.chunk_size:
@@ -351,7 +351,7 @@ class RecursiveChunker(BaseChunker):
             current_offset += len(split)
         return chunks
 
-    def chunk(self, text: str) -> Sequence[RecursiveChunk]:
+    def chunk(self, text: str) -> List[Chunk]:
         """Recursively chunk text.
 
         Args:
@@ -363,7 +363,7 @@ class RecursiveChunker(BaseChunker):
     def __repr__(self) -> str:
         """Get a string representation of the recursive chunker."""
         return (
-            f"RecursiveChunker(tokenizer_or_token_counter={self.tokenizer},"
+            f"RecursiveChunker(tokenizer={self.tokenizer},"
             f" rules={self.rules}, chunk_size={self.chunk_size}, "
             f"min_characters_per_chunk={self.min_characters_per_chunk})"
         )

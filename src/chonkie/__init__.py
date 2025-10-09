@@ -5,6 +5,8 @@
 
 from .chef import (
     BaseChef,
+    MarkdownChef,
+    TableChef,
     TextChef,
 )
 from .chunker import (
@@ -16,6 +18,7 @@ from .chunker import (
     SemanticChunker,
     SentenceChunker,
     SlumberChunker,
+    TableChunker,
     TokenChunker,
 )
 from .cloud import (
@@ -37,11 +40,15 @@ from .fetcher import (
     BaseFetcher,
     FileFetcher,
 )
-from .friends import (
+from .genie import (
+    BaseGenie,
+    GeminiGenie,
+    OpenAIGenie,
+)
+from .handshakes import (
     BaseHandshake,
-    BasePorter,
     ChromaHandshake,
-    JSONPorter,
+    ElasticHandshake,
     MongoDBHandshake,
     PgvectorHandshake,
     PineconeHandshake,
@@ -49,10 +56,10 @@ from .friends import (
     TurbopufferHandshake,
     WeaviateHandshake,
 )
-from .genie import (
-    BaseGenie,
-    GeminiGenie,
-    OpenAIGenie,
+from .porters import (
+    BasePorter,
+    DatasetsPorter,
+    JSONPorter,
 )
 from .refinery import (
     BaseRefinery,
@@ -60,24 +67,23 @@ from .refinery import (
     OverlapRefinery,
 )
 from .tokenizer import (
+    AutoTokenizer,
     CharacterTokenizer,
     Tokenizer,
+    TokenizerProtocol,
     WordTokenizer,
 )
 from .types import (
     Chunk,
-    CodeChunk,
-    Context,
+    Document,
     LanguageConfig,
-    LateChunk,
+    MarkdownCode,
+    MarkdownDocument,
+    MarkdownTable,
     MergeRule,
-    RecursiveChunk,
     RecursiveLevel,
     RecursiveRules,
-    SemanticChunk,
-    SemanticSentence,
     Sentence,
-    SentenceChunk,
     SplitRule,
 )
 from .utils import (
@@ -86,6 +92,6 @@ from .utils import (
 )
 
 # This hippo grows with every release 🦛✨~
-__version__ = "1.2.1"
+__version__ = "1.3.1"
 __name__ = "chonkie"
 __author__ = "🦛 Chonkie Inc"

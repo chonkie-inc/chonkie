@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Literal, Optional, Union, cast
 import requests
 
 from chonkie.cloud.file import FileManager
-from chonkie.types import SentenceChunk
+from chonkie.types import Chunk
 
 from .base import CloudChunker
 
@@ -19,7 +19,7 @@ class SentenceChunker(CloudChunker):
 
     def __init__(
         self,
-        tokenizer_or_token_counter: str = "gpt2",
+        tokenizer: str = "gpt2",
         chunk_size: int = 512,
         chunk_overlap: int = 0,
         min_sentences_per_chunk: int = 1,
@@ -53,7 +53,7 @@ class SentenceChunker(CloudChunker):
             raise ValueError("Include delim must be either 'prev', 'next' or None.")
 
         # Assign all the attributes to the instance
-        self.tokenizer_or_token_counter = tokenizer_or_token_counter
+        self.tokenizer = tokenizer
         self.chunk_size = chunk_size
         self.chunk_overlap = chunk_overlap
         self.min_sentences_per_chunk = min_sentences_per_chunk
@@ -74,14 +74,14 @@ class SentenceChunker(CloudChunker):
         # Initialize the file manager to upload files if needed
         self.file_manager = FileManager(api_key=self.api_key)
 
-    def chunk(self, text: Optional[Union[str, List[str]]] = None, file: Optional[str] = None) -> Union[List[SentenceChunk], List[List[SentenceChunk]]]:
+    def chunk(self, text: Optional[Union[str, List[str]]] = None, file: Optional[str] = None) -> Union[List[Chunk], List[List[Chunk]]]:
         """Chunk the text or file via sentence boundaries."""
         # Define the payload for the request
         payload: Dict[str, Any]
         if text is not None:
             payload = {
                 "text": text,
-                "tokenizer": self.tokenizer_or_token_counter,
+                "tokenizer": self.tokenizer,
                 "chunk_size": self.chunk_size,
                 "chunk_overlap": self.chunk_overlap,
                 "min_sentences_per_chunk": self.min_sentences_per_chunk,
@@ -97,7 +97,7 @@ class SentenceChunker(CloudChunker):
                     "type": "document",
                     "content": file_response.name,
                 },
-                "tokenizer": self.tokenizer_or_token_counter,
+                "tokenizer": self.tokenizer,
                 "chunk_size": self.chunk_size,
                 "chunk_overlap": self.chunk_overlap,
                 "min_sentences_per_chunk": self.min_sentences_per_chunk,
@@ -120,16 +120,16 @@ class SentenceChunker(CloudChunker):
         try:
             if isinstance(text, list):
                 batch_result: List[List[Dict]] = cast(List[List[Dict]], response.json())
-                batch_chunks: List[List[SentenceChunk]] = []
+                batch_chunks: List[List[Chunk]] = []
                 for chunk_list in batch_result:
-                    curr_chunks: List[SentenceChunk] = []
+                    curr_chunks: List[Chunk] = []
                     for chunk in chunk_list:
-                        curr_chunks.append(SentenceChunk.from_dict(chunk))
+                        curr_chunks.append(Chunk.from_dict(chunk))
                     batch_chunks.append(curr_chunks)
                 return batch_chunks
             else:
                 single_result: List[Dict] = cast(List[Dict], response.json())
-                single_chunks: List[SentenceChunk] = [SentenceChunk.from_dict(chunk) for chunk in single_result]
+                single_chunks: List[Chunk] = [Chunk.from_dict(chunk) for chunk in single_result]
                 return single_chunks
         except Exception as error:
             raise ValueError(
@@ -138,6 +138,6 @@ class SentenceChunker(CloudChunker):
                 + "If the issue persists, please contact support at support@chonkie.ai."
             ) from error
 
-    def __call__(self, text: Optional[Union[str, List[str]]] = None, file: Optional[str] = None) -> Union[List[SentenceChunk], List[List[SentenceChunk]]]:
+    def __call__(self, text: Optional[Union[str, List[str]]] = None, file: Optional[str] = None) -> Union[List[Chunk], List[List[Chunk]]]:
         """Call the SentenceChunker."""
         return self.chunk(text=text, file=file)

@@ -5,7 +5,7 @@ from unittest.mock import Mock, patch
 import pytest
 
 from chonkie.cloud import SentenceChunker
-from chonkie.types import SentenceChunk
+from chonkie.types import Chunk
 
 
 @pytest.fixture
@@ -61,19 +61,19 @@ def test_cloud_sentence_chunker_initialization(mock_requests_get) -> None:
     # Check if the chunk_size < 0 raises an error
     with pytest.raises(ValueError):
         SentenceChunker(
-            tokenizer_or_token_counter="gpt2", chunk_size=-1, chunk_overlap=0, api_key="test_key"
+            tokenizer="gpt2", chunk_size=-1, chunk_overlap=0, api_key="test_key"
         )
 
     # Check if the chunk_overlap < 0 raises an error
     with pytest.raises(ValueError):
         SentenceChunker(
-            tokenizer_or_token_counter="gpt2", chunk_size=512, chunk_overlap=-1, api_key="test_key"
+            tokenizer="gpt2", chunk_size=512, chunk_overlap=-1, api_key="test_key"
         )
 
     # Check if the min_sentences_per_chunk < 1 raises an error
     with pytest.raises(ValueError):
         SentenceChunker(
-            tokenizer_or_token_counter="gpt2",
+            tokenizer="gpt2",
             chunk_size=512,
             chunk_overlap=0,
             min_sentences_per_chunk=-1,
@@ -83,7 +83,7 @@ def test_cloud_sentence_chunker_initialization(mock_requests_get) -> None:
     # Check if the min_characters_per_sentence < 1 raises an error
     with pytest.raises(ValueError):
         SentenceChunker(
-            tokenizer_or_token_counter="gpt2",
+            tokenizer="gpt2",
             chunk_size=512,
             chunk_overlap=0,
             min_characters_per_sentence=-1,
@@ -93,7 +93,7 @@ def test_cloud_sentence_chunker_initialization(mock_requests_get) -> None:
     # Check if the approximate is not a boolean
     with pytest.raises(ValueError):
         SentenceChunker(
-            tokenizer_or_token_counter="gpt2",
+            tokenizer="gpt2",
             chunk_size=512,
             chunk_overlap=0,
             approximate="not_a_boolean",
@@ -103,7 +103,7 @@ def test_cloud_sentence_chunker_initialization(mock_requests_get) -> None:
     # Check if the include_delim is not a string
     with pytest.raises(ValueError):
         SentenceChunker(
-            tokenizer_or_token_counter="gpt2",
+            tokenizer="gpt2",
             chunk_size=512,
             chunk_overlap=0,
             include_delim="not_a_string",
@@ -112,9 +112,9 @@ def test_cloud_sentence_chunker_initialization(mock_requests_get) -> None:
 
     # Finally, check if the attributes are set correctly
     chunker = SentenceChunker(
-        tokenizer_or_token_counter="gpt2", chunk_size=512, chunk_overlap=0, api_key="test_key"
+        tokenizer="gpt2", chunk_size=512, chunk_overlap=0, api_key="test_key"
     )
-    assert chunker.tokenizer_or_token_counter == "gpt2"
+    assert chunker.tokenizer == "gpt2"
     assert chunker.chunk_size == 512
     assert chunker.chunk_overlap == 0
     assert chunker.min_sentences_per_chunk == 1
@@ -135,7 +135,7 @@ def test_cloud_sentence_chunker_simple(mock_requests_get, mock_requests_post, mo
     mock_requests_post.return_value = mock_response
     
     sentence_chunker = SentenceChunker(
-        tokenizer_or_token_counter="gpt2",
+        tokenizer="gpt2",
         chunk_size=512,
         chunk_overlap=0,
         api_key="test_key"
@@ -143,7 +143,7 @@ def test_cloud_sentence_chunker_simple(mock_requests_get, mock_requests_post, mo
     result = sentence_chunker(text)
 
     # Check the result
-    assert isinstance(result, list) and isinstance(result[0], SentenceChunk) and len(result) == 1
+    assert isinstance(result, list) and isinstance(result[0], Chunk) and len(result) == 1
     assert result[0].text == "Hello, world!"
     assert result[0].token_count == 2  # Based on simple word split
     assert result[0].start_index == 0
@@ -182,7 +182,7 @@ def test_cloud_sentence_chunker_multiple_sentences(mock_requests_get, mock_reque
     mock_requests_post.return_value = mock_response
     
     sentence_chunker = SentenceChunker(
-        tokenizer_or_token_counter="gpt2",
+        tokenizer="gpt2",
         chunk_size=5,
         chunk_overlap=0,
         api_key="test_key"
@@ -192,7 +192,7 @@ def test_cloud_sentence_chunker_multiple_sentences(mock_requests_get, mock_reque
     # Check the result
     assert len(result) > 1
     assert isinstance(result, list)
-    assert all(isinstance(item, SentenceChunk) for item in result)
+    assert all(isinstance(item, Chunk) for item in result)
     assert all(isinstance(item.text, str) for item in result)
     assert all(isinstance(item.token_count, int) for item in result)
     assert all(isinstance(item.start_index, int) for item in result)
@@ -210,7 +210,7 @@ def test_cloud_sentence_chunker_batch(mock_requests_get, mock_requests_post, moc
     mock_requests_post.return_value = mock_response
     
     sentence_chunker = SentenceChunker(
-        tokenizer_or_token_counter="gpt2",
+        tokenizer="gpt2",
         chunk_size=512,
         chunk_overlap=0,
         api_key="test_key"
@@ -221,7 +221,7 @@ def test_cloud_sentence_chunker_batch(mock_requests_get, mock_requests_post, moc
     assert len(result) == len(texts)
     assert isinstance(result, list)
     assert all(isinstance(item, list) for item in result)
-    assert all(isinstance(item, SentenceChunk) for item in result[0])
+    assert all(isinstance(item, Chunk) for item in result[0])
     assert all(isinstance(item.text, str) for item in result[0])
     assert all(isinstance(item.token_count, int) for item in result[0])
     assert all(isinstance(item.start_index, int) for item in result[0])
