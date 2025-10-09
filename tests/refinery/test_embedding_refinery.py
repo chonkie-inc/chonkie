@@ -45,8 +45,8 @@ class MockEmbeddings(BaseEmbeddings):
         """Mock token counting method."""
         # Simple mock: split by whitespace
         return len(text.split())
-    
-    def get_tokenizer_or_token_counter(self) -> Callable[[str], int]:
+
+    def get_tokenizer(self) -> Callable[[str], int]:
         """Return the token counter function."""
         return self.count_tokens
 

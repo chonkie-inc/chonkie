@@ -7,7 +7,7 @@ from typing import Tuple, Union
 from typing_extensions import List
 
 from chonkie.pipeline import chef
-from chonkie.tokenizer import Tokenizer
+from chonkie.tokenizer import AutoTokenizer, TokenizerProtocol
 from chonkie.types import (
   Chunk,
   MarkdownCode,
@@ -22,7 +22,7 @@ from .base import BaseChef
 @chef("markdown")
 class MarkdownChef(BaseChef):
   """Chef to process a markdown file into a MarkdownDocument type.
-  
+
   Args:
     path (Union[str, Path]): The path to the markdown file.
 
@@ -31,10 +31,10 @@ class MarkdownChef(BaseChef):
 
   """
 
-  def __init__(self, tokenizer: Union[Tokenizer, str] = "character") -> None:
+  def __init__(self, tokenizer: Union[TokenizerProtocol, str] = "character") -> None:
     """Initialize the MarkdownChef."""
     super().__init__()
-    self.tokenizer = tokenizer if isinstance(tokenizer, Tokenizer) else Tokenizer(tokenizer)
+    self.tokenizer = AutoTokenizer(tokenizer)
     self.code_pattern = re.compile(r"```([a-zA-Z0-9+\-_]*)\n?(.*?)\n?```", re.DOTALL)
     self.table_pattern = re.compile(r"(\|.*?\n\|[-: ]+\|.*?\n(?:\|.*?\n)*)")
     self.image_pattern = re.compile(r"(\[)?!\[([^\]]*)\]\(([^)]+)\)(?(1)\]\(([^)]+)\)|)")
