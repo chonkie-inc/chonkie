@@ -32,6 +32,20 @@ class BaseHandshake(ABC):
 
         """
         raise NotImplementedError
+    
+    @abstractmethod
+    def search(self, query: str, top_k: int = 5) -> List[Chunk]:
+        """Search for similar chunks in the vector database.
+
+        Args:
+            query (str): The text query to search for.
+            top_k (int, optional): The number of top results to return. Defaults to 5.
+
+        Returns:
+            List[Chunk]: A list of the most similar chunks.
+
+        """
+        raise NotImplementedError
 
     def __call__(self, chunks: Union[Chunk, List[Chunk]]) -> Any:
         """Write chunks using the default batch method when the instance is called.

@@ -208,91 +208,56 @@ class ChromaHandshake(BaseHandshake):
         """Return the string representation of the ChromaHandshake."""
         return f"ChromaHandshake(collection_name={self.collection_name})"
 
-    def search(
-        self,
-        query: Optional[str] = None,
-        embedding: Optional[List[float]] = None,
-        limit: int = 5,
-    ) -> List[Dict[str, Any]]:
+    def search(self, query: str, top_k: int = 5) -> List[Chunk]:
         """Search the Chroma collection for similar chunks.
 
         Args:
-            query: The query string to search for. If provided, `embedding` is ignored.
-            embedding: The embedding vector to search for.
-            limit: The maximum number of results to return.
+            query (str): The text query to search for.
+            top_k (int, optional): The number of top results to return. Defaults to 5.
 
         Returns:
-            List[Dict[str, Any]]: A list of dictionaries containing the matching chunks and their metadata.
+            List[Chunk]: A list of the most similar chunks.
 
         """
-        if query is None and embedding is None:
-            raise ValueError("Either 'query' or 'embedding' must be provided.")
+        if not query:
+            raise ValueError("'query' must be provided.")
 
         # Determine the query embeddings based on the input
-        if query:
-            query_embedding_result = cast("np.ndarray", self.embedding_function(query))
-            query_embeddings = [query_embedding_result.tolist()]
-        else:
-            query_embeddings = [embedding]  # type: ignore[list-item]
+        query_embedding_result = cast("np.ndarray", self.embedding_function(query))
+        query_embeddings = [query_embedding_result.tolist()]
 
         # Perform the query
         results = self.collection.query(
             query_embeddings=query_embeddings,
-            n_results=limit,
-            include=["metadatas", "documents", "distances"],
+            n_results=top_k,
+            include=["metadatas", "documents"], # We don't need distances anymore
         )
 
         # Safely extract results, checking for None values
-        ids_list = results.get("ids")
-        distances_list = results.get("distances")
         metadatas_list = results.get("metadatas")
         documents_list = results.get("documents")
 
         # Ensure all required result lists are present and not None
-        if (
-            ids_list is None
-            or distances_list is None
-            or metadatas_list is None
-            or documents_list is None
-        ):
+        if metadatas_list is None or documents_list is None:
             return []
 
         # We queried with one vector, so we get the first list of results
-        ids, distances, metadatas, documents = (
-            ids_list[0],
-            distances_list[0],
+        metadatas, documents = (
             metadatas_list[0],
             documents_list[0],
         )
 
-        # Process and format the results
-        matches = []
-        distance_metric = (
-            self.collection.metadata.get("hnsw:space", "l2")
-            if self.collection.metadata
-            else "l2"
-        )
+        # Process results and convert them back into Chunk objects
+        chunks = []
+        for metadata, document in zip(metadatas, documents):
+            # Reconstruct the Chunk object from the document text and metadata
+            if metadata is not None:
+                chunk = Chunk(
+                    text=document,
+                    start_index=metadata.get("start_index"),
+                    end_index=metadata.get("end_index"),
+                    token_count=metadata.get("token_count"),
+                )
+                chunks.append(chunk)
 
-        for id_val, distance, metadata, document in zip(
-            ids, distances, metadatas, documents
-        ):
-            similarity = None
-            if distance is not None:
-                if distance_metric == "cosine":
-                    similarity = 1.0 - distance
-                elif distance_metric == "l2":
-                    similarity = 1.0 - (distance**2 / 2)
-                else:  # 'ip' (inner product) is already a similarity score
-                    similarity = distance
-
-            match_data = {
-                "id": id_val,
-                "score": similarity,
-                "text": document,
-            }
-            if metadata:
-                match_data.update(metadata)
-
-            matches.append(match_data)
-
-        return matches
+        return chunks
