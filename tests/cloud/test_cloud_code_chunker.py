@@ -145,19 +145,19 @@ def test_cloud_code_chunker_initialization(mock_requests_get: Any) -> None:
     """Test that the code chunker can be initialized."""
     # Check if the chunk_size <= 0 raises an error
     with pytest.raises(ValueError):
-        CodeChunker(tokenizer_or_token_counter="gpt2", chunk_size=-1, api_key="test_key")
+        CodeChunker(tokenizer="gpt2", chunk_size=-1, api_key="test_key")
 
     with pytest.raises(ValueError):
-        CodeChunker(tokenizer_or_token_counter="gpt2", chunk_size=0, api_key="test_key")
+        CodeChunker(tokenizer="gpt2", chunk_size=0, api_key="test_key")
 
     # Finally, check if the attributes are set correctly
     chunker = CodeChunker(
-        tokenizer_or_token_counter="gpt2", 
+        tokenizer="gpt2", 
         chunk_size=512, 
         language="python",
         api_key="test_key"
     )
-    assert chunker.tokenizer_or_token_counter == "gpt2"
+    assert chunker.tokenizer == "gpt2"
     assert chunker.chunk_size == 512
     assert chunker.language == "python"
 
@@ -173,7 +173,7 @@ def test_cloud_code_chunker_simple(mock_requests_get: Any, mock_requests_post: A
     mock_requests_post.return_value = mock_response
     
     code_chunker = CodeChunker(
-        tokenizer_or_token_counter="gpt2",
+        tokenizer="gpt2",
         chunk_size=512,
         language="python",
         api_key="test_key"
@@ -202,7 +202,7 @@ def test_cloud_code_chunker_python_complex(mock_requests_get: Any, mock_requests
     mock_requests_post.return_value = mock_response
     
     code_chunker = CodeChunker(
-        tokenizer_or_token_counter="gpt2",
+        tokenizer="gpt2",
         chunk_size=50,
         language="python",
         api_key="test_key"
@@ -232,7 +232,7 @@ def test_cloud_code_chunker_javascript(mock_requests_get: Any, mock_requests_pos
     mock_requests_post.return_value = mock_response
     
     code_chunker = CodeChunker(
-        tokenizer_or_token_counter="gpt2",
+        tokenizer="gpt2",
         chunk_size=40,
         language="javascript",
         api_key="test_key"
@@ -260,7 +260,7 @@ def test_cloud_code_chunker_auto_language(mock_requests_get: Any, mock_requests_
     mock_requests_post.return_value = mock_response
     
     code_chunker = CodeChunker(
-        tokenizer_or_token_counter="gpt2",
+        tokenizer="gpt2",
         chunk_size=100,
         language="auto",
         api_key="test_key"
@@ -289,7 +289,7 @@ def test_cloud_code_chunker_no_nodes_support(mock_requests_get: Any, mock_reques
     mock_requests_post.return_value = mock_response
     
     code_chunker = CodeChunker(
-        tokenizer_or_token_counter="gpt2",
+        tokenizer="gpt2",
         chunk_size=512,
         language="python",
         api_key="test_key"
@@ -314,7 +314,7 @@ def test_cloud_code_chunker_batch(mock_requests_get: Any, mock_requests_post: An
     mock_requests_post.return_value = mock_response
     
     code_chunker = CodeChunker(
-        tokenizer_or_token_counter="gpt2",
+        tokenizer="gpt2",
         chunk_size=100,
         language="auto",
         api_key="test_key"
@@ -347,7 +347,7 @@ def test_cloud_code_chunker_empty_text(mock_requests_get: Any, mock_requests_pos
     mock_requests_post.return_value = mock_response
     
     code_chunker = CodeChunker(
-        tokenizer_or_token_counter="gpt2",
+        tokenizer="gpt2",
         chunk_size=512,
         language="python",
         api_key="test_key"
@@ -366,7 +366,7 @@ def test_cloud_code_chunker_whitespace_text(mock_requests_get: Any, mock_request
     mock_requests_post.return_value = mock_response
     
     code_chunker = CodeChunker(
-        tokenizer_or_token_counter="gpt2",
+        tokenizer="gpt2",
         chunk_size=512,
         language="python",
         api_key="test_key"
@@ -391,7 +391,7 @@ def test_cloud_code_chunker_chunk_size_adherence(mock_requests_get: Any, mock_re
     mock_requests_post.return_value = mock_response
     
     code_chunker = CodeChunker(
-        tokenizer_or_token_counter="gpt2",
+        tokenizer="gpt2",
         chunk_size=chunk_size,
         language="python",
         api_key="test_key"
@@ -416,7 +416,7 @@ def test_cloud_code_chunker_indices_continuity(mock_requests_get: Any, mock_requ
     mock_requests_post.return_value = mock_response
     
     code_chunker = CodeChunker(
-        tokenizer_or_token_counter="gpt2",
+        tokenizer="gpt2",
         chunk_size=60,
         language="python",
         api_key="test_key"
@@ -449,7 +449,7 @@ def test_cloud_code_chunker_different_tokenizers(mock_requests_get: Any, mock_re
         mock_requests_post.return_value = mock_response
         
         code_chunker = CodeChunker(
-            tokenizer_or_token_counter=tokenizer,
+            tokenizer=tokenizer,
             chunk_size=512,
             language="python",
             api_key="test_key"
@@ -473,7 +473,7 @@ def test_cloud_code_chunker_real_api(mock_requests_get: Any, mock_requests_post:
     mock_requests_post.return_value = mock_response
     
     code_chunker = CodeChunker(
-        tokenizer_or_token_counter="gpt2",
+        tokenizer="gpt2",
         chunk_size=512,
         language="python",
         api_key="test_key",  # Use a test key to avoid env dependency

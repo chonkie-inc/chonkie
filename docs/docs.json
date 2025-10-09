@@ -82,7 +82,8 @@
               "python-sdk/handshakes/tubropuffer-handshake",
               "python-sdk/handshakes/pinecone-handshake",
               "python-sdk/handshakes/pgvector-handshake",
-              "python-sdk/handshakes/mongodb-handshake"
+              "python-sdk/handshakes/mongodb-handshake",
+              "python-sdk/handshakes/elastic-handshake"
             ]
           },
           {
