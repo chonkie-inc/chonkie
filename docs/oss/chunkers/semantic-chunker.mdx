@@ -1,13 +1,12 @@
 ---
-title: "Semantic Chunker"
-description: "Split text into chunks based on semantic similarity with advanced features"
-icon: "vector-square"
+title: 'Semantic Chunker'
+description: 'Split text into chunks based on semantic similarity with advanced features'
+icon: 'vector-square'
 ---
 
 The `SemanticChunker` splits text into chunks based on semantic similarity, ensuring that related content stays together in the same chunk. This chunker now includes advanced features like Savitzky-Golay filtering for smoother boundary detection and skip-window merging for connecting related content that may not be consecutive. This chunker is inspired by the work of [Greg Kamradt](https://github.com/gkamradt).
 
 ## API Reference
-
 To use the `SemanticChunker` via the API, check out the [API reference documentation](../../api-reference/semantic-chunker).
 
 ## Installation
@@ -18,10 +17,7 @@ SemanticChunker requires additional dependencies for semantic capabilities. You 
 pip install "chonkie[semantic]"
 ```
 
-<Info>
-  For installation instructions, see the [Installation
-  Guide](/oss/installation).
-</Info>
+<Info>For installation instructions, see the [Installation Guide](/python-sdk/getting-started/installation).</Info>
 
 ## Initialization
 
@@ -49,70 +45,105 @@ chunker = SemanticChunker(
 ## Parameters
 
 <ParamField
-  path="embedding_model"
-  type="Union[str, BaseEmbeddings]"
-  default="minishlab/potion-base-32M"
+    path="embedding_model"
+    type="Union[str, BaseEmbeddings]"
+    default="minishlab/potion-base-32M"
 >
-  Model identifier or embedding model instance
-</ParamField>
-
-<ParamField path="threshold" type="float" default="0.8">
-  Similarity threshold for grouping sentences (0-1). Lower values create larger
-  groups.
-</ParamField>
-
-<ParamField path="chunk_size" type="int" default="2048">
-  Maximum tokens per chunk
-</ParamField>
-
-<ParamField path="similarity_window" type="int" default="3">
-  Number of sentences to consider for similarity calculation
-</ParamField>
-
-<ParamField path="min_sentences_per_chunk" type="int" default="1">
-  Minimum number of sentences per chunk
-</ParamField>
-
-<ParamField path="min_characters_per_sentence" type="int" default="24">
-  Minimum number of characters per sentence
-</ParamField>
-
-<ParamField path="skip_window" type="int" default="0">
-  Number of groups to skip when looking for similar content to merge. - `0`
-  (default): No skip-and-merge, uses standard semantic grouping - `1` or higher:
-  Enables merging of semantically similar groups within the skip window This
-  feature allows the chunker to connect related content that may not be
-  consecutive in the text.
-</ParamField>
-
-<ParamField path="filter_window" type="int" default="5">
-  Window length for the Savitzky-Golay filter used in boundary detection
-</ParamField>
-
-<ParamField path="filter_polyorder" type="int" default="3">
-  Polynomial order for the Savitzky-Golay filter
-</ParamField>
-
-<ParamField path="filter_tolerance" type="float" default="0.2">
-  Tolerance for the Savitzky-Golay filter boundary detection
+    Model identifier or embedding model instance
 </ParamField>
 
 <ParamField
-  path="delim"
-  type="Union[str, List[str]]"
-  default='[". ", "! ", "? ", "\n"]'
+    path="threshold"
+    type="float"
+    default="0.8"
 >
-  Delimiters to split sentences on
+    Similarity threshold for grouping sentences (0-1). Lower values create larger groups.
 </ParamField>
 
 <ParamField
-  path="include_delim"
-  type='Optional[Literal["prev", "next"]]'
-  default="prev"
+    path="chunk_size"
+    type="int"
+    default="2048"
 >
-  Include delimiters in the chunk text. Specify whether to include with the
-  previous or next sentence.
+    Maximum tokens per chunk
 </ParamField>
+
+<ParamField
+    path="similarity_window"
+    type="int"
+    default="3"
+>
+    Number of sentences to consider for similarity calculation
+</ParamField>
+
+<ParamField
+    path="min_sentences_per_chunk"
+    type="int"
+    default="1"
+>
+    Minimum number of sentences per chunk
+</ParamField>
+
+<ParamField
+    path="min_characters_per_sentence"
+    type="int"
+    default="24"
+>
+    Minimum number of characters per sentence
+</ParamField>
+
+<ParamField
+    path="skip_window"
+    type="int"
+    default="0"
+>
+    Number of groups to skip when looking for similar content to merge.
+    - `0` (default): No skip-and-merge, uses standard semantic grouping
+    - `1` or higher: Enables merging of semantically similar groups within the skip window
+    
+    This feature allows the chunker to connect related content that may not be consecutive in the text.
+</ParamField>
+
+<ParamField
+    path="filter_window"
+    type="int"
+    default="5"
+>
+    Window length for the Savitzky-Golay filter used in boundary detection
+</ParamField>
+
+<ParamField
+    path="filter_polyorder"
+    type="int"
+    default="3"
+>
+    Polynomial order for the Savitzky-Golay filter
+</ParamField>
+
+<ParamField
+    path="filter_tolerance"
+    type="float"
+    default="0.2"
+>
+    Tolerance for the Savitzky-Golay filter boundary detection
+</ParamField>
+
+<ParamField
+    path="delim"
+    type="Union[str, List[str]]"
+    default='[". ", "! ", "? ", "\n"]'
+>
+    Delimiters to split sentences on
+</ParamField>
+
+<ParamField
+    path="include_delim"
+    type='Optional[Literal["prev", "next"]]'
+    default="prev"
+>
+    Include delimiters in the chunk text. Specify whether to include with the previous or next sentence.
+</ParamField>
+
 
 ## Basic Usage
 
@@ -143,7 +174,7 @@ for chunk in chunks:
 ```python
 from chonkie import SemanticChunker
 
-text = """Artificial intelligence is transforming industries worldwide.
+text = """Artificial intelligence is transforming industries worldwide. 
 Machine learning algorithms can now process vast amounts of data efficiently.
 Deep learning models have achieved remarkable accuracy in complex tasks.
 
@@ -156,24 +187,21 @@ These systems leverage quantum mechanical phenomena for processing.
 Potential applications include cryptography and drug discovery."""
 
 # Create semantic chunker
-
 chunker = SemanticChunker(
-embedding_model="minishlab/potion-base-32M",
-threshold=0.75, # Higher threshold = more similar content grouped
-chunk_size=1024
+    embedding_model="minishlab/potion-base-32M",
+    threshold=0.75,  # Higher threshold = more similar content grouped
+    chunk_size=1024
 )
 
 chunks = chunker.chunk(text)
 
 # Analyze semantic groupings
-
 for i, chunk in enumerate(chunks):
-print(f"\n--- Semantic Group {i+1} ---")
-print(f"Content: {chunk.text[:100]}...")
-print(f"Token count: {chunk.token_count}")
-print(f"Theme: {chunk.text.split('.')[0]}") # First sentence as theme indicator
-
-````
+    print(f"\n--- Semantic Group {i+1} ---")
+    print(f"Content: {chunk.text[:100]}...")
+    print(f"Token count: {chunk.token_count}")
+    print(f"Theme: {chunk.text.split('.')[0]}")  # First sentence as theme indicator
+```
 </Accordion>
 
 <Accordion title="Skip-Window Merging">
@@ -205,8 +233,7 @@ chunks = chunker.chunk(text)
 for i, chunk in enumerate(chunks):
     print(f"\nGroup {i+1}: {len(chunk.text.split('.'))} sentences")
     print(f"Preview: {chunk.text[:80]}...")
-````
-
+```
 </Accordion>
 
 <Accordion title="Fine-tuned Similarity Control">
@@ -216,26 +243,24 @@ from chonkie import SemanticChunker
 text = """Your comprehensive document with various topics..."""
 
 # Experiment with different thresholds
-
 thresholds = [0.5, 0.7, 0.9]
 
 for threshold in thresholds:
-chunker = SemanticChunker(
-embedding_model="minishlab/potion-base-32M",
-threshold=threshold,
-chunk_size=512,
-similarity_window=3 # Consider 3 sentences for similarity
-)
-
+    chunker = SemanticChunker(
+        embedding_model="minishlab/potion-base-32M",
+        threshold=threshold,
+        chunk_size=512,
+        similarity_window=3  # Consider 3 sentences for similarity
+    )
+    
     chunks = chunker.chunk(text)
     print(f"\nThreshold {threshold}: {len(chunks)} chunks created")
-
+    
     # Lower threshold = larger, more diverse chunks
     # Higher threshold = smaller, more focused chunks
     avg_size = sum(c.token_count for c in chunks) / len(chunks)
     print(f"Average chunk size: {avg_size:.1f} tokens")
-
-````
+```
 </Accordion>
 
 <Accordion title="Batch Document Processing">
@@ -265,13 +290,12 @@ for doc_idx, chunks in enumerate(batch_results):
     print(f"\nDocument {doc_idx + 1}:")
     print(f"  Total chunks: {len(chunks)}")
     print(f"  Total tokens: {sum(c.token_count for c in chunks)}")
-
+    
     # Show semantic boundaries
     for i, chunk in enumerate(chunks):
         first_sentence = chunk.text.split('.')[0]
         print(f"  Chunk {i+1}: {first_sentence[:50]}...")
-````
-
+```
 </Accordion>
 
 <Accordion title="Custom Embeddings Integration">
@@ -280,35 +304,32 @@ from chonkie import SemanticChunker
 from chonkie.embeddings import AutoEmbeddings
 
 # Use AutoEmbeddings for automatic model selection
-
 embeddings = AutoEmbeddings.get_embeddings(
-model="sentence-transformers/all-MiniLM-L6-v2"
+    model="sentence-transformers/all-MiniLM-L6-v2"
 )
 
 chunker = SemanticChunker(
-embedding_model=embeddings,
-threshold=0.8,
-chunk_size=512
+    embedding_model=embeddings,
+    threshold=0.8,
+    chunk_size=512
 )
 
 # Or use specific embedding providers
-
 from chonkie.embeddings import OpenAIEmbeddings
 
 openai_embeddings = OpenAIEmbeddings(
-model="text-embedding-ada-002"
+    model="text-embedding-ada-002"
 )
 
 chunker = SemanticChunker(
-embedding_model=openai_embeddings,
-threshold=0.75,
-chunk_size=1024
+    embedding_model=openai_embeddings,
+    threshold=0.75,
+    chunk_size=1024
 )
 
 text = "Your text to chunk with custom embeddings..."
 chunks = chunker.chunk(text)
-
-````
+```
 </Accordion>
 
 <Accordion title="Advanced Filtering Options">
@@ -332,8 +353,7 @@ chunks = chunker.chunk(text)
 # especially in documents with gradual topic shifts
 for chunk in chunks:
     print(f"Smooth boundary chunk: {chunk.text[:60]}...")
-````
-
+```
 </Accordion>
 
 <Accordion title="Sentence Configuration">
@@ -341,19 +361,17 @@ for chunk in chunks:
 from chonkie import SemanticChunker
 
 # Customize sentence detection
-
 chunker = SemanticChunker(
-embedding_model="minishlab/potion-base-32M",
-threshold=0.7,
-chunk_size=1024,
-min_sentences_per_chunk=3, # At least 3 sentences per chunk
-min_characters_per_sentence=30, # Filter out short fragments
-delim=[". ", "! ", "? ", "\n\n"], # Custom sentence delimiters
-include_delim="prev" # Include delimiter with previous sentence
+    embedding_model="minishlab/potion-base-32M",
+    threshold=0.7,
+    chunk_size=1024,
+    min_sentences_per_chunk=3,   # At least 3 sentences per chunk
+    min_characters_per_sentence=30,  # Filter out short fragments
+    delim=[". ", "! ", "? ", "\n\n"],  # Custom sentence delimiters
+    include_delim="prev"  # Include delimiter with previous sentence
 )
 
 # Text with various sentence structures
-
 text = """Short sentence. This is a much longer sentence with more detail.
 Question here? Exclamation point! New paragraph starts here.
 
@@ -362,10 +380,9 @@ Another paragraph with different content..."""
 chunks = chunker.chunk(text)
 
 for chunk in chunks:
-sentences = chunk.text.split('. ')
-print(f"Chunk with {len(sentences)} sentences")
-
-````
+    sentences = chunk.text.split('. ')
+    print(f"Chunk with {len(sentences)} sentences")
+```
 </Accordion>
 
 <Accordion title="RAG Pipeline Integration">
@@ -399,8 +416,7 @@ for chunk in chunks:
     print(f"Chunk ready for indexing: {chunk.text[:50]}...")
     if hasattr(chunk, 'embeddings'):
         print(f"  Embedding shape: {chunk.embeddings.shape}")
-````
-
+```
 </Accordion>
 
 </AccordionGroup>
@@ -414,14 +430,13 @@ The SemanticChunker uses Savitzky-Golay filtering for smoother boundary detectio
 ### Skip-Window Merging
 
 When `skip_window > 0`, the chunker can merge semantically similar groups that are not consecutive. This is useful for:
-
 - Documents with alternating topics
 - Content with recurring themes
 - Technical documents with distributed related sections
 
 ## Supported Embeddings
 
-SemanticChunker supports multiple embedding providers through Chonkie's embedding system. See the [Embeddings Overview](/oss/embeddings/overview) for more information.
+SemanticChunker supports multiple embedding providers through Chonkie's embedding system. See the [Embeddings Overview](/python-sdk/embeddings/overview) for more information.
 
 ## Return Type
 
@@ -454,7 +469,6 @@ chunker = LegacySemanticChunker(
 ```
 
 For the SDPM (Semantic Double-Pass Merging) functionality, you can either:
-
 1. Use the new SemanticChunker with `skip_window > 0` (recommended)
 2. Use the legacy SDPMChunker (see [SDPM Chunker documentation](./sdpm-chunker))
-   </Note>
+</Note>

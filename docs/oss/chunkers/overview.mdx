@@ -37,14 +37,6 @@ Chonkie provides multiple chunking strategies to handle different text processin
     Groups content based on semantic similarity. Best for preserving context and
     topical coherence.
   </Card>
-  <Card
-    title="SDPMChunker"
-    icon="layer-group"
-    href="/oss/chunkers/sdpm-chunker"
-  >
-    Chunks using Semantic Double-Pass Merging (SDPM) algorithm, best for
-    maintaining topical coherence when text has frequent breaks.
-  </Card>
   <Card title="LateChunker" icon="clock" href="/oss/chunkers/late-chunker">
     Chunks using Late Chunking algorithm, best for higher recall in your RAG
     applications.
@@ -79,24 +71,24 @@ Chonkie provides multiple chunking strategies to handle different text processin
 
 Different chunkers are available depending on your installation:
 
-| Chunker          | Default | embeddings | 'all' | Chonkie Cloud |
-| ---------------- | :-----: | :--------: | :---: | :-----------: |
-| TokenChunker     |   ✅    |     ✅     |  ✅   |      ✅       |
-| SentenceChunker  |   ✅    |     ✅     |  ✅   |      ✅       |
-| RecursiveChunker |   ✅    |     ✅     |  ✅   |      ✅       |
-| TableChunker     |   ✅    |     ✅     |  ✅   |      ✅       |
-| CodeChunker      |   ❌    |     ✅     |  ✅   |      ✅       |
-| SemanticChunker  |   ❌    |     ✅     |  ✅   |      ✅       |
-| SDPMChunker      |   ❌    |     ✅     |  ✅   |      ✅       |
-| LateChunker      |   ❌    |     ✅     |  ✅   |      ✅       |
-| NeuralChunker    |   ❌    |     ✅     |  ✅   |      ✅       |
-| SlumberChunker   |   ❌    |     ✅     |  ✅   |      ✅       |
+| Chunker          |                        Default                         |                       embeddings                       |                    `"chonkie[all]"`                    |                   `@chonkiejs/core`                    |                          API                           |
+| ---------------- | :----------------------------------------------------: | :----------------------------------------------------: | :----------------------------------------------------: | :----------------------------------------------------: | :----------------------------------------------------: |
+| TokenChunker     | <Icon icon="check" color="#005c00" iconType="solid" /> | <Icon icon="check" color="#005c00" iconType="solid" /> | <Icon icon="check" color="#005c00" iconType="solid" /> | <Icon icon="check" color="#005c00" iconType="solid" /> | <Icon icon="check" color="#005c00" iconType="solid" /> |
+| SentenceChunker  | <Icon icon="check" color="#005c00" iconType="solid" /> | <Icon icon="check" color="#005c00" iconType="solid" /> | <Icon icon="check" color="#005c00" iconType="solid" /> |   <Icon icon="x" color="#ff0000" iconType="solid" />   | <Icon icon="check" color="#005c00" iconType="solid" /> |
+| RecursiveChunker | <Icon icon="check" color="#005c00" iconType="solid" /> | <Icon icon="check" color="#005c00" iconType="solid" /> | <Icon icon="check" color="#005c00" iconType="solid" /> | <Icon icon="check" color="#005c00" iconType="solid" /> | <Icon icon="check" color="#005c00" iconType="solid" /> |
+| TableChunker     | <Icon icon="check" color="#005c00" iconType="solid" /> | <Icon icon="check" color="#005c00" iconType="solid" /> | <Icon icon="check" color="#005c00" iconType="solid" /> |   <Icon icon="x" color="#ff0000" iconType="solid" />   | <Icon icon="check" color="#005c00" iconType="solid" /> |
+| CodeChunker      |   <Icon icon="x" color="#ff0000" iconType="solid" />   | <Icon icon="check" color="#005c00" iconType="solid" /> | <Icon icon="check" color="#005c00" iconType="solid" /> |   <Icon icon="x" color="#ff0000" iconType="solid" />   | <Icon icon="check" color="#005c00" iconType="solid" /> |
+| SemanticChunker  |   <Icon icon="x" color="#ff0000" iconType="solid" />   | <Icon icon="check" color="#005c00" iconType="solid" /> | <Icon icon="check" color="#005c00" iconType="solid" /> |   <Icon icon="x" color="#ff0000" iconType="solid" />   | <Icon icon="check" color="#005c00" iconType="solid" /> |
+| LateChunker      |   <Icon icon="x" color="#ff0000" iconType="solid" />   | <Icon icon="check" color="#005c00" iconType="solid" /> | <Icon icon="check" color="#005c00" iconType="solid" /> |   <Icon icon="x" color="#ff0000" iconType="solid" />   | <Icon icon="check" color="#005c00" iconType="solid" /> |
+| NeuralChunker    |   <Icon icon="x" color="#ff0000" iconType="solid" />   | <Icon icon="check" color="#005c00" iconType="solid" /> | <Icon icon="check" color="#005c00" iconType="solid" /> |   <Icon icon="x" color="#ff0000" iconType="solid" />   | <Icon icon="check" color="#005c00" iconType="solid" /> |
+| SlumberChunker   |   <Icon icon="x" color="#ff0000" iconType="solid" />   | <Icon icon="check" color="#005c00" iconType="solid" /> | <Icon icon="check" color="#005c00" iconType="solid" /> |   <Icon icon="x" color="#ff0000" iconType="solid" />   | <Icon icon="check" color="#005c00" iconType="solid" /> |
 
 ## Common Interface
 
 All chunkers share a consistent interface:
 
-```python
+<CodeGroup>
+```python Python
 # Single text chunking
 chunks = chunker.chunk(text)
 
@@ -106,6 +98,13 @@ chunks = chunker.chunk_batch(texts)
 # Direct calling
 chunks = chunker(text)  # or chunker([text1, text2])
 ```
+
+```javascript JavaScript
+// Single text chunking
+const chunks = await chunker.chunk(text);
+```
+
+</CodeGroup>
 
 ## F.A.Q.
 
