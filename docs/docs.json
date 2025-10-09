@@ -40,6 +40,7 @@
               "python-sdk/chunkers/token-chunker",
               "python-sdk/chunkers/sentence-chunker",
               "python-sdk/chunkers/recursive-chunker",
+              "python-sdk/chunkers/table-chunker",
               "python-sdk/chunkers/code-chunker",
               "python-sdk/chunkers/semantic-chunker",
               "python-sdk/chunkers/sdpm-chunker",
@@ -82,7 +83,8 @@
               "python-sdk/handshakes/tubropuffer-handshake",
               "python-sdk/handshakes/pinecone-handshake",
               "python-sdk/handshakes/pgvector-handshake",
-              "python-sdk/handshakes/mongodb-handshake"
+              "python-sdk/handshakes/mongodb-handshake",
+              "python-sdk/handshakes/elastic-handshake"
             ]
           },
           {

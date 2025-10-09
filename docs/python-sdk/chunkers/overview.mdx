@@ -72,6 +72,13 @@ Chonkie provides multiple chunking strategies to handle different text processin
   >
     Agentic chunking using generative models (LLMs) via the Genie interface for S-tier chunk quality. 🦛🧞
   </Card>
+  <Card
+    title="TableChunker"
+    icon="table-cells"
+    href="/python-sdk/chunkers/table-chunker"
+  >
+    Splits large markdown tables into smaller, manageable chunks by row, preserving headers. Great for tabular data in RAG and LLM pipelines.
+  </Card>
 </CardGroup>
 
 ## Availability
@@ -83,6 +90,7 @@ Different chunkers are available depending on your installation:
 | TokenChunker    | ✅      | ✅         | ✅    | ✅            |
 | SentenceChunker | ✅      | ✅         | ✅    | ✅            |
 | RecursiveChunker| ✅      | ✅         | ✅    | ✅            |
+| TableChunker    | ✅      | ✅         | ✅    | ✅            |
 | CodeChunker     | ❌      | ✅         | ✅    | ✅            |
 | SemanticChunker | ❌      | ✅         | ✅    | ✅            |
 | SDPMChunker     | ❌      | ✅         | ✅    | ✅            |

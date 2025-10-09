@@ -48,6 +48,7 @@ from .genie import (
 from .handshakes import (
     BaseHandshake,
     ChromaHandshake,
+    ElasticHandshake,
     MongoDBHandshake,
     PgvectorHandshake,
     PineconeHandshake,
