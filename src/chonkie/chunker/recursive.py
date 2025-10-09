@@ -9,7 +9,6 @@ from itertools import accumulate
 from typing import List, Optional, Tuple, Union
 
 from chonkie.chunker.base import BaseChunker
-
 from chonkie.pipeline import chunker
 from chonkie.tokenizer import TokenizerProtocol
 from chonkie.types import (
