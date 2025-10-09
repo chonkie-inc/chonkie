@@ -450,25 +450,3 @@ class Chunk:
     end_index: int
     token_count: int
 ```
-
-## Legacy Versions
-
-<Note>
-The original SemanticChunker (pre-v1.2.0) with different parameter names and behavior is available in the legacy module:
-
-```python
-from chonkie.legacy import SemanticChunker as LegacySemanticChunker
-
-# Uses old parameter names and behavior
-chunker = LegacySemanticChunker(
-    mode="window",
-    min_sentences=1,
-    min_chunk_size=2,
-    threshold_step=0.01
-)
-```
-
-For the SDPM (Semantic Double-Pass Merging) functionality, you can either:
-1. Use the new SemanticChunker with `skip_window > 0` (recommended)
-2. Use the legacy SDPMChunker (see [SDPM Chunker documentation](./sdpm-chunker))
-</Note>
