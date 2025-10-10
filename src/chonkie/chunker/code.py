@@ -300,9 +300,9 @@ class CodeChunker(BaseChunker):
         return chunk_texts
 
     def _create_chunks(self,
-                   texts: List[str],
-                   token_counts: List[int],
-                   node_groups: List[List["Node"]]) -> List[Chunk]:
+                       texts: List[str],
+                       token_counts: List[int],
+                       node_groups: List[List["Node"]]) -> List[Chunk]:
         """Create Code Chunks."""
         chunks = []
         current_index = 0
@@ -326,15 +326,21 @@ class CodeChunker(BaseChunker):
     def chunk(self, text: str) -> List[Chunk]:
         """Recursively chunks the code based on context from tree-sitter."""
         if not text.strip(): # Handle empty or whitespace-only input
+            logger.debug("Empty or whitespace-only code provided")
             return []
 
+        logger.debug(f"Starting code chunking for text of length {len(text)}")
+
         original_text_bytes = text.encode("utf-8") # Store bytes
-        
+
         # At this point, if the language is auto, we need to detect the language
         # and initialize the parser
         if self.language == "auto":
             language = self._detect_language(original_text_bytes)
+            logger.info(f"Auto-detected code language: {language}")
             self.parser = get_parser(language) # type: ignore
+        else:
+            logger.debug(f"Using configured language: {self.language}")
 
         # Initialize node_groups here to ensure it's available in the finally block scope
         node_groups = []
@@ -343,12 +349,15 @@ class CodeChunker(BaseChunker):
             tree: Tree = self.parser.parse(original_text_bytes) # type: ignore
             root_node: Node = tree.root_node # type: ignore
 
-            # Get the node_groups 
+            # Get the node_groups
             node_groups, token_counts = self._group_child_nodes(root_node)
             texts: List[str] = self._get_texts_from_node_groups(node_groups, original_text_bytes)
 
+            # Create chunks inside the try block to ensure node_groups is available
             chunks = self._create_chunks(texts, token_counts, node_groups)
-        finally: 
+            logger.info(f"Created {len(chunks)} code chunks from parsed syntax tree")
+
+        finally:
             # Clean up the tree and root_node if they are not needed
             if not self.include_nodes:
                 if 'tree' in locals():
@@ -358,7 +367,7 @@ class CodeChunker(BaseChunker):
                 # Clear node_groups only after it's been used by _create_chunks
                 node_groups.clear()
 
-        return chunks 
+        return chunks
         
     def __repr__(self) -> str:
         """Return the string representation of the CodeChunker."""
