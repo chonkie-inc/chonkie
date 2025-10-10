@@ -44,7 +44,6 @@
               "oss/chunkers/table-chunker",
               "oss/chunkers/code-chunker",
               "oss/chunkers/semantic-chunker",
-              "oss/chunkers/sdpm-chunker",
               "oss/chunkers/late-chunker",
               "oss/chunkers/neural-chunker",
               "oss/chunkers/slumber-chunker"
@@ -105,6 +104,12 @@
             "pages": [
               "oss/experimental/overview",
               "oss/experimental/code-chunker"
+            ]
+          },
+          {
+            "group": "Deprecated",
+            "pages": [
+              "oss/chunkers/sdpm-chunker"
             ]
           },
           {
