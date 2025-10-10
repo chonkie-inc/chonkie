@@ -1,7 +1,7 @@
 """Custom base types for Chonkie."""
 
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Iterator, List, Optional, Union
+from typing import TYPE_CHECKING, Iterator, List, Optional, Union, Any, Dict
 from uuid import uuid4
 
 if TYPE_CHECKING:
@@ -126,3 +126,22 @@ class Chunk:
     def copy(self) -> "Chunk":
         """Return a deep copy of the chunk."""
         return Chunk.from_dict(self.to_dict())
+ 
+
+@dataclass
+class HandshakeSearchResult:
+    """Represents a single search result from a Handshake (Vector DB)."""
+    id: str
+    text: str
+    score: float
+    metadata: Dict[str, Any]
+    
+@dataclass
+class HandshakeFileMetadata:
+    """Represents metadata for a file in a Handshake (Vector DB)."""
+    id: str
+    metadata: Dict[str, Any]
+    text_size: Optional[int] = field(default=None) # Use field(default=None) for dataclasses
+    chunk_count: Optional[int] = field(default=None)
+
+MetadataType = Dict[str, Any]

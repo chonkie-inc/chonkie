@@ -1,5 +1,6 @@
 """Qdrant Handshake to export Chonkie's Chunks into a Qdrant collection."""
 
+import asyncio
 import importlib.util as importutil
 from typing import (
     TYPE_CHECKING,
@@ -13,7 +14,7 @@ from typing import (
 from uuid import NAMESPACE_OID, uuid5
 
 from chonkie.embeddings import AutoEmbeddings, BaseEmbeddings
-from chonkie.types import Chunk
+from chonkie.types import Chunk, HandshakeSearchResult, HandshakeFileMetadata, MetadataType
 
 from .base import BaseHandshake
 from .utils import generate_random_collection_name
@@ -198,35 +199,55 @@ class QdrantHandshake(BaseHandshake):
         """Return the string representation of the QdrantHandshake."""
         return f"QdrantHandshake(collection_name={self.collection_name})"
 
-    def search(
+    async def search(
         self,
-        query: Optional[str] = None,
-        embedding: Optional[List[float]] = None,
-        limit: int = 5,
-    ) -> List[Dict[str, Any]]:
-        """Retrieve the top_k most similar chunks to the query.
+        query: str,
+        k: int = 4,
+    ) -> List[HandshakeSearchResult]:
+        """Retrieve the top_k most similar chunks to the query string.
 
         Args:
-            query: Optional[str]: The query string to search for.
-            embedding: Optional[List[float]]: The embedding vector to search for. If provided, `query` is ignored.
-            limit: int: The number of top similar chunks to retrieve.
+            query: str: The query string to search for.
+            k: int: The number of top similar chunks to retrieve.
 
         Returns:
-            List[Dict[str, Any]]: The list of most similar chunks with their metadata.
-
+            List[HandshakeSearchResult]: The list of most similar chunks with scores and metadata.
         """
-        if embedding is None and query is None:
-            raise ValueError("Either query or embedding must be provided")
-        if query is not None:
-            embedding = self.embedding_model.embed(query).tolist()
-
-        results = self.client.query_points(
+        if not self.client:
+            raise ValueError("Qdrant client not initialized. Call handshake.connect() or initialize client.")
+        
+        # 1. Convert the query string into a query vector
+        query_vector: List[float] = self.embedding_model.embed(query).tolist()
+        
+        # 2. Search Qdrant for the top k similar vectors
+        results = await asyncio.to_thread(
+            self.client.search,  # Pass the synchronous function itself
             collection_name=self.collection_name,
-            query=embedding,
-            limit=limit,
+            query_vector=query_vector,
+            limit=k,
             with_payload=True,
         )
-        return [
-            {"id": result["id"], "score": result["score"], **result["payload"]}
-            for result in results.dict()["points"]
-        ]
+
+        # 3. Process the results into the standard HandshakeSearchResult list
+        search_results: List[HandshakeSearchResult] = []
+        for point in results:
+            # Payload keys are defined in the _generate_payload method
+            payload = point.payload
+            
+            # Construct HandshakeFileMetadata using dictionary literal syntax {} (Fixed TypedDict instantiation)
+            metadata: HandshakeFileMetadata = {
+                "type": "text", # (Fixed MetadataType.TEXT.value error)
+                "source": "Qdrant Handshake",
+                "chunk_id": payload.get("start_index", 0),
+            }
+
+            search_results.append(
+                HandshakeSearchResult(
+                    id=str(point.id), # <--- ADD THIS LINE
+                    text=payload.get("text", "Content not found."),
+                    score=point.score,
+                    metadata=metadata,
+                )
+            )
+
+        return search_results

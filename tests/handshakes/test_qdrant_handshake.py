@@ -1,6 +1,7 @@
 """Test the QdrantHandshake class."""
 import os
 import uuid
+import asyncio # <--- ADD THIS
 from typing import List
 from unittest.mock import Mock, patch
 
@@ -12,7 +13,7 @@ from qdrant_client.http.models import Distance, VectorParams
 
 from chonkie.embeddings import AutoEmbeddings, BaseEmbeddings
 from chonkie.handshakes.qdrant import QdrantHandshake
-from chonkie.types import Chunk
+from chonkie.types import Chunk, HandshakeSearchResult, MetadataType # <--- UPDATE THIS
 
 # Define the default model name for clarity
 DEFAULT_EMBEDDING_MODEL = "minishlab/potion-retrieval-32M"
@@ -331,3 +332,46 @@ def test_generate_payload(sample_chunk: Chunk, real_embeddings: BaseEmbeddings) 
     }
     # Cleanup client implicitly created by handshake
     handshake.client.delete_collection(collection_name="test-payload-gen-real")
+
+@pytest.mark.asyncio
+async def test_qdrant_handshake_search(real_embeddings: BaseEmbeddings) -> None:
+    """Test the Qdrant handshake search method."""
+    collection_name = "test-handshake-search-real"
+    client = qdrant_client.QdrantClient(":memory:")
+    handshake = QdrantHandshake(
+        client=client,
+        collection_name=collection_name,
+        embedding_model=real_embeddings,
+    )
+
+    # 1. Write some data with distinct content
+    data = [
+        Chunk(text="The sun is shining brightly, a beautiful summer day.", start_index=0, end_index=50, token_count=10),
+        Chunk(text="It is cold outside, and the wind is blowing.", start_index=51, end_index=95, token_count=9),
+    ]
+    handshake.write(data)
+
+    # 2. Add a slight delay for in-memory persistence/indexing
+    await asyncio.sleep(0.5) 
+
+    # 3. Test search with query for the first chunk's content
+    query = "hot summer weather"
+    results = await handshake.search(query=query, k=1)
+    
+    # 4. Assertions
+    assert len(results) == 1
+    # The result should be the type we just implemented in qdrant.py
+    assert isinstance(results[0], HandshakeSearchResult)
+    
+    # Check that the first (most similar) chunk is the one about the sun
+    assert results[0].text == "The sun is shining brightly, a beautiful summer day."
+    assert results[0].score > 0.0 # Score should be meaningful
+    
+    # Check metadata structure (based on how we populated it in qdrant.py)
+    assert results[0].metadata["type"] == "text"
+    assert results[0].metadata["source"] == "Qdrant Handshake"
+    # start_index=0 used as chunk_id proxy
+    assert results[0].metadata["chunk_id"] == 0
+
+    # Cleanup
+    client.delete_collection(collection_name=collection_name)

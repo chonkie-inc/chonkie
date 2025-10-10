@@ -24,11 +24,24 @@ except ImportError:
     SPLIT_AVAILABLE = False
 
 # Import the optimized Savitzky-Golay filter (pure C implementation)
-from .c_extensions.savgol import (
-    filter_split_indices,
-    find_local_minima_interpolated,
-    windowed_cross_similarity,
-)
+try:
+    from .c_extensions.savgol import (
+        filter_split_indices,
+        find_local_minima_interpolated,
+        windowed_cross_similarity,
+    )
+except ImportError:
+    # Fallback/stub functions to allow package import when C-extensions fail.
+    # We must ensure all imported names exist, but raise an error if they are called.
+    def _c_extension_error(*args, **kwargs):
+        raise ImportError(
+            "C-extension 'savgol' failed to load. "
+            "The `SemanticChunker` cannot be used until the 'chonkie' package is properly compiled (e.g., using `pip install .`)."
+        )
+        
+    filter_split_indices = _c_extension_error
+    find_local_minima_interpolated = _c_extension_error
+    windowed_cross_similarity = _c_extension_error
 
 
 class SemanticChunker(BaseChunker):

@@ -1,6 +1,6 @@
 """Module for chunkers."""
 
-from .base import Chunk
+from .base import Chunk, HandshakeSearchResult, HandshakeFileMetadata, MetadataType
 from .code import LanguageConfig, MergeRule, SplitRule
 from .document import Document
 from .markdown import MarkdownCode, MarkdownDocument, MarkdownImage, MarkdownTable
@@ -9,6 +9,9 @@ from .sentence import Sentence
 
 __all__ = [
     "Chunk",
+    "HandshakeSearchResult",   
+    "HandshakeFileMetadata",
+    "MetadataType",   
     "RecursiveLevel",
     "RecursiveRules",
     "Sentence",
