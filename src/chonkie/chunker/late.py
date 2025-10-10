@@ -41,9 +41,6 @@ class LateChunker(RecursiveChunker):
             **kwargs: Additional keyword arguments.
 
         """
-        # Lazy import all the dependencies on initialization
-        self._import_dependencies()
-
         # set all the additional attributes
         if isinstance(embedding_model, SentenceTransformerEmbeddings):
             self.embedding_model = embedding_model
@@ -170,12 +167,3 @@ class LateChunker(RecursiveChunker):
             )
         return result
 
-    def _import_dependencies(self) -> None:
-        """Lazy import dependencies for the chunker implementation.
-
-        This method should be implemented by all chunker implementations that require
-        additional dependencies. It lazily imports the dependencies only when they are needed.
-
-        Note: numpy is now a base dependency and is imported at module level.
-        """
-        pass

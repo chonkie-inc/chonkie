@@ -26,8 +26,7 @@ class BaseEmbeddings(ABC):
             NotImplementedError: If any of the abstract methods are not implemented
 
         """
-        # Lazy import dependencies if they are not already imported
-        self._import_dependencies()
+        super().__init__()
 
     @abstractmethod
     def embed(self, text: str) -> np.ndarray:
@@ -59,16 +58,6 @@ class BaseEmbeddings(ABC):
 
         """
         return [self.embed(text) for text in texts]
-
-    def _import_dependencies(self) -> None:
-        """Lazy import dependencies for the embeddings implementation.
-
-        This method should be implemented by all embeddings implementations that require
-        additional dependencies. It lazily imports the dependencies only when they are needed.
-
-        Note: numpy is now a base dependency and doesn't need to be checked here.
-        """
-        pass
 
     def similarity(self, u: np.ndarray, v: np.ndarray) -> np.float32:
         """Compute the similarity between two embeddings.
@@ -102,18 +91,6 @@ class BaseEmbeddings(ABC):
         """
         raise NotImplementedError
 
-    def _is_available(self) -> bool:
-        """Check if this embeddings implementation is available (dependencies installed).
-
-        Override this method to add custom dependency checks.
-
-        Note: numpy is now a base dependency and is always available.
-
-        Returns:
-            bool: True if the embeddings implementation is available, False otherwise
-
-        """
-        return True
 
     @abstractmethod
     def get_tokenizer(self) -> Any:
