@@ -30,10 +30,10 @@ from chonkie import CodeChunker
 
 # Basic initialization with default parameters
 chunker = CodeChunker(
-    language="python",                 # Specify the programming language
-    tokenizer_or_token_counter="character", # Default tokenizer (or use "gpt2", etc.)
-    chunk_size=2048,                    # Maximum tokens per chunk
-    include_nodes=False                # Optionally include AST nodes in output
+    language="python",      # Specify the programming language
+    tokenizer="character",  # Default tokenizer (or use "gpt2", etc.)
+    chunk_size=2048,        # Maximum tokens per chunk
+    include_nodes=False     # Optionally include AST nodes in output
 )
 
 # Using a custom tokenizer
@@ -41,7 +41,7 @@ from tokenizers import Tokenizer
 custom_tokenizer = Tokenizer.from_pretrained("your-tokenizer")
 chunker = CodeChunker(
     language="javascript",
-    tokenizer_or_token_counter=custom_tokenizer,
+    tokenizer=custom_tokenizer,
     chunk_size=2048
 )
 ```
@@ -54,7 +54,7 @@ chunker = CodeChunker(
 </ParamField>
 
 <ParamField
-  path="tokenizer_or_token_counter"
+  path="tokenizer"
   type="Union[str, Callable, Any]"
   default="character"
 >
