@@ -25,7 +25,7 @@ class TableChef(BaseChef):
         except ImportError as e:
             raise ImportError("Pandas is required to use TableChef. Please install it with `pip install chonkie[table]`.") from e
 
-    def process(self, path: Union[str, Path]) -> Union[str, List[MarkdownTable], None]:
+    def process(self, path: Union[str, Path]) -> Union[MarkdownTable, List[MarkdownTable], None]:
         """Process a CSV file and return a pandas DataFrame.
 
         Args:
@@ -41,16 +41,18 @@ class TableChef(BaseChef):
             str_path = str(path)
             if str_path.endswith(".csv"):
                 df = pd.read_csv(str_path)
-                return df.to_markdown(index=False)
+                text = df.to_markdown(index=False)
+                return MarkdownTable(content=text, start_index=0, end_index=len(text))
             elif str_path.endswith(".xls") or str_path.endswith(".xlsx"):
                 df = pd.read_excel(str_path)
-                return df.to_markdown(index=False)
+                text = df.to_markdown(index=False)
+                return MarkdownTable(content=text, start_index=0, end_index=len(text))
         # else string is a markedown table
         return self.extract_tables_from_markdown(str(path))
 
     def process_batch(
         self, paths: Union[List[str], List[Path]]
-    ) -> List[Union[str, List[MarkdownTable], None]]:
+    ) -> List[Union[MarkdownTable, List[MarkdownTable], None]]:
         """Process multiple CSV files and return a list of DataFrames.
 
         Args:
@@ -64,7 +66,7 @@ class TableChef(BaseChef):
 
     def __call__(
         self, path: Union[str, Path, List[str], List[Path]]
-    ) -> Union[str, List[MarkdownTable], None, List[Union[str, List[MarkdownTable], None]]]:
+    ) -> Union[MarkdownTable, List[MarkdownTable], None, List[Union[MarkdownTable, List[MarkdownTable], None]]]:
         """Process one or more CSV files and return DataFrame(s)."""
         if isinstance(path, (list, tuple)):
             return self.process_batch(path)
