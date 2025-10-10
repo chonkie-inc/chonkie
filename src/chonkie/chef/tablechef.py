@@ -59,16 +59,18 @@ class TableChef(BaseChef):
                 markdown = df.to_markdown(index=False)
                 return self.parse(markdown)
             elif str_path.endswith(".xls") or str_path.endswith(".xlsx"):
-                df = pd.read_excel(str_path)
-                markdown = df.to_markdown(index=False)
-                return self.parse(markdown)
-            else:
-                # Assume it's a markdown file
-                markdown = self.read(path)
-                return self.parse(markdown)
-        else:
-            # Treat as markdown string/path
-            return self.parse(str(path))
+                all_df = pd.read_excel(str_path,sheet_name=None)
+                if len(all_df.keys()) > 1:
+                    out: List[MarkdownTable] = []
+                    for df in all_df.values():
+                        text = df.to_markdown(index=False)
+                        out.append(MarkdownTable(content=text, start_index=0, end_index=len(text)))
+                    return out
+                else:
+                    df = list(all_df.values())[0]
+                    text = df.to_markdown(index=False)
+                    return MarkdownTable(content=text, start_index=0, end_index=len(text))
+        return self.extract_tables_from_markdown(str(path))
 
     def process_batch(
         self, paths: Union[List[str], List[Path]]
@@ -79,7 +81,7 @@ class TableChef(BaseChef):
             paths (Union[List[str], List[Path]]): Paths to the CSV files.
 
         Returns:
-            List[pd.DataFrame]: List of DataFrames.
+            List[Union[MarkdownTable, List[MarkdownTable], None]]: List of DataFrames or None for each file.
 
         """
         return [self.process(path) for path in paths]
@@ -87,7 +89,7 @@ class TableChef(BaseChef):
     def __call__(
         self, path: Union[str, Path, List[str], List[Path]]
     ) -> Union[MarkdownTable, List[MarkdownTable], None, List[Union[MarkdownTable, List[MarkdownTable], None]]]:
-        """Process one or more CSV files and return DataFrame(s)."""
+        """Process a single file or a batch of files."""
         if isinstance(path, (list, tuple)):
             return self.process_batch(path)
         elif isinstance(path, (str, Path)):
