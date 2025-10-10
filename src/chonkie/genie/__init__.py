@@ -4,6 +4,7 @@ from .azure_openai import AzureOpenAIGenie
 from .base import BaseGenie
 from .gemini import GeminiGenie
 from .openai import OpenAIGenie
+from .mistral import MistralGenie
 
 # Add all genie classes to __all__
 __all__ = [
@@ -11,4 +12,5 @@ __all__ = [
     "BaseGenie",
     "GeminiGenie",
     "OpenAIGenie",
+    "MistralGenie",
 ]
