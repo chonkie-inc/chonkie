@@ -12,6 +12,7 @@ from .base import BaseEmbeddings
 
 if TYPE_CHECKING:
     import tiktoken
+    from openai import OpenAI
 
 
 class OpenAIEmbeddings(BaseEmbeddings):
