@@ -9,6 +9,7 @@ import pandas as pd
 import pytest
 
 from chonkie import TableChef
+from chonkie.types import MarkdownDocument
 
 
 class TestTableChef:
