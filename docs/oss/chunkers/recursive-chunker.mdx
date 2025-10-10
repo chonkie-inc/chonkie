@@ -32,12 +32,13 @@ Find more information about the rules in the [Additional Information](#additiona
 from chonkie import RecursiveChunker, RecursiveRules
 
 chunker = RecursiveChunker(
-    tokenizer: Union[str, Callable, Any] = "character",
-    chunk_size: int = 2048,
-    rules: RecursiveRules = RecursiveRules(),
-    min_characters_per_chunk: int = 24,
+tokenizer: Union[str, Callable, Any] = "character",
+chunk_size: int = 2048,
+rules: RecursiveRules = RecursiveRules(),
+min_characters_per_chunk: int = 24,
 )
-```
+
+````
 ```javascript JavaScript
 import { RecursiveChunker } from "@chonkiejs/core"
 
@@ -47,7 +48,8 @@ const chunker = await RecursiveChunker.create({
   rules: new RecursiveRules(),
   minCharactersPerChunk: 24
 });
-```
+````
+
 </CodeGroup>
 
 You can also initialize the RecursiveChunker using a recipe. Recipes are pre-defined rules for common chunking tasks.
@@ -75,7 +77,7 @@ chunker = RecursiveChunker.from_recipe(lang="hi")
   Tokenizer to use. Can be a string identifier or a tokenizer instance
 </ParamField>
 
-<ParamField path="chunk_size" type="int" default="2048">
+<ParamField path="chunk_size / chunkSize" type="int" default="2048">
   Maximum number of tokens per chunk
 </ParamField>
 
@@ -83,7 +85,11 @@ chunker = RecursiveChunker.from_recipe(lang="hi")
   Rules to use for chunking.
 </ParamField>
 
-<ParamField path="min_characters_per_chunk" type="int" default="12">
+<ParamField
+  path="min_characters_per_chunk / minCharactersPerChunk"
+  type="int"
+  default="12"
+>
   Minimum number of characters per chunk
 </ParamField>
 
@@ -91,17 +97,30 @@ chunker = RecursiveChunker.from_recipe(lang="hi")
 
 ### Single Text Chunking
 
-```python
+<CodeGroup>
+```python Python
 text = """This is the first sentence. This is the second sentence.
 And here's a third one with some additional context."""
 
 chunks = chunker.chunk(text)
 
 for chunk in chunks:
-    print(f"Chunk text: {chunk.text}")
-    print(f"Token count: {chunk.token_count}")
-```
+print(f"Chunk text: {chunk.text}")
+print(f"Token count: {chunk.token_count}")
 
+````
+```javascript JavaScript
+const text = "This is the first sentence. This is the second sentence \n. And here's a third one with some additional context."
+
+chunks = await chunker.chunk(text)
+
+for (const chunk of chunks):
+    console.log(`Chunk text: ${chunk.text}`)
+    console.log(`Tokens: ${chunk.tokenCount}`);
+}
+````
+
+</CodeGroup>
 ### Batch Chunking
 
 ```python
@@ -133,7 +152,8 @@ batch_chunks = chunker(["Text 1. More text.", "Text 2. More."])
 
 The RecursiveChunker returns chunks as `Chunk` objects:
 
-```python
+<CodeGroup>
+```python Python
 @dataclass
 class Chunk:
     text: str           # The chunk text
@@ -141,12 +161,30 @@ class Chunk:
     end_index: int      # Ending position in original text
     token_count: int    # Number of tokens in Chunk
 ```
+```javascript JavaScript
+class Chunk {
+    /** The text content of the chunk */
+    text: string;
+    /** The starting index of the chunk in the original text */
+    startIndex: number;
+    /** The ending index of the chunk in the original text */
+    endIndex: number;
+    /** The number of tokens in the chunk */
+    tokenCount: number;
+    /** Optional embedding vector for the chunk */
+    embedding?: number[];
+    /* Get a string representation of the chunk */
+    toString(): string;
+}
+```
+</CodeGroup>
 
 ## Additional Information
 
 The RecursiveChunker uses the `RecursiveRules` class to determine the chunking rules. The rules are a list of `RecursiveLevel` objects, which define the delimiters and whitespace rules for each level of the recursive tree.
 
-```python
+<CodeGroup>
+```python Python
 @dataclass
 class RecursiveRules:
     rules: List[RecursiveLevel]
@@ -157,7 +195,18 @@ class RecursiveLevel:
     whitespace: bool = False
     include_delim: Optional[Literal["prev", "next"]])  # Whether to include the delimiter at all, or in the previous chunk, or the next chunk.
 ```
+```javascript JavaScript
+class RecursiveRules {
+    levels: RecursiveLevel[];
+}
 
+class RecursiveLevel {
+    delimiters?: string | string[];
+    whitespace: boolean;
+    includeDelim: 'prev' | 'next' | 'none';
+}
+```
+</CodeGroup>
 You can pass in custom rules to the RecursiveChunker, or use the default rules. The default rules are designed to be a good starting point for most documents, but you can customize them to your needs.
 
 <Info>
