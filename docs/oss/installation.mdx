@@ -24,6 +24,10 @@ uv add chonkie
 
 </CodeGroup>
 
+This installs our basic chunkers, plus the Python API SDK. 
+
+To use advanced features locally, skip ahead to [Installation Options](#installation-options)
+
 ### JavaScript
 
 Install the core package for local chunking
@@ -43,6 +47,48 @@ bun add @chonkiejs/core
 
 ```bash yarn
 yarn add @chonkiejs/core
+```
+
+</CodeGroup>
+
+To use custom tokenizers, install the `@chonkiejs/token` package
+
+<CodeGroup>
+```bash npm
+npm install @chonkiejs/token
+```
+
+```bash pnpm
+pnpm add @chonkiejs/token
+```
+
+```bash bun
+bun add @chonkiejs/token
+```
+
+```bash yarn
+yarn add @chonkiejs/token
+```
+
+</CodeGroup>
+
+To use the API, install the `@chonkiejs/cloud` package
+
+<CodeGroup>
+```bash npm
+npm install @chonkiejs/cloud
+```
+
+```bash pnpm
+pnpm add @chonkiejs/cloud
+```
+
+```bash bun
+bun add @chonkiejs/cloud
+```
+
+```bash yarn
+yarn add @chonkiejs/cloud
 ```
 
 </CodeGroup>
@@ -108,7 +154,7 @@ npm install @chonkiejs/cloud
 
 The following table shows which chunkers are available with different installation options:
 
-| Chunker          |                        Default                         |                       embeddings                       |                         'all'                                |      chonkiejs/core |     API Chunking |
+| Chunker          |                        Default                         |                       embeddings                       |                         'all'                                |      Chonkie JS |     API  |
 | ---------------- | :----------------------------------------------------: | :----------------------------------------------------: | :----------------------------------------------------:       |:----------------------------------------------------:    | :----------------------------------------------------:    |
 | TokenChunker     | <Icon icon="check" color="#005c00" iconType="solid" /> | <Icon icon="check" color="#005c00" iconType="solid" /> | <Icon icon="check" color="#005c00" iconType="solid" /> | <Icon icon="check" color="#005c00" iconType="solid" /> | <Icon icon="check" color="#005c00" iconType="solid" /> |
 | RecursiveChunker | <Icon icon="check" color="#005c00" iconType="solid" /> | <Icon icon="check" color="#005c00" iconType="solid" /> | <Icon icon="check" color="#005c00" iconType="solid" /> |<Icon icon="check" color="#005c00" iconType="solid" /> | <Icon icon="check" color="#005c00" iconType="solid" /> |

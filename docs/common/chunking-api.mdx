@@ -1,0 +1,376 @@
+---
+title: Chunking API
+description: Enterprise-grade text chunking and embedding service, powered by Chonkie
+icon: "scissors"
+iconType: "solid"
+sidebarTitle: Chunking API
+---
+
+<div align="center">
+  <img
+    src="/assets/logo/chonkie_logo_horizontal_large.png"
+    alt="Chonkie Logo"
+    height={120}
+    width={400}
+    noZoom
+  />
+  _✨Transform your text into perfect chunks for RAG✨_
+</div>
+
+<br />
+
+**Chonkie Chunking API** is an enterprise-grade text processing service built on Chonkie OSS.
+Get instant access to 8 advanced chunking algorithms, embedding generation, and text refinement—all through simple REST APIs.
+
+No chunking logic to write, tokenizers to configure, or edge cases to debug.
+
+Just perfect chunks, delivered fast.
+
+## Key Features
+
+<CardGroup cols={2}>
+  <Card title="8 Advanced Chunkers" icon="scissors">
+    Token, Sentence, Recursive, Semantic, Late, Code, Neural, and Slumber
+    chunkers. Each optimized for different document types and use cases.
+  </Card>
+  <Card title="Embeddings Refinery" icon="sparkles">
+    Add vector embeddings to your chunks using any Hugging Face model. Supports
+    all major embedding providers with automatic dimension detection.
+  </Card>
+  <Card title="Overlap Refinery" icon="layer-group">
+    Add contextual overlap between chunks to prevent information loss at
+    boundaries. Configurable overlap sizes for optimal retrieval quality.
+  </Card>
+  <Card title="Multi-Language SDKs" icon="code">
+    Official Python and JavaScript/TypeScript SDKs with full type safety,
+    automatic retries, and environment variable support.
+  </Card>
+  <Card title="Production-Ready" icon="shield-check">
+    Battle-tested algorithms refined through thousands of real-world
+    deployments. Used by startups to enterprises for mission-critical RAG
+    systems.
+  </Card>
+  <Card title="Auto-Scaling" icon="gauge-high">
+    Automatically scales to handle your workload. From prototyping with single
+    documents to production pipelines processing millions of chunks.
+  </Card>
+</CardGroup>
+
+## Why Use Hosted Chunking?
+
+Building chunking from scratch means dealing with:
+
+- **Algorithm complexity**: Implementing semantic chunking, code parsing, recursive splitting
+- **Tokenizer headaches**: Managing multiple tokenizers, handling edge cases, counting accurately
+- **Performance optimization**: Caching, batching, parallelization, memory management
+- **Maintenance burden**: Updating dependencies, fixing bugs, handling new file formats
+
+Chonkie Chunking API eliminates all of this. You get:
+
+<CardGroup cols={2}>
+  <Card title="Instant Integration" icon="bolt">
+    Add chunking to your application in minutes with simple REST APIs or SDKs.
+    No complex setup or configuration required.
+  </Card>
+  <Card title="Battle-Tested Algorithms" icon="trophy">
+    Proven chunking strategies refined through thousands of production
+    deployments across diverse document types and use cases.
+  </Card>
+  <Card title="Always Up-to-Date" icon="arrows-rotate">
+    Automatic updates with new chunkers, optimizations, and bug fixes. You get
+    improvements without changing a line of code.
+  </Card>
+  <Card title="Cost-Effective" icon="dollar-sign">
+    Pay only for what you use. No infrastructure costs, no maintenance overhead.
+    Free tier available for development and small projects.
+  </Card>
+</CardGroup>
+
+## Available Chunkers
+
+<AccordionGroup>
+  <Accordion title="Token Chunker" icon="scissors">
+    **Best for**: General-purpose chunking, RAG pipelines, most use cases
+
+    Split text into fixed-size token chunks with configurable overlap. Fast,
+    reliable, and works well for most document types.
+
+    [Learn more →](/api-reference/chunking/token-chunker)
+  </Accordion>
+
+  <Accordion title="Sentence Chunker" icon="message">
+    **Best for**: Q&A systems, maintaining sentence integrity
+
+    Chunks at sentence boundaries while respecting token limits. Ensures
+    complete thoughts are never split mid-sentence.
+
+    [Learn more →](/api-reference/chunking/sentence-chunker)
+  </Accordion>
+
+  <Accordion title="Recursive Chunker" icon="chart-tree-map">
+    **Best for**: Markdown, structured documents, hierarchical content
+
+    Hierarchically chunks using multiple delimiters (paragraphs → sentences →
+    words). Perfect for maintaining document structure.
+
+    [Learn more →](/api-reference/chunking/recursive-chunker)
+  </Accordion>
+
+  <Accordion title="Semantic Chunker" icon="brain">
+    **Best for**: Multi-topic documents, topic segmentation
+
+    Uses embeddings to identify natural topic boundaries. Creates semantically
+    coherent chunks based on meaning, not just structure.
+
+    [Learn more →](/api-reference/chunking/semantic-chunker)
+  </Accordion>
+
+  <Accordion title="Code Chunker" icon="code">
+    **Best for**: Source code, API documentation, technical docs
+
+    Language-aware chunking using AST analysis. Preserves function and class
+    boundaries for better code search and generation.
+
+    [Learn more →](/api-reference/chunking/code-chunker)
+  </Accordion>
+
+  <Accordion title="Late Chunker" icon="magnifying-glass-chart">
+    **Best for**: Search systems, retrieval optimization
+
+    Uses late interaction mechanisms for retrieval-optimized chunks. Ideal for
+    building high-quality search indices.
+
+    [Learn more →](/api-reference/chunking/late-chunker)
+  </Accordion>
+
+  <Accordion title="Neural Chunker" icon="microchip-ai">
+    **Best for**: Complex documents, maximum quality
+
+    ML-based chunking that learns optimal boundaries. Best quality but slower—
+    use when accuracy matters most.
+
+    [Learn more →](/api-reference/chunking/neural-chunker)
+  </Accordion>
+
+  <Accordion title="Slumber Chunker" icon="book-open">
+    **Best for**: Books, research papers, long-form content
+
+    Specialized for long documents with hierarchical structure. Maintains
+    narrative flow across large texts.
+
+    [Learn more →](/api-reference/chunking/slumber-chunker)
+  </Accordion>
+</AccordionGroup>
+
+## Quick Start
+
+Get started in 3 simple steps:
+
+### 1. Get Your API Key
+
+Sign up at [labs.chonkie.ai](https://labs.chonkie.ai) to get your API key.
+
+### 2. Install SDK (Optional)
+
+<CodeGroup>
+
+```bash Python
+pip install chonkie[cloud]
+```
+
+```bash JavaScript
+npm install @chonkiejs/cloud
+```
+
+</CodeGroup>
+
+### 3. Start Chunking
+
+<CodeGroup>
+
+```python Python
+from chonkie.cloud import TokenChunker
+
+# Initialize chunker
+chunker = TokenChunker(
+    chunk_size=512,
+    chunk_overlap=50,
+    tokenizer="gpt2"
+)
+
+# Chunk your text
+text = """
+Your long document here. This could be documentation, articles,
+research papers, or any text you need to process for RAG.
+"""
+
+chunks = chunker.chunk(text)
+
+# Use the chunks
+for chunk in chunks:
+    print(f"Chunk ({chunk.token_count} tokens): {chunk.text[:100]}...")
+```
+
+```javascript JavaScript
+import { TokenChunker } from '@chonkiejs/cloud';
+
+// Initialize chunker
+const chunker = new TokenChunker({
+  chunkSize: 512,
+  chunkOverlap: 50,
+  tokenizer: 'gpt2'
+});
+
+// Chunk your text
+const text = `
+Your long document here. This could be documentation, articles,
+research papers, or any text you need to process for RAG.
+`;
+
+const chunks = await chunker.chunk({ text });
+
+// Use the chunks
+chunks.forEach(chunk => {
+  console.log(`Chunk (${chunk.tokenCount} tokens): ${chunk.text.substring(0, 100)}...`);
+});
+```
+
+```bash cURL
+curl -X POST https://api.chonkie.ai/v1/chunk/token \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "Your long document here...",
+    "tokenizer": "gpt2",
+    "chunk_size": 512,
+    "chunk_overlap": 50
+  }'
+```
+
+</CodeGroup>
+
+## Use Cases
+
+<AccordionGroup>
+  <Accordion title="RAG Pipelines" icon="diagram-project">
+    Preprocess documents for retrieval augmented generation. Chunk once, embed,
+    and store in your vector database for lightning-fast retrieval.
+  </Accordion>
+
+  <Accordion title="Document Analysis" icon="file-magnifying-glass">
+    Break down large documents for analysis, summarization, or classification.
+    Process documents too large for single LLM calls.
+  </Accordion>
+
+  <Accordion title="Semantic Search" icon="magnifying-glass">
+    Create search indices over documentation, support articles, or knowledge
+    bases. Combine with embeddings for powerful semantic search.
+  </Accordion>
+
+  <Accordion title="Code Indexing" icon="brackets-curly">
+    Index codebases for AI-powered code search, documentation generation, or
+    code review tools. Language-aware chunking preserves context.
+  </Accordion>
+
+  <Accordion title="Content Processing" icon="file-lines">
+    Process blogs, articles, and content at scale. Perfect for content
+    recommendation systems or editorial tools.
+  </Accordion>
+</AccordionGroup>
+
+## Refineries: Enhance Your Chunks
+
+<CardGroup cols={2}>
+  <Card
+    title="Add Embeddings"
+    icon="sparkles"
+    href="/api-reference/refineries/embeddings"
+  >
+    Generate vector embeddings for your chunks using any Hugging Face model.
+    Supports all major providers: OpenAI, Cohere, Sentence Transformers, and
+    more.
+  </Card>
+  <Card
+    title="Add Overlap"
+    icon="layer-group"
+    href="/api-reference/refineries/overlap"
+  >
+    Add contextual overlap between chunks post-processing. Perfect for adding
+    overlap to existing chunks or experimenting with different overlap sizes.
+  </Card>
+</CardGroup>
+
+## Pricing
+
+| Plan | Requests/Day | Price | Best For |
+|------|--------------|-------|----------|
+| **Free** | 1,000 | $0/month | Development, prototyping |
+| **Pro** | 10,000 | $29/month | Small applications, startups |
+| **Team** | 100,000 | $199/month | Production apps, teams |
+| **Enterprise** | Custom | Custom | Large-scale deployments |
+
+All plans include:
+- All 8 chunkers
+- Both refineries
+- All embedding models
+- SDK access
+- Email support
+
+[View detailed pricing →](https://labs.chonkie.ai/pricing)
+
+## Performance
+
+The Chunking API is optimized for speed:
+
+- **< 100ms** - Token, Sentence, Recursive chunkers
+- **< 500ms** - Semantic, Code, Late chunkers
+- **< 2s** - Neural chunker (highest quality)
+- **Auto-scaling** - Handles traffic spikes automatically
+- **Global CDN** - Low latency worldwide
+
+## Comparison: Hosted vs Self-Hosted
+
+| Feature | Chunking API | Self-Hosted OSS |
+|---------|--------------|-----------------|
+| **Setup Time** | Minutes | Hours |
+| **Maintenance** | None | Ongoing |
+| **Scaling** | Automatic | Manual |
+| **Cost** | Pay per use | Infrastructure + DevOps |
+| **Updates** | Automatic | Manual |
+| **Support** | Included | Community |
+| **Best For** | Most teams | Large orgs with ops teams |
+
+## Next Steps
+
+Ready to start chunking?
+
+<CardGroup cols={2}>
+  <Card
+    title="API Documentation"
+    icon="book"
+    href="/api-reference/chunking/token-chunker"
+  >
+    Explore detailed API docs for all chunkers and refineries
+  </Card>
+  <Card
+    title="Get API Key"
+    icon="key"
+    href="https://labs.chonkie.ai"
+  >
+    Sign up for free and get your API key in seconds
+  </Card>
+  <Card
+    title="View Examples"
+    icon="code"
+    href="https://github.com/chonkie-ai/chonkie/tree/main/examples"
+  >
+    Browse code examples and integration patterns
+  </Card>
+  <Card
+    title="Join Community"
+    icon="discord"
+    href="https://discord.gg/Q6zkP8w6ur"
+  >
+    Get help from the community and share your use cases
+  </Card>
+</CardGroup>
