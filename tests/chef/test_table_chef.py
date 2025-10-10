@@ -8,7 +8,7 @@ from typing import Any
 import pandas as pd
 import pytest
 
-from chonkie.chef import TableChef
+from chonkie import TableChef, MarkdownTable
 
 
 class TestTableChef:
@@ -55,10 +55,11 @@ class TestTableChef:
 
         monkeypatch.setattr(pd, "read_csv", fake_read_csv)
         result = table_chef.process(str(csv_file))
-        assert isinstance(result, str)
+        assert hasattr(result, "content")
         # Check for column names and values, not exact formatting
-        assert "col1" in result and "col2" in result
-        assert "1" in result and "2" in result and "3" in result and "4" in result
+        content_str = str(result.content)
+        assert "col1" in content_str and "col2" in content_str
+        assert "1" in content_str and "2" in content_str and "3" in content_str and "4" in content_str
         assert called["called"]
 
     def test_process_excel_file(
@@ -77,9 +78,10 @@ class TestTableChef:
 
         monkeypatch.setattr(pd, "read_excel", fake_read_excel)
         result = table_chef.process(str(excel_file))
-        assert isinstance(result, str)
-        assert "col1" in result and "col2" in result
-        assert "1" in result and "2" in result and "3" in result and "4" in result
+        assert hasattr(result, "content")
+        content_str = str(result.content)
+        assert "col1" in content_str and "col2" in content_str
+        assert "1" in content_str and "2" in content_str and "3" in content_str and "4" in content_str
         assert called["called"]
 
     def test_process_markdown_table_string(
@@ -103,11 +105,14 @@ class TestTableChef:
         assert isinstance(results, list)
         assert len(results) == 2
         for r in results:
-            if isinstance(r, str):
-                assert "col1" in r and "col2" in r
-                assert "1" in r and "2" in r and "3" in r and "4" in r
+            if hasattr(r, "content"):
+                content_str = str(r.content)
+                assert "col1" in content_str and "col2" in content_str
+                assert "1" in content_str and "2" in content_str and "3" in content_str and "4" in content_str
             elif isinstance(r, list):
                 assert all(hasattr(t, "content") for t in r)
+            elif r is None:
+                continue
             else:
                 assert False, f"Unexpected result type: {type(r)}"
 
@@ -123,11 +128,14 @@ class TestTableChef:
         assert isinstance(results, list)
         assert len(results) == 2
         for r in results:
-            if isinstance(r, str):
-                assert "col1" in r and "col2" in r
-                assert "1" in r and "2" in r and "3" in r and "4" in r
+            if hasattr(r, "content"):
+                content_str = str(r.content)
+                assert "col1" in content_str and "col2" in content_str
+                assert "1" in content_str and "2" in content_str and "3" in content_str and "4" in content_str
             elif isinstance(r, list):
                 assert all(hasattr(t, "content") for t in r)
+            elif r is None:
+                continue
             else:
                 assert False, f"Unexpected result type: {type(r)}"
 
@@ -138,9 +146,10 @@ class TestTableChef:
         file1 = tmp_path / "a.csv"
         file1.write_text(csv_content)
         result = table_chef(str(file1))
-        assert isinstance(result, str)
-        assert "col1" in result and "col2" in result
-        assert "1" in result and "2" in result and "3" in result and "4" in result
+        assert hasattr(result, "content")
+        content_str = str(result.content)
+        assert "col1" in content_str and "col2" in content_str
+        assert "1" in content_str and "2" in content_str and "3" in content_str and "4" in content_str
 
     def test_call_invalid_type(self: "TestTableChef", table_chef: TableChef) -> None:
         """Test that TableChef raises TypeError on invalid input type."""
