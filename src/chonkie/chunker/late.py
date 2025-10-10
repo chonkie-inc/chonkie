@@ -129,54 +129,53 @@ class LateChunker(RecursiveChunker):
             )
         return embs
 
-    def chunk(self, text: str) -> List[Chunk]:
-        """Chunk the text via LateChunking."""
-        # This would first call upon the _recursive_chunk method
-        # and then use the embedding model to get the token token_embeddings
-        # Lastly, we would combine the methods together to create the LateChunk objects
-        chunks = self._recursive_chunk(text)
-        token_embeddings = self.embedding_model.embed_as_tokens(text)
+    # Located in the file: Fouzhan Dev/chonkie/src/chonkie/chunker/late.py
 
-        # Get the token_counts for all the chunks
-        # Note: LateChunker always returns chunks, so chunks are always RecursiveChunk objects
-        token_counts = [c.token_count for c in chunks]  # type: ignore[union-attr]
+def chunk(self, text: str) -> List[Chunk]:
+    """Chunk the text via LateChunking."""
+    chunks = self._recursive_chunk(text)
 
-        # Validate the token_counts with the actual count
-        if sum(token_counts) > token_embeddings.shape[0]:
-            raise ValueError(
-                "The sum of token counts exceeds the number of tokens in the text"
+    # --- THIS IS THE FIX ---
+    # If the list of chunks is empty, stop here and return nothing.
+    if not chunks:
+        return []
+    # --- END OF FIX ---
+
+    # The rest of the code is the same as before. It will only run
+    # now if the 'chunks' list is NOT empty.
+    token_embeddings = self.embedding_model.embed_as_tokens(text)
+
+    token_counts = [c.token_count for c in chunks]
+
+    if sum(token_counts) > token_embeddings.shape[0]:
+        raise ValueError(
+            "The sum of token counts exceeds the number of tokens in the text"
+        )
+    if sum(token_counts) < token_embeddings.shape[0]:
+        diff = token_embeddings.shape[0] - sum(token_counts)
+        token_counts[0] = token_counts[0] + diff // 2
+        token_counts[-1] = token_counts[-1] + (diff - diff // 2)
+
+    if sum(token_counts) != token_embeddings.shape[0]:
+        raise ValueError(
+            "The sum of token counts does not match the number of tokens in the text",
+            f"Expected {token_embeddings.shape[0]}, got {sum(token_counts)}",
+        )
+
+    late_embds = self._get_late_embeddings(token_embeddings, token_counts)
+
+    result = []
+    for chunk, token_count, embedding in zip(chunks, token_counts, late_embds):
+        result.append(
+            Chunk(
+                text=chunk.text,
+                start_index=chunk.start_index,
+                end_index=chunk.end_index,
+                token_count=token_count,
+                embedding=embedding,
             )
-        # Diff would always be positive now~ which it should be considering token_counts
-        # doesn't have any special tokens added
-        if sum(token_counts) < token_embeddings.shape[0]:
-            # Use a little trick to ensure that the token counts get properly adjusted
-            diff = token_embeddings.shape[0] - sum(token_counts)
-            token_counts[0] = token_counts[0] + diff // 2
-            token_counts[-1] = token_counts[-1] + (diff - diff // 2)
-
-        if sum(token_counts) != token_embeddings.shape[0]:
-            raise ValueError(
-                "The sum of token counts does not match the number of tokens in the text",
-                f"Expected {token_embeddings.shape[0]}, got {sum(token_counts)}",
-            )
-
-        # Split the token embeddings into chunks based on the token counts
-        late_embds = self._get_late_embeddings(token_embeddings, token_counts)
-
-        # Wrap it all up in Chunks with embeddings
-        result = []
-        for chunk, token_count, embedding in zip(chunks, token_counts, late_embds):
-            # Note: LateChunker always returns chunks, so chunk is always a Chunk
-            result.append(
-                Chunk(
-                    text=chunk.text,  # type: ignore[attr-defined]
-                    start_index=chunk.start_index,  # type: ignore[attr-defined]
-                    end_index=chunk.end_index,  # type: ignore[attr-defined]
-                    token_count=token_count,
-                    embedding=embedding,
-                )
-            )
-        return result
+        )
+    return result
 
     def _import_dependencies(self) -> None:
         """Lazy import dependencies for the chunker implementation.

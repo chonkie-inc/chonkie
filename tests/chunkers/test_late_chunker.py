@@ -194,5 +194,17 @@ def test_late_chunker_from_recipe_nonexistent() -> None:
     with pytest.raises(ValueError):
         LateChunker.from_recipe(name="default", lang="invalid")
 
+# --- PASTE THE NEW TEST FUNCTION HERE ---
+def test_late_chunker_very_short_non_empty_text(embedding_model: SentenceTransformerEmbeddings) -> None:
+    """Test chunking text that is not empty but too short to form a chunk."""
+    # This text is shorter than the default min_characters_per_chunk
+    text = "short"
+    chunker = LateChunker(embedding_model=embedding_model)
+    chunks = chunker.chunk(text)
+
+    # The expected behavior is to return an empty list, not crash
+    assert chunks == []
+# --- END OF PASTED CODE ---
+
 if __name__ == "__main__":
     pytest.main()
