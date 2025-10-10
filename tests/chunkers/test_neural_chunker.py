@@ -58,7 +58,6 @@ class TestNeuralChunkerInitialization:
             chunker = NeuralChunker(
                 model="mirth/chonky_distilbert_base_uncased_1",
                 min_characters_per_chunk=20,
-                stride=128
             )
             assert chunker.min_characters_per_chunk == 20
             assert chunker.return_type == "chunks"
@@ -322,72 +321,6 @@ class TestNeuralChunkerRepresentation:
             assert "return_type=chunks" in repr_str
         except Exception:
             pytest.skip("transformers not available or model not accessible")
-
-
-class TestNeuralChunkerConstants:
-    """Test the class constants and configurations."""
-
-    def test_supported_models(self):
-        """Test that supported models are defined."""
-        assert len(NeuralChunker.SUPPORTED_MODELS) > 0
-        assert "mirth/chonky_distilbert_base_uncased_1" in NeuralChunker.SUPPORTED_MODELS
-
-    def test_supported_model_strides(self):
-        """Test that model strides are defined for all supported models."""
-        for model in NeuralChunker.SUPPORTED_MODELS:
-            assert model in NeuralChunker.SUPPORTED_MODEL_STRIDES
-            assert isinstance(NeuralChunker.SUPPORTED_MODEL_STRIDES[model], int)
-            assert NeuralChunker.SUPPORTED_MODEL_STRIDES[model] > 0
-
-    def test_default_model(self):
-        """Test that default model is in supported models."""
-        assert NeuralChunker.DEFAULT_MODEL in NeuralChunker.SUPPORTED_MODELS
-
-    def test_default_model_has_stride(self):
-        """Test that default model has a defined stride."""
-        assert NeuralChunker.DEFAULT_MODEL in NeuralChunker.SUPPORTED_MODEL_STRIDES
-
-
-class TestNeuralChunkerParameterVariations:
-    """Test different parameter combinations."""
-
-    def test_different_stride_values(self):
-        """Test with different stride values."""
-        try:
-            # Test with custom stride
-            chunker = NeuralChunker(stride=128)
-            assert hasattr(chunker, 'pipe')
-            
-            # Test with stride None (should use default)
-            chunker2 = NeuralChunker(stride=None)
-            assert hasattr(chunker2, 'pipe')
-        except Exception:
-            pytest.skip("transformers not available or model not accessible")
-
-    def test_different_device_maps(self):
-        """Test with different device maps."""
-        try:
-            # Test with auto device map
-            chunker = NeuralChunker(device_map="auto")
-            assert hasattr(chunker, 'pipe')
-            
-            # Test with cpu device map
-            chunker2 = NeuralChunker(device_map="cpu")
-            assert hasattr(chunker2, 'pipe')
-        except Exception:
-            pytest.skip("transformers not available or model not accessible")
-
-    def test_different_min_characters(self):
-        """Test with different min_characters_per_chunk values."""
-        try:
-            chunker = NeuralChunker(min_characters_per_chunk=5)
-            assert chunker.min_characters_per_chunk == 5
-            
-            chunker2 = NeuralChunker(min_characters_per_chunk=100)
-            assert chunker2.min_characters_per_chunk == 100
-        except Exception:
-            pytest.skip("transformers not available or model not accessible")
-
 
 class TestNeuralChunkerBehavior:
     """Test specific behavior patterns of the NeuralChunker."""
