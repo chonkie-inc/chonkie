@@ -21,11 +21,13 @@ class TableChef(BaseChef):
         self.table_pattern = re.compile(r"(\|.*?\n(?:\|[-: ]+\|.*?\n)?(?:\|.*?\n)+)")
 
     def _lazy_import_pandas(self) -> None:
-        try: 
+        try:
             global pd
             import pandas as pd
         except ImportError as e:
-            raise ImportError("Pandas is required to use TableChef. Please install it with `pip install chonkie[table]`.") from e
+            raise ImportError(
+                "Pandas is required to use TableChef. Please install it with `pip install chonkie[table]`."
+            ) from e
 
     def parse(self, text: str) -> Union[MarkdownTable, List[MarkdownTable], None]:
         """Parse raw markdown text into a MarkdownDocument with extracted tables.
@@ -59,17 +61,23 @@ class TableChef(BaseChef):
                 markdown = df.to_markdown(index=False)
                 return self.parse(markdown)
             elif str_path.endswith(".xls") or str_path.endswith(".xlsx"):
-                all_df = pd.read_excel(str_path,sheet_name=None)
+                all_df = pd.read_excel(str_path, sheet_name=None)
                 if len(all_df.keys()) > 1:
                     out: List[MarkdownTable] = []
                     for df in all_df.values():
                         text = df.to_markdown(index=False)
-                        out.append(MarkdownTable(content=text, start_index=0, end_index=len(text)))
+                        out.append(
+                            MarkdownTable(
+                                content=text, start_index=0, end_index=len(text)
+                            )
+                        )
                     return out
                 else:
                     df = list(all_df.values())[0]
                     text = df.to_markdown(index=False)
-                    return MarkdownTable(content=text, start_index=0, end_index=len(text))
+                    return MarkdownTable(
+                        content=text, start_index=0, end_index=len(text)
+                    )
         return self.extract_tables_from_markdown(str(path))
 
     def process_batch(
@@ -88,7 +96,12 @@ class TableChef(BaseChef):
 
     def __call__(
         self, path: Union[str, Path, List[str], List[Path]]
-    ) -> Union[MarkdownTable, List[MarkdownTable], None, List[Union[MarkdownTable, List[MarkdownTable], None]]]:
+    ) -> Union[
+        MarkdownTable,
+        List[MarkdownTable],
+        None,
+        List[Union[MarkdownTable, List[MarkdownTable], None]],
+    ]:
         """Process a single file or a batch of files."""
         if isinstance(path, (list, tuple)):
             return self.process_batch(path)
@@ -112,7 +125,11 @@ class TableChef(BaseChef):
             table_content = match.group(0)
             start_index = match.start()
             end_index = match.end()
-            tables.append(MarkdownTable(content=table_content, start_index=start_index, end_index=end_index))
+            tables.append(
+                MarkdownTable(
+                    content=table_content, start_index=start_index, end_index=end_index
+                )
+            )
         return tables
 
     def __repr__(self) -> str:
