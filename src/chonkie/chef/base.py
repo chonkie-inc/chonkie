@@ -4,7 +4,10 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import List, Union
 
+from chonkie.logger import get_logger
 from chonkie.types import Document
+
+logger = get_logger(__name__)
 
 
 class BaseChef(ABC):
@@ -46,7 +49,10 @@ class BaseChef(ABC):
             List of Documents created from the files.
 
         """
-        return [self.process(path) for path in paths]
+        logger.info(f"Processing batch of {len(paths)} files")
+        results = [self.process(path) for path in paths]
+        logger.info(f"Completed batch processing of {len(paths)} files")
+        return results
 
     def read(self, path: Union[str, Path]) -> str:
         """Read the file content.
@@ -58,8 +64,15 @@ class BaseChef(ABC):
             File content as string.
 
         """
-        with open(path, "r", encoding="utf-8") as file:
-            return str(file.read())
+        try:
+            logger.debug(f"Reading file: {path}")
+            with open(path, "r", encoding="utf-8") as file:
+                content = str(file.read())
+                logger.debug(f"Successfully read file: {path}", size=len(content))
+                return content
+        except Exception as e:
+            logger.warning(f"Failed to read file: {path}", error=str(e))
+            raise
 
     def __call__(self, path: Union[str, Path]) -> Document:
         """Call the chef to process the data.
@@ -71,6 +84,7 @@ class BaseChef(ABC):
             Document created from the file.
 
         """
+        logger.debug(f"Processing file with {self.__class__.__name__}: {path}")
         return self.process(path)
 
     def __repr__(self) -> str:

@@ -3,10 +3,13 @@
 from pathlib import Path
 from typing import List, Union
 
+from chonkie.logger import get_logger
 from chonkie.pipeline import chef
 from chonkie.types import Document
 
 from .base import BaseChef
+
+logger = get_logger(__name__)
 
 
 @chef("text")
@@ -23,7 +26,10 @@ class TextChef(BaseChef):
             Document: Processed text data.
 
         """
-        return Document(content=self.read(path))
+        logger.debug(f"Processing text file: {path}")
+        content = self.read(path)
+        logger.info(f"Text processing complete: read {len(content)} characters from {path}")
+        return Document(content=content)
 
     def parse(self, text: str) -> Document:
         """Parse raw text into a Document.

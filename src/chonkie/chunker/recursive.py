@@ -9,6 +9,7 @@ from itertools import accumulate
 from typing import List, Optional, Tuple, Union
 
 from chonkie.chunker.base import BaseChunker
+from chonkie.logger import get_logger
 from chonkie.pipeline import chunker
 from chonkie.tokenizer import TokenizerProtocol
 from chonkie.types import (
@@ -16,6 +17,8 @@ from chonkie.types import (
     RecursiveLevel,
     RecursiveRules,
 )
+
+logger = get_logger(__name__)
 
 # Import the unified split function
 try:
@@ -109,8 +112,10 @@ class RecursiveChunker(BaseChunker):
             ValueError: If the recipe is not found.
 
         """
+        logger.info("Loading RecursiveChunker recipe", name=name, lang=lang)
         # Create a recursive rules object
         rules = RecursiveRules.from_recipe(name, lang, path)
+        logger.debug(f"Recipe loaded successfully with {len(rules.levels or [])} levels")
         return cls(
             tokenizer=tokenizer,
             rules=rules,
@@ -360,7 +365,10 @@ class RecursiveChunker(BaseChunker):
             text (str): Text to chunk.
 
         """
-        return self._recursive_chunk(text=text, level=0, start_offset=0)
+        logger.debug(f"Starting recursive chunking for text of length {len(text)}")
+        chunks = self._recursive_chunk(text=text, level=0, start_offset=0)
+        logger.info(f"Created {len(chunks)} chunks using recursive chunking")
+        return chunks
 
     def __repr__(self) -> str:
         """Get a string representation of the recursive chunker."""

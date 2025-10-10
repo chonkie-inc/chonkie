@@ -9,9 +9,12 @@ from typing import Generator, List, Sequence, Union
 from tqdm import trange
 
 from chonkie.chunker.base import BaseChunker
+from chonkie.logger import get_logger
 from chonkie.pipeline import chunker
 from chonkie.tokenizer import TokenizerProtocol
 from chonkie.types import Chunk
+
+logger = get_logger(__name__)
 
 
 @chunker("token")
@@ -122,6 +125,8 @@ class TokenChunker(BaseChunker):
         if not text.strip():
             return []
 
+        logger.debug(f"Chunking text of length {len(text)} with chunk_size={self.chunk_size}")
+
         # Encode full text
         text_tokens = self.tokenizer.encode(text)
 
@@ -135,6 +140,7 @@ class TokenChunker(BaseChunker):
         # Create the chunks from the token groups and token counts
         chunks = self._create_chunks(chunk_texts, token_groups, token_counts)
 
+        logger.info(f"Created {len(chunks)} chunks from {len(text_tokens)} tokens")
         return chunks
 
     def _process_batch(self, texts: List[str]) -> List[List[Chunk]]:

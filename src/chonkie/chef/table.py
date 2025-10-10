@@ -5,8 +5,11 @@ from pathlib import Path
 from typing import TYPE_CHECKING, List, Union
 
 from chonkie.chef.base import BaseChef
+from chonkie.logger import get_logger
 from chonkie.pipeline import chef
 from chonkie.types import Document, MarkdownDocument, MarkdownTable
+
+logger = get_logger(__name__)
 
 if TYPE_CHECKING:
     import pandas as pd
@@ -39,7 +42,9 @@ class TableChef(BaseChef):
             Document: MarkdownDocument with extracted tables.
 
         """
+        logger.debug("Parsing markdown text for tables")
         tables = self.extract_tables_from_markdown(text)
+        logger.info(f"Markdown table extraction complete: found {len(tables)} tables")
         return MarkdownDocument(content=text, tables=tables)
 
     def process(self, path: Union[str, Path]) -> Document:
@@ -52,20 +57,24 @@ class TableChef(BaseChef):
             Document: MarkdownDocument with extracted tables.
 
         """
+        logger.debug(f"Processing table file/string: {path}")
         self._lazy_import_pandas()
         # if file exists
         path_obj = Path(path)
         if path_obj.is_file():
             str_path = str(path)
             if str_path.endswith(".csv"):
+                logger.debug("Processing CSV file")
                 df = pd.read_csv(str_path)
                 markdown = df.to_markdown(index=False)
+                logger.info(f"CSV processing complete: converted {len(df)} rows to markdown")
                 # CSV always produces a single table
                 table = MarkdownTable(
                     content=markdown, start_index=0, end_index=len(markdown)
                 )
                 return MarkdownDocument(content=markdown, tables=[table])
             elif str_path.endswith(".xls") or str_path.endswith(".xlsx"):
+                logger.debug("Processing Excel file")
                 all_df = pd.read_excel(str_path, sheet_name=None)
                 tables: List[MarkdownTable] = []
                 all_content = []
@@ -79,8 +88,10 @@ class TableChef(BaseChef):
                     )
                 # Join all sheets with double newline
                 content = "\n\n".join(all_content)
+                logger.info(f"Excel processing complete: converted {len(all_df)} sheets to markdown")
                 return MarkdownDocument(content=content, tables=tables)
         # Not a file, treat as markdown string and extract tables
+        logger.debug("Extracting tables from markdown string")
         return self.parse(str(path))
 
     def process_batch(
@@ -95,7 +106,10 @@ class TableChef(BaseChef):
             List[Document]: List of MarkdownDocuments with extracted tables.
 
         """
-        return [self.process(path) for path in paths]
+        logger.debug(f"Processing batch of {len(paths)} files/strings")
+        results = [self.process(path) for path in paths]
+        logger.info(f"Completed batch processing of {len(paths)} files/strings")
+        return results
 
     def __call__(  # type: ignore[override]
         self, path: Union[str, Path, List[str], List[Path]]

@@ -11,12 +11,15 @@ from bisect import bisect_left
 from itertools import accumulate
 from typing import List, Literal, Optional, Sequence, Union
 
+from chonkie.logger import get_logger
 from chonkie.pipeline import chunker
 from chonkie.tokenizer import TokenizerProtocol
 from chonkie.types import Chunk, Sentence
 from chonkie.utils import Hubbie
 
 from .base import BaseChunker
+
+logger = get_logger(__name__)
 
 # Import optimized merge functions
 try:
@@ -146,7 +149,9 @@ class SentenceChunker(BaseChunker):
         """
         # Create a hubbie instance
         hub = Hubbie()
+        logger.info("Loading SentenceChunker recipe", name=name, lang=lang)
         recipe = hub.get_recipe(name, lang, path)
+        logger.debug("Recipe loaded successfully", delim=recipe.get("delim"), include_delim=recipe.get("include_delim"))
         return cls(
             tokenizer=tokenizer,
             chunk_size=chunk_size,
@@ -293,12 +298,18 @@ class SentenceChunker(BaseChunker):
 
         """
         if not text.strip():
+            logger.debug("Empty text provided, returning empty chunk list")
             return []
+
+        logger.debug(f"Chunking text of length {len(text)}")
 
         # Get prepared sentences with token counts
         sentences = self._prepare_sentences(text)  # 28mus
         if not sentences:
+            logger.debug("No sentences extracted from text")
             return []
+
+        logger.debug(f"Prepared {len(sentences)} sentences for chunking")
 
         # Pre-calculate cumulative token counts for bisect
         token_sums = list(
@@ -372,6 +383,7 @@ class SentenceChunker(BaseChunker):
             else:
                 pos = split_idx
 
+        logger.info(f"Created {len(chunks)} chunks from text", text_length=len(text))
         return chunks
 
     def __repr__(self) -> str:

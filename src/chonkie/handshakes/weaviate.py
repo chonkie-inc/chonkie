@@ -14,11 +14,14 @@ from urllib.parse import urlparse
 from uuid import NAMESPACE_OID, uuid5
 
 from chonkie.embeddings import AutoEmbeddings, BaseEmbeddings
+from chonkie.logger import get_logger
 from chonkie.pipeline import handshake
 from chonkie.types import Chunk
 
 from .base import BaseHandshake
 from .utils import generate_random_collection_name
+
+logger = get_logger(__name__)
 
 if TYPE_CHECKING:
     import weaviate
@@ -314,6 +317,7 @@ class WeaviateHandshake(BaseHandshake):
         elif not isinstance(chunks, list):
             chunks = list(chunks)
 
+        logger.debug(f"Writing {len(chunks)} chunks to Weaviate collection: {self.collection_name}")
         # Get the collection
         collection = self.client.collections.get(self.collection_name)
 
@@ -368,10 +372,12 @@ class WeaviateHandshake(BaseHandshake):
 
         # Report success
         successful_chunks = len(chunk_ids)
+        logger.info(f"Successfully wrote {successful_chunks} chunks to Weaviate collection: {self.collection_name}")
         print(
             f"🦛 Chonkie wrote {successful_chunks} chunks to Weaviate collection: {self.collection_name}"
         )
         if successful_chunks < len(chunks):
+            logger.warning(f"{len(chunks) - successful_chunks} chunks failed to write")
             print(
                 f"🦛 Warning: {len(chunks) - successful_chunks} chunks failed to write"
             )
@@ -458,6 +464,7 @@ class WeaviateHandshake(BaseHandshake):
             List[Dict[str, Any]]: The list of most similar chunks with their metadata.
 
         """
+        logger.debug(f"Searching Weaviate collection: {self.collection_name} with limit={limit}")
         if embedding is None and query is None:
             raise ValueError("Either query or embedding must be provided")
         if query is not None:
@@ -485,4 +492,5 @@ class WeaviateHandshake(BaseHandshake):
                 "chunk_type": obj.properties.get("chunk_type"),
             }
             matches.append(match)
+        logger.info(f"Search complete: found {len(matches)} matching chunks")
         return matches
