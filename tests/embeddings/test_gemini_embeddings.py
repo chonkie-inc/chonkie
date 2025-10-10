@@ -141,12 +141,12 @@ def test_similarity() -> None:
         assert abs(sim2 - 1.0) < 1e-6
 
 
-def test_get_tokenizer_or_token_counter() -> None:
-    """Test that get_tokenizer_or_token_counter returns the count_tokens method."""
+def test_get_tokenizer() -> None:
+    """Test that get_tokenizer returns the count_tokens method."""
     with patch("google.genai.Client"):
         embeddings = GeminiEmbeddings(api_key="test-key")
         
-        tokenizer = embeddings.get_tokenizer_or_token_counter()
+        tokenizer = embeddings.get_tokenizer()
         assert callable(tokenizer)
         assert tokenizer == embeddings.count_tokens
 
@@ -326,7 +326,7 @@ def test_is_available() -> None:
 def test_import_dependencies_failure() -> None:
     """Test that _import_dependencies raises ImportError when dependencies not available."""
     with patch.object(GeminiEmbeddings, "_is_available", return_value=False):
-        with pytest.raises(ImportError, match="google-genai, numpy"):
+        with pytest.raises(ImportError, match="google-genai"):
             GeminiEmbeddings(api_key="test-key")
 
 

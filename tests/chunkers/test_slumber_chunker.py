@@ -109,7 +109,7 @@ class TestSlumberChunkerInitialization:
         
         chunker = SlumberChunker(
             genie=mock_genie,
-            tokenizer_or_token_counter="cl100k_base",
+            tokenizer="cl100k_base",
             chunk_size=2048,
             rules=custom_rules,
             candidate_size=256,
@@ -475,7 +475,7 @@ class TestSlumberChunkerEdgeCases:
         # Test with different tokenizer
         chunker = SlumberChunker(
             genie=mock_genie,
-            tokenizer_or_token_counter="cl100k_base",
+            tokenizer="cl100k_base",
             verbose=False
         )
         

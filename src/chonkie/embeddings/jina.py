@@ -5,13 +5,13 @@ import os
 import warnings
 from typing import TYPE_CHECKING, List, Optional
 
+import numpy as np
 import requests
 
-if TYPE_CHECKING:
-    import numpy as np
-    from tokenizers import Tokenizer
-
 from .base import BaseEmbeddings
+
+if TYPE_CHECKING:
+    from tokenizers import Tokenizer
 
 
 class JinaEmbeddings(BaseEmbeddings):
@@ -88,22 +88,17 @@ class JinaEmbeddings(BaseEmbeddings):
 
     def _is_available(self) -> bool:
         """Check if the Jina package is available."""
-        return (
-            importutil.find_spec("numpy") is not None
-            and importutil.find_spec("tokenizers") is not None
-        )
+        return importutil.find_spec("tokenizers") is not None
 
     def _import_dependencies(self) -> None:
-        """Lazy import dependencies if they are not already imported.""" 
+        """Lazy import dependencies if they are not already imported."""
         if self._is_available():
-            global np, Tokenizer
-            import numpy as np
+            global Tokenizer
             from tokenizers import Tokenizer
         else:
-            raise ImportError("One (or more) of the following packages is not available: numpy, tokenizers." +
-             " Please install it via `pip install chonkie[jina]`")
+            raise ImportError("tokenizers is not available. Please install it via `pip install chonkie[jina]`")
     
-    def embed(self, text: str) -> "np.ndarray":
+    def embed(self, text: str) -> np.ndarray:
         """Embed a single text using the Jina embeddings API.
 
         Args:
@@ -149,7 +144,7 @@ class JinaEmbeddings(BaseEmbeddings):
         # Adding a fallback raise to satisfy linters and catch unexpected scenarios.
         raise RuntimeError(f"Embedding failed for text '{text[:50]}...' after multiple retries, but no exception was raised.")
 
-    def embed_batch(self, texts: List[str]) -> List["np.ndarray"]:
+    def embed_batch(self, texts: List[str]) -> List[np.ndarray]:
         """Embed multiple texts using the Jina embeddings API.
 
         Args:
@@ -228,7 +223,7 @@ class JinaEmbeddings(BaseEmbeddings):
         """
         return self._dimension
         
-    def get_tokenizer_or_token_counter(self) -> "Tokenizer":
+    def get_tokenizer(self) -> "Tokenizer":
         """Get the tokenizer instance used by the embeddings model.
 
         Returns:

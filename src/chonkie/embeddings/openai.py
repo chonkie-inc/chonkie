@@ -6,11 +6,13 @@ import warnings
 from functools import lru_cache
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
+import numpy as np
+
 from .base import BaseEmbeddings
 
 if TYPE_CHECKING:
-    import numpy as np
     import tiktoken
+    from openai import OpenAI
 
 
 class OpenAIEmbeddings(BaseEmbeddings):
@@ -114,7 +116,7 @@ class OpenAIEmbeddings(BaseEmbeddings):
             base_url=base_url,
             timeout=timeout,
             max_retries=max_retries,
-            **kwargs,
+            **kwargs, # type: ignore
         )
 
         if self.client.api_key is None:
@@ -134,7 +136,7 @@ class OpenAIEmbeddings(BaseEmbeddings):
               return self._tokenizer.decode(tokens[:max_tokens])
         return text
 
-    def embed(self, text: str) -> "np.ndarray":
+    def embed(self, text: str) -> np.ndarray:
         """Get embeddings for a single text."""
         text = self._truncate(text)
         response = self.client.embeddings.create(
@@ -143,7 +145,7 @@ class OpenAIEmbeddings(BaseEmbeddings):
         )
         return np.array(response.data[0].embedding, dtype=np.float32)
 
-    def embed_batch(self, texts: List[str]) -> List["np.ndarray"]:
+    def embed_batch(self, texts: List[str]) -> List[np.ndarray]:
         """Get embeddings for multiple texts using batched API calls."""
         if not texts:
             return []
@@ -181,7 +183,7 @@ class OpenAIEmbeddings(BaseEmbeddings):
 
         return all_embeddings
 
-    def similarity(self, u: "np.ndarray", v: "np.ndarray") -> "np.float32":
+    def similarity(self, u: np.ndarray, v: np.ndarray) -> np.float32:
         """Compute cosine similarity between two embeddings."""
         return np.float32(np.divide(np.dot(u, v), np.linalg.norm(u) * np.linalg.norm(v)))
 
@@ -190,16 +192,15 @@ class OpenAIEmbeddings(BaseEmbeddings):
         """Return the embedding dimension."""
         return self._dimension
 
-    def get_tokenizer_or_token_counter(self) -> "tiktoken.Encoding":
+    def get_tokenizer(self) -> "tiktoken.Encoding":
         """Return a tiktoken tokenizer object."""
         return self._tokenizer  # type: ignore[return-value]
 
     def _is_available(self) -> bool:
         """Check if the OpenAI package is available."""
-        # We should check for OpenAI package alongside Numpy and tiktoken
+        # We should check for OpenAI package alongside tiktoken
         return (
             importutil.find_spec("openai") is not None
-            and importutil.find_spec("numpy") is not None
             and importutil.find_spec("tiktoken") is not None
         )
 
@@ -210,13 +211,12 @@ class OpenAIEmbeddings(BaseEmbeddings):
         additional dependencies. It lazily imports the dependencies only when they are needed.
         """
         if self._is_available():
-            global np, tiktoken, OpenAI
-            import numpy as np
+            global tiktoken, OpenAI
             import tiktoken
             from openai import OpenAI
         else:
             raise ImportError(
-                'One (or more) of the following packages is not available: openai, numpy, tiktoken. Please install it via `pip install "chonkie[openai]"`'
+                'One (or more) of the following packages is not available: openai, tiktoken. Please install it via `pip install "chonkie[openai]"`'
             )
 
     def __repr__(self) -> str:

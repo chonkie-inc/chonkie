@@ -4,10 +4,11 @@ import importlib.util as importutil
 import warnings
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
+import numpy as np
+
 from .base import BaseEmbeddings
 
 if TYPE_CHECKING:
-    import numpy as np
     import tiktoken
     from openai import AzureOpenAI
 
@@ -119,7 +120,7 @@ class AzureOpenAIEmbeddings(BaseEmbeddings):
         else:
             raise ValueError("Embedding dimension must be provided for unknown models.")
 
-    def embed(self, text: str) -> "np.ndarray":
+    def embed(self, text: str) -> np.ndarray:
         """Embed a single string."""
         response = self.client.embeddings.create(
             model=self._deployment,
@@ -128,7 +129,7 @@ class AzureOpenAIEmbeddings(BaseEmbeddings):
 
         return np.array(response.data[0].embedding, dtype=np.float32)
 
-    def embed_batch(self, texts: List[str]) -> List["np.ndarray"]:
+    def embed_batch(self, texts: List[str]) -> List[np.ndarray]:
         """Embed a batch of strings."""
         if not texts:
             return []
@@ -156,7 +157,7 @@ class AzureOpenAIEmbeddings(BaseEmbeddings):
                     raise
         return all_embeddings
 
-    def similarity(self, u: "np.ndarray", v: "np.ndarray") -> "np.float32":
+    def similarity(self, u: np.ndarray, v: np.ndarray) -> np.float32:
         """Compute cosine similarity between two vectors."""
         return np.float32(np.dot(u, v) / (np.linalg.norm(u) * np.linalg.norm(v)))
 
@@ -165,7 +166,7 @@ class AzureOpenAIEmbeddings(BaseEmbeddings):
         """Return the embedding dimension."""
         return self._dimension
 
-    def get_tokenizer_or_token_counter(self) -> "tiktoken.Encoding":
+    def get_tokenizer(self) -> "tiktoken.Encoding":
         """Return a tiktoken tokenizer object."""
         return self._tokenizer  # type: ignore
 
@@ -173,7 +174,6 @@ class AzureOpenAIEmbeddings(BaseEmbeddings):
         """Check if the required dependencies are available."""
         return (
             importutil.find_spec("openai") is not None
-            and importutil.find_spec("numpy") is not None
             and importutil.find_spec("tiktoken") is not None
             and importutil.find_spec("azure.identity") is not None
         )
@@ -185,8 +185,7 @@ class AzureOpenAIEmbeddings(BaseEmbeddings):
         additional dependencies. It lazily imports the dependencies only when they are needed.
         """
         if self._is_available():
-            global np, tiktoken, AzureOpenAI
-            import numpy as np
+            global tiktoken, AzureOpenAI
             import tiktoken
             from openai import AzureOpenAI
         else:
