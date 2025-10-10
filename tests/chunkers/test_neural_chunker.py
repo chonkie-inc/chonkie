@@ -350,6 +350,7 @@ class TestNeuralChunkerConstants:
 
 class TestNeuralChunkerParameterVariations:
     """Test different parameter combinations."""
+    
     def test_different_device_maps(self):
         """Test with different device maps."""
         try:
