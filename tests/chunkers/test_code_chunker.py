@@ -166,3 +166,26 @@ def test_code_chunker_chunk_size_javascript(js_code: str) -> None:
     # Allow for some leeway
     assert all(chunk.token_count < chunk_size + 15 for chunk in chunks[:-1])
     assert chunks[-1].token_count > 0 
+
+
+def test_code_chunker_adds_line_numbers(python_code: str) -> None:
+    """Test that the CodeChunker correctly adds start and end line numbers to chunks."""
+    # Use a chunk size that will reliably split the python_code fixture
+    chunker = CodeChunker(language="python", chunk_size=100)
+    chunks = chunker.chunk(python_code)
+
+    assert len(chunks) > 0, "Chunker should produce at least one chunk"
+
+    # Verify that every chunk has valid, 1-indexed line numbers
+    for chunk in chunks:
+        assert chunk.start_line is not None, "start_line should not be None"
+        assert chunk.end_line is not None, "end_line should not be None"
+        assert isinstance(chunk.start_line, int)
+        assert isinstance(chunk.end_line, int)
+        assert chunk.start_line > 0, "Line numbers should be 1-indexed and positive"
+        assert chunk.end_line >= chunk.start_line, "End line must be greater than or equal to start line"
+
+    # The python_code fixture starts with a newline, so the first line of code is line 1.
+    # The code itself has 18 lines.
+    assert chunks[0].start_line == 1, "The first chunk should start on the first line of code"
+    assert chunks[-1].end_line == 18, "The last chunk should end on the last line of code"
