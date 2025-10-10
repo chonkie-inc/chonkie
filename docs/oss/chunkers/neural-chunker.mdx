@@ -50,6 +50,10 @@ chunker = NeuralChunker(
   semantic shifts.
 </ParamField>
 
+<ParamField path="tokenizer" type="Optional[Union[str, Any]]" default="None">
+  The tokenizer to use for the chunker
+</ParamField>
+
 <ParamField path="device_map" type="str" default="cpu">
   The device to run the inference on (e.g., "cpu", "cuda", "mps"). Chonkie will
   try to auto-detect the best available device if not specified.
@@ -58,6 +62,11 @@ chunker = NeuralChunker(
 <ParamField path="min_characters_per_chunk" type="int" default="10">
   The minimum number of characters required for a text segment to be considered
   a valid chunk.
+</ParamField>
+
+<ParamField path="stride" type="Optional[int]" default="None">
+  Stride to use for the chunker. Will automcatically select appropriate stride
+  for the model if not specified.
 </ParamField>
 
 ## Usage
