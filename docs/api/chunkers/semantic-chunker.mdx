@@ -1,0 +1,188 @@
+---
+title: "Semantic Chunker"
+api: "POST /v1/chunk/semantic"
+description: "Create semantically coherent chunks using embedding similarity"
+---
+
+The Semantic Chunker uses embeddings to identify natural break points in text based on semantic meaning. It creates chunks where topic transitions occur, resulting in more coherent segments than simple structural chunking.
+
+## Authentication
+
+Set your API key as an environment variable or pass it to the SDK:
+
+```bash
+export CHONKIE_API_KEY="your-api-key-here"
+```
+
+Get your API key from [labs.chonkie.ai](https://labs.chonkie.ai)
+
+## Request
+
+#### Parameters
+
+<ParamField path="text" type="string | string[]" required>
+  The text to chunk.
+</ParamField>
+
+<ParamField path="embedding_model" type="string" default="minishlab/potion-base-8M">
+  The embedding model to use for semantic similarity. Supports Hugging Face model identifiers.
+</ParamField>
+
+<ParamField path="tokenizer" type="string" default="gpt2">
+  Tokenizer to use for counting tokens.
+</ParamField>
+
+<ParamField path="chunk_size" type="integer" default="512">
+  Target number of tokens per chunk (soft limit).
+</ParamField>
+
+<ParamField path="similarity_threshold" type="float" default="0.5">
+  Threshold for semantic similarity (0-1). Lower values create more chunks.
+</ParamField>
+
+<ParamField path="similarity_percentile" type="float">
+  Alternative to threshold - use percentile of similarity scores as cutoff.
+</ParamField>
+
+<ParamField path="min_sentences" type="integer" default="1">
+  Minimum number of sentences per chunk.
+</ParamField>
+
+## Response
+
+#### Returns
+
+Array of `Chunk` objects with semantically coherent text segments.
+
+## Examples
+
+<CodeGroup>
+
+```python Python
+from chonkie.cloud import SemanticChunker
+
+# Initialize the semantic chunker
+chunker = SemanticChunker(
+    embedding_model="minishlab/potion-base-8M",
+    chunk_size=512,
+    similarity_threshold=0.5
+)
+
+# Chunk text with topic transitions
+text = """
+Python is a high-level programming language. It's known for its readability
+and simplicity. Many developers choose Python for data science projects.
+
+Quantum computing leverages quantum mechanics. It uses qubits instead of
+classical bits. This enables solving certain problems exponentially faster.
+
+Climate change affects global weather patterns. Rising temperatures impact
+ecosystems worldwide. Mitigation efforts require international cooperation.
+"""
+
+chunks = chunker.chunk(text)
+
+for i, chunk in enumerate(chunks):
+    print(f"Chunk {i+1}: {chunk.text[:60]}...")
+    print(f"Tokens: {chunk.token_count}\n")
+```
+
+```javascript JavaScript
+import { SemanticChunker } from '@chonkiejs/cloud';
+
+// Initialize the semantic chunker
+const chunker = new SemanticChunker({
+  embeddingModel: 'minishlab/potion-base-8M',
+  chunkSize: 512,
+  similarityThreshold: 0.5
+});
+
+// Chunk text with topic transitions
+const text = `
+Python is a high-level programming language. It's known for its readability.
+
+Quantum computing leverages quantum mechanics. It uses qubits instead of bits.
+
+Climate change affects global weather patterns. Rising temperatures impact ecosystems.
+`;
+
+const chunks = await chunker.chunk({ text });
+
+chunks.forEach((chunk, i) => {
+  console.log(`Chunk ${i+1}: ${chunk.text.substring(0, 60)}...`);
+  console.log(`Tokens: ${chunk.tokenCount}\n`);
+});
+```
+
+```bash cURL
+curl -X POST https://api.chonkie.ai/v1/chunk/semantic \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "Python is a high-level programming language. It is known for readability. Quantum computing uses quantum mechanics. It leverages qubits for computation.",
+    "embedding_model": "minishlab/potion-base-8M",
+    "chunk_size": 512,
+    "similarity_threshold": 0.5
+  }'
+```
+
+</CodeGroup>
+
+## Similarity Threshold vs Percentile
+
+Choose between two methods for determining chunk boundaries:
+
+```python
+# Use fixed threshold (explicit control)
+chunker = SemanticChunker(similarity_threshold=0.5)
+
+# Use percentile (adaptive to content)
+chunker = SemanticChunker(similarity_percentile=0.8)
+```
+
+- **similarity_threshold**: Creates chunks when similarity drops below this value
+- **similarity_percentile**: Uses the Nth percentile of all similarity scores as threshold
+
+## Response Example
+
+```json
+[
+  {
+    "text": "Python is a high-level programming language. It's known for its readability and simplicity. Many developers choose Python for data science projects.",
+    "start_index": 0,
+    "end_index": 148,
+    "token_count": 32
+  },
+  {
+    "text": "Quantum computing leverages quantum mechanics. It uses qubits instead of classical bits. This enables solving certain problems exponentially faster.",
+    "start_index": 150,
+    "end_index": 298,
+    "token_count": 28
+  }
+]
+```
+
+## Use Cases
+
+- **Multi-Topic Documents** - Automatically detect topic boundaries
+- **Long-Form Content** - Create coherent segments from articles or books
+- **Knowledge Base** - Group related information together
+- **RAG Applications** - Ensure retrieved chunks contain complete topics
+
+## Best Practices
+
+<Tip>
+  Start with `similarity_threshold=0.5` and adjust based on your content. Lower values (0.3-0.4) create more, smaller chunks. Higher values (0.6-0.7) create fewer, larger chunks.
+</Tip>
+
+<Tip>
+  Use `similarity_percentile` for documents with varying content density. It adapts to the natural distribution of semantic similarities in your text.
+</Tip>
+
+<Tip>
+  Choose an embedding model that matches your domain. Use domain-specific models for specialized content (legal, medical, technical).
+</Tip>
+
+<Warning>
+  Semantic chunking requires embedding computation and is slower than structural chunking methods. Use for quality over speed.
+</Warning>

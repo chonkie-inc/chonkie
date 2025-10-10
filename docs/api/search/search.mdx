@@ -1,0 +1,359 @@
+---
+title: "Semantic Search"
+api: "POST /v1/search"
+description: "Search knowledge bases using semantic similarity"
+---
+
+Perform semantic search over your knowledge bases to find the most relevant chunks for a given query. Supports multiple search modes optimized for different speed/quality trade-offs.
+
+## Authentication
+
+Include your API key in the Authorization header:
+
+```bash
+Authorization: Bearer YOUR_API_KEY
+```
+
+Get your API key from [labs.chonkie.ai](https://labs.chonkie.ai)
+
+## Request
+
+#### Parameters
+
+<ParamField path="query" type="string" required>
+  The search query. Can be a question, statement, or keywords.
+</ParamField>
+
+<ParamField path="knowledge" type="string" required>
+  The slug of the knowledge base to search in.
+</ParamField>
+
+<ParamField path="limit" type="integer" default="10">
+  Maximum number of results to return (1-100).
+</ParamField>
+
+<ParamField path="mode" type="string" default="balanced">
+  Search mode: "fast" (fastest, good quality), "balanced" (moderate speed, high quality), or "deep" (slowest, best quality).
+</ParamField>
+
+## Response
+
+#### Returns
+
+<ResponseField name="results" type="array">
+  Array of search result objects, ranked by relevance.
+</ResponseField>
+
+<ResponseField name="query" type="string">
+  The original search query.
+</ResponseField>
+
+<ResponseField name="knowledgeBase" type="string">
+  The knowledge base slug searched.
+</ResponseField>
+
+<ResponseField name="mode" type="string">
+  The search mode used.
+</ResponseField>
+
+<ResponseField name="took" type="integer">
+  Search time in milliseconds.
+</ResponseField>
+
+Each result object contains:
+
+<ResponseField name="text" type="string">
+  The chunk text content.
+</ResponseField>
+
+<ResponseField name="score" type="float">
+  Relevance score (0-1, higher is more relevant).
+</ResponseField>
+
+<ResponseField name="metadata" type="object">
+  Additional metadata about the chunk.
+</ResponseField>
+
+## Examples
+
+<CodeGroup>
+
+```python Python
+import requests
+
+url = "https://labs.chonkie.ai/api/v1/search"
+headers = {
+    "Authorization": "Bearer YOUR_API_KEY",
+    "Content-Type": "application/json"
+}
+
+data = {
+    "query": "How do I configure authentication?",
+    "knowledge": "product-documentation",
+    "limit": 5,
+    "mode": "balanced"
+}
+
+response = requests.post(url, headers=headers, json=data)
+result = response.json()
+
+print(f"Found {len(result['results'])} results in {result['took']}ms\n")
+
+for i, item in enumerate(result['results']):
+    print(f"Result {i+1} (score: {item['score']:.3f}):")
+    print(f"  {item['text'][:200]}...")
+    print()
+```
+
+```javascript JavaScript
+const response = await fetch('https://labs.chonkie.ai/api/v1/search', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer YOUR_API_KEY',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    query: 'How do I configure authentication?',
+    knowledge: 'product-documentation',
+    limit: 5,
+    mode: 'balanced'
+  })
+});
+
+const result = await response.json();
+
+console.log(`Found ${result.results.length} results in ${result.took}ms\n`);
+
+result.results.forEach((item, i) => {
+  console.log(`Result ${i+1} (score: ${item.score.toFixed(3)}):`);
+  console.log(`  ${item.text.substring(0, 200)}...`);
+  console.log();
+});
+```
+
+```bash cURL
+curl -X POST https://labs.chonkie.ai/api/v1/search \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": "How do I configure authentication?",
+    "knowledge": "product-documentation",
+    "limit": 5,
+    "mode": "balanced"
+  }'
+```
+
+</CodeGroup>
+
+## Response Example
+
+```json
+{
+  "results": [
+    {
+      "text": "Authentication can be configured using Bearer tokens. Include your API key in the Authorization header with the format: Authorization: Bearer YOUR_API_KEY. You can generate API keys from the settings page.",
+      "score": 0.892,
+      "metadata": {
+        "file": "1705320000000-auth-guide.md",
+        "chunk_index": 3
+      }
+    },
+    {
+      "text": "To configure API authentication, first create an API key in your account settings. Then, include this key in all API requests using the Authorization header. Keys can be rotated for security.",
+      "score": 0.854,
+      "metadata": {
+        "file": "1705320001234-api-reference.pdf",
+        "chunk_index": 12
+      }
+    },
+    {
+      "text": "Authentication methods include Bearer token authentication for API calls and OAuth 2.0 for user-facing applications. For server-to-server communication, use API keys with appropriate scopes.",
+      "score": 0.798,
+      "metadata": {
+        "file": "1705320002345-security-docs.md",
+        "chunk_index": 7
+      }
+    }
+  ],
+  "query": "How do I configure authentication?",
+  "knowledgeBase": "product-documentation",
+  "mode": "balanced",
+  "took": 145
+}
+```
+
+## Search Modes
+
+Choose the mode based on your speed vs. quality requirements:
+
+### Fast Mode
+```python
+data = {"query": query, "knowledge": kb_slug, "mode": "fast"}
+```
+- **Speed**: ~50-100ms
+- **Quality**: Good
+- **Best for**: Real-time search, autocomplete, quick lookups
+
+### Balanced Mode (Default)
+```python
+data = {"query": query, "knowledge": kb_slug, "mode": "balanced"}
+```
+- **Speed**: ~100-200ms
+- **Quality**: High
+- **Best for**: General search, Q&A, most use cases
+
+### Deep Mode
+```python
+data = {"query": query, "knowledge": kb_slug, "mode": "deep"}
+```
+- **Speed**: ~200-500ms
+- **Quality**: Best
+- **Best for**: Critical searches, research, when accuracy matters most
+
+## Understanding Scores
+
+Relevance scores range from 0 to 1:
+
+- **0.9-1.0** - Highly relevant, almost exact match
+- **0.7-0.9** - Very relevant, strong semantic similarity
+- **0.5-0.7** - Moderately relevant, related content
+- **0.3-0.5** - Somewhat relevant, tangentially related
+- **< 0.3** - Low relevance, may not be useful
+
+## Filtering Results
+
+Filter results by score threshold:
+
+```python
+def search_with_threshold(query, kb_slug, threshold=0.7):
+    """Search and filter by minimum score."""
+    response = requests.post(
+        "https://labs.chonkie.ai/api/v1/search",
+        headers=headers,
+        json={
+            "query": query,
+            "knowledge": kb_slug,
+            "limit": 20
+        }
+    )
+
+    results = response.json()["results"]
+
+    # Filter by threshold
+    filtered = [r for r in results if r["score"] >= threshold]
+
+    print(f"Found {len(filtered)} results above threshold {threshold}")
+    return filtered
+```
+
+## Use Cases
+
+- **RAG Systems** - Retrieve context for LLM prompts
+- **Q&A Applications** - Find answers to user questions
+- **Document Search** - Semantic search over documentation
+- **Customer Support** - Find relevant support articles
+- **Research** - Discover related content across documents
+
+## Best Practices
+
+<Tip>
+  Start with `mode="balanced"` for most use cases. Switch to "fast" if you need real-time responses, or "deep" when accuracy is critical.
+</Tip>
+
+<Tip>
+  Set `limit` based on your use case: 3-5 for RAG context, 10-20 for search results, 50+ for comprehensive retrieval.
+</Tip>
+
+<Tip>
+  For RAG applications, use a score threshold of 0.7 or higher to ensure only highly relevant chunks are included in LLM context.
+</Tip>
+
+<Warning>
+  Empty knowledge bases or knowledge bases still being indexed will return zero results. Ensure files have completed ingestion before searching.
+</Warning>
+
+<Info>
+  Search is available immediately after file ingestion completes. There's no separate indexing step required.
+</Info>
+
+## RAG Integration Example
+
+Use search results as context for LLM prompts:
+
+```python
+def rag_query(question, kb_slug):
+    """Answer question using RAG."""
+    # 1. Search for relevant context
+    search_response = requests.post(
+        "https://labs.chonkie.ai/api/v1/search",
+        headers=headers,
+        json={
+            "query": question,
+            "knowledge": kb_slug,
+            "limit": 3,
+            "mode": "balanced"
+        }
+    )
+
+    results = search_response.json()["results"]
+
+    # 2. Build context from top results
+    context = "\n\n".join([r["text"] for r in results])
+
+    # 3. Create LLM prompt
+    prompt = f"""Answer the question based on the following context:
+
+Context:
+{context}
+
+Question: {question}
+
+Answer:"""
+
+    # 4. Call LLM (example with OpenAI)
+    # llm_response = openai.chat.completions.create(...)
+
+    return {
+        "context": context,
+        "sources": [r["metadata"] for r in results],
+        "relevance_scores": [r["score"] for r in results]
+    }
+```
+
+## Handling Empty Results
+
+```python
+response = requests.post(url, headers=headers, json=data)
+result = response.json()
+
+if len(result["results"]) == 0:
+    print("No results found. Possible reasons:")
+    print("- Knowledge base is empty")
+    print("- Files are still being ingested")
+    print("- Query doesn't match any content")
+    print("- Try broader or different search terms")
+else:
+    print(f"Found {len(result['results'])} results")
+```
+
+## Error Responses
+
+<ResponseField name="400 Bad Request">
+  Missing required fields (query or knowledge) or invalid parameters.
+</ResponseField>
+
+<ResponseField name="401 Unauthorized">
+  Invalid or missing API key.
+</ResponseField>
+
+<ResponseField name="404 Not Found">
+  Knowledge base doesn't exist or you don't have access.
+</ResponseField>
+
+<ResponseField name="429 Too Many Requests">
+  Rate limit exceeded. Implement backoff and retry.
+</ResponseField>
+
+<ResponseField name="500 Internal Server Error">
+  Search service error. Retry with exponential backoff.
+</ResponseField>

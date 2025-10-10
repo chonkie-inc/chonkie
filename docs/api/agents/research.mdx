@@ -1,0 +1,312 @@
+---
+title: "Deep Research"
+description: "Create comprehensive research reports using AI agents"
+icon: "magnifying-glass"
+---
+
+Deep Research enables agents to conduct thorough, multi-step research on topics, generating comprehensive reports with citations and structured findings.
+
+<Info>
+  Deep Research is a long-running task that can take several minutes to complete. It's designed for thorough analysis, not real-time responses.
+</Info>
+
+## How It Works
+
+1. **Submit Query** - Send a research question
+2. **Background Processing** - Agent conducts research asynchronously
+3. **Multi-step Analysis** - Breaks down query, searches, analyzes
+4. **Report Generation** - Creates structured markdown report
+5. **Retrieve Results** - Fetch completed report
+
+## Create Research Task
+
+#### Endpoint
+
+```
+POST /v1/research
+```
+
+#### Parameters
+
+<ParamField path="agent" type="string" required>
+  Agent slug to use for research.
+</ParamField>
+
+<ParamField path="query" type="string" required>
+  Research question or topic.
+</ParamField>
+
+#### Examples
+
+<CodeGroup>
+
+```python Python
+import requests
+
+url = "https://labs.chonkie.ai/api/v1/research"
+headers = {
+    "Authorization": "Bearer YOUR_API_KEY",
+    "Content-Type": "application/json"
+}
+
+data = {
+    "agent": "documentation-assistant",
+    "query": "What are the best practices for API authentication and security?"
+}
+
+response = requests.post(url, headers=headers, json=data)
+result = response.json()
+
+report_id = result["reportId"]
+agent_slug = result["agentSlug"]
+
+print(f"Research task created: {report_id}")
+print("Processing in background...")
+```
+
+```javascript JavaScript
+const response = await fetch('https://labs.chonkie.ai/api/v1/research', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer YOUR_API_KEY',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    agent: 'documentation-assistant',
+    query: 'What are the best practices for API authentication and security?'
+  })
+});
+
+const result = await response.json();
+console.log(`Research task created: ${result.reportId}`);
+console.log('Processing in background...');
+```
+
+</CodeGroup>
+
+#### Response
+
+```json
+{
+  "reportId": "report_abc123",
+  "agentSlug": "documentation-assistant",
+  "query": "What are the best practices for API authentication and security?",
+  "status": "processing",
+  "createdAt": "2024-01-20T10:30:00Z"
+}
+```
+
+## List Research Reports
+
+#### Endpoint
+
+```
+GET /v1/research/{agent_slug}
+```
+
+#### Examples
+
+<CodeGroup>
+
+```python Python
+agent_slug = "documentation-assistant"
+url = f"https://labs.chonkie.ai/api/v1/research/{agent_slug}"
+headers = {"Authorization": "Bearer YOUR_API_KEY"}
+
+response = requests.get(url, headers=headers)
+reports = response.json()["reports"]
+
+for report in reports:
+    print(f"- {report['title']} ({report['status']})")
+    print(f"  Created: {report['createdAt']}")
+    print(f"  ID: {report['id']}\n")
+```
+
+```javascript JavaScript
+const agentSlug = 'documentation-assistant';
+const response = await fetch(
+  `https://labs.chonkie.ai/api/v1/research/${agentSlug}`,
+  { headers: { 'Authorization': 'Bearer YOUR_API_KEY' } }
+);
+
+const { reports } = await response.json();
+reports.forEach(report => {
+  console.log(`- ${report.title} (${report.status})`);
+  console.log(`  Created: ${report.createdAt}`);
+  console.log(`  ID: ${report.id}\n`);
+});
+```
+
+</CodeGroup>
+
+## Get Research Report
+
+#### Endpoint
+
+```
+GET /v1/research/{agent_slug}/{report_id}
+```
+
+#### Examples
+
+<CodeGroup>
+
+```python Python
+import time
+
+agent_slug = "documentation-assistant"
+report_id = "report_abc123"
+
+url = f"https://labs.chonkie.ai/api/v1/research/{agent_slug}/{report_id}"
+headers = {"Authorization": "Bearer YOUR_API_KEY"}
+
+# Poll until complete
+while True:
+    response = requests.get(url, headers=headers)
+    data = response.json()
+    report = data["report"]
+
+    if report["status"] == "completed":
+        print("Research complete!\n")
+        print(f"Title: {report['title']}\n")
+        print(f"Outline:\n{report['outline']}\n")
+        print(f"Full Report:\n{report['content']}")
+        break
+    elif report["status"] == "failed":
+        print("Research failed")
+        break
+    else:
+        print(f"Status: {report['status']}... waiting")
+        time.sleep(10)
+```
+
+```javascript JavaScript
+const agentSlug = 'documentation-assistant';
+const reportId = 'report_abc123';
+
+// Poll until complete
+while (true) {
+  const response = await fetch(
+    `https://labs.chonkie.ai/api/v1/research/${agentSlug}/${reportId}`,
+    { headers: { 'Authorization': 'Bearer YOUR_API_KEY' } }
+  );
+
+  const { report } = await response.json();
+
+  if (report.status === 'completed') {
+    console.log('Research complete!\n');
+    console.log(`Title: ${report.title}\n`);
+    console.log(`Outline:\n${report.outline}\n`);
+    console.log(`Full Report:\n${report.content}`);
+    break;
+  } else if (report.status === 'failed') {
+    console.log('Research failed');
+    break;
+  } else {
+    console.log(`Status: ${report.status}... waiting`);
+    await new Promise(resolve => setTimeout(resolve, 10000));
+  }
+}
+```
+
+</CodeGroup>
+
+#### Response
+
+```json
+{
+  "report": {
+    "id": "report_abc123",
+    "title": "API Authentication and Security Best Practices",
+    "status": "completed",
+    "query": "What are the best practices for API authentication and security?",
+    "outline": "1. Token-Based Authentication\n2. OAuth 2.0\n3. API Key Management\n4. Rate Limiting\n5. HTTPS Enforcement",
+    "content": "# API Authentication and Security Best Practices\n\n## Executive Summary\n\nAPI security is critical...\n\n## 1. Token-Based Authentication\n\nBearer tokens provide...",
+    "agentId": "agent_abc123",
+    "agentSlug": "documentation-assistant",
+    "createdAt": "2024-01-20T10:30:00Z",
+    "updatedAt": "2024-01-20T10:35:00Z"
+  },
+  "agent": {
+    "id": "agent_abc123",
+    "name": "Documentation Assistant",
+    "slug": "documentation-assistant"
+  }
+}
+```
+
+## Delete Research Report
+
+#### Endpoint
+
+```
+DELETE /v1/research/{agent_slug}/{report_id}
+```
+
+## Report Status
+
+Reports progress through these states:
+
+- **processing** - Research in progress
+- **completed** - Report ready
+- **failed** - Error occurred
+
+## Report Structure
+
+Completed reports include:
+
+- **Title** - Generated title based on query
+- **Outline** - Structured outline of findings
+- **Content** - Full markdown report with sections
+- **Citations** - References to source material
+
+## Use Cases
+
+- **Comprehensive Analysis** - Deep dive into complex topics
+- **Competitive Research** - Analyze competitors or market trends
+- **Technical Documentation** - Generate detailed technical guides
+- **Literature Review** - Summarize research across documents
+
+## Best Practices
+
+<Tip>
+  Deep Research works best with agents that have `useContext=true` and access to comprehensive knowledge bases.
+</Tip>
+
+<Tip>
+  Craft specific research questions for better results. Instead of "Tell me about APIs", ask "What are the security best practices for REST APIs in 2024?"
+</Tip>
+
+<Tip>
+  Research typically takes 2-5 minutes. Implement polling with 10-15 second intervals to check status.
+</Tip>
+
+<Warning>
+  Deep Research is resource-intensive. Rate limits may apply based on your plan.
+</Warning>
+
+<Info>
+  Reports are stored and can be retrieved later. They don't expire unless deleted.
+</Info>
+
+## Typical Timeline
+
+- **Simple queries** (narrow scope): 1-2 minutes
+- **Moderate queries** (balanced depth): 2-4 minutes
+- **Complex queries** (comprehensive analysis): 4-8 minutes
+
+## Error Handling
+
+```python
+response = requests.get(url, headers=headers)
+data = response.json()
+report = data["report"]
+
+if report["status"] == "failed":
+    print(f"Research failed")
+    # Retry with modified query or different agent
+elif report["status"] == "completed":
+    print("Success!")
+else:
+    print(f"Still processing: {report['status']}")
+```

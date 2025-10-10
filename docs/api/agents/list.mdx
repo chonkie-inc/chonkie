@@ -1,0 +1,170 @@
+---
+title: "List Agents"
+api: "GET /v1/agents"
+description: "Get all agents in your organization"
+---
+
+Retrieve a list of all AI agents in your organization, including their configuration and status.
+
+## Authentication
+
+Include your API key in the Authorization header:
+
+```bash
+Authorization: Bearer YOUR_API_KEY
+```
+
+Get your API key from [labs.chonkie.ai](https://labs.chonkie.ai)
+
+## Request
+
+This endpoint takes no parameters. Simply make a GET request with your API key.
+
+## Response
+
+#### Returns
+
+Array of agent objects with full configuration.
+
+## Examples
+
+<CodeGroup>
+
+```python Python
+import requests
+
+url = "https://labs.chonkie.ai/api/v1/agents"
+headers = {
+    "Authorization": "Bearer YOUR_API_KEY"
+}
+
+response = requests.get(url, headers=headers)
+agents = response.json()
+
+print(f"Found {len(agents)} agents:\n")
+for agent in agents:
+    print(f"- {agent['name']} ({agent['slug']})")
+    print(f"  Model: {agent['model']}")
+    print(f"  Context: {agent['useContext']}")
+    if agent['useContext']:
+        print(f"  Knowledge Base: {agent['knowledge']}")
+    print()
+```
+
+```javascript JavaScript
+const response = await fetch('https://labs.chonkie.ai/api/v1/agents', {
+  headers: {
+    'Authorization': 'Bearer YOUR_API_KEY'
+  }
+});
+
+const agents = await response.json();
+console.log(`Found ${agents.length} agents:\n`);
+
+agents.forEach(agent => {
+  console.log(`- ${agent.name} (${agent.slug})`);
+  console.log(`  Model: ${agent.model}`);
+  console.log(`  Context: ${agent.useContext}`);
+  if (agent.useContext) {
+    console.log(`  Knowledge Base: ${agent.knowledge}`);
+  }
+  console.log();
+});
+```
+
+```bash cURL
+curl -X GET https://labs.chonkie.ai/api/v1/agents \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+</CodeGroup>
+
+## Response Example
+
+```json
+[
+  {
+    "id": "agent_abc123",
+    "slug": "documentation-assistant",
+    "name": "Documentation Assistant",
+    "description": "Helps users navigate product documentation",
+    "model": "gpt-4o-mini",
+    "systemPrompt": "You are a helpful documentation assistant...",
+    "temperature": 0.3,
+    "maxContextChunks": 5,
+    "useContext": true,
+    "knowledge": "product-documentation",
+    "status": "active",
+    "organizationSlug": "acme",
+    "createdAt": "2024-01-15T10:30:00Z",
+    "updatedAt": "2024-01-15T10:30:00Z"
+  },
+  {
+    "id": "agent_xyz789",
+    "slug": "code-reviewer",
+    "name": "Code Reviewer",
+    "description": "Reviews code and suggests improvements",
+    "model": "gpt-4o",
+    "systemPrompt": "You are an expert code reviewer...",
+    "temperature": 0.2,
+    "maxContextChunks": 10,
+    "useContext": false,
+    "knowledge": null,
+    "status": "active",
+    "organizationSlug": "acme",
+    "createdAt": "2024-01-10T14:20:00Z",
+    "updatedAt": "2024-01-12T09:15:00Z"
+  }
+]
+```
+
+## Filtering and Sorting
+
+Filter agents in your application:
+
+```python
+def filter_agents_by_model(agents, model):
+    """Get agents using a specific model."""
+    return [a for a in agents if a['model'] == model]
+
+def filter_agents_with_context(agents):
+    """Get agents that use knowledge base context."""
+    return [a for a in agents if a['useContext']]
+
+def sort_agents_by_date(agents, reverse=True):
+    """Sort agents by creation date."""
+    return sorted(agents, key=lambda x: x['createdAt'], reverse=reverse)
+
+# Usage
+agents = response.json()
+gpt4_agents = filter_agents_by_model(agents, "gpt-4o")
+context_agents = filter_agents_with_context(agents)
+recent_agents = sort_agents_by_date(agents)
+```
+
+## Use Cases
+
+- **Dashboard** - Display all agents in admin panel
+- **Selection** - Let users choose which agent to chat with
+- **Monitoring** - Track agent usage and configuration
+- **Audit** - Review which agents exist and their settings
+
+## Best Practices
+
+<Tip>
+  Cache the agent list in your application and refresh periodically, rather than fetching on every interaction.
+</Tip>
+
+<Info>
+  Agents are returned sorted by creation date (newest first) by default.
+</Info>
+
+## Error Responses
+
+<ResponseField name="401 Unauthorized">
+  Invalid or missing API key.
+</ResponseField>
+
+<ResponseField name="429 Too Many Requests">
+  Rate limit exceeded.
+</ResponseField>

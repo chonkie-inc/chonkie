@@ -1,0 +1,321 @@
+---
+title: "Upload Files"
+api: "POST /v1/knowledge/{knowledge_base_slug}"
+description: "Upload one or more files to a knowledge base"
+---
+
+Upload files to a knowledge base for indexing and semantic search. Supports batch uploads and triggers automatic ingestion processing to chunk, embed, and index your documents.
+
+## Authentication
+
+Include your API key in the Authorization header:
+
+```bash
+Authorization: Bearer YOUR_API_KEY
+```
+
+Get your API key from [labs.chonkie.ai](https://labs.chonkie.ai)
+
+## Request
+
+#### Path Parameters
+
+<ParamField path="knowledge_base_slug" type="string" required>
+  The slug of the knowledge base to upload to.
+</ParamField>
+
+#### Body Parameters
+
+<ParamField path="files" type="file | file[]" required>
+  Single file or multiple files to upload. Use multipart/form-data encoding. Maximum 10 files per request.
+</ParamField>
+
+## Response
+
+#### Returns
+
+<ResponseField name="message" type="string">
+  Success message.
+</ResponseField>
+
+<ResponseField name="files" type="array">
+  Array of uploaded file information.
+</ResponseField>
+
+<ResponseField name="knowledgeBaseId" type="string">
+  ID of the knowledge base.
+</ResponseField>
+
+Each file object contains:
+
+<ResponseField name="key" type="string">
+  Unique file identifier (timestamp-filename).
+</ResponseField>
+
+<ResponseField name="originalName" type="string">
+  Original filename.
+</ResponseField>
+
+<ResponseField name="size" type="integer">
+  File size in bytes.
+</ResponseField>
+
+<ResponseField name="type" type="string">
+  MIME type of the file.
+</ResponseField>
+
+## Examples
+
+<CodeGroup>
+
+```python Python
+import requests
+
+kb_slug = "product-documentation"
+url = f"https://labs.chonkie.ai/api/v1/knowledge/{kb_slug}"
+headers = {
+    "Authorization": "Bearer YOUR_API_KEY"
+}
+
+# Upload single file
+with open("api-reference.pdf", "rb") as f:
+    files = {"files": f}
+    response = requests.post(url, headers=headers, files=files)
+
+result = response.json()
+print(f"Uploaded: {result['files'][0]['originalName']}")
+print(f"File key: {result['files'][0]['key']}")
+
+# Upload multiple files
+file_paths = ["doc1.pdf", "doc2.txt", "doc3.md"]
+with open(file_paths[0], "rb") as f1, \
+     open(file_paths[1], "rb") as f2, \
+     open(file_paths[2], "rb") as f3:
+    files = [
+        ("files", f1),
+        ("files", f2),
+        ("files", f3)
+    ]
+    response = requests.post(url, headers=headers, files=files)
+
+result = response.json()
+print(f"Uploaded {len(result['files'])} files")
+```
+
+```javascript JavaScript
+const kbSlug = 'product-documentation';
+
+// Upload single file
+const formData = new FormData();
+const fileInput = document.querySelector('input[type="file"]');
+formData.append('files', fileInput.files[0]);
+
+const response = await fetch(
+  `https://labs.chonkie.ai/api/v1/knowledge/${kbSlug}`,
+  {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Bearer YOUR_API_KEY'
+    },
+    body: formData
+  }
+);
+
+const result = await response.json();
+console.log(`Uploaded: ${result.files[0].originalName}`);
+console.log(`File key: ${result.files[0].key}`);
+
+// Upload multiple files
+const multiFormData = new FormData();
+const fileList = document.querySelector('input[type="file"]').files;
+for (const file of fileList) {
+  multiFormData.append('files', file);
+}
+
+const multiResponse = await fetch(
+  `https://labs.chonkie.ai/api/v1/knowledge/${kbSlug}`,
+  {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Bearer YOUR_API_KEY'
+    },
+    body: multiFormData
+  }
+);
+
+const multiResult = await multiResponse.json();
+console.log(`Uploaded ${multiResult.files.length} files`);
+```
+
+```bash cURL
+# Upload single file
+curl -X POST https://labs.chonkie.ai/api/v1/knowledge/product-documentation \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -F "files=@api-reference.pdf"
+
+# Upload multiple files
+curl -X POST https://labs.chonkie.ai/api/v1/knowledge/product-documentation \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -F "files=@doc1.pdf" \
+  -F "files=@doc2.txt" \
+  -F "files=@doc3.md"
+```
+
+</CodeGroup>
+
+## Response Example
+
+```json
+{
+  "message": "Files uploaded successfully",
+  "files": [
+    {
+      "key": "1705320000000-api-reference.pdf",
+      "originalName": "api-reference.pdf",
+      "size": 2458624,
+      "type": "application/pdf"
+    },
+    {
+      "key": "1705320001234-user-guide.md",
+      "originalName": "user-guide.md",
+      "size": 45123,
+      "type": "text/markdown"
+    }
+  ],
+  "knowledgeBaseId": "kb_abc123def456"
+}
+```
+
+## Async Ingestion
+
+After files are uploaded, they are queued for **asynchronous ingestion**:
+
+1. **Upload** - Files stored in R2 bucket
+2. **Queue** - Ingestion job triggered
+3. **Processing** - Files are chunked and embedded
+4. **Indexing** - Vectors stored in Qdrant
+5. **Ready** - Files searchable via [Semantic Search](/api-reference/search/search)
+
+Ingestion typically completes within:
+- **Small files** (<1MB): Seconds
+- **Medium files** (1-10MB): Minutes
+- **Large files** (>10MB): Several minutes
+
+## Checking Ingestion Status
+
+Search becomes available once ingestion completes. To check if a file is ready:
+
+```python
+import requests
+import time
+
+# Upload file
+upload_response = requests.post(url, headers=headers, files=files)
+file_key = upload_response.json()["files"][0]["key"]
+
+# Wait and test search
+time.sleep(10)  # Give ingestion time to process
+
+search_response = requests.post(
+    "https://labs.chonkie.ai/api/v1/search",
+    headers=headers,
+    json={
+        "query": "test query",
+        "knowledge": kb_slug,
+        "limit": 1
+    }
+)
+
+if len(search_response.json()["results"]) > 0:
+    print("File is indexed and searchable")
+```
+
+## Supported File Formats
+
+| Format | Extensions | Notes |
+|--------|-----------|-------|
+| **PDF** | .pdf | Text-based PDFs (scanned PDFs require OCR) |
+| **Text** | .txt, .md, .markdown | Plain text and Markdown |
+| **Word** | .doc, .docx | Microsoft Word documents |
+| **HTML** | .html, .htm | Web pages and HTML files |
+| **Code** | .py, .js, .java, etc. | Source code files |
+| **Data** | .json, .csv, .xml | Structured data files |
+
+## File Size Limits
+
+- **Maximum file size**: 50MB per file
+- **Maximum files per request**: 10 files
+- **Maximum total size per request**: 100MB
+
+## Use Cases
+
+- **Document Indexing** - Add new documents to your knowledge base
+- **Batch Upload** - Upload multiple related documents at once
+- **Content Updates** - Add new versions of documentation
+- **Migration** - Import existing document collections
+
+## Best Practices
+
+<Tip>
+  Upload files in batches of 5-10 for optimal performance. Very large batches may timeout.
+</Tip>
+
+<Tip>
+  Use descriptive filenames. They help identify files later and improve organization.
+</Tip>
+
+<Tip>
+  For very large files, consider splitting them into smaller sections before uploading.
+</Tip>
+
+<Warning>
+  Duplicate filenames are allowed. Each upload gets a unique key with timestamp prefix.
+</Warning>
+
+<Info>
+  Ingestion processing is automatic and requires no additional API calls. Files become searchable once processing completes.
+</Info>
+
+## Error Responses
+
+<ResponseField name="400 Bad Request">
+  No files provided, or files exceed size limits.
+</ResponseField>
+
+<ResponseField name="401 Unauthorized">
+  Invalid or missing API key.
+</ResponseField>
+
+<ResponseField name="404 Not Found">
+  Knowledge base doesn't exist or you don't have access.
+</ResponseField>
+
+<ResponseField name="413 Payload Too Large">
+  Files exceed maximum size limits.
+</ResponseField>
+
+<ResponseField name="429 Too Many Requests">
+  Rate limit exceeded or too many concurrent uploads.
+</ResponseField>
+
+## Monitoring Upload Progress
+
+For large file uploads, you can monitor progress:
+
+```javascript
+const formData = new FormData();
+formData.append('files', largeFile);
+
+const xhr = new XMLHttpRequest();
+
+xhr.upload.addEventListener('progress', (e) => {
+  if (e.lengthComputable) {
+    const percentComplete = (e.loaded / e.total) * 100;
+    console.log(`Upload progress: ${percentComplete.toFixed(2)}%`);
+  }
+});
+
+xhr.open('POST', `https://labs.chonkie.ai/api/v1/knowledge/${kbSlug}`);
+xhr.setRequestHeader('Authorization', 'Bearer YOUR_API_KEY');
+xhr.send(formData);
+```

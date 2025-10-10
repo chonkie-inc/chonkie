@@ -1,0 +1,314 @@
+---
+title: "Introduction"
+description: "Get started with Chonkie's Cloud API for intelligent text processing and RAG"
+icon: "rocket"
+---
+
+Welcome to Chonkie's Cloud API! Build powerful AI applications with enterprise-grade text chunking, semantic search, and intelligent agents.
+
+## What is Chonkie Cloud?
+
+Chonkie Cloud provides two complementary APIs:
+
+### 🔪 Chunking & Embedding API
+**Base URL**: `https://api.chonkie.ai`
+
+Transform raw text into perfectly-sized, semantically meaningful chunks for RAG applications. Includes:
+
+- **8 Advanced Chunkers** - Token, Sentence, Recursive, Semantic, Late, Code, Neural, and Slumber
+- **2 Refineries** - Add embeddings and overlap for better retrieval
+- **Multiple Embeddings** - Support for all major embedding models
+- **Battle-tested** - Used in production by thousands of developers
+
+### 🧠 Context as a Service API
+**Base URL**: `https://labs.chonkie.ai/api`
+
+Build AI applications with persistent knowledge and intelligent agents:
+
+- **Knowledge Bases** - Store and index documents with automatic chunking and embedding
+- **Semantic Search** - Three-mode search (fast/balanced/deep) over your documents
+- **AI Agents** - Configurable agents with LLM integration and RAG capabilities
+- **MCP Integration** - Connect to Claude Desktop via Model Context Protocol
+
+## Quick Start
+
+### 1. Get Your API Key
+
+Sign up at [labs.chonkie.ai](https://labs.chonkie.ai) to get your API key.
+
+### 2. Install SDK (Optional)
+
+<CodeGroup>
+
+```bash Python
+pip install chonkie[cloud]
+```
+
+```bash JavaScript
+npm install @chonkiejs/cloud
+```
+
+</CodeGroup>
+
+### 3. Make Your First Request
+
+<CodeGroup>
+
+```python Python - Chunking
+from chonkie.cloud import TokenChunker
+
+# Initialize chunker
+chunker = TokenChunker(
+    chunk_size=512,
+    chunk_overlap=50
+)
+
+# Chunk your text
+text = "Your long document here..."
+chunks = chunker.chunk(text)
+
+print(f"Created {len(chunks)} chunks")
+```
+
+```javascript JavaScript - Chunking
+import { TokenChunker } from '@chonkiejs/cloud';
+
+// Initialize chunker
+const chunker = new TokenChunker({
+  chunkSize: 512,
+  chunkOverlap: 50
+});
+
+// Chunk your text
+const text = "Your long document here...";
+const chunks = await chunker.chunk({ text });
+
+console.log(`Created ${chunks.length} chunks`);
+```
+
+```python Python - Knowledge Base
+import requests
+
+# Create knowledge base
+response = requests.post(
+    "https://labs.chonkie.ai/api/v1/knowledge",
+    headers={
+        "Authorization": "Bearer YOUR_API_KEY",
+        "Content-Type": "application/json"
+    },
+    json={
+        "name": "My Docs",
+        "description": "Product documentation"
+    }
+)
+
+kb = response.json()
+print(f"Created: {kb['slug']}")
+```
+
+```javascript JavaScript - Knowledge Base
+// Create knowledge base
+const response = await fetch(
+  'https://labs.chonkie.ai/api/v1/knowledge',
+  {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Bearer YOUR_API_KEY',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      name: 'My Docs',
+      description: 'Product documentation'
+    })
+  }
+);
+
+const kb = await response.json();
+console.log(`Created: ${kb.slug}`);
+```
+
+</CodeGroup>
+
+## Authentication
+
+All API requests require authentication using Bearer tokens:
+
+```bash
+Authorization: Bearer YOUR_API_KEY
+```
+
+Set it as an environment variable for convenience:
+
+```bash
+export CHONKIE_API_KEY="your-api-key-here"
+```
+
+The SDK automatically reads from `CHONKIE_API_KEY` if no key is provided explicitly.
+
+## API Overview
+
+### Chunking API
+
+Perfect for developers who need:
+- Text preprocessing for RAG pipelines
+- Embedding generation at scale
+- Flexible chunking strategies
+- Direct integration with existing systems
+
+**Popular Endpoints:**
+- [Token Chunker](/api-reference/chunking/token-chunker) - Fast, simple chunking
+- [Semantic Chunker](/api-reference/chunking/semantic-chunker) - Topic-aware boundaries
+- [Code Chunker](/api-reference/chunking/code-chunker) - Language-aware code splitting
+- [Embeddings Refinery](/api-reference/refineries/embeddings) - Add vector embeddings
+
+### Context as a Service API
+
+Perfect for teams who need:
+- Managed knowledge base infrastructure
+- Built-in semantic search
+- AI agents with knowledge integration
+- No vector database setup required
+
+**Popular Endpoints:**
+- [Create Knowledge Base](/api-reference/knowledge/create) - Store documents
+- [Semantic Search](/api-reference/search/search) - Query knowledge
+- [Create Agent](/api-reference/agents/create) - Build AI assistants
+- [Chat](/api-reference/agents/chat) - OpenAI-compatible chat
+
+## Use Cases
+
+<CardGroup cols={2}>
+
+<Card title="RAG Applications" icon="brain">
+  Chunk documents, generate embeddings, and build retrieval systems for LLMs
+</Card>
+
+<Card title="Document Search" icon="magnifying-glass">
+  Create semantic search over documentation, support articles, or knowledge bases
+</Card>
+
+<Card title="AI Chatbots" icon="comments">
+  Build context-aware chatbots that answer questions from your documents
+</Card>
+
+<Card title="Code Analysis" icon="code">
+  Index and search codebases with language-aware chunking
+</Card>
+
+</CardGroup>
+
+## Rate Limits
+
+| Plan | Chunking API | Context API | Knowledge Bases | Agents |
+|------|--------------|-------------|-----------------|--------|
+| **Free** | 1,000 req/day | 100 req/day | 1 KB | 1 agent |
+| **Pro** | 10,000 req/day | 1,000 req/day | 10 KBs | 10 agents |
+| **Team** | 100,000 req/day | 10,000 req/day | 100 KBs | 100 agents |
+| **Enterprise** | Custom | Custom | Unlimited | Unlimited |
+
+Check your current usage at [labs.chonkie.ai/settings](https://labs.chonkie.ai/settings)
+
+## SDKs and Libraries
+
+Official SDKs available:
+
+- **Python**: `pip install chonkie[cloud]` - [GitHub](https://github.com/chonkie-ai/chonkie)
+- **JavaScript/TypeScript**: `npm install @chonkiejs/cloud` - [GitHub](https://github.com/chonkie-ai/chonkiejs)
+
+Both SDKs provide:
+- Type-safe interfaces
+- Automatic retries
+- Error handling
+- Environment variable support
+- Full feature parity with REST API
+
+## Response Format
+
+All API responses use JSON format:
+
+### Success Response
+```json
+{
+  "data": {...},
+  "message": "Success"
+}
+```
+
+### Error Response
+```json
+{
+  "error": "Error message",
+  "details": "Additional context",
+  "code": "ERROR_CODE"
+}
+```
+
+## Common HTTP Status Codes
+
+| Code | Meaning | Action |
+|------|---------|--------|
+| **200** | Success | Request completed successfully |
+| **400** | Bad Request | Check request parameters |
+| **401** | Unauthorized | Verify API key is correct |
+| **404** | Not Found | Resource doesn't exist |
+| **429** | Rate Limited | Slow down requests or upgrade plan |
+| **500** | Server Error | Retry with exponential backoff |
+
+## Best Practices
+
+<Tip>
+  **Cache API responses** when possible to reduce latency and stay within rate limits.
+</Tip>
+
+<Tip>
+  **Use appropriate chunk sizes** based on your LLM's context window. Common sizes: 512 for GPT-3.5, 1024 for GPT-4.
+</Tip>
+
+<Tip>
+  **Add overlap** between chunks (10-20%) to avoid losing information at boundaries.
+</Tip>
+
+<Tip>
+  **Choose the right chunker** for your content type. Use Semantic for varied topics, Code for source code, Token for general text.
+</Tip>
+
+<Warning>
+  **Never commit API keys** to version control. Use environment variables or secrets management.
+</Warning>
+
+## Getting Help
+
+Need assistance?
+
+- **Documentation**: You're reading it! Browse the sidebar for detailed guides
+- **Discord Community**: [discord.gg/Q6zkP8w6ur](https://discord.gg/Q6zkP8w6ur)
+- **Email Support**: [support@chonkie.ai](mailto:support@chonkie.ai)
+- **GitHub Issues**: [github.com/chonkie-ai/chonkie/issues](https://github.com/chonkie-ai/chonkie/issues)
+
+## What's Next?
+
+<CardGroup cols={2}>
+
+<Card title="Try the Playground" icon="flask" href="/api-reference/common/playground">
+  Test chunkers visually without writing code
+</Card>
+
+<Card title="Build with Chunking" icon="scissors" href="/api-reference/chunking/token-chunker">
+  Start chunking text for your RAG pipeline
+</Card>
+
+<Card title="Create Knowledge Base" icon="database" href="/api-reference/knowledge/create">
+  Store and search documents at scale
+</Card>
+
+<Card title="Deploy an Agent" icon="robot" href="/api-reference/agents/create">
+  Build AI assistants with knowledge integration
+</Card>
+
+</CardGroup>
+
+---
+
+<Info>
+  **New to RAG?** Check out our [concepts guide](/common/concepts) to learn about chunking, embeddings, and retrieval.
+</Info>

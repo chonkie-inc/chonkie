@@ -1,0 +1,208 @@
+---
+title: "Update Agent"
+api: "PUT /v1/agents/{agent_slug}"
+description: "Modify an agent's configuration"
+---
+
+Update an existing agent's configuration, including model, system prompt, temperature, and knowledge base settings.
+
+## Authentication
+
+Include your API key in the Authorization header:
+
+```bash
+Authorization: Bearer YOUR_API_KEY
+```
+
+## Request
+
+#### Path Parameters
+
+<ParamField path="agent_slug" type="string" required>
+  The slug of the agent to update.
+</ParamField>
+
+#### Body Parameters
+
+All parameters are optional. Only include fields you want to update.
+
+<ParamField path="name" type="string">
+  New agent name.
+</ParamField>
+
+<ParamField path="description" type="string">
+  New description.
+</ParamField>
+
+<ParamField path="model" type="string">
+  Change the LLM model.
+</ParamField>
+
+<ParamField path="systemPrompt" type="string">
+  Update system prompt.
+</ParamField>
+
+<ParamField path="temperature" type="float">
+  Adjust temperature (0.0-2.0).
+</ParamField>
+
+<ParamField path="maxContextChunks" type="integer">
+  Change max context chunks.
+</ParamField>
+
+<ParamField path="useContext" type="boolean">
+  Enable/disable context injection.
+</ParamField>
+
+<ParamField path="knowledge" type="string">
+  Change knowledge base.
+</ParamField>
+
+## Response
+
+#### Returns
+
+<ResponseField name="agent" type="object">
+  Updated agent configuration.
+</ResponseField>
+
+## Examples
+
+<CodeGroup>
+
+```python Python
+import requests
+
+agent_slug = "documentation-assistant"
+url = f"https://labs.chonkie.ai/api/v1/agents/{agent_slug}"
+headers = {
+    "Authorization": "Bearer YOUR_API_KEY",
+    "Content-Type": "application/json"
+}
+
+# Update specific fields
+data = {
+    "model": "gpt-4o",  # Upgrade to GPT-4o
+    "temperature": 0.5,  # Increase creativity
+    "maxContextChunks": 10  # More context
+}
+
+response = requests.put(url, headers=headers, json=data)
+result = response.json()
+
+print(f"Updated agent: {result['agent']['name']}")
+print(f"New model: {result['agent']['model']}")
+print(f"New temperature: {result['agent']['temperature']}")
+```
+
+```javascript JavaScript
+const agentSlug = 'documentation-assistant';
+const response = await fetch(
+  `https://labs.chonkie.ai/api/v1/agents/${agentSlug}`,
+  {
+    method: 'PUT',
+    headers: {
+      'Authorization': 'Bearer YOUR_API_KEY',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      model: 'gpt-4o',
+      temperature: 0.5,
+      maxContextChunks: 10
+    })
+  }
+);
+
+const result = await response.json();
+console.log(`Updated agent: ${result.agent.name}`);
+console.log(`New model: ${result.agent.model}`);
+```
+
+```bash cURL
+curl -X PUT https://labs.chonkie.ai/api/v1/agents/documentation-assistant \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gpt-4o",
+    "temperature": 0.5,
+    "maxContextChunks": 10
+  }'
+```
+
+</CodeGroup>
+
+## Response Example
+
+```json
+{
+  "message": "Agent updated successfully",
+  "slug": "documentation-assistant",
+  "agent": {
+    "id": "agent_abc123",
+    "slug": "documentation-assistant",
+    "name": "Documentation Assistant",
+    "model": "gpt-4o",
+    "temperature": 0.5,
+    "maxContextChunks": 10,
+    "useContext": true,
+    "knowledge": "product-documentation",
+    "updatedAt": "2024-01-20T15:45:00Z"
+  }
+}
+```
+
+## Common Update Patterns
+
+### Change Model
+```python
+data = {"model": "gpt-4o"}
+```
+
+### Adjust Temperature
+```python
+data = {"temperature": 0.8}
+```
+
+### Update System Prompt
+```python
+data = {
+    "systemPrompt": "You are an expert Python developer assistant..."
+}
+```
+
+### Switch Knowledge Base
+```python
+data = {"knowledge": "new-knowledge-base-slug"}
+```
+
+### Disable Context
+```python
+data = {
+    "useContext": False,
+    "knowledge": None
+}
+```
+
+## Best Practices
+
+<Tip>
+  Only send fields you want to change. Omitted fields remain unchanged.
+</Tip>
+
+<Warning>
+  Changing the model affects cost and latency. Test thoroughly before switching production agents.
+</Warning>
+
+## Error Responses
+
+<ResponseField name="400 Bad Request">
+  Invalid parameters or invalid knowledge base reference.
+</ResponseField>
+
+<ResponseField name="401 Unauthorized">
+  Invalid or missing API key.
+</ResponseField>
+
+<ResponseField name="404 Not Found">
+  Agent doesn't exist or you don't have access.
+</ResponseField>

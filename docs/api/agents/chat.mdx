@@ -1,0 +1,338 @@
+---
+title: "Chat with Agent"
+api: "POST /v1/chat/completions"
+description: "Have conversations with AI agents using OpenAI-compatible API"
+---
+
+Chat with your agents using an OpenAI-compatible API. Supports both streaming and non-streaming responses, with automatic context injection from knowledge bases.
+
+## Authentication
+
+Include your API key in the Authorization header:
+
+```bash
+Authorization: Bearer YOUR_API_KEY
+```
+
+## Request
+
+#### Parameters
+
+<ParamField path="model" type="string" required>
+  The agent slug to use (replaces OpenAI's model parameter).
+</ParamField>
+
+<ParamField path="messages" type="array" required>
+  Array of message objects in OpenAI format.
+</ParamField>
+
+<ParamField path="stream" type="boolean" default="false">
+  Enable streaming responses.
+</ParamField>
+
+<ParamField path="temperature" type="float">
+  Override agent's default temperature (0.0-2.0).
+</ParamField>
+
+<ParamField path="max_tokens" type="integer">
+  Maximum tokens in response.
+</ParamField>
+
+## Response
+
+#### Returns (Non-streaming)
+
+OpenAI-compatible chat completion response.
+
+#### Returns (Streaming)
+
+Server-Sent Events (SSE) with delta chunks.
+
+## Examples
+
+<CodeGroup>
+
+```python Python - Basic
+import requests
+
+url = "https://labs.chonkie.ai/api/v1/chat/completions"
+headers = {
+    "Authorization": "Bearer YOUR_API_KEY",
+    "Content-Type": "application/json"
+}
+
+data = {
+    "model": "documentation-assistant",  # Agent slug
+    "messages": [
+        {"role": "user", "content": "How do I configure authentication?"}
+    ]
+}
+
+response = requests.post(url, headers=headers, json=data)
+result = response.json()
+
+assistant_message = result["choices"][0]["message"]["content"]
+print(f"Assistant: {assistant_message}")
+```
+
+```python Python - Streaming
+import requests
+
+data = {
+    "model": "documentation-assistant",
+    "messages": [
+        {"role": "user", "content": "Explain API authentication"}
+    ],
+    "stream": True
+}
+
+response = requests.post(url, headers=headers, json=data, stream=True)
+
+print("Assistant: ", end="")
+for line in response.iter_lines():
+    if line:
+        line = line.decode('utf-8')
+        if line.startswith('data: '):
+            data_str = line[6:]
+            if data_str == '[DONE]':
+                break
+            import json
+            chunk = json.loads(data_str)
+            content = chunk["choices"][0]["delta"].get("content", "")
+            print(content, end="", flush=True)
+print()
+```
+
+```javascript JavaScript - Basic
+const response = await fetch(
+  'https://labs.chonkie.ai/api/v1/chat/completions',
+  {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Bearer YOUR_API_KEY',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      model: 'documentation-assistant',
+      messages: [
+        { role: 'user', content: 'How do I configure authentication?' }
+      ]
+    })
+  }
+);
+
+const result = await response.json();
+const assistantMessage = result.choices[0].message.content;
+console.log(`Assistant: ${assistantMessage}`);
+```
+
+```javascript JavaScript - Streaming
+const response = await fetch(
+  'https://labs.chonkie.ai/api/v1/chat/completions',
+  {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Bearer YOUR_API_KEY',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      model: 'documentation-assistant',
+      messages: [
+        { role: 'user', content: 'Explain API authentication' }
+      ],
+      stream: true
+    })
+  }
+);
+
+const reader = response.body.getReader();
+const decoder = new TextDecoder();
+
+process.stdout.write('Assistant: ');
+while (true) {
+  const { done, value } = await reader.read();
+  if (done) break;
+
+  const chunk = decoder.decode(value);
+  const lines = chunk.split('\n');
+
+  for (const line of lines) {
+    if (line.startsWith('data: ')) {
+      const data = line.slice(6);
+      if (data === '[DONE]') break;
+
+      try {
+        const parsed = JSON.parse(data);
+        const content = parsed.choices[0]?.delta?.content || '';
+        process.stdout.write(content);
+      } catch (e) {
+        // Skip invalid JSON
+      }
+    }
+  }
+}
+console.log();
+```
+
+```bash cURL
+curl -X POST https://labs.chonkie.ai/api/v1/chat/completions \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "documentation-assistant",
+    "messages": [
+      {"role": "user", "content": "How do I configure authentication?"}
+    ]
+  }'
+```
+
+</CodeGroup>
+
+## Response Example (Non-streaming)
+
+```json
+{
+  "id": "chatcmpl_abc123",
+  "object": "chat.completion",
+  "created": 1705320000,
+  "model": "documentation-assistant",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "To configure authentication, you need to include your API key in the Authorization header. Here's how:\n\n1. Get your API key from labs.chonkie.ai\n2. Include it in requests: `Authorization: Bearer YOUR_API_KEY`\n3. All API endpoints require this header for authentication.\n\nYou can also rotate keys for security from your account settings."
+      },
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 45,
+    "completion_tokens": 78,
+    "total_tokens": 123
+  }
+}
+```
+
+## Message Format
+
+Messages use OpenAI format:
+
+```python
+messages = [
+    {"role": "system", "content": "You are a helpful assistant."},  # Optional
+    {"role": "user", "content": "What is Python?"},
+    {"role": "assistant", "content": "Python is a programming language."},
+    {"role": "user", "content": "Tell me more about it."}
+]
+```
+
+**Roles:**
+- **system** - Overrides agent's system prompt (optional)
+- **user** - User messages
+- **assistant** - Assistant responses (for conversation history)
+
+## Context Injection
+
+When the agent has `useContext=true`:
+
+1. User sends query
+2. Agent searches knowledge base automatically
+3. Top relevant chunks injected into context
+4. Agent responds with knowledge-aware answer
+
+You don't need to manually retrieve or inject context - it happens automatically.
+
+## Multi-turn Conversations
+
+Maintain conversation history by including previous messages:
+
+```python
+# First turn
+messages = [
+    {"role": "user", "content": "What is RAG?"}
+]
+response1 = requests.post(url, headers=headers, json={
+    "model": "documentation-assistant",
+    "messages": messages
+})
+assistant_reply = response1.json()["choices"][0]["message"]["content"]
+
+# Second turn - include history
+messages.append({"role": "assistant", "content": assistant_reply})
+messages.append({"role": "user", "content": "How do I implement it?"})
+
+response2 = requests.post(url, headers=headers, json={
+    "model": "documentation-assistant",
+    "messages": messages
+})
+```
+
+## OpenAI SDK Compatibility
+
+Use OpenAI's SDK by changing the base URL:
+
+```python
+from openai import OpenAI
+
+client = OpenAI(
+    api_key="YOUR_CHONKIE_API_KEY",
+    base_url="https://labs.chonkie.ai/api/v1"
+)
+
+response = client.chat.completions.create(
+    model="documentation-assistant",  # Agent slug
+    messages=[
+        {"role": "user", "content": "How do I use the API?"}
+    ]
+)
+
+print(response.choices[0].message.content)
+```
+
+## Use Cases
+
+- **Customer Support Chatbots** - Answer user questions
+- **Documentation Chat** - Interactive docs assistant
+- **Code Assistants** - Help developers with APIs
+- **Internal Tools** - Employee-facing chat interfaces
+
+## Best Practices
+
+<Tip>
+  For conversational UIs, use streaming to show responses as they're generated, providing better UX.
+</Tip>
+
+<Tip>
+  Include conversation history (up to last 5-10 turns) for context-aware responses.
+</Tip>
+
+<Tip>
+  Set appropriate `max_tokens` to control response length and costs.
+</Tip>
+
+<Warning>
+  Large conversation histories increase token usage and cost. Trim old messages as needed.
+</Warning>
+
+<Info>
+  Context injection happens automatically when `useContext=true`. The agent handles retrieval and injection internally.
+</Info>
+
+## Error Responses
+
+<ResponseField name="400 Bad Request">
+  Invalid message format or missing required fields.
+</ResponseField>
+
+<ResponseField name="401 Unauthorized">
+  Invalid or missing API key.
+</ResponseField>
+
+<ResponseField name="404 Not Found">
+  Agent doesn't exist or you don't have access.
+</ResponseField>
+
+<ResponseField name="429 Too Many Requests">
+  Rate limit exceeded.
+</ResponseField>

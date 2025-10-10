@@ -1,0 +1,253 @@
+---
+title: "Download File"
+api: "GET /v1/knowledge/{knowledge_base_slug}/{file_id}"
+description: "Download a specific file from a knowledge base"
+---
+
+Download the original file from a knowledge base. Returns the file as a binary stream with appropriate content-type headers.
+
+## Authentication
+
+Include your API key in the Authorization header:
+
+```bash
+Authorization: Bearer YOUR_API_KEY
+```
+
+Get your API key from [labs.chonkie.ai](https://labs.chonkie.ai)
+
+## Request
+
+#### Path Parameters
+
+<ParamField path="knowledge_base_slug" type="string" required>
+  The slug of the knowledge base.
+</ParamField>
+
+<ParamField path="file_id" type="string" required>
+  The file key from [Get Knowledge Base Files](/api-reference/knowledge/get-files). Format: `{timestamp}-{filename}`
+</ParamField>
+
+## Response
+
+#### Returns
+
+Binary file stream with headers:
+
+<ResponseField name="Content-Type" type="header">
+  MIME type of the file (e.g., "application/pdf", "text/plain").
+</ResponseField>
+
+<ResponseField name="Content-Length" type="header">
+  File size in bytes.
+</ResponseField>
+
+<ResponseField name="Content-Disposition" type="header">
+  Attachment header with original filename.
+</ResponseField>
+
+<ResponseField name="ETag" type="header">
+  Entity tag for caching.
+</ResponseField>
+
+## Examples
+
+<CodeGroup>
+
+```python Python
+import requests
+
+kb_slug = "product-documentation"
+file_id = "1705320000000-api-reference.pdf"
+
+url = f"https://labs.chonkie.ai/api/v1/knowledge/{kb_slug}/{file_id}"
+headers = {
+    "Authorization": "Bearer YOUR_API_KEY"
+}
+
+response = requests.get(url, headers=headers)
+
+# Save to file
+with open("downloaded-api-reference.pdf", "wb") as f:
+    f.write(response.content)
+
+print(f"Downloaded: {file_id}")
+print(f"Size: {len(response.content)} bytes")
+print(f"Content-Type: {response.headers['Content-Type']}")
+```
+
+```javascript JavaScript
+const kbSlug = 'product-documentation';
+const fileId = '1705320000000-api-reference.pdf';
+
+const response = await fetch(
+  `https://labs.chonkie.ai/api/v1/knowledge/${kbSlug}/${fileId}`,
+  {
+    headers: {
+      'Authorization': 'Bearer YOUR_API_KEY'
+    }
+  }
+);
+
+// Get filename from Content-Disposition header
+const disposition = response.headers.get('Content-Disposition');
+const filename = disposition.match(/filename="(.+)"/)[1];
+
+// Download file
+const blob = await response.blob();
+const url = window.URL.createObjectURL(blob);
+const a = document.createElement('a');
+a.href = url;
+a.download = filename;
+document.body.appendChild(a);
+a.click();
+a.remove();
+window.URL.revokeObjectURL(url);
+
+console.log(`Downloaded: ${filename}`);
+```
+
+```bash cURL
+# Download and save file
+curl -X GET \
+  https://labs.chonkie.ai/api/v1/knowledge/product-documentation/1705320000000-api-reference.pdf \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -o downloaded-file.pdf
+
+# View headers only
+curl -X GET \
+  https://labs.chonkie.ai/api/v1/knowledge/product-documentation/1705320000000-api-reference.pdf \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -I
+```
+
+</CodeGroup>
+
+## Response Headers Example
+
+```
+HTTP/1.1 200 OK
+Content-Type: application/pdf
+Content-Length: 2458624
+Content-Disposition: attachment; filename="api-reference.pdf"
+ETag: "d8e8fca2dc0f896fd7cb4cb0031ba249"
+Cache-Control: private, max-age=3600
+```
+
+## Download with Progress Tracking
+
+For large files, track download progress:
+
+```python
+import requests
+
+url = f"https://labs.chonkie.ai/api/v1/knowledge/{kb_slug}/{file_id}"
+headers = {"Authorization": "Bearer YOUR_API_KEY"}
+
+response = requests.get(url, headers=headers, stream=True)
+total_size = int(response.headers.get('content-length', 0))
+
+downloaded = 0
+with open("output.pdf", "wb") as f:
+    for chunk in response.iter_content(chunk_size=8192):
+        if chunk:
+            f.write(chunk)
+            downloaded += len(chunk)
+            progress = (downloaded / total_size) * 100
+            print(f"Downloaded: {progress:.1f}%", end="\r")
+
+print(f"\nDownload complete: {downloaded} bytes")
+```
+
+## Extracting Original Filename
+
+The original filename is embedded in the Content-Disposition header:
+
+```python
+import re
+
+disposition = response.headers['Content-Disposition']
+# disposition = 'attachment; filename="api-reference.pdf"'
+
+match = re.search(r'filename="(.+)"', disposition)
+if match:
+    original_filename = match.group(1)
+    print(f"Original filename: {original_filename}")
+```
+
+## Use Cases
+
+- **File Recovery** - Download original documents
+- **Backup** - Create local backups of knowledge base files
+- **Distribution** - Share files with team members
+- **Analysis** - Download files for local processing
+- **Archive** - Export knowledge base contents
+
+## Best Practices
+
+<Tip>
+  Use streaming for large files to avoid loading entire files into memory. Most HTTP libraries support streaming downloads.
+</Tip>
+
+<Tip>
+  Respect the ETag header for caching. If you've downloaded a file before, send the ETag in an If-None-Match header to check if it's changed.
+</Tip>
+
+<Info>
+  Downloaded files are identical to the originally uploaded files. No processing or modification occurs during storage.
+</Info>
+
+<Warning>
+  Very large files may take time to download. Implement timeout handling and retry logic for production applications.
+</Warning>
+
+## Conditional Downloads
+
+Use ETags for efficient conditional downloads:
+
+```python
+import requests
+
+headers = {
+    "Authorization": "Bearer YOUR_API_KEY",
+    "If-None-Match": "d8e8fca2dc0f896fd7cb4cb0031ba249"  # Previous ETag
+}
+
+response = requests.get(url, headers=headers)
+
+if response.status_code == 304:
+    print("File not modified, use cached version")
+else:
+    print("File updated, downloading new version")
+    with open("output.pdf", "wb") as f:
+        f.write(response.content)
+```
+
+## File ID Format
+
+The `file_id` parameter uses the format returned by [Get Knowledge Base Files](/api-reference/knowledge/get-files):
+
+- **Format**: `{timestamp}-{filename}`
+- **Example**: `1705320000000-api-reference.pdf`
+- **Timestamp**: Unix millisecond timestamp
+- **Filename**: Original filename with extension
+
+Always use the full file key, including the timestamp prefix.
+
+## Error Responses
+
+<ResponseField name="401 Unauthorized">
+  Invalid or missing API key.
+</ResponseField>
+
+<ResponseField name="404 Not Found">
+  File doesn't exist, knowledge base doesn't exist, or you don't have access.
+</ResponseField>
+
+<ResponseField name="429 Too Many Requests">
+  Rate limit exceeded for downloads.
+</ResponseField>
+
+<ResponseField name="500 Internal Server Error">
+  Storage error. Contact support if this persists.
+</ResponseField>

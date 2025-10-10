@@ -1,0 +1,104 @@
+---
+title: "Delete Agent"
+api: "DELETE /v1/agents/{agent_slug}"
+description: "Permanently delete an agent"
+---
+
+Delete an agent permanently. This removes the agent configuration but does not affect the knowledge base it was using.
+
+## Authentication
+
+Include your API key in the Authorization header:
+
+```bash
+Authorization: Bearer YOUR_API_KEY
+```
+
+## Request
+
+#### Path Parameters
+
+<ParamField path="agent_slug" type="string" required>
+  The slug of the agent to delete.
+</ParamField>
+
+## Response
+
+#### Returns
+
+<ResponseField name="message" type="string">
+  Success message confirming deletion.
+</ResponseField>
+
+## Examples
+
+<CodeGroup>
+
+```python Python
+import requests
+
+agent_slug = "old-agent"
+url = f"https://labs.chonkie.ai/api/v1/agents/{agent_slug}"
+headers = {
+    "Authorization": "Bearer YOUR_API_KEY"
+}
+
+response = requests.delete(url, headers=headers)
+result = response.json()
+print(result["message"])
+```
+
+```javascript JavaScript
+const agentSlug = 'old-agent';
+const response = await fetch(
+  `https://labs.chonkie.ai/api/v1/agents/${agentSlug}`,
+  {
+    method: 'DELETE',
+    headers: {
+      'Authorization': 'Bearer YOUR_API_KEY'
+    }
+  }
+);
+
+const result = await response.json();
+console.log(result.message);
+```
+
+```bash cURL
+curl -X DELETE https://labs.chonkie.ai/api/v1/agents/old-agent \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+</CodeGroup>
+
+## Response Example
+
+```json
+{
+  "message": "Agent deleted successfully"
+}
+```
+
+## What Gets Deleted
+
+- Agent configuration
+- Agent metadata
+- MCP integrations (if any)
+
+**Not deleted:**
+- Knowledge base (remains intact)
+- Chat history (if stored separately)
+
+<Warning>
+  Deletion is permanent and cannot be undone. The agent cannot be recovered.
+</Warning>
+
+## Error Responses
+
+<ResponseField name="401 Unauthorized">
+  Invalid or missing API key.
+</ResponseField>
+
+<ResponseField name="404 Not Found">
+  Agent doesn't exist or you don't have access.
+</ResponseField>

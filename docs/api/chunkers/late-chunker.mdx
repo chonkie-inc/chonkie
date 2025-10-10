@@ -1,0 +1,178 @@
+---
+title: "Late Chunker"
+api: "POST /v1/chunk/late"
+description: "Contextualized chunking using late interaction mechanisms"
+---
+
+The Late Chunker uses contextualized embeddings and late interaction mechanisms to create chunks that are optimized for retrieval tasks. It's particularly effective for building search indices and RAG systems.
+
+## Authentication
+
+Set your API key as an environment variable or pass it to the SDK:
+
+```bash
+export CHONKIE_API_KEY="your-api-key-here"
+```
+
+Get your API key from [labs.chonkie.ai](https://labs.chonkie.ai)
+
+## Request
+
+#### Parameters
+
+<ParamField path="text" type="string | string[]" required>
+  The text to chunk.
+</ParamField>
+
+<ParamField path="embedding_model" type="string" default="colbert-ir/colbertv2.0">
+  The late interaction model to use. Supports ColBERT and similar architectures.
+</ParamField>
+
+<ParamField path="tokenizer" type="string" default="gpt2">
+  Tokenizer to use for counting tokens.
+</ParamField>
+
+<ParamField path="chunk_size" type="integer" default="512">
+  Target number of tokens per chunk.
+</ParamField>
+
+<ParamField path="similarity_threshold" type="float" default="0.5">
+  Threshold for token-level similarity scores.
+</ParamField>
+
+## Response
+
+#### Returns
+
+Array of `Chunk` objects optimized for retrieval and search.
+
+## Examples
+
+<CodeGroup>
+
+```python Python
+from chonkie.cloud import LateChunker
+
+# Initialize the late chunker
+chunker = LateChunker(
+    embedding_model="colbert-ir/colbertv2.0",
+    chunk_size=512,
+    similarity_threshold=0.5
+)
+
+# Chunk text for retrieval
+text = """
+Information retrieval systems help users find relevant documents.
+Modern IR uses dense embeddings and neural ranking models.
+Late interaction models like ColBERT combine efficiency with effectiveness.
+They compute token-level interactions for fine-grained matching.
+"""
+
+chunks = chunker.chunk(text)
+
+for i, chunk in enumerate(chunks):
+    print(f"Chunk {i+1}:")
+    print(f"  Text: {chunk.text}")
+    print(f"  Tokens: {chunk.token_count}\n")
+```
+
+```javascript JavaScript
+import { LateChunker } from '@chonkiejs/cloud';
+
+// Initialize the late chunker
+const chunker = new LateChunker({
+  embeddingModel: 'colbert-ir/colbertv2.0',
+  chunkSize: 512,
+  similarityThreshold: 0.5
+});
+
+// Chunk text for retrieval
+const text = `
+Information retrieval systems help users find relevant documents.
+Modern IR uses dense embeddings and neural ranking models.
+Late interaction models like ColBERT combine efficiency with effectiveness.
+`;
+
+const chunks = await chunker.chunk({ text });
+
+chunks.forEach((chunk, i) => {
+  console.log(`Chunk ${i+1}:`);
+  console.log(`  Text: ${chunk.text}`);
+  console.log(`  Tokens: ${chunk.tokenCount}\n`);
+});
+```
+
+```bash cURL
+curl -X POST https://api.chonkie.ai/v1/chunk/late \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "Information retrieval systems help users find relevant documents. Modern IR uses dense embeddings and neural ranking models.",
+    "embedding_model": "colbert-ir/colbertv2.0",
+    "chunk_size": 512,
+    "similarity_threshold": 0.5
+  }'
+```
+
+</CodeGroup>
+
+## How Late Interaction Works
+
+Late interaction models compute token-level embeddings and perform matching at query time:
+
+1. **Token Embeddings** - Each token gets its own contextualized embedding
+2. **Late Matching** - Query and document tokens are matched individually
+3. **Max Similarity** - For each query token, find the most similar document token
+4. **Aggregation** - Combine token-level scores into a final relevance score
+
+This approach provides better retrieval quality than traditional dense embeddings.
+
+## Response Example
+
+```json
+[
+  {
+    "text": "Information retrieval systems help users find relevant documents. Modern IR uses dense embeddings and neural ranking models.",
+    "start_index": 0,
+    "end_index": 124,
+    "token_count": 24
+  },
+  {
+    "text": "Late interaction models like ColBERT combine efficiency with effectiveness. They compute token-level interactions for fine-grained matching.",
+    "start_index": 125,
+    "end_index": 266,
+    "token_count": 26
+  }
+]
+```
+
+## Use Cases
+
+- **Search Engines** - Build high-quality search indices
+- **RAG Systems** - Optimize chunks for retrieval augmented generation
+- **Question Answering** - Create chunks optimized for finding answers
+- **Semantic Search** - Fine-grained matching for precise results
+
+## Best Practices
+
+<Tip>
+  Late Chunker works best with ColBERT-family models. Use "colbert-ir/colbertv2.0" as a starting point.
+</Tip>
+
+<Tip>
+  Combine Late Chunker with Embeddings Refinery to get both chunking and embeddings in one pipeline.
+</Tip>
+
+<Warning>
+  Late interaction models require more computation than standard embeddings. Consider caching results for frequently accessed documents.
+</Warning>
+
+## Comparison with Semantic Chunker
+
+| Feature | Late Chunker | Semantic Chunker |
+|---------|--------------|------------------|
+| **Embedding Granularity** | Token-level | Sentence/chunk-level |
+| **Matching** | Late interaction | Dense vectors |
+| **Retrieval Quality** | Higher | Good |
+| **Speed** | Moderate | Fast |
+| **Best For** | Search, RAG | General chunking |

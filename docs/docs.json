@@ -80,7 +80,7 @@
               "oss/handshakes/chroma-handshake",
               "oss/handshakes/qdrant-handshake",
               "oss/handshakes/weaviate-handshake",
-              "oss/handshakes/tubropuffer-handshake",
+              "oss/handshakes/turbopuffer-handshake",
               "oss/handshakes/pinecone-handshake",
               "oss/handshakes/pgvector-handshake",
               "oss/handshakes/mongodb-handshake",
@@ -119,9 +119,68 @@
         ]
       },
       {
-        "tab": "API Reference",
+        "tab": "Old API Reference",
         "icon": "cloud",
         "openapi": "chonkie-cloud/openapi.json"
+      },
+      {
+        "tab": "API Reference",
+        "icon": "cloud",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "pages": ["api/common/introduction", "api/common/playground"]
+          },
+          {
+            "group": "chunkers",
+            "pages": [
+              "api/chunkers/token-chunker",
+              "api/chunkers/sentence-chunker",
+              "api/chunkers/recursive-chunker",
+              "api/chunkers/semantic-chunker",
+              "api/chunkers/late-chunker",
+              "api/chunkers/code-chunker",
+              "api/chunkers/neural-chunker",
+              "api/chunkers/slumber-chunker"
+            ]
+          },
+          {
+            "group": "Refineries",
+            "pages": [
+              "api/refineries/embeddings",
+              "api/refineries/overlap"
+            ]
+          },
+          {
+            "group": "Knowledge Bases",
+            "pages": [
+              "api/knowledge/create",
+              "api/knowledge/list",
+              "api/knowledge/get-files",
+              "api/knowledge/upload",
+              "api/knowledge/download",
+              "api/knowledge/delete-file",
+              "api/knowledge/delete"
+            ]
+          },
+          {
+            "group": "Search",
+            "pages": ["api/search/search"]
+          },
+          {
+            "group": "Agents",
+            "pages": [
+              "api/agents/create",
+              "api/agents/list",
+              "api/agents/get",
+              "api/agents/update",
+              "api/agents/delete",
+              "api/agents/chat",
+              "api/agents/research",
+              "api/agents/mcp"
+            ]
+          }
+        ]
       }
     ],
     "global": {

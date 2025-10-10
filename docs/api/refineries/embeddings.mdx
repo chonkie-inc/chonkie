@@ -1,0 +1,260 @@
+---
+title: "Embeddings Refinery"
+api: "POST /v1/refine/embeddings"
+description: "Add vector embeddings to chunks for semantic search and RAG"
+---
+
+The Embeddings Refinery adds vector embeddings to your chunks, enabling semantic search, similarity comparison, and retrieval augmented generation (RAG). It supports multiple embedding models from Hugging Face and other providers.
+
+## Authentication
+
+Set your API key as an environment variable or pass it to the SDK:
+
+```bash
+export CHONKIE_API_KEY="your-api-key-here"
+```
+
+Get your API key from [labs.chonkie.ai](https://labs.chonkie.ai)
+
+## Request
+
+#### Parameters
+
+<ParamField path="chunks" type="array" required>
+  Array of chunk objects to add embeddings to. Each chunk must have `text`, `start_index`, `end_index`, and `token_count` fields.
+</ParamField>
+
+<ParamField path="embedding_model" type="string" default="minishlab/potion-base-8M">
+  The embedding model to use. Supports Hugging Face model identifiers like "sentence-transformers/all-MiniLM-L6-v2" or "minishlab/potion-base-8M".
+</ParamField>
+
+## Response
+
+#### Returns
+
+Array of chunks with added `embedding` field containing the vector representation.
+
+<ResponseField name="text" type="string">
+  The original chunk text.
+</ResponseField>
+
+<ResponseField name="start_index" type="integer">
+  Starting position in original text.
+</ResponseField>
+
+<ResponseField name="end_index" type="integer">
+  Ending position in original text.
+</ResponseField>
+
+<ResponseField name="token_count" type="integer">
+  Number of tokens in the chunk.
+</ResponseField>
+
+<ResponseField name="embedding" type="array">
+  Vector embedding as array of floats. Dimension depends on the model (typically 384-1024).
+</ResponseField>
+
+## Examples
+
+<CodeGroup>
+
+```python Python
+from chonkie.cloud import TokenChunker, EmbeddingsRefinery
+
+# Step 1: Create chunks
+chunker = TokenChunker(chunk_size=512)
+text = """
+Artificial intelligence is transforming technology.
+Machine learning enables new possibilities.
+Neural networks process complex patterns.
+"""
+chunks = chunker.chunk(text)
+
+# Step 2: Add embeddings
+refinery = EmbeddingsRefinery(
+    embedding_model="sentence-transformers/all-MiniLM-L6-v2"
+)
+refined_chunks = refinery.refine(chunks)
+
+# Step 3: Use embeddings
+for i, chunk in enumerate(refined_chunks):
+    print(f"Chunk {i+1}:")
+    print(f"  Text: {chunk.text}")
+    print(f"  Embedding dimension: {len(chunk.embedding)}")
+    print(f"  First 5 values: {chunk.embedding[:5]}\n")
+```
+
+```javascript JavaScript
+import { TokenChunker, EmbeddingsRefinery } from '@chonkiejs/cloud';
+
+// Step 1: Create chunks
+const chunker = new TokenChunker({ chunkSize: 512 });
+const text = `
+Artificial intelligence is transforming technology.
+Machine learning enables new possibilities.
+Neural networks process complex patterns.
+`;
+const chunks = await chunker.chunk({ text });
+
+// Step 2: Add embeddings
+const refinery = new EmbeddingsRefinery({
+  embeddingModel: 'sentence-transformers/all-MiniLM-L6-v2'
+});
+const refinedChunks = await refinery.refine(chunks);
+
+// Step 3: Use embeddings
+refinedChunks.forEach((chunk, i) => {
+  console.log(`Chunk ${i+1}:`);
+  console.log(`  Text: ${chunk.text}`);
+  console.log(`  Embedding dimension: ${chunk.embedding.length}`);
+  console.log(`  First 5 values: ${chunk.embedding.slice(0, 5)}\n`);
+});
+```
+
+```bash cURL
+curl -X POST https://api.chonkie.ai/v1/refine/embeddings \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "chunks": [
+      {
+        "text": "Artificial intelligence is transforming technology.",
+        "start_index": 0,
+        "end_index": 51,
+        "token_count": 8
+      },
+      {
+        "text": "Machine learning enables new possibilities.",
+        "start_index": 52,
+        "end_index": 95,
+        "token_count": 6
+      }
+    ],
+    "embedding_model": "sentence-transformers/all-MiniLM-L6-v2"
+  }'
+```
+
+</CodeGroup>
+
+## Popular Embedding Models
+
+Choose an embedding model based on your needs:
+
+### Fast & Lightweight
+```python
+# Smallest, fastest (8M parameters, 256-dim)
+refinery = EmbeddingsRefinery(
+    embedding_model="minishlab/potion-base-8M"
+)
+
+# Small, good quality (33M params, 384-dim)
+refinery = EmbeddingsRefinery(
+    embedding_model="sentence-transformers/all-MiniLM-L6-v2"
+)
+```
+
+### Balanced
+```python
+# Medium size, high quality (110M params, 768-dim)
+refinery = EmbeddingsRefinery(
+    embedding_model="sentence-transformers/all-mpnet-base-v2"
+)
+
+# Retrieval optimized (32M params, 768-dim)
+refinery = EmbeddingsRefinery(
+    embedding_model="minishlab/potion-retrieval-32M"
+)
+```
+
+### Maximum Quality
+```python
+# Best quality (335M params, 1024-dim)
+refinery = EmbeddingsRefinery(
+    embedding_model="BAAI/bge-large-en-v1.5"
+)
+```
+
+## Response Example
+
+```json
+[
+  {
+    "text": "Artificial intelligence is transforming technology.",
+    "start_index": 0,
+    "end_index": 51,
+    "token_count": 8,
+    "embedding": [0.123, -0.456, 0.789, ...]
+  },
+  {
+    "text": "Machine learning enables new possibilities.",
+    "start_index": 52,
+    "end_index": 95,
+    "token_count": 6,
+    "embedding": [0.234, -0.567, 0.891, ...]
+  }
+]
+```
+
+## Pipeline Example
+
+Combine chunking and embedding in a complete pipeline:
+
+```python
+from chonkie.cloud import SemanticChunker, EmbeddingsRefinery
+
+# 1. Semantic chunking
+chunker = SemanticChunker(
+    chunk_size=512,
+    embedding_model="minishlab/potion-base-8M"
+)
+chunks = chunker.chunk(long_document)
+
+# 2. Add embeddings
+refinery = EmbeddingsRefinery(
+    embedding_model="sentence-transformers/all-mpnet-base-v2"
+)
+embedded_chunks = refinery.refine(chunks)
+
+# 3. Store in vector database
+# vector_db.upsert(embedded_chunks)
+```
+
+## Use Cases
+
+- **Semantic Search** - Enable similarity-based search over documents
+- **RAG Systems** - Retrieve relevant chunks for LLM context
+- **Clustering** - Group similar chunks together
+- **Deduplication** - Find and remove duplicate content
+- **Recommendation** - Suggest related content
+
+## Best Practices
+
+<Tip>
+  Choose an embedding model that matches your speed vs. quality requirements. Start with "minishlab/potion-base-8M" for fast prototyping, upgrade to larger models for production.
+</Tip>
+
+<Tip>
+  Use the same embedding model for both indexing and querying to ensure consistent similarity scores.
+</Tip>
+
+<Tip>
+  For multilingual content, use models like "sentence-transformers/paraphrase-multilingual-mpnet-base-v2".
+</Tip>
+
+<Warning>
+  Larger embedding models produce better quality but require more computation and storage. Balance your needs carefully.
+</Warning>
+
+<Info>
+  Embeddings are normalized to unit length by default, making cosine similarity equivalent to dot product for faster search.
+</Info>
+
+## Model Comparison
+
+| Model | Parameters | Dimensions | Speed | Quality | Best For |
+|-------|-----------|------------|-------|---------|----------|
+| potion-base-8M | 8M | 256 | Fastest | Good | Prototyping |
+| all-MiniLM-L6-v2 | 33M | 384 | Fast | Good | General use |
+| potion-retrieval-32M | 32M | 768 | Fast | High | RAG systems |
+| all-mpnet-base-v2 | 110M | 768 | Medium | High | Production |
+| bge-large-en-v1.5 | 335M | 1024 | Slow | Highest | Maximum quality |

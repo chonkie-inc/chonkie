@@ -1,0 +1,209 @@
+---
+title: "Slumber Chunker"
+api: "POST /v1/chunk/slumber"
+description: "Specialized chunker for long-form documents and books"
+---
+
+The Slumber Chunker is optimized for processing long-form content like books, research papers, and lengthy articles. It uses hierarchical analysis to maintain narrative flow and chapter/section structure.
+
+<Note>
+  Slumber Chunker is only available in Python. JavaScript support is coming soon.
+</Note>
+
+## Authentication
+
+Set your API key as an environment variable or pass it to the SDK:
+
+```bash
+export CHONKIE_API_KEY="your-api-key-here"
+```
+
+Get your API key from [labs.chonkie.ai](https://labs.chonkie.ai)
+
+## Request
+
+#### Parameters
+
+<ParamField path="text" type="string | string[]" required>
+  The long-form text to chunk.
+</ParamField>
+
+<ParamField path="tokenizer" type="string" default="gpt2">
+  Tokenizer to use for counting tokens.
+</ParamField>
+
+<ParamField path="chunk_size" type="integer" default="1024">
+  Target tokens per chunk (typically larger for long-form content).
+</ParamField>
+
+<ParamField path="chunk_overlap" type="integer" default="128">
+  Number of tokens to overlap between chunks.
+</ParamField>
+
+<ParamField path="preserve_sections" type="boolean" default="true">
+  Whether to respect section boundaries (chapters, headings).
+</ParamField>
+
+<ParamField path="min_chunk_size" type="integer" default="512">
+  Minimum tokens per chunk (avoids very small fragments).
+</ParamField>
+
+## Response
+
+#### Returns
+
+Array of `Chunk` objects optimized for long-form content.
+
+## Examples
+
+<CodeGroup>
+
+```python Python
+from chonkie.cloud import SlumberChunker
+
+# Initialize for long-form content
+chunker = SlumberChunker(
+    tokenizer="gpt2",
+    chunk_size=1024,
+    chunk_overlap=128,
+    preserve_sections=True
+)
+
+# Chunk a book chapter or article
+text = """
+# Chapter 1: The Beginning
+
+In the beginning, there was data. Vast amounts of unstructured text
+waiting to be processed and understood. The challenge was not just
+storing this data, but making sense of it.
+
+## The Problem of Scale
+
+As documents grew longer, traditional methods struggled. Processing
+entire books or lengthy research papers required new approaches.
+Simple splitting created disconnected fragments.
+
+## A New Approach
+
+The solution lay in understanding document structure. By respecting
+natural boundaries like chapters and sections, we could maintain
+narrative flow while creating manageable chunks.
+
+# Chapter 2: Implementation
+
+The implementation required careful consideration of multiple factors.
+Chunk size needed to be large enough for context but small enough
+for processing. Overlap ensured continuity between chunks.
+"""
+
+chunks = chunker.chunk(text)
+
+for i, chunk in enumerate(chunks):
+    print(f"Chunk {i+1}:")
+    print(f"  Length: {len(chunk.text)} chars")
+    print(f"  Tokens: {chunk.token_count}")
+    print(f"  Preview: {chunk.text[:100]}...\n")
+```
+
+```bash cURL
+curl -X POST https://api.chonkie.ai/v1/chunk/slumber \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "# Chapter 1\n\nLong-form content here...\n\n## Section 1.1\n\nMore detailed content...",
+    "tokenizer": "gpt2",
+    "chunk_size": 1024,
+    "chunk_overlap": 128,
+    "preserve_sections": true
+  }'
+```
+
+</CodeGroup>
+
+## Hierarchical Processing
+
+Slumber Chunker understands document hierarchy:
+
+- **Chapters** - Top-level divisions
+- **Sections** - Mid-level organization
+- **Subsections** - Detailed breakdowns
+- **Paragraphs** - Basic content units
+
+It tries to keep related hierarchical content together.
+
+## Optimal Chunk Sizes
+
+For long-form content, use larger chunk sizes:
+
+```python
+# For books and articles
+chunker = SlumberChunker(chunk_size=1024, chunk_overlap=128)
+
+# For research papers
+chunker = SlumberChunker(chunk_size=2048, chunk_overlap=256)
+
+# For very long documents
+chunker = SlumberChunker(chunk_size=4096, chunk_overlap=512)
+```
+
+## Response Example
+
+```json
+[
+  {
+    "text": "# Chapter 1: The Beginning\n\nIn the beginning, there was data. Vast amounts of unstructured text waiting to be processed...",
+    "start_index": 0,
+    "end_index": 456,
+    "token_count": 98
+  },
+  {
+    "text": "## The Problem of Scale\n\nAs documents grew longer, traditional methods struggled. Processing entire books...",
+    "start_index": 457,
+    "end_index": 892,
+    "token_count": 95
+  }
+]
+```
+
+## Use Cases
+
+- **Book Processing** - Index and search through entire books
+- **Research Papers** - Process academic papers while maintaining structure
+- **Long Articles** - Handle blog posts and articles
+- **Documentation** - Chunk technical documentation
+- **Archive Processing** - Process historical documents and manuscripts
+
+## Best Practices
+
+<Tip>
+  Use larger `chunk_size` (1024-4096) for long-form content to maintain sufficient context.
+</Tip>
+
+<Tip>
+  Set `chunk_overlap` to 10-15% of `chunk_size` to ensure continuity across chunks.
+</Tip>
+
+<Tip>
+  Enable `preserve_sections=true` for structured documents to maintain chapter and section boundaries.
+</Tip>
+
+<Tip>
+  Set `min_chunk_size` to avoid tiny fragments from short sections. Use 512-1024 as minimum.
+</Tip>
+
+<Warning>
+  Very large chunk sizes may exceed token limits for some downstream models. Test with your specific use case.
+</Warning>
+
+## Performance Considerations
+
+Slumber Chunker is optimized for quality over speed:
+
+- **Processing Time** - Slower than simple chunkers due to hierarchical analysis
+- **Memory Usage** - Handles large documents efficiently
+- **Chunk Quality** - Produces high-quality, coherent chunks
+- **Context Preservation** - Maintains narrative flow across chunks
+
+<Info>
+  For processing entire books, consider breaking them into chapters first, then chunking each chapter individually for better performance.
+</Info>

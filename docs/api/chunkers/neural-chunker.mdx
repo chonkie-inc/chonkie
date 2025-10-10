@@ -1,0 +1,202 @@
+---
+title: "Neural Chunker"
+api: "POST /v1/chunk/neural"
+description: "ML-based chunking that learns optimal boundaries from data"
+---
+
+The Neural Chunker uses machine learning models to predict optimal chunk boundaries. It learns patterns from training data and can adapt to different document types and chunking objectives.
+
+## Authentication
+
+Set your API key as an environment variable or pass it to the SDK:
+
+```bash
+export CHONKIE_API_KEY="your-api-key-here"
+```
+
+Get your API key from [labs.chonkie.ai](https://labs.chonkie.ai)
+
+## Request
+
+#### Parameters
+
+<ParamField path="text" type="string | string[]" required>
+  The text to chunk.
+</ParamField>
+
+<ParamField path="model" type="string" default="chonkie-ai/neural-chunker-v1">
+  The neural chunking model to use.
+</ParamField>
+
+<ParamField path="tokenizer" type="string" default="gpt2">
+  Tokenizer to use for counting tokens.
+</ParamField>
+
+<ParamField path="chunk_size" type="integer" default="512">
+  Target maximum tokens per chunk.
+</ParamField>
+
+<ParamField path="threshold" type="float" default="0.5">
+  Confidence threshold for chunk boundaries (0-1).
+</ParamField>
+
+## Response
+
+#### Returns
+
+Array of `Chunk` objects with ML-predicted boundaries.
+
+## Examples
+
+<CodeGroup>
+
+```python Python
+from chonkie.cloud import NeuralChunker
+
+# Initialize the neural chunker
+chunker = NeuralChunker(
+    model="chonkie-ai/neural-chunker-v1",
+    chunk_size=512,
+    threshold=0.6
+)
+
+# Chunk text using learned patterns
+text = """
+The industrial revolution transformed society. Manufacturing moved from
+homes to factories. This shift created new economic opportunities.
+
+However, it also brought challenges. Working conditions were often poor.
+Child labor was common. These issues eventually led to labor reforms.
+
+Today, we face a new revolution. Digital technology is reshaping work.
+Automation and AI are changing every industry. Adaptation is essential.
+"""
+
+chunks = chunker.chunk(text)
+
+for i, chunk in enumerate(chunks):
+    print(f"Chunk {i+1}:")
+    print(f"  {chunk.text[:70]}...")
+    print(f"  Tokens: {chunk.token_count}\n")
+```
+
+```javascript JavaScript
+import { NeuralChunker } from '@chonkiejs/cloud';
+
+// Initialize the neural chunker
+const chunker = new NeuralChunker({
+  model: 'chonkie-ai/neural-chunker-v1',
+  chunkSize: 512,
+  threshold: 0.6
+});
+
+// Chunk text using learned patterns
+const text = `
+The industrial revolution transformed society. Manufacturing moved from homes to factories.
+
+However, it also brought challenges. Working conditions were often poor.
+
+Today, we face a new revolution. Digital technology is reshaping work.
+`;
+
+const chunks = await chunker.chunk({ text });
+
+chunks.forEach((chunk, i) => {
+  console.log(`Chunk ${i+1}:`);
+  console.log(`  ${chunk.text.substring(0, 70)}...`);
+  console.log(`  Tokens: ${chunk.tokenCount}\n`);
+});
+```
+
+```bash cURL
+curl -X POST https://api.chonkie.ai/v1/chunk/neural \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "The industrial revolution transformed society. However, it also brought challenges. Today, we face a new revolution.",
+    "model": "chonkie-ai/neural-chunker-v1",
+    "chunk_size": 512,
+    "threshold": 0.6
+  }'
+```
+
+</CodeGroup>
+
+## How Neural Chunking Works
+
+The neural model predicts boundary probabilities for each token position:
+
+1. **Encode** - Convert text to contextualized embeddings
+2. **Predict** - Neural model outputs boundary probabilities
+3. **Threshold** - Apply confidence threshold to select boundaries
+4. **Combine** - Group tokens into chunks based on boundaries
+5. **Optimize** - Respect chunk_size constraints while maintaining learned patterns
+
+## Threshold Adjustment
+
+Control chunk granularity with the threshold parameter:
+
+```python
+# More, smaller chunks (sensitive to subtle boundaries)
+chunker = NeuralChunker(threshold=0.4)
+
+# Fewer, larger chunks (only strong boundaries)
+chunker = NeuralChunker(threshold=0.7)
+
+# Balanced (default)
+chunker = NeuralChunker(threshold=0.5)
+```
+
+## Response Example
+
+```json
+[
+  {
+    "text": "The industrial revolution transformed society. Manufacturing moved from homes to factories. This shift created new economic opportunities.",
+    "start_index": 0,
+    "end_index": 140,
+    "token_count": 28
+  },
+  {
+    "text": "However, it also brought challenges. Working conditions were often poor. Child labor was common. These issues eventually led to labor reforms.",
+    "start_index": 142,
+    "end_index": 285,
+    "token_count": 30
+  }
+]
+```
+
+## Use Cases
+
+- **Adaptive Chunking** - Learn domain-specific chunking patterns
+- **Quality-Focused** - When chunk quality matters more than speed
+- **Complex Documents** - Handle documents with varied structure
+- **Custom Requirements** - Fine-tune models for specific chunking needs
+
+## Best Practices
+
+<Tip>
+  Start with `threshold=0.5` and adjust based on results. Lower thresholds create more chunks, higher thresholds create fewer.
+</Tip>
+
+<Tip>
+  Neural Chunker learns from patterns, so it works especially well on documents similar to its training data.
+</Tip>
+
+<Warning>
+  Neural chunking is slower than rule-based methods. Use when quality is more important than speed.
+</Warning>
+
+<Info>
+  The neural model can be fine-tuned on your specific documents for even better results. Contact support@chonkie.ai for custom training.
+</Info>
+
+## Comparison with Other Chunkers
+
+| Feature | Neural | Semantic | Token |
+|---------|--------|----------|-------|
+| **Approach** | ML-learned | Embedding similarity | Fixed size |
+| **Quality** | Highest | High | Good |
+| **Speed** | Slow | Moderate | Fast |
+| **Adaptability** | High | Medium | Low |
+| **Best For** | Complex docs | Multi-topic text | Simple cases |

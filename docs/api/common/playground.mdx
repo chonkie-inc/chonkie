@@ -1,0 +1,83 @@
+---
+title: "Playground"
+description: "Test and experiment with Chonkie's chunking algorithms visually"
+icon: "flask"
+---
+
+The Chonkie Playground is an interactive environment where you can test different chunking algorithms on your own text without writing any code.
+
+## Access the Playground
+
+Visit the playground at [labs.chonkie.ai/playground](https://labs.chonkie.ai/playground)
+
+<Info>
+  You'll need to sign in to labs.chonkie.ai to access the playground and get your API key.
+</Info>
+
+## Available Chunkers
+
+The playground supports all of Chonkie's chunking algorithms:
+
+### Basic Chunkers
+- **Token Chunker** - Split text into fixed-size token chunks with configurable overlap
+- **Sentence Chunker** - Chunk text by sentence boundaries while respecting token limits
+- **Recursive Chunker** - Hierarchically chunk text using multiple delimiters
+
+### Advanced Chunkers
+- **Semantic Chunker** - Create semantically coherent chunks using embedding similarity
+- **Code Chunker** - Language-aware chunking for source code files
+- **Late Chunker** - Contextualized chunking using late interaction mechanisms
+- **Neural Chunker** - ML-based chunking that learns optimal boundaries
+- **Slumber Chunker** - Specialized chunker for long-form documents
+
+### Specialized Pipeline
+- **Kestral Pipeline** - Multi-stage chunking pipeline combining multiple strategies
+
+## How to Use
+
+1. **Select a Chunker** - Choose the chunking algorithm you want to test
+2. **Configure Parameters** - Adjust chunk size, overlap, and algorithm-specific settings
+3. **Input Text** - Paste or type your text in the input area
+4. **Run Chunking** - Click the chunk button to process your text
+5. **View Results** - See your text split into chunks with metadata
+
+## Visual Feedback
+
+The playground provides rich visual feedback:
+
+- **Chunk Boundaries** - See exactly where each chunk starts and ends
+- **Token Counts** - View the token count for each chunk
+- **Overlap Visualization** - See how chunks overlap (when overlap is configured)
+- **Metadata** - Access start/end indices and other chunk properties
+
+## Export Results
+
+After chunking, you can:
+
+- Copy chunks as JSON
+- Download chunks as a file
+- Use the results to inform your integration decisions
+
+## From Playground to Production
+
+Once you've found the right chunking strategy in the playground, you can implement it in your application using:
+
+- **Python SDK** - `pip install chonkie[cloud]`
+- **JavaScript SDK** - `npm install @chonkiejs/cloud`
+- **Direct API** - Make HTTP requests to api.chonkie.ai
+
+See the [Chunking](/api-reference/chunking/token-chunker) documentation for code examples.
+
+## Tips
+
+<Tip>
+  Start with the Token Chunker to understand basic chunking, then experiment with advanced chunkers for your specific use case.
+</Tip>
+
+<Tip>
+  Use the playground to test edge cases and understand how different chunkers handle special characters, code, and formatting.
+</Tip>
+
+<Tip>
+  Compare multiple chunkers side-by-side to find the best fit for your content type and application needs.
+</Tip>

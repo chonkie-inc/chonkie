@@ -1,0 +1,133 @@
+---
+title: "Get Agent"
+api: "GET /v1/agents/{agent_slug}"
+description: "Retrieve a specific agent's configuration"
+---
+
+Get detailed information about a specific agent, including its full configuration and settings.
+
+## Authentication
+
+Include your API key in the Authorization header:
+
+```bash
+Authorization: Bearer YOUR_API_KEY
+```
+
+Get your API key from [labs.chonkie.ai](https://labs.chonkie.ai)
+
+## Request
+
+#### Path Parameters
+
+<ParamField path="agent_slug" type="string" required>
+  The slug of the agent to retrieve.
+</ParamField>
+
+## Response
+
+#### Returns
+
+<ResponseField name="agent" type="object">
+  Complete agent configuration and metadata.
+</ResponseField>
+
+## Examples
+
+<CodeGroup>
+
+```python Python
+import requests
+
+agent_slug = "documentation-assistant"
+url = f"https://labs.chonkie.ai/api/v1/agents/{agent_slug}"
+headers = {
+    "Authorization": "Bearer YOUR_API_KEY"
+}
+
+response = requests.get(url, headers=headers)
+data = response.json()
+agent = data["agent"]
+
+print(f"Agent: {agent['name']}")
+print(f"Model: {agent['model']}")
+print(f"Temperature: {agent['temperature']}")
+print(f"Uses Context: {agent['useContext']}")
+if agent['useContext']:
+    print(f"Knowledge Base: {agent['knowledge']}")
+    print(f"Max Context Chunks: {agent['maxContextChunks']}")
+```
+
+```javascript JavaScript
+const agentSlug = 'documentation-assistant';
+const response = await fetch(
+  `https://labs.chonkie.ai/api/v1/agents/${agentSlug}`,
+  {
+    headers: {
+      'Authorization': 'Bearer YOUR_API_KEY'
+    }
+  }
+);
+
+const { agent } = await response.json();
+
+console.log(`Agent: ${agent.name}`);
+console.log(`Model: ${agent.model}`);
+console.log(`Temperature: ${agent.temperature}`);
+console.log(`Uses Context: ${agent.useContext}`);
+if (agent.useContext) {
+  console.log(`Knowledge Base: ${agent.knowledge}`);
+  console.log(`Max Context Chunks: ${agent.maxContextChunks}`);
+}
+```
+
+```bash cURL
+curl -X GET https://labs.chonkie.ai/api/v1/agents/documentation-assistant \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+</CodeGroup>
+
+## Response Example
+
+```json
+{
+  "agent": {
+    "id": "agent_abc123",
+    "slug": "documentation-assistant",
+    "name": "Documentation Assistant",
+    "description": "Helps users navigate product documentation",
+    "model": "gpt-4o-mini",
+    "systemPrompt": "You are a helpful documentation assistant. Answer questions clearly and concisely based on the provided context. If you don't know the answer, say so.",
+    "temperature": 0.3,
+    "maxContextChunks": 5,
+    "useContext": true,
+    "knowledge": "product-documentation",
+    "status": "active",
+    "organizationSlug": "acme",
+    "createdAt": "2024-01-15T10:30:00Z",
+    "updatedAt": "2024-01-15T10:30:00Z"
+  }
+}
+```
+
+## Use Cases
+
+- **Configuration Display** - Show agent settings in UI
+- **Validation** - Verify agent configuration before use
+- **Debugging** - Check agent settings when troubleshooting
+- **Audit** - Review specific agent configuration
+
+## Error Responses
+
+<ResponseField name="401 Unauthorized">
+  Invalid or missing API key.
+</ResponseField>
+
+<ResponseField name="404 Not Found">
+  Agent doesn't exist or you don't have access.
+</ResponseField>
+
+<ResponseField name="429 Too Many Requests">
+  Rate limit exceeded.
+</ResponseField>
