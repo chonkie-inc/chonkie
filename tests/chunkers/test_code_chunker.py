@@ -185,7 +185,7 @@ def test_code_chunker_adds_line_numbers(python_code: str) -> None:
         assert chunk.start_line > 0, "Line numbers should be 1-indexed and positive"
         assert chunk.end_line >= chunk.start_line, "End line must be greater than or equal to start line"
 
-    # The python_code fixture starts with a newline, so the first line of code is line 1.
-    # The code itself has 18 lines.
-    assert chunks[0].start_line == 1, "The first chunk should start on the first line of code"
-    assert chunks[-1].end_line == 18, "The last chunk should end on the last line of code"
+    # The python_code fixture starts with a newline, so its content begins on line 2.
+    # The code content ends on line 19 of the input string.
+    assert chunks[0].start_line == 2, "The first chunk should start on the first line of code (line 2)"
+    assert chunks[-1].end_line == 19, "The last chunk should end on the last line of code (line 19)"

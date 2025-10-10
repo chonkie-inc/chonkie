@@ -344,6 +344,7 @@ class CodeChunker(BaseChunker):
 
         # Initialize node_groups here to ensure it's available in the finally block scope
         node_groups = []
+        chunks = []
         try:
             # Create the parsing tree for the current code
             tree: Tree = self.parser.parse(original_text_bytes) # type: ignore
