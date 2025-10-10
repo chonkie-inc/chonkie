@@ -116,7 +116,7 @@ class OpenAIEmbeddings(BaseEmbeddings):
             base_url=base_url,
             timeout=timeout,
             max_retries=max_retries,
-            **kwargs,
+            **kwargs, # type: ignore
         )
 
         if self.client.api_key is None:
