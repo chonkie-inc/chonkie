@@ -7,6 +7,7 @@ iconType: solid
 ---
 
 Chefs are simple classes that automatically prepare data for future usage. They are designed to make preprocessing and data transformation easy and reusable.
+<Info> Chefs are available only in Python </Info>
 
 <CardGroup cols={3}>
   <Card title="TableChef" icon="table" href="/oss/chefs/tablechef">
@@ -21,19 +22,3 @@ Chefs are simple classes that automatically prepare data for future usage. They 
   </Card>
 </CardGroup>
 
-## TableChef Example
-
-```python
-from chonkie import TableChef
-
-md_tables = """
-| Name | Age | City |
-|------|-----|------|
-| Alice | 25 | New York |
-| Bob | 30 | Paris |
-| Charlie | 35 | London |
-"""
-table_chef = TableChef()
-tables = table_chef.process(md_tables)
-print(tables)
-```
