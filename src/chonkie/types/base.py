@@ -22,6 +22,8 @@ class Chunk:
         start_index (int): The starting index of the chunk in the original text.
         end_index (int): The ending index of the chunk in the original text.
         token_count (int): The number of tokens in the chunk.
+        start_line (Optional[int]): The starting line number of the chunk in the original text (1-indexed).
+        end_line (Optional[int]): The ending line number of the chunk in the original text (1-indexed).
         context (Optional[str]): Optional context metadata for the chunk.
         embedding (Union[List[float], np.ndarray, None]): Optional embedding vector for the chunk,
             either as a list of floats or a numpy array.
@@ -33,6 +35,8 @@ class Chunk:
     start_index: int = field(default=0)
     end_index: int = field(default=0)
     token_count: int = field(default=0)
+    start_line: Optional[int] = field(default=None)
+    end_line: Optional[int] = field(default=None)
     context: Optional[str] = field(default=None)
     embedding: Union[List[float], "np.ndarray", None] = field(default=None)
 
@@ -80,15 +84,17 @@ class Chunk:
 
     def __repr__(self) -> str:
         """Return a detailed string representation of the Chunk."""
-        repr = (
-            f"Chunk(text='{self.text}', token_count={self.token_count}, "
+        repr_str = (
+            f"Chunk(text='{self.text[:50]}...', token_count={self.token_count}, "
             f"start_index={self.start_index}, end_index={self.end_index}"
         )
+        if self.start_line is not None and self.end_line is not None:
+            repr_str += f", start_line={self.start_line}, end_line={self.end_line}"
         if self.context:
-            repr += f", context={self.context}"
+            repr_str += f", context={self.context}"
         if self.embedding is not None:
-            repr += f", embedding={self._preview_embedding()}"
-        return repr + ")"
+            repr_str += f", embedding={self._preview_embedding()}"
+        return repr_str + ")"
 
     def __iter__(self) -> Iterator[str]:
         """Return an iterator over the chunk's text."""
@@ -100,14 +106,24 @@ class Chunk:
 
     def to_dict(self) -> dict:
         """Return the Chunk as a dictionary."""
-        result = self.__dict__.copy()
-        result["context"] = self.context
+        result = {
+            "id": self.id,
+            "text": self.text,
+            "start_index": self.start_index,
+            "end_index": self.end_index,
+            "token_count": self.token_count,
+            "start_line": self.start_line,
+            "end_line": self.end_line,
+            "context": self.context,
+        }
         # Convert embedding to list if it has tolist method (numpy array)
         if self.embedding is not None:
             if hasattr(self.embedding, 'tolist'):
                 result["embedding"] = self.embedding.tolist()
             else:
                 result["embedding"] = self.embedding
+        else:
+            result["embedding"] = None
         return result
 
     @classmethod
@@ -119,6 +135,8 @@ class Chunk:
             start_index=data["start_index"],
             end_index=data["end_index"],
             token_count=data["token_count"],
+            start_line=data.get("start_line", None),
+            end_line=data.get("end_line", None),
             context=data.get("context", None),
             embedding=data.get("embedding", None),
         )
