@@ -12,34 +12,56 @@ To use the `TokenChunker` via the API, check out the [API reference documentatio
 
 ## Installation
 
-TokenChunker is included in the base installation of Chonkie. No additional dependencies are required.
+TokenChunker is included in the base installation of Chonkie.
 
 <Info>
-  {" "}
-  For installation instructions, see the [Installation Guide](/oss/installation).
+  If you would like to use custom tokenizers in JavaScript, please install the
+  `@chonkiejs/token` library
 </Info>
 
 ## Initialization
 
-```python
+<CodeGroup>
+```python Python
 from chonkie import TokenChunker
 
 # Basic initialization with default parameters
 chunker = TokenChunker(
-    tokenizer="character",  # Default tokenizer (or use "gpt2", etc.)
-    chunk_size=2048,    # Maximum tokens per chunk
-    chunk_overlap=128  # Overlap between chunks
+  tokenizer="character", # Default tokenizer (or use "gpt2", etc.)
+  chunk_size=2048, # Maximum tokens per chunk
+  chunk_overlap=128 # Overlap between chunks
 )
 
 # Using a custom tokenizer
 from tokenizers import Tokenizer
 custom_tokenizer = Tokenizer.from_pretrained("your-tokenizer")
 chunker = TokenChunker(
-    tokenizer=custom_tokenizer,
-    chunk_size=2048,
-    chunk_overlap=128
+  tokenizer=custom_tokenizer,
+  chunk_size=2048,
+  chunk_overlap=128
 )
+
+````
+
+```javascript JavaScript
+import { TokenChunker } from "@chonkiejs/core";
+
+// Create a chunker
+let chunker = TokenChunker.create({
+  chunkSize: 2048,
+  chunkOverlap: 128,
+});
+
+// Using a custom tokenizer
+// NOTE: Requires installation of `@chonkiejs/token`
+chunker = TokenChunker.create({
+  tokenizer: "gpt2",
+  chunkSize: 2048,
+  chunkOverlap: 512
+});
 ```
+
+</CodeGroup>
 
 ## Parameters
 
