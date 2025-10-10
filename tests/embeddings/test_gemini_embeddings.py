@@ -326,7 +326,7 @@ def test_is_available() -> None:
 def test_import_dependencies_failure() -> None:
     """Test that _import_dependencies raises ImportError when dependencies not available."""
     with patch.object(GeminiEmbeddings, "_is_available", return_value=False):
-        with pytest.raises(ImportError, match="google-genai, numpy"):
+        with pytest.raises(ImportError, match="google-genai"):
             GeminiEmbeddings(api_key="test-key")
 
 
