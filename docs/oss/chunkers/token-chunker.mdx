@@ -47,7 +47,7 @@ chunker = TokenChunker(
 import { TokenChunker } from "@chonkiejs/core";
 
 // Create a chunker
-let chunker = TokenChunker.create({
+let chunker = await TokenChunker.create({
   chunkSize: 2048,
   chunkOverlap: 128,
 });
@@ -80,7 +80,8 @@ chunker = TokenChunker.create({
 
 ## Basic Usage
 
-```python
+<CodeGroup>
+```python Python
 from chonkie import TokenChunker
 
 # Initialize the chunker
@@ -99,6 +100,26 @@ for chunk in chunks:
     print(f"Chunk: {chunk.text[:50]}...")
     print(f"Tokens: {chunk.token_count}")
 ```
+
+```javascript JavaScript
+import { TokenChunker } from "@chonkiejs/core";
+
+// Create a chunker
+const chunker = await TokenChunker.create({
+  chunkSize: 512,
+  chunkOverlap: 128,
+});
+
+// Chunk your text
+const chunks = await chunker.chunk("Your text here...");
+
+// Access chunk information
+for (const chunk of chunks) {
+  console.log(chunk.text);
+  console.log(`Tokens: ${chunk.tokenCount}`);
+}
+```
+</CodeGroup>
 
 ## Examples
 
@@ -294,6 +315,8 @@ for i, chunk in enumerate(chunks):
 
 ## Supported Tokenizers
 
+<Note>Changing tokenizer backend is only supported on Python </Note>
+
 TokenChunker supports multiple tokenizer backends:
 
 - **TikToken** (Recommended)
@@ -326,16 +349,6 @@ TokenChunker supports multiple tokenizer backends:
 ## Return Type
 
 TokenChunker returns chunks as `Chunk` objects.
-Chunks object include a custom `Context` class for additional metadata alongside other attributes:
-
-```python
-@dataclass
-class Context:
-    text: str
-    token_count: int
-    start_index: Optional[int] = None
-    end_index: Optional[int] = None
-```
 
 ```python
 @dataclass
@@ -344,5 +357,4 @@ class Chunk:
     start_index: int    # Starting position in original text
     end_index: int      # Ending position in original text
     token_count: int    # Number of tokens in chunk
-    context: Optional[Context]  # Contextual information (if any)
 ```

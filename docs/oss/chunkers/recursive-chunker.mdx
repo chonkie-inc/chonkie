@@ -5,7 +5,8 @@ icon: "chart-tree-map"
 iconType: "solid"
 ---
 
-The RecursiveChunker is a chunker that recursively chunks documents into smaller chunks. It is a good choice for documents that are long but well structured, for example, a book or a research paper.
+The RecursiveChunker is a chunker that recursively chunks documents into smaller chunks.
+It is a good choice for documents that are long but well structured, for example, a book or a research paper.
 
 ## API Reference
 
@@ -16,8 +17,8 @@ To use the `RecursiveChunker` via the API, check out the [API reference document
 The RecursiveChunker is included in the base installation of Chonkie. No additional dependencies are required.
 
 <Info>
-  For installation instructions, see the [Installation
-  Guide](/oss/installation).
+  If you would like to use custom tokenizers in JavaScript, please install the
+  `@chonkiejs/token` library
 </Info>
 
 ## Initialization
@@ -26,19 +27,33 @@ The RecursiveChunker uses `RecursiveRules` to determine how to chunk the text.
 The rules are a list of `RecursiveLevel` objects, which define the delimiters and whitespace rules for each level of the recursive tree.
 Find more information about the rules in the [Additional Information](#additional-information) section.
 
-```python
+<CodeGroup>
+```python Python
 from chonkie import RecursiveChunker, RecursiveRules
 
 chunker = RecursiveChunker(
-    tokenizer_or_token_counter: Union[str, Callable, Any] = "character",
+    tokenizer: Union[str, Callable, Any] = "character",
     chunk_size: int = 2048,
     rules: RecursiveRules = RecursiveRules(),
     min_characters_per_chunk: int = 24,
 )
 ```
+```javascript JavaScript
+import { RecursiveChunker } from "@chonkiejs/core"
+
+const chunker = await RecursiveChunker.create({
+  tokenizer: "character",
+  chunkSize: 2048,
+  rules: new RecursiveRules(),
+  minCharactersPerChunk: 24
+});
+```
+</CodeGroup>
 
 You can also initialize the RecursiveChunker using a recipe. Recipes are pre-defined rules for common chunking tasks.
 Find all available recipes on our Hugging Face Hub [here](https://huggingface.co/datasets/chonkie-ai/recipes).
+
+<Note> Recipes are supported on Python only </Note>
 
 ```python
 from chonkie import RecursiveChunker
@@ -53,7 +68,7 @@ chunker = RecursiveChunker.from_recipe(lang="hi")
 ## Parameters
 
 <ParamField
-  path="tokenizer_or_token_counter"
+  path="tokenizer"
   type="Union[str, Callable, Any]"
   default="character"
 >

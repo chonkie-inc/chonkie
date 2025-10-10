@@ -93,7 +93,7 @@ for chunk in chunks:
 import { RecursiveChunker } from "@chonkiejs/core";
 
 // Create a chunker
-const chunker = RecursiveChunker.create({
+const chunker = await RecursiveChunker.create({
   chunkSize: 512,
   minCharactersPerChunk: 24,
 });
