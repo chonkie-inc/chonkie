@@ -13,8 +13,8 @@ logger = get_logger(__name__)
 
 class EmbeddingsRefinery(BaseRefinery):
     """Embedding Refinery.
-    
-    Embeds the text of the chunks using the embedding model and 
+
+    Embeds the text of the chunks using the embedding model and
     adds the embeddings to the chunks for use in downstream tasks
     like upserting into a vector database.
 
@@ -26,24 +26,24 @@ class EmbeddingsRefinery(BaseRefinery):
 
     def __init__(
         self,
-        embedding_model: Union[str, BaseEmbeddings, AutoEmbeddings] = "minishlab/potion-retrieval-32M",
-        **kwargs: Dict[str, Any]
+        embedding_model: Union[
+            str, BaseEmbeddings, AutoEmbeddings
+        ] = "minishlab/potion-retrieval-32M",
+        **kwargs: Dict[str, Any],
     ) -> None:
         """Initialize the EmbeddingRefinery."""
         super().__init__()
 
         # Check if the model is a string
         if isinstance(embedding_model, str):
-            self.embedding_model = AutoEmbeddings.get_embeddings(embedding_model, **kwargs)
+            self.embedding_model = AutoEmbeddings.get_embeddings(
+                embedding_model, **kwargs
+            )
         elif isinstance(embedding_model, BaseEmbeddings):
             self.embedding_model = embedding_model
         else:
             raise ValueError("Model must be a string or a BaseEmbeddings instance.")
 
-    def _is_available(self) -> bool:
-        """Check if the embedding model is available."""
-        return self.embedding_model._is_available()
-        
     def refine(self, chunks: List[Chunk]) -> List[Chunk]:
         """Refine the chunks."""
         logger.debug(f"Starting embedding refinery for {len(chunks)} chunks")

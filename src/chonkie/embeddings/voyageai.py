@@ -6,10 +6,11 @@ import os
 import warnings
 from typing import TYPE_CHECKING, List, Literal, Optional
 
+import numpy as np
+
 from .base import BaseEmbeddings
 
 if TYPE_CHECKING:
-    import numpy as np
     import voyageai
     from tokenizers import Tokenizer
 
@@ -113,7 +114,7 @@ class VoyageAIEmbeddings(BaseEmbeddings):
         tokens = self._tokenizer.encode_batch(texts)
         return [len(t) for t in tokens]
 
-    def embed(self, text: str, input_type: Optional[Literal["query", "document"]] = None) -> "np.ndarray":
+    def embed(self, text: str, input_type: Optional[Literal["query", "document"]] = None) -> np.ndarray:
         """Obtain embedding for a single text synchronously.
 
         Args:
@@ -174,7 +175,7 @@ class VoyageAIEmbeddings(BaseEmbeddings):
         
         return np.array(response.embeddings[0], dtype=np.float32)
 
-    def embed_batch(self, texts: List[str], input_type: Optional[Literal["query", "document"]] = None) -> List["np.ndarray"]:
+    def embed_batch(self, texts: List[str], input_type: Optional[Literal["query", "document"]] = None) -> List[np.ndarray]:
         """Obtain embeddings for a batch of texts synchronously.
 
         Args:
@@ -277,18 +278,16 @@ class VoyageAIEmbeddings(BaseEmbeddings):
     def _is_available(self) -> bool:
         """Check if the voyageai package is available."""
         return (importutil.find_spec("voyageai") is not None
-                and importutil.find_spec("numpy") is not None
                 and importutil.find_spec("tokenizers") is not None)
 
     def _import_dependencies(self) -> None:
-        """Lazy import dependencies if they are not already imported.""" 
+        """Lazy import dependencies if they are not already imported."""
         if self._is_available():
-            global np, Tokenizer, voyageai
-            import numpy as np
+            global Tokenizer, voyageai
             import voyageai
             from tokenizers import Tokenizer
         else:
-            raise ImportError("One (or more) of the following packages is not available: numpy, tokenizers or voyageai." +
+            raise ImportError("One (or more) of the following packages is not available: tokenizers or voyageai." +
              " Please install it via `pip install chonkie[voyageai]`")
 
     @property

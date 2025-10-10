@@ -36,7 +36,7 @@ _enabled = True
 _handler_id: Optional[int] = None
 
 # Default configuration
-DEFAULT_LOG_LEVEL = "INFO"
+DEFAULT_LOG_LEVEL = "WARNING"
 DEFAULT_FORMAT = (
     "<green>{time:YYYY-MM-DD HH:mm:ss}</green> | "
     "<level>{level: <8}</level> | "

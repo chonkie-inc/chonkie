@@ -12,11 +12,6 @@ logger = get_logger(__name__)
 class BaseRefinery(ABC):
     """Base class for all refinery classes."""
 
-    @abstractmethod
-    def _is_available(self) -> bool:
-        """Check if the refinery is available."""
-        pass
-
     def _import_dependencies(self) -> None:
         """Lazy import the dependencies."""
         raise NotImplementedError("Subclasses must implement this method.")
