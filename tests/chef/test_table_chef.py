@@ -9,6 +9,7 @@ import pandas as pd
 import pytest
 
 from chonkie import TableChef
+from chonkie.types import MarkdownDocument
 
 
 class TestTableChef:
@@ -108,10 +109,10 @@ class TestTableChef:
         self: "TestTableChef", table_chef: TableChef, markdown_table: str
     ) -> None:
         """Test processing a markdown table string."""
-        tables = table_chef.process(markdown_table)
-        assert isinstance(tables, list)
-        assert len(tables) == 1
-        assert hasattr(tables[0], "content")
+        result = table_chef.process(markdown_table)
+        assert isinstance(result, MarkdownDocument)
+        assert len(result.tables) == 1
+        assert hasattr(result.tables[0], "content")
 
     def test_process_batch(
         self: "TestTableChef", table_chef: TableChef, csv_content: str, tmp_path: Path

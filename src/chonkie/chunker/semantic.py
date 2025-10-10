@@ -10,10 +10,13 @@ from typing import Any, Dict, List, Literal, Optional, Union
 import numpy as np
 
 from chonkie.embeddings import AutoEmbeddings, BaseEmbeddings
+from chonkie.logger import get_logger
 from chonkie.types import Chunk, Sentence
 from chonkie.utils import Hubbie
 
 from .base import BaseChunker
+
+logger = get_logger(__name__)
 
 # Import the unified split function
 try:
@@ -520,10 +523,14 @@ class SemanticChunker(BaseChunker):
         """Chunk the text into semantic chunks."""
         # Handle empty text
         if not text or text.isspace():
+            logger.debug("Empty or whitespace-only text provided")
             return []
+
+        logger.debug(f"Starting semantic chunking for text of length {len(text)}")
 
         # Prepare the sentences
         sentences = self._prepare_sentences(text)
+        logger.debug(f"Prepared {len(sentences)} sentences for semantic analysis")
 
         # Handle edge cases - too few sentences
         if len(sentences) <= self.similarity_window:
@@ -561,6 +568,7 @@ class SemanticChunker(BaseChunker):
         # Create the chunks
         chunks = self._create_chunks(final_groups)
 
+        logger.info(f"Created {len(chunks)} semantic chunks from {len(sentences)} sentences")
         # Return the chunks
         return chunks
 
