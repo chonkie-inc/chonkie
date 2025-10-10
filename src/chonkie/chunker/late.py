@@ -1,6 +1,5 @@
 """Module containing the LateChunker class."""
 
-import importlib.util as importutil
 from typing import Any, List, Optional, Union
 
 import numpy as np

@@ -1,6 +1,5 @@
 """Base class for all embeddings implementations."""
 
-import importlib.util as importutil
 from abc import ABC, abstractmethod
 from typing import Any, List, Union
 
