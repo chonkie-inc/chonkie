@@ -1,22 +1,15 @@
 """Module containing the LateChunker class."""
 
 import importlib.util as importutil
-from typing import TYPE_CHECKING, Any, List, Optional, Union
+from typing import Any, List, Optional, Union
+
+import numpy as np
 
 # Get all the Chonkie imports
 from chonkie.chunker.recursive import RecursiveChunker
 from chonkie.embeddings.sentence_transformer import SentenceTransformerEmbeddings
 from chonkie.pipeline import chunker
 from chonkie.types import Chunk, RecursiveRules
-
-if TYPE_CHECKING:
-    try:
-        import numpy as np
-    except ImportError:
-        class np:  # type: ignore
-            """Stub class for numpy when not available."""
-
-            pass
 
 
 @chunker("late")
@@ -117,14 +110,14 @@ class LateChunker(RecursiveChunker):
         )   
     
     def _get_late_embeddings(
-        self, token_embeddings: "np.ndarray", token_counts: List[int]
-    ) -> List["np.ndarray"]:
+        self, token_embeddings: np.ndarray, token_counts: List[int]
+    ) -> List[np.ndarray]:
         # Split the token embeddings into chunks based on the token counts
         embs = []
-        cum_token_counts = np.cumsum([0] + token_counts)  # type: ignore[name-defined]
+        cum_token_counts = np.cumsum([0] + token_counts)
         for i in range(len(token_counts)):
             embs.append(
-                np.mean(  # type: ignore[name-defined]
+                np.mean(
                     token_embeddings[cum_token_counts[i] : cum_token_counts[i + 1]],
                     axis=0,
                 )
@@ -185,11 +178,7 @@ class LateChunker(RecursiveChunker):
 
         This method should be implemented by all chunker implementations that require
         additional dependencies. It lazily imports the dependencies only when they are needed.
+
+        Note: numpy is now a base dependency and is imported at module level.
         """
-        if importutil.find_spec("numpy"):
-            global np
-            import numpy as np
-        else:
-            raise ImportError(
-                "numpy is not available. Please install it via `pip install chonkie[semantic]`"
-            )
+        pass
