@@ -2,11 +2,9 @@
 
 import importlib.util as importutil
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Any, List, Union
+from typing import Any, List, Union
 
-# for type checking
-if TYPE_CHECKING:
-    import numpy as np
+import numpy as np
 
 
 class BaseEmbeddings(ABC):
@@ -33,7 +31,7 @@ class BaseEmbeddings(ABC):
         self._import_dependencies()
 
     @abstractmethod
-    def embed(self, text: str) -> "np.ndarray":
+    def embed(self, text: str) -> np.ndarray:
         """Embed a text string into a vector representation.
 
         This method should be implemented for all embeddings models.
@@ -47,7 +45,7 @@ class BaseEmbeddings(ABC):
         """
         raise NotImplementedError
 
-    def embed_batch(self, texts: List[str]) -> List["np.ndarray"]:
+    def embed_batch(self, texts: List[str]) -> List[np.ndarray]:
         """Embed a list of text strings into vector representations.
 
         This method should be implemented for embeddings models that support batch processing.
@@ -68,16 +66,12 @@ class BaseEmbeddings(ABC):
 
         This method should be implemented by all embeddings implementations that require
         additional dependencies. It lazily imports the dependencies only when they are needed.
-        """
-        if self._is_available():
-            global np
-            import numpy as np
-        else:
-            raise ImportError(
-                "numpy is not available. Please install it via `pip install chonkie[semantic]`"
-            )
 
-    def similarity(self, u: "np.ndarray", v: "np.ndarray") -> "np.float32":
+        Note: numpy is now a base dependency and doesn't need to be checked here.
+        """
+        pass
+
+    def similarity(self, u: np.ndarray, v: np.ndarray) -> np.float32:
         """Compute the similarity between two embeddings.
 
         Most embeddings models will use cosine similarity for this purpose. However,
@@ -114,11 +108,13 @@ class BaseEmbeddings(ABC):
 
         Override this method to add custom dependency checks.
 
+        Note: numpy is now a base dependency and is always available.
+
         Returns:
             bool: True if the embeddings implementation is available, False otherwise
 
         """
-        return importutil.find_spec("numpy") is not None
+        return True
 
     @abstractmethod
     def get_tokenizer(self) -> Any:
@@ -143,7 +139,7 @@ class BaseEmbeddings(ABC):
 
     def __call__(
         self, text: Union[str, List[str]]
-    ) -> Union["np.ndarray", List["np.ndarray"]]:
+    ) -> Union[np.ndarray, List[np.ndarray]]:
         """Embed a text string into a vector representation.
 
         This method allows the embeddings object to be called directly with a text string

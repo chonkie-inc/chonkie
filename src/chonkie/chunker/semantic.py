@@ -1,14 +1,13 @@
 """SemanticChunker with advanced peak detection and window embedding calculation.
 
-This chunker uses peak detection to find split points instead of a simple threshold, 
+This chunker uses peak detection to find split points instead of a simple threshold,
 and calculates window embeddings directly rather than approximating them from sentence embeddings.
 It uses Savitzky-Golay filtering for smoother boundary detection.
 """
 
-from typing import TYPE_CHECKING, Any, Dict, List, Literal, Optional, Union
+from typing import Any, Dict, List, Literal, Optional, Union
 
-if TYPE_CHECKING:
-    import numpy as np
+import numpy as np
 
 from chonkie.embeddings import AutoEmbeddings, BaseEmbeddings
 from chonkie.types import Chunk, Sentence
@@ -257,11 +256,11 @@ class SemanticChunker(BaseChunker):
         token_counts = self.tokenizer.count_tokens_batch(sentences)  # type: ignore[union-attr]
         return [Sentence(text=s, start_index=i, end_index=i + len(s), token_count=tc) for (i, (s, tc)) in enumerate(zip(sentences, token_counts))]
     
-    def _get_sentence_embeddings(self, sentences: List[Sentence]) -> List["np.ndarray"]:
+    def _get_sentence_embeddings(self, sentences: List[Sentence]) -> List[np.ndarray]:
         """Get the embeddings for the sentences."""
         return self.embedding_model.embed_batch([s.text for s in sentences[self.similarity_window:]])
 
-    def _get_window_embeddings(self, sentences: List[Sentence]) -> List["np.ndarray"]:
+    def _get_window_embeddings(self, sentences: List[Sentence]) -> List[np.ndarray]:
         """Get the embeddings for the window."""
         paragraphs = []
         for i in range(len(sentences) - self.similarity_window):
@@ -275,7 +274,7 @@ class SemanticChunker(BaseChunker):
         similarities = [float(self.embedding_model.similarity(w, s)) for w, s in zip(window_embeddings, sentence_embeddings)]
         return similarities
     
-    def _get_split_indices(self, similarities: Union[List[float], "np.ndarray"]) -> List[int]:
+    def _get_split_indices(self, similarities: Union[List[float], np.ndarray]) -> List[int]:
         """Get split indices using optimized Savitzky-Golay filter with interpolation."""
         # Convert to numpy array if needed
         if not isinstance(similarities, np.ndarray):
@@ -315,7 +314,7 @@ class SemanticChunker(BaseChunker):
                 [int(i + self.similarity_window) for i in split_indices_list] + 
                 [len(similarities) + self.similarity_window])
     
-    def _compute_group_embeddings_batch(self, groups: List[List[Sentence]]) -> List["np.ndarray"]:
+    def _compute_group_embeddings_batch(self, groups: List[List[Sentence]]) -> List[np.ndarray]:
         """Compute embeddings for all groups in batch.
         
         Args:
@@ -338,7 +337,7 @@ class SemanticChunker(BaseChunker):
         embeddings = self.embedding_model.embed_batch(group_texts)
         return embeddings
     
-    def _get_windowed_similarity(self, sentences: List[Sentence]) -> Union[List[float], "np.ndarray"]:
+    def _get_windowed_similarity(self, sentences: List[Sentence]) -> Union[List[float], np.ndarray]:
         """Alternative similarity computation using windowed cross-similarity.
         
         This can be more robust than pairwise window-sentence comparison.
@@ -531,11 +530,11 @@ class SemanticChunker(BaseChunker):
         return chunks
 
     def _import_dependencies(self) -> None:
-        """Import the dependencies."""
-        global np
-        
-        # Import NumPy (still needed for array operations)
-        import numpy as np
+        """Import the dependencies.
+
+        Note: numpy is now a base dependency and is imported at module level.
+        """
+        pass
     
     def __repr__(self) -> str: 
         """Return a string representation of the SemanticChunker."""
