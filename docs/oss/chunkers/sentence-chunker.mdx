@@ -26,17 +26,17 @@ from chonkie import SentenceChunker
 
 # Basic initialization with default parameters
 chunker = SentenceChunker(
-    tokenizer_or_token_counter="character",  # Default tokenizer (or use "gpt2", etc.)
-    chunk_size=2048,                  # Maximum tokens per chunk
-    chunk_overlap=128,               # Overlap between chunks
-    min_sentences_per_chunk=1        # Minimum sentences in each chunk
+    tokenizer="character",     # Default tokenizer (or use "gpt2", etc.)
+    chunk_size=2048,           # Maximum tokens per chunk
+    chunk_overlap=128,         # Overlap between chunks
+    min_sentences_per_chunk=1  # Minimum sentences in each chunk
 )
 ```
 
 ## Parameters
 
 <ParamField
-  path="tokenizer_or_token_counter"
+  path="tokenizer"
   type="Union[str, Callable, Any]"
   default="character"
 >
@@ -61,8 +61,9 @@ chunker = SentenceChunker(
 </ParamField>
 
 <ParamField path="approximate" type="bool" default="False">
-  Use approximate token counting for faster processing. **Note**: This field is
-  deprecated and will be removed in future versions.
+  Use approximate token counting for faster processing. 
+  
+  <Warning>This field is deprecated and will be removed in future versions. </Warning>
 </ParamField>
 
 <ParamField
