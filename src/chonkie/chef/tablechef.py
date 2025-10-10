@@ -27,7 +27,7 @@ class TableChef(BaseChef):
         except ImportError as e:
             raise ImportError("Pandas is required to use TableChef. Please install it with `pip install chonkie[table]`.") from e
 
-    def parse(self, text: str) -> MarkdownDocument:
+    def parse(self, text: str) -> Union[MarkdownTable, List[MarkdownTable], None]:
         """Parse raw markdown text into a MarkdownDocument with extracted tables.
 
         Args:
@@ -38,9 +38,9 @@ class TableChef(BaseChef):
 
         """
         tables = self.extract_tables_from_markdown(text)
-        return MarkdownDocument(content=text, tables=tables)
+        return tables
 
-    def process(self, path: Union[str, Path]) -> MarkdownDocument:
+    def process(self, path: Union[str, Path]) -> MarkdownTable:
         """Process a CSV/Excel file or markdown file into a MarkdownDocument.
 
         Args:
@@ -72,7 +72,7 @@ class TableChef(BaseChef):
 
     def process_batch(
         self, paths: Union[List[str], List[Path]]
-    ) -> List[Document]:  # type: ignore[override]
+    ) -> List[Union[MarkdownTable, List[MarkdownTable], None]]:
         """Process multiple CSV files and return a list of DataFrames.
 
         Args:
@@ -84,16 +84,10 @@ class TableChef(BaseChef):
         """
         return [self.process(path) for path in paths]
 
-    def __call__(self, path: Union[str, Path, List[str], List[Path]]) -> Union[Document, List[Document]]:  # type: ignore[override]
-        """Process CSV/Excel/markdown file(s).
-
-        Args:
-            path: Path to file(s) to process. Can be single path or list of paths.
-
-        Returns:
-            MarkdownDocument or List[MarkdownDocument] created from the file(s).
-
-        """
+    def __call__(
+        self, path: Union[str, Path, List[str], List[Path]]
+    ) -> Union[MarkdownTable, List[MarkdownTable], None, List[Union[MarkdownTable, List[MarkdownTable], None]]]:
+        """Process one or more CSV files and return DataFrame(s)."""
         if isinstance(path, (list, tuple)):
             return self.process_batch(path)
         elif isinstance(path, (str, Path)):
