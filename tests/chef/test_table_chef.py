@@ -8,7 +8,7 @@ from typing import Any
 import pandas as pd
 import pytest
 
-from chonkie import TableChef, MarkdownTable
+from chonkie import TableChef
 
 
 class TestTableChef:
@@ -40,13 +40,18 @@ class TestTableChef:
 """.strip()
 
     def test_process_csv_file(
-        self: "TestTableChef", table_chef: TableChef, csv_content: str, tmp_path: Path, monkeypatch: Any
+        self: "TestTableChef",
+        table_chef: TableChef,
+        csv_content: str,
+        tmp_path: Path,
+        monkeypatch: Any,
     ) -> None:
         """Test processing a CSV file with TableChef."""
         csv_file = tmp_path / "test.csv"
         csv_file.write_text(csv_content)
         called = {}
         import pandas as pd
+
         orig_read_csv = pd.read_csv
 
         def fake_read_csv(path, *args, **kwargs):  # type: ignore
@@ -59,17 +64,27 @@ class TestTableChef:
         # Check for column names and values, not exact formatting
         content_str = str(result.content)
         assert "col1" in content_str and "col2" in content_str
-        assert "1" in content_str and "2" in content_str and "3" in content_str and "4" in content_str
+        assert (
+            "1" in content_str
+            and "2" in content_str
+            and "3" in content_str
+            and "4" in content_str
+        )
         assert called["called"]
 
     def test_process_excel_file(
-        self: "TestTableChef", table_chef: TableChef, excel_df: pd.DataFrame, tmp_path: Path, monkeypatch: Any
+        self: "TestTableChef",
+        table_chef: TableChef,
+        excel_df: pd.DataFrame,
+        tmp_path: Path,
+        monkeypatch: Any,
     ) -> None:
         """Test processing an Excel file with TableChef."""
         excel_file = tmp_path / "test.xlsx"
         excel_df.to_excel(excel_file, index=False)
         called = {}
         import pandas as pd
+
         orig_read_excel = pd.read_excel
 
         def fake_read_excel(path: str, *args: object, **kwargs: object) -> pd.DataFrame:
@@ -81,7 +96,12 @@ class TestTableChef:
         assert hasattr(result, "content")
         content_str = str(result.content)
         assert "col1" in content_str and "col2" in content_str
-        assert "1" in content_str and "2" in content_str and "3" in content_str and "4" in content_str
+        assert (
+            "1" in content_str
+            and "2" in content_str
+            and "3" in content_str
+            and "4" in content_str
+        )
         assert called["called"]
 
     def test_process_markdown_table_string(
@@ -108,7 +128,12 @@ class TestTableChef:
             if hasattr(r, "content"):
                 content_str = str(r.content)
                 assert "col1" in content_str and "col2" in content_str
-                assert "1" in content_str and "2" in content_str and "3" in content_str and "4" in content_str
+                assert (
+                    "1" in content_str
+                    and "2" in content_str
+                    and "3" in content_str
+                    and "4" in content_str
+                )
             elif isinstance(r, list):
                 assert all(hasattr(t, "content") for t in r)
             elif r is None:
@@ -131,7 +156,12 @@ class TestTableChef:
             if hasattr(r, "content"):
                 content_str = str(r.content)
                 assert "col1" in content_str and "col2" in content_str
-                assert "1" in content_str and "2" in content_str and "3" in content_str and "4" in content_str
+                assert (
+                    "1" in content_str
+                    and "2" in content_str
+                    and "3" in content_str
+                    and "4" in content_str
+                )
             elif isinstance(r, list):
                 assert all(hasattr(t, "content") for t in r)
             elif r is None:
@@ -149,14 +179,21 @@ class TestTableChef:
         assert hasattr(result, "content")
         content_str = str(result.content)
         assert "col1" in content_str and "col2" in content_str
-        assert "1" in content_str and "2" in content_str and "3" in content_str and "4" in content_str
+        assert (
+            "1" in content_str
+            and "2" in content_str
+            and "3" in content_str
+            and "4" in content_str
+        )
 
     def test_call_invalid_type(self: "TestTableChef", table_chef: TableChef) -> None:
         """Test that TableChef raises TypeError on invalid input type."""
         with pytest.raises(TypeError, match="Unsupported type"):
             table_chef(123)  # type: ignore
 
-    def test_extract_tables_from_markdown_multiple(self: "TestTableChef", table_chef: TableChef) -> None:
+    def test_extract_tables_from_markdown_multiple(
+        self: "TestTableChef", table_chef: TableChef
+    ) -> None:
         """Test extracting multiple tables from markdown text."""
         md = """
 | a | b |
