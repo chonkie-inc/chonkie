@@ -137,7 +137,7 @@
             "pages": ["api/common/introduction", "api/common/playground"]
           },
           {
-            "group": "chunkers",
+            "group": "Chunkers`",
             "pages": [
               "api/chunkers/token-chunker",
               "api/chunkers/sentence-chunker",
