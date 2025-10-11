@@ -63,16 +63,16 @@ print(f"Knowledge base ID: {result['knowledgeBaseId']}")
 ```
 
 ```javascript JavaScript
-const kbSlug = 'product-documentation';
-const fileId = '1705320000000-old-version.pdf';
+const kbSlug = "product-documentation";
+const fileId = "1705320000000-old-version.pdf";
 
 const response = await fetch(
   `https://labs.chonkie.ai/api/v1/knowledge/${kbSlug}/${fileId}`,
   {
-    method: 'DELETE',
+    method: "DELETE",
     headers: {
-      'Authorization': 'Bearer YOUR_API_KEY'
-    }
+      Authorization: "Bearer YOUR_API_KEY",
+    },
   }
 );
 
@@ -174,7 +174,8 @@ def delete_file_with_confirmation(kb_slug, file_id, filename):
 ## Best Practices
 
 <Tip>
-  Before deleting, consider downloading the file as a backup in case you need it later.
+  Before deleting, consider downloading the file as a backup in case you need it
+  later.
 </Tip>
 
 <Tip>
@@ -182,11 +183,13 @@ def delete_file_with_confirmation(kb_slug, file_id, filename):
 </Tip>
 
 <Warning>
-  Deletion is permanent and cannot be undone. There is no "trash" or recovery mechanism. Make sure you want to delete the file before proceeding.
+  Deletion is permanent and cannot be undone. There is no "trash" or recovery
+  mechanism. Make sure you want to delete the file before proceeding.
 </Warning>
 
 <Info>
-  After deletion, search results are updated immediately. The file will no longer appear in search queries.
+  After deletion, search results are updated immediately. The file will no
+  longer appear in search queries.
 </Info>
 
 ## Safe Deletion Pattern
@@ -240,12 +243,11 @@ def safe_delete_file(kb_slug, file_id, backup_dir="backups"):
   File or knowledge base doesn't exist, or you don't have access.
 </ResponseField>
 
-<ResponseField name="429 Too Many Requests">
-  Rate limit exceeded.
-</ResponseField>
+<ResponseField name="429 Too Many Requests">Rate limit exceeded.</ResponseField>
 
 <ResponseField name="500 Internal Server Error">
-  Server error during deletion. File may or may not have been deleted. Check with [Get Knowledge Base Files](/api-reference/knowledge/get-files).
+  Server error during deletion. File may or may not have been deleted. Check
+  with [Get Knowledge Base Files](/api/knowledge/get-files).
 </ResponseField>
 
 ## Idempotency

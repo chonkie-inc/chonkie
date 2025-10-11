@@ -33,7 +33,8 @@ Get your API key from [labs.chonkie.ai](https://labs.chonkie.ai)
 </ParamField>
 
 <ParamField path="mode" type="string" default="balanced">
-  Search mode: "fast" (fastest, good quality), "balanced" (moderate speed, high quality), or "deep" (slowest, best quality).
+  Search mode: "fast" (fastest, good quality), "balanced" (moderate speed, high
+  quality), or "deep" (slowest, best quality).
 </ParamField>
 
 ## Response
@@ -106,18 +107,18 @@ for i, item in enumerate(result['results']):
 ```
 
 ```javascript JavaScript
-const response = await fetch('https://labs.chonkie.ai/api/v1/search', {
-  method: 'POST',
+const response = await fetch("https://labs.chonkie.ai/api/v1/search", {
+  method: "POST",
   headers: {
-    'Authorization': 'Bearer YOUR_API_KEY',
-    'Content-Type': 'application/json'
+    Authorization: "Bearer YOUR_API_KEY",
+    "Content-Type": "application/json",
   },
   body: JSON.stringify({
-    query: 'How do I configure authentication?',
-    knowledge: 'product-documentation',
+    query: "How do I configure authentication?",
+    knowledge: "product-documentation",
     limit: 5,
-    mode: 'balanced'
-  })
+    mode: "balanced",
+  }),
 });
 
 const result = await response.json();
@@ -125,7 +126,7 @@ const result = await response.json();
 console.log(`Found ${result.results.length} results in ${result.took}ms\n`);
 
 result.results.forEach((item, i) => {
-  console.log(`Result ${i+1} (score: ${item.score.toFixed(3)}):`);
+  console.log(`Result ${i + 1} (score: ${item.score.toFixed(3)}):`);
   console.log(`  ${item.text.substring(0, 200)}...`);
   console.log();
 });
@@ -162,7 +163,7 @@ curl -X POST https://labs.chonkie.ai/api/v1/search \
       "text": "To configure API authentication, first create an API key in your account settings. Then, include this key in all API requests using the Authorization header. Keys can be rotated for security.",
       "score": 0.854,
       "metadata": {
-        "file": "1705320001234-api-reference.pdf",
+        "file": "1705320001234-api.pdf",
         "chunk_index": 12
       }
     },
@@ -187,25 +188,31 @@ curl -X POST https://labs.chonkie.ai/api/v1/search \
 Choose the mode based on your speed vs. quality requirements:
 
 ### Fast Mode
+
 ```python
 data = {"query": query, "knowledge": kb_slug, "mode": "fast"}
 ```
+
 - **Speed**: ~50-100ms
 - **Quality**: Good
 - **Best for**: Real-time search, autocomplete, quick lookups
 
 ### Balanced Mode (Default)
+
 ```python
 data = {"query": query, "knowledge": kb_slug, "mode": "balanced"}
 ```
+
 - **Speed**: ~100-200ms
 - **Quality**: High
 - **Best for**: General search, Q&A, most use cases
 
 ### Deep Mode
+
 ```python
 data = {"query": query, "knowledge": kb_slug, "mode": "deep"}
 ```
+
 - **Speed**: ~200-500ms
 - **Quality**: Best
 - **Best for**: Critical searches, research, when accuracy matters most
@@ -257,23 +264,28 @@ def search_with_threshold(query, kb_slug, threshold=0.7):
 ## Best Practices
 
 <Tip>
-  Start with `mode="balanced"` for most use cases. Switch to "fast" if you need real-time responses, or "deep" when accuracy is critical.
+  Start with `mode="balanced"` for most use cases. Switch to "fast" if you need
+  real-time responses, or "deep" when accuracy is critical.
 </Tip>
 
 <Tip>
-  Set `limit` based on your use case: 3-5 for RAG context, 10-20 for search results, 50+ for comprehensive retrieval.
+  Set `limit` based on your use case: 3-5 for RAG context, 10-20 for search
+  results, 50+ for comprehensive retrieval.
 </Tip>
 
 <Tip>
-  For RAG applications, use a score threshold of 0.7 or higher to ensure only highly relevant chunks are included in LLM context.
+  For RAG applications, use a score threshold of 0.7 or higher to ensure only
+  highly relevant chunks are included in LLM context.
 </Tip>
 
 <Warning>
-  Empty knowledge bases or knowledge bases still being indexed will return zero results. Ensure files have completed ingestion before searching.
+  Empty knowledge bases or knowledge bases still being indexed will return zero
+  results. Ensure files have completed ingestion before searching.
 </Warning>
 
 <Info>
-  Search is available immediately after file ingestion completes. There's no separate indexing step required.
+  Search is available immediately after file ingestion completes. There's no
+  separate indexing step required.
 </Info>
 
 ## RAG Integration Example

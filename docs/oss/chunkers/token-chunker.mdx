@@ -8,7 +8,7 @@ The `TokenChunker` splits text into chunks based on token count, ensuring each c
 
 ## API Reference
 
-To use the `TokenChunker` via the API, check out the [API reference documentation](../../api-reference/token-chunker).
+To use the `TokenChunker` via the API, check out the [API reference documentation](../../api/token-chunker).
 
 ## Installation
 
@@ -26,19 +26,21 @@ TokenChunker is included in the base installation of Chonkie.
 from chonkie import TokenChunker
 
 # Basic initialization with default parameters
+
 chunker = TokenChunker(
-  tokenizer="character", # Default tokenizer (or use "gpt2", etc.)
-  chunk_size=2048, # Maximum tokens per chunk
-  chunk_overlap=128 # Overlap between chunks
+tokenizer="character", # Default tokenizer (or use "gpt2", etc.)
+chunk_size=2048, # Maximum tokens per chunk
+chunk_overlap=128 # Overlap between chunks
 )
 
 # Using a custom tokenizer
+
 from tokenizers import Tokenizer
 custom_tokenizer = Tokenizer.from_pretrained("your-tokenizer")
 chunker = TokenChunker(
-  tokenizer=custom_tokenizer,
-  chunk_size=2048,
-  chunk_overlap=128
+tokenizer=custom_tokenizer,
+chunk_size=2048,
+chunk_overlap=128
 )
 
 ````
@@ -469,3 +471,4 @@ class Chunk {
 }
 ```
 </CodeGroup>
+````

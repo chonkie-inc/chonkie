@@ -21,7 +21,8 @@ Get your API key from [labs.chonkie.ai](https://labs.chonkie.ai)
 #### Path Parameters
 
 <ParamField path="knowledge_base_slug" type="string" required>
-  The slug of the knowledge base to query. Get this from [List Knowledge Bases](/api-reference/knowledge/list) or [Create Knowledge Base](/api-reference/knowledge/create).
+  The slug of the knowledge base to query. Get this from [List Knowledge
+  Bases](/api/knowledge/list) or [Create Knowledge Base](/api/knowledge/create).
 </ParamField>
 
 ## Response
@@ -81,20 +82,20 @@ for file in files:
 ```
 
 ```javascript JavaScript
-const kbSlug = 'product-documentation';
+const kbSlug = "product-documentation";
 const response = await fetch(
   `https://labs.chonkie.ai/api/v1/knowledge/${kbSlug}`,
   {
     headers: {
-      'Authorization': 'Bearer YOUR_API_KEY'
-    }
+      Authorization: "Bearer YOUR_API_KEY",
+    },
   }
 );
 
 const { files } = await response.json();
 
 console.log(`Files in '${kbSlug}':\n`);
-files.forEach(file => {
+files.forEach((file) => {
   const sizeKB = (file.size / 1024).toFixed(2);
   console.log(`- ${file.name}`);
   console.log(`  Size: ${sizeKB} KB`);
@@ -116,8 +117,8 @@ curl -X GET https://labs.chonkie.ai/api/v1/knowledge/product-documentation \
 {
   "files": [
     {
-      "key": "1705320000000-api-reference.pdf",
-      "name": "api-reference.pdf",
+      "key": "1705320000000-api.pdf",
+      "name": "api.pdf",
       "size": 2458624,
       "lastModified": "2024-01-15T10:40:00Z",
       "contentType": "application/pdf"
@@ -152,21 +153,21 @@ The `key` field uses the format: `{timestamp}-{filename}`
 - **Timestamp** - Unix millisecond timestamp of upload
 - **Filename** - Original filename
 
-Use the full key when calling [Delete File](/api-reference/knowledge/delete-file) or [Download File](/api-reference/knowledge/download).
+Use the full key when calling [Delete File](/api/knowledge/delete-file) or [Download File](/api/knowledge/download).
 
 ## Supported File Types
 
 Common file types and their MIME types:
 
-| Extension | MIME Type | Description |
-|-----------|-----------|-------------|
-| `.pdf` | application/pdf | PDF documents |
-| `.txt` | text/plain | Plain text |
-| `.md` | text/markdown | Markdown |
+| Extension       | MIME Type          | Description    |
+| --------------- | ------------------ | -------------- |
+| `.pdf`          | application/pdf    | PDF documents  |
+| `.txt`          | text/plain         | Plain text     |
+| `.md`           | text/markdown      | Markdown       |
 | `.doc`, `.docx` | application/msword | Word documents |
-| `.html` | text/html | HTML files |
-| `.json` | application/json | JSON files |
-| `.csv` | text/csv | CSV files |
+| `.html`         | text/html          | HTML files     |
+| `.json`         | application/json   | JSON files     |
+| `.csv`          | text/csv           | CSV files      |
 
 ## Use Cases
 
@@ -178,11 +179,13 @@ Common file types and their MIME types:
 ## Best Practices
 
 <Tip>
-  Store the file `key` in your database if you need to reference specific files later for deletion or download.
+  Store the file `key` in your database if you need to reference specific files
+  later for deletion or download.
 </Tip>
 
 <Tip>
-  Display file sizes in human-readable format (KB, MB) for better user experience.
+  Display file sizes in human-readable format (KB, MB) for better user
+  experience.
 </Tip>
 
 <Info>
@@ -190,7 +193,8 @@ Common file types and their MIME types:
 </Info>
 
 <Warning>
-  Very large knowledge bases with thousands of files may take longer to list. Consider implementing pagination in your UI.
+  Very large knowledge bases with thousands of files may take longer to list.
+  Consider implementing pagination in your UI.
 </Warning>
 
 ## Empty Knowledge Base

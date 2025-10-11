@@ -10,7 +10,7 @@ It is a good choice for documents that are long but well structured, for example
 
 ## API Reference
 
-To use the `RecursiveChunker` via the API, check out the [API reference documentation](../../api-reference/recursive-chunker).
+To use the `RecursiveChunker` via the API, check out the [API reference documentation](../../api/recursive-chunker).
 
 ## Installation
 
@@ -191,10 +191,11 @@ class RecursiveRules:
 
 @dataclass
 class RecursiveLevel:
-    delimiters: Optional[Union[str, List[str]]]
-    whitespace: bool = False
-    include_delim: Optional[Literal["prev", "next"]])  # Whether to include the delimiter at all, or in the previous chunk, or the next chunk.
-```
+delimiters: Optional[Union[str, List[str]]]
+whitespace: bool = False
+include_delim: Optional[Literal["prev", "next"]]) # Whether to include the delimiter at all, or in the previous chunk, or the next chunk.
+
+````
 ```javascript JavaScript
 class RecursiveRules {
     levels: RecursiveLevel[];
@@ -205,7 +206,8 @@ class RecursiveLevel {
     whitespace: boolean;
     includeDelim: 'prev' | 'next' | 'none';
 }
-```
+````
+
 </CodeGroup>
 You can pass in custom rules to the RecursiveChunker, or use the default rules. The default rules are designed to be a good starting point for most documents, but you can customize them to your needs.
 

@@ -10,7 +10,8 @@ to your chunks by adding embeddings to them. This is useful for
 downstream tasks like semantic search, clustering, or vector database insertions.
 
 ## API Reference
-To use the `EmbeddingsRefinery` via the API, check out the [API reference documentation](../../api-reference/embeddings-refinery).
+
+To use the `EmbeddingsRefinery` via the API, check out the [API reference documentation](../../api/embeddings-refinery).
 
 ## Initialization
 
@@ -27,7 +28,8 @@ em_refinery = EmbeddingsRefinery(
 ```
 
 ## Usage
-Use the `EmbeddingsRefinery` object as a callable or the 
+
+Use the `EmbeddingsRefinery` object as a callable or the
 `refine` method to add embeddings to your chunks.
 
 ```python
@@ -46,10 +48,7 @@ chunks_with_embeddings = em_refinery(chunks)
 ```
 
 ## Parameters
-<ParamField
-    path="embedding_model"
-    type="Union[str, BaseEmbeddings]"
->
-    Model identifier or embedding model instance
-</ParamField>
 
+<ParamField path="embedding_model" type="Union[str, BaseEmbeddings]">
+  Model identifier or embedding model instance
+</ParamField>

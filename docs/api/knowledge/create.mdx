@@ -87,16 +87,16 @@ print(f"ID: {kb['id']}")
 ```
 
 ```javascript JavaScript
-const response = await fetch('https://labs.chonkie.ai/api/v1/knowledge', {
-  method: 'POST',
+const response = await fetch("https://labs.chonkie.ai/api/v1/knowledge", {
+  method: "POST",
   headers: {
-    'Authorization': 'Bearer YOUR_API_KEY',
-    'Content-Type': 'application/json'
+    Authorization: "Bearer YOUR_API_KEY",
+    "Content-Type": "application/json",
   },
   body: JSON.stringify({
-    name: 'Product Documentation',
-    description: 'Technical documentation for our products'
-  })
+    name: "Product Documentation",
+    description: "Technical documentation for our products",
+  }),
 });
 
 const kb = await response.json();
@@ -155,8 +155,8 @@ The slug is automatically generated from the name:
 
 After creating a knowledge base:
 
-1. **Upload Files** - Add documents using [Upload Files](/api-reference/knowledge/upload)
-2. **Search** - Query your knowledge base using [Semantic Search](/api-reference/search/search)
+1. **Upload Files** - Add documents using [Upload Files](/api/knowledge/upload)
+2. **Search** - Query your knowledge base using [Semantic Search](/api/search/search)
 3. **Connect Agents** - Link agents to use this knowledge base for context
 
 ## Use Cases
@@ -170,19 +170,23 @@ After creating a knowledge base:
 ## Best Practices
 
 <Tip>
-  Use descriptive names that reflect the content. The name becomes part of the slug, making API calls more readable.
+  Use descriptive names that reflect the content. The name becomes part of the
+  slug, making API calls more readable.
 </Tip>
 
 <Tip>
-  Add a detailed description to help you remember what each knowledge base contains, especially when managing multiple bases.
+  Add a detailed description to help you remember what each knowledge base
+  contains, especially when managing multiple bases.
 </Tip>
 
 <Info>
-  Knowledge bases are scoped to your organization. Team members can access all knowledge bases in your organization.
+  Knowledge bases are scoped to your organization. Team members can access all
+  knowledge bases in your organization.
 </Info>
 
 <Warning>
-  Knowledge base names must be unique within your organization. Choose distinct names to avoid confusion.
+  Knowledge base names must be unique within your organization. Choose distinct
+  names to avoid confusion.
 </Warning>
 
 ## Limits

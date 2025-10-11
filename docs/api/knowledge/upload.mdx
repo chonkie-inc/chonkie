@@ -27,7 +27,8 @@ Get your API key from [labs.chonkie.ai](https://labs.chonkie.ai)
 #### Body Parameters
 
 <ParamField path="files" type="file | file[]" required>
-  Single file or multiple files to upload. Use multipart/form-data encoding. Maximum 10 files per request.
+  Single file or multiple files to upload. Use multipart/form-data encoding.
+  Maximum 10 files per request.
 </ParamField>
 
 ## Response
@@ -78,7 +79,7 @@ headers = {
 }
 
 # Upload single file
-with open("api-reference.pdf", "rb") as f:
+with open("api.pdf", "rb") as f:
     files = {"files": f}
     response = requests.post(url, headers=headers, files=files)
 
@@ -103,21 +104,21 @@ print(f"Uploaded {len(result['files'])} files")
 ```
 
 ```javascript JavaScript
-const kbSlug = 'product-documentation';
+const kbSlug = "product-documentation";
 
 // Upload single file
 const formData = new FormData();
 const fileInput = document.querySelector('input[type="file"]');
-formData.append('files', fileInput.files[0]);
+formData.append("files", fileInput.files[0]);
 
 const response = await fetch(
   `https://labs.chonkie.ai/api/v1/knowledge/${kbSlug}`,
   {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Authorization': 'Bearer YOUR_API_KEY'
+      Authorization: "Bearer YOUR_API_KEY",
     },
-    body: formData
+    body: formData,
   }
 );
 
@@ -129,17 +130,17 @@ console.log(`File key: ${result.files[0].key}`);
 const multiFormData = new FormData();
 const fileList = document.querySelector('input[type="file"]').files;
 for (const file of fileList) {
-  multiFormData.append('files', file);
+  multiFormData.append("files", file);
 }
 
 const multiResponse = await fetch(
   `https://labs.chonkie.ai/api/v1/knowledge/${kbSlug}`,
   {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Authorization': 'Bearer YOUR_API_KEY'
+      Authorization: "Bearer YOUR_API_KEY",
     },
-    body: multiFormData
+    body: multiFormData,
   }
 );
 
@@ -151,7 +152,7 @@ console.log(`Uploaded ${multiResult.files.length} files`);
 # Upload single file
 curl -X POST https://labs.chonkie.ai/api/v1/knowledge/product-documentation \
   -H "Authorization: Bearer YOUR_API_KEY" \
-  -F "files=@api-reference.pdf"
+  -F "files=@api.pdf"
 
 # Upload multiple files
 curl -X POST https://labs.chonkie.ai/api/v1/knowledge/product-documentation \
@@ -170,8 +171,8 @@ curl -X POST https://labs.chonkie.ai/api/v1/knowledge/product-documentation \
   "message": "Files uploaded successfully",
   "files": [
     {
-      "key": "1705320000000-api-reference.pdf",
-      "originalName": "api-reference.pdf",
+      "key": "1705320000000-api.pdf",
+      "originalName": "api.pdf",
       "size": 2458624,
       "type": "application/pdf"
     },
@@ -194,9 +195,10 @@ After files are uploaded, they are queued for **asynchronous ingestion**:
 2. **Queue** - Ingestion job triggered
 3. **Processing** - Files are chunked and embedded
 4. **Indexing** - Vectors stored in Qdrant
-5. **Ready** - Files searchable via [Semantic Search](/api-reference/search/search)
+5. **Ready** - Files searchable via [Semantic Search](/api/search/search)
 
 Ingestion typically completes within:
+
 - **Small files** (<1MB): Seconds
 - **Medium files** (1-10MB): Minutes
 - **Large files** (>10MB): Several minutes
@@ -232,14 +234,14 @@ if len(search_response.json()["results"]) > 0:
 
 ## Supported File Formats
 
-| Format | Extensions | Notes |
-|--------|-----------|-------|
-| **PDF** | .pdf | Text-based PDFs (scanned PDFs require OCR) |
-| **Text** | .txt, .md, .markdown | Plain text and Markdown |
-| **Word** | .doc, .docx | Microsoft Word documents |
-| **HTML** | .html, .htm | Web pages and HTML files |
-| **Code** | .py, .js, .java, etc. | Source code files |
-| **Data** | .json, .csv, .xml | Structured data files |
+| Format   | Extensions            | Notes                                      |
+| -------- | --------------------- | ------------------------------------------ |
+| **PDF**  | .pdf                  | Text-based PDFs (scanned PDFs require OCR) |
+| **Text** | .txt, .md, .markdown  | Plain text and Markdown                    |
+| **Word** | .doc, .docx           | Microsoft Word documents                   |
+| **HTML** | .html, .htm           | Web pages and HTML files                   |
+| **Code** | .py, .js, .java, etc. | Source code files                          |
+| **Data** | .json, .csv, .xml     | Structured data files                      |
 
 ## File Size Limits
 
@@ -257,23 +259,28 @@ if len(search_response.json()["results"]) > 0:
 ## Best Practices
 
 <Tip>
-  Upload files in batches of 5-10 for optimal performance. Very large batches may timeout.
+  Upload files in batches of 5-10 for optimal performance. Very large batches
+  may timeout.
 </Tip>
 
 <Tip>
-  Use descriptive filenames. They help identify files later and improve organization.
+  Use descriptive filenames. They help identify files later and improve
+  organization.
 </Tip>
 
 <Tip>
-  For very large files, consider splitting them into smaller sections before uploading.
+  For very large files, consider splitting them into smaller sections before
+  uploading.
 </Tip>
 
 <Warning>
-  Duplicate filenames are allowed. Each upload gets a unique key with timestamp prefix.
+  Duplicate filenames are allowed. Each upload gets a unique key with timestamp
+  prefix.
 </Warning>
 
 <Info>
-  Ingestion processing is automatic and requires no additional API calls. Files become searchable once processing completes.
+  Ingestion processing is automatic and requires no additional API calls. Files
+  become searchable once processing completes.
 </Info>
 
 ## Error Responses
@@ -304,18 +311,18 @@ For large file uploads, you can monitor progress:
 
 ```javascript
 const formData = new FormData();
-formData.append('files', largeFile);
+formData.append("files", largeFile);
 
 const xhr = new XMLHttpRequest();
 
-xhr.upload.addEventListener('progress', (e) => {
+xhr.upload.addEventListener("progress", (e) => {
   if (e.lengthComputable) {
     const percentComplete = (e.loaded / e.total) * 100;
     console.log(`Upload progress: ${percentComplete.toFixed(2)}%`);
   }
 });
 
-xhr.open('POST', `https://labs.chonkie.ai/api/v1/knowledge/${kbSlug}`);
-xhr.setRequestHeader('Authorization', 'Bearer YOUR_API_KEY');
+xhr.open("POST", `https://labs.chonkie.ai/api/v1/knowledge/${kbSlug}`);
+xhr.setRequestHeader("Authorization", "Bearer YOUR_API_KEY");
 xhr.send(formData);
 ```
