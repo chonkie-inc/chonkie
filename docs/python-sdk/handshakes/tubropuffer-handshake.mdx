@@ -56,62 +56,6 @@ chunks = chunker("Chonkie chunks, turbopuffer puffs!")
 handshake.write(chunks)
 ```
 
-### Searching Chunks in Turbopuffer
-
-You can retrieve the most similar chunks from your Turbopuffer namespace using the `search` method:
-<CodeGroup>
-```python search using a query
-from chonkie import TurbopufferHandshake
-
-# Initialize the handshake
-handshake = TurbopufferHandshake(namespace_name="my_documents")
-
-# Search for similar chunks
-results = handshake.search(query="puffy chonks", limit=2)
-for result in results:
-    print(result["score"], result["text"])
-```
-
-```python search using embedding
-from chonkie import TurbopufferHandshake
-
-# Initialize the handshake
-handshake = TurbopufferHandshake(namespace_name="my_documents")
-
-# Generate an embedding
-embedding = handshake.embedding_model.embed("puffy chonks").tolist()
-
-# Search using the embedding
-results = handshake.search(embedding=embedding, limit=2)
-for result in results:
-    print(result["score"], result["text"])
-```
-
-```python search using chonkie chunks
-from chonkie import TurbopufferHandshake, SemanticChunker
-
-# Initialize the handshake
-handshake = TurbopufferHandshake(namespace_name="my_documents")
-
-# Create some chunks
-chunker = SemanticChunker()
-chunks = chunker.chunk("Chonkie chunks, turbopuffer puffs!")
-
-# Generate an embedding from a chunk's text to use for the search
-if chunks:
-        search_embedding = handshake.embedding_model.embed(chunks[0].text).tolist()
-
-    # Search the handshake using the generated embedding
-    results = handshake.search(
-        embedding=search_embedding,
-        limit=2,
-    )
-    for result in results:
-        print(result["score"], result["text"])
-```
-</CodeGroup>
-
-
 ## Parameters
 
 <ParamField
