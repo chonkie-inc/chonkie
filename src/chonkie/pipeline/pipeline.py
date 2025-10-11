@@ -17,11 +17,11 @@ class Pipeline:
     The Pipeline class provides a clean, chainable interface for processing
     documents through the CHOMP pipeline: CHef -> CHunker -> Refinery -> Porter/Handshake.
 
-    Example:
+    Examples:
         ```python
         from chonkie.pipeline import Pipeline
 
-        # Simple pipeline - returns Document with chunks
+        # Simple pipeline with single file - returns Document with chunks
         doc = (Pipeline()
             .fetch_from("file", path="document.txt")
             .process_with("text")
@@ -31,6 +31,13 @@ class Pipeline:
         # Access chunks via doc.chunks
         for chunk in doc.chunks:
             print(chunk.text)
+
+        # Process multiple files from directory - returns List[Document]
+        docs = (Pipeline()
+            .fetch_from("file", dir="./docs", ext=[".txt", ".md"])
+            .process_with("text")
+            .chunk_with("recursive", chunk_size=512)
+            .run())
 
         # Complex pipeline with refinement and export
         doc = (Pipeline()
@@ -185,9 +192,13 @@ class Pipeline:
         Raises:
             ValueError: If source_type is not a registered fetcher
 
-        Example:
+        Examples:
             ```python
+            # Single file
             pipeline.fetch_from("file", path="document.txt")
+
+            # Directory with extension filter
+            pipeline.fetch_from("file", dir="./docs", ext=[".txt", ".md"])
             ```
 
         """
@@ -336,13 +347,22 @@ class Pipeline:
 
         Examples:
             ```python
-            # Traditional fetcher-based pipeline - returns Document
+            # Single file pipeline - returns Document
             pipeline = (Pipeline()
                 .fetch_from("file", path="doc.txt")
                 .process_with("text")
                 .chunk_with("recursive", chunk_size=512))
             doc = pipeline.run()
             print(f"Chunked into {len(doc.chunks)} chunks")
+
+            # Directory pipeline - returns List[Document]
+            pipeline = (Pipeline()
+                .fetch_from("file", dir="./docs", ext=[".txt", ".md"])
+                .process_with("text")
+                .chunk_with("recursive", chunk_size=512))
+            docs = pipeline.run()
+            for doc in docs:
+                print(f"File chunked into {len(doc.chunks)} chunks")
 
             # Direct text input (fetcher optional)
             pipeline = (Pipeline()

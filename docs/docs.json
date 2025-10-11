@@ -32,7 +32,8 @@
             "group": "Getting Started",
             "pages": [
               "oss/quick-start",
-              "oss/installation"
+              "oss/installation",
+              "oss/pipelines"
             ]
           },
           {
@@ -42,6 +43,13 @@
               "oss/chefs/tablechef",
               "oss/chefs/textchef",
               "oss/chefs/markdownchef"
+            ]
+          },
+          {
+            "group": "Fetchers",
+            "pages": [
+              "oss/fetchers/overview",
+              "oss/fetchers/file-fetcher"
             ]
           },
           {
