@@ -9,7 +9,11 @@ The `TableChunker` splits large markdown tables into smaller, manageable chunks 
 
 ## API Reference
 
-To use the `TableChunker` via the API, check out the [API reference documentation](../../api/table-chunker).
+Use the `recursive` endpoint to access table chunking functionality.
+
+On the API, the table chunker operates as part of the recursive chunker,
+allowing you to process documents containing inline tables while ensuring
+that table structures remain intact across chunk boundaries.
 
 ## Installation
 
