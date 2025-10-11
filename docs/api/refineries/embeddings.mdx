@@ -1,6 +1,6 @@
 ---
 title: "Embeddings Refinery"
-api: "POST https://api.chonkie.ai/v1/refine/embeddings"
+api: "POST /v1/refine/embeddings"
 description: "Add vector embeddings to chunks for semantic search and RAG"
 ---
 
@@ -11,11 +11,17 @@ The Embeddings Refinery adds vector embeddings to your chunks, enabling semantic
 #### Parameters
 
 <ParamField path="chunks" type="array" required>
-  Array of chunk objects to add embeddings to. Each chunk must have `text`, `start_index`, `end_index`, and `token_count` fields.
+  Array of chunk objects to add embeddings to. Each chunk must have `text`,
+  `start_index`, `end_index`, and `token_count` fields.
 </ParamField>
 
-<ParamField path="embedding_model" type="string" default="minishlab/potion-retrieval-32M">
-  The embedding model to use. Supports Hugging Face model identifiers.
+<ParamField
+  path="embedding_model"
+  type="string"
+  default="minishlab/potion-retrieval-32M"
+>
+  The embedding model to use. Supports Hugging Face and OpenAI models.
+  <Info> Need another model? Reach out to us at support@chonkie.ai </Info>
 </ParamField>
 
 ## Response
@@ -61,13 +67,13 @@ refined_chunks = refinery.refine(chunks)
 ```
 
 ```javascript JavaScript
-import { TokenChunker, EmbeddingsRefinery } from '@chonkiejs/cloud';
+import { TokenChunker, EmbeddingsRefinery } from "@chonkiejs/cloud";
 
 const chunker = new TokenChunker({ chunkSize: 512 });
 const chunks = await chunker.chunk({ text: "Your text here..." });
 
 const refinery = new EmbeddingsRefinery({
-  embeddingModel: 'minishlab/potion-retrieval-32M'
+  embeddingModel: "minishlab/potion-retrieval-32M",
 });
 const refinedChunks = await refinery.refine(chunks);
 ```

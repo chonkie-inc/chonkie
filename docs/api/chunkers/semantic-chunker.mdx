@@ -8,6 +8,8 @@ The Semantic Chunker uses embeddings to identify natural break points in text ba
 
 ## Examples
 
+### Text Input
+
 <CodeGroup>
 
 ```python Python
@@ -41,8 +43,48 @@ curl -X POST https://api.chonkie.ai/v1/chunk/semantic \
   -d '{
     "text": "Your text here...",
     "embedding_model": "minishlab/potion-base-8M",
-    "chunk_size": 512,
+    "chunk_size": 512
   }'
+```
+
+</CodeGroup>
+
+### File Input
+
+<CodeGroup>
+
+```python Python
+from chonkie.cloud import SemanticChunker
+
+chunker = SemanticChunker(
+    embedding_model="minishlab/potion-base-8M",
+    chunk_size=512,
+)
+
+# Chunk from file
+with open("document.txt", "rb") as f:
+    chunks = chunker.chunk(file=f)
+```
+
+```javascript JavaScript
+import { SemanticChunker } from '@chonkiejs/cloud';
+
+const chunker = new SemanticChunker({
+  embeddingModel: 'minishlab/potion-base-8M',
+  chunkSize: 512,
+});
+
+// Chunk from file
+const file = document.querySelector('input[type="file"]').files[0];
+const chunks = await chunker.chunk({ file });
+```
+
+```bash cURL
+curl -X POST https://api.chonkie.ai/v1/chunk/semantic \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -F "file=@document.txt" \
+  -F "embedding_model=minishlab/potion-base-8M" \
+  -F "chunk_size=512"
 ```
 
 </CodeGroup>
@@ -51,8 +93,12 @@ curl -X POST https://api.chonkie.ai/v1/chunk/semantic \
 
 #### Parameters
 
-<ParamField path="text" type="string | string[]" required>
-  The text to chunk. Can be a single string or an array of strings for batch processing.
+<ParamField path="text" type="string | string[]">
+  The text to chunk. Can be a single string or an array of strings for batch processing. Either `text` or `file` is required.
+</ParamField>
+
+<ParamField path="file" type="file">
+  File to chunk. Use multipart/form-data encoding. Either `text` or `file` is required.
 </ParamField>
 
 <ParamField path="embedding_model" type="string" default="minishlab/potion-base-8M">
