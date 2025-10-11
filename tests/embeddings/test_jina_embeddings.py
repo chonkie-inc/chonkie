@@ -152,7 +152,7 @@ class TestJinaEmbeddingsProperties:
     def test_import_dependencies_failure(self) -> None:
         """Test _import_dependencies when packages are not available."""
         with patch('chonkie.embeddings.jina.JinaEmbeddings._is_available', return_value=False):
-            with pytest.raises(ImportError, match="One \\(or more\\) of the following packages is not available"):
+            with pytest.raises(ImportError, match="tokenizers is not available"):
                 JinaEmbeddings(api_key="test_key")
 
 

@@ -5,15 +5,20 @@ from typing import TYPE_CHECKING, Any, List, Literal, Optional, Union
 from uuid import NAMESPACE_OID, uuid5
 
 from chonkie.embeddings import AutoEmbeddings, BaseEmbeddings
+from chonkie.logger import get_logger
+from chonkie.pipeline import handshake
 from chonkie.types import Chunk
 
 from .base import BaseHandshake
 from .utils import generate_random_collection_name
 
+logger = get_logger(__name__)
+
 if TYPE_CHECKING:
     pass
 
 
+@handshake("turbopuffer")
 class TurbopufferHandshake(BaseHandshake):
     """Turbopuffer Handshake to export Chonkie's Chunks into a Turbopuffer database."""
 
@@ -90,6 +95,7 @@ class TurbopufferHandshake(BaseHandshake):
         if isinstance(chunks, Chunk):
             chunks = [chunks]
 
+        logger.debug(f"Writing {len(chunks)} chunks to Turbopuffer namespace: {self.namespace.name}")  # type: ignore[attr-defined]
         # Embed the chunks
         ids = [self._generate_id(index, chunk) for (index, chunk) in enumerate(chunks)]
         texts = [chunk.text for chunk in chunks]
@@ -109,7 +115,8 @@ class TurbopufferHandshake(BaseHandshake):
                 "token_count": token_counts,
             }
         )
-        
+
+        logger.info(f"Successfully wrote {len(chunks)} chunks to Turbopuffer namespace: {self.namespace.name}")  # type: ignore[attr-defined]
         print(f"🦛 Chonkie has written {len(chunks)} chunks to the namespace: {self.namespace.name}")  # type: ignore[attr-defined]
 
     def __repr__(self) -> str:
