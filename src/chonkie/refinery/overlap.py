@@ -5,6 +5,7 @@ from functools import lru_cache
 from typing import List, Literal, Union
 
 from chonkie.logger import get_logger
+from chonkie.pipeline import refinery
 from chonkie.refinery.base import BaseRefinery
 from chonkie.tokenizer import AutoTokenizer, TokenizerProtocol
 from chonkie.types import Chunk, RecursiveLevel, RecursiveRules
@@ -19,6 +20,7 @@ logger = get_logger(__name__)
 # both prefix and suffix overlap.
 
 
+@refinery("overlap")
 class OverlapRefinery(BaseRefinery):
     """Refinery for adding overlap to chunks.
 

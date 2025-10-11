@@ -14,17 +14,19 @@ from uuid import NAMESPACE_OID, uuid5
 
 from chonkie.embeddings import AutoEmbeddings, BaseEmbeddings
 from chonkie.logger import get_logger
+from chonkie.pipeline import handshake
 from chonkie.types import Chunk
 
 from .base import BaseHandshake
+from .utils import generate_random_collection_name
 
 logger = get_logger(__name__)
-from .utils import generate_random_collection_name
 
 if TYPE_CHECKING:
     import pymongo
 
 
+@handshake("mongodb")
 class MongoDBHandshake(BaseHandshake):
     """MongoDB Handshake to export Chonkie's Chunks into a MongoDB collection.
 

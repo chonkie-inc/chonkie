@@ -12,6 +12,7 @@ from itertools import accumulate
 from typing import List, Literal, Optional, Sequence, Union
 
 from chonkie.logger import get_logger
+from chonkie.pipeline import chunker
 from chonkie.tokenizer import TokenizerProtocol
 from chonkie.types import Chunk, Sentence
 from chonkie.utils import Hubbie
@@ -35,6 +36,7 @@ except ImportError:
     SPLIT_AVAILABLE = False
 
 
+@chunker("sentence")
 class SentenceChunker(BaseChunker):
     """SentenceChunker splits the sentences in a text based on token limits and sentence boundaries.
 

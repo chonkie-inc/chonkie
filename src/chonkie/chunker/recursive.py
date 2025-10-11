@@ -10,6 +10,7 @@ from typing import List, Optional, Tuple, Union
 
 from chonkie.chunker.base import BaseChunker
 from chonkie.logger import get_logger
+from chonkie.pipeline import chunker
 from chonkie.tokenizer import TokenizerProtocol
 from chonkie.types import (
     Chunk,
@@ -34,6 +35,7 @@ except ImportError:
     MERGE_CYTHON_AVAILABLE = False
 
 
+@chunker("recursive")
 class RecursiveChunker(BaseChunker):
     """Chunker that recursively splits text into smaller chunks, based on the provided RecursiveRules.
 
