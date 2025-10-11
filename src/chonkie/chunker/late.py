@@ -23,6 +23,8 @@ class LateChunker(RecursiveChunker):
     Args:
         embedding_model: The embedding model to use for chunking.
         chunk_size: The maximum size of each chunk.
+        rules: Recursive rules to chunk by
+        min_characters_per_chunk: Minimum number of characters in a single chunk
 
     """
 

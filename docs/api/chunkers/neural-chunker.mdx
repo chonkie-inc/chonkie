@@ -1,0 +1,126 @@
+---
+title: "Neural Chunker"
+api: "POST https://api.chonkie.ai/v1/chunk/neural"
+description: "Neural network-based chunking for optimal semantic boundaries"
+---
+
+The Neural Chunker uses a neural network model to identify optimal chunk boundaries based on learned patterns of semantic coherence.
+
+## Examples
+
+### Text Input
+
+<CodeGroup>
+
+```python Python
+from chonkie.cloud import NeuralChunker
+
+chunker = NeuralChunker(
+  model="mirth/chonky_modernbert_large_1"
+)
+
+text = "Your text here..."
+chunks = chunker.chunk(text)
+```
+
+```javascript JavaScript
+import { NeuralChunker } from "@chonkiejs/cloud";
+
+const chunker = new NeuralChunker({
+  model:"mirth/chonky_modernbert_large_1"
+});
+
+const text = "Your text here...";
+const chunks = await chunker.chunk({ text });
+```
+
+```bash cURL
+curl -X POST https://api.chonkie.ai/v1/chunk/neural \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "Your text here...",
+    "model": "mirth/chonky_modernbert_large_1"
+  }'
+```
+
+</CodeGroup>
+
+### File Input
+
+<CodeGroup>
+
+```python Python
+from chonkie.cloud import NeuralChunker
+
+chunker = NeuralChunker(
+  model="mirth/chonky_modernbert_large_1"
+)
+
+# Chunk from file
+with open("document.txt", "rb") as f:
+    chunks = chunker.chunk(file=f)
+```
+
+```javascript JavaScript
+import { NeuralChunker } from "@chonkiejs/cloud";
+
+const chunker = new NeuralChunker({
+  model:"mirth/chonky_modernbert_large_1"
+});
+
+// Chunk from file
+const file = document.querySelector('input[type="file"]').files[0];
+const chunks = await chunker.chunk({ file });
+```
+
+```bash cURL
+curl -X POST https://api.chonkie.ai/v1/chunk/neural \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -F "file=@document.txt" \
+  -F "model=mirth/chonky_modernbert_large_1"
+```
+
+</CodeGroup>
+
+## Request
+
+#### Parameters
+
+<ParamField path="text" type="string | string[]">
+  The text to chunk. Can be a single string or an array of strings for batch processing. Either `text` or `file` is required.
+</ParamField>
+
+<ParamField path="file" type="file">
+  File to chunk. Use multipart/form-data encoding. Either `text` or `file` is required.
+</ParamField>
+
+<ParamField path="model" type="string" default="mirth/chonky_modernbert_large_1">
+  The neural chunking model to use.
+</ParamField>
+
+<ParamField path="min_characters_per_chunk" type="integer" default="10">
+  Minimum number of characters per chunk
+</ParamField>
+
+## Response
+
+#### Returns
+
+Array of `Chunk` objects, each containing:
+
+<ResponseField name="text" type="string">
+  The chunk text content.
+</ResponseField>
+
+<ResponseField name="start_index" type="integer">
+  Starting character position in the original text.
+</ResponseField>
+
+<ResponseField name="end_index" type="integer">
+  Ending character position in the original text.
+</ResponseField>
+
+<ResponseField name="token_count" type="integer">
+  Number of tokens in the chunk.
+</ResponseField>
