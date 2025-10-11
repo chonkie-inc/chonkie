@@ -11,13 +11,23 @@
   "navigation": {
     "tabs": [
       {
-        "tab": "Open Source",
-        "icon": "book",
+        "tab": "Welcome",
+        "icon": "hippo",
         "groups": [
           {
             "group": "Welcome",
-            "pages": ["common/welcome", "common/concepts", "common/chunking-api", "common/labs"]
+            "pages": ["common/welcome", "common/concepts"]
           },
+          {
+            "group": "Products",
+            "pages":  ["common/open-source", "common/chunking-api", "common/labs"]
+          }
+        ]
+      },
+      {
+        "tab": "Open Source",
+        "icon": "book",
+        "groups": [
           {
             "group": "Getting Started",
             "pages": [
