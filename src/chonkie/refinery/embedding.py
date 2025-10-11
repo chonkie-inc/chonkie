@@ -3,11 +3,16 @@
 from typing import Any, Dict, List, Union
 
 from chonkie.embeddings import AutoEmbeddings, BaseEmbeddings
+from chonkie.logger import get_logger
+from chonkie.pipeline import refinery
 from chonkie.types import Chunk
 
 from .base import BaseRefinery
 
+logger = get_logger(__name__)
 
+
+@refinery("embeddings")
 class EmbeddingsRefinery(BaseRefinery):
     """Embedding Refinery.
 
@@ -43,10 +48,12 @@ class EmbeddingsRefinery(BaseRefinery):
 
     def refine(self, chunks: List[Chunk]) -> List[Chunk]:
         """Refine the chunks."""
+        logger.debug(f"Starting embedding refinery for {len(chunks)} chunks")
         texts = [chunk.text for chunk in chunks]
         embeds = self.embedding_model.embed_batch(texts)
         for chunk, embed in zip(chunks, embeds):
             chunk.embedding = embed  # type: ignore[attr-defined]
+        logger.info(f"Embedding refinement complete: added embeddings to {len(chunks)} chunks")
         return chunks
 
     def __repr__(self) -> str:

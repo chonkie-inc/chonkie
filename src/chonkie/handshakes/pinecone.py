@@ -15,15 +15,20 @@ from typing import (
 from uuid import NAMESPACE_OID, uuid5
 
 from chonkie.embeddings import AutoEmbeddings, BaseEmbeddings
+from chonkie.logger import get_logger
+from chonkie.pipeline import handshake
 from chonkie.types import Chunk
 
 from .base import BaseHandshake
 from .utils import generate_random_collection_name
 
+logger = get_logger(__name__)
+
 if TYPE_CHECKING:
     import pinecone
 
 
+@handshake("pinecone")
 class PineconeHandshake(BaseHandshake):
     """Pinecone Handshake to export Chonkie's Chunks into a Pinecone index.
 
@@ -183,8 +188,10 @@ class PineconeHandshake(BaseHandshake):
         """
         if isinstance(chunks, Chunk):
             chunks = [chunks]
+        logger.debug(f"Writing {len(chunks)} chunks to Pinecone index: {self.index_name}")
         vectors = self._get_vectors(chunks)
         self.index.upsert(vectors)
+        logger.info(f"Successfully wrote {len(chunks)} chunks to Pinecone index: {self.index_name}")
         print(
             f"🦛 Chonkie wrote {len(chunks)} chunks to Pinecone index: {self.index_name}"
         )
@@ -215,6 +222,7 @@ class PineconeHandshake(BaseHandshake):
             List[Dict[str, Any]]: A list of dictionaries containing the matching chunks and their metadata.
 
         """
+        logger.debug(f"Searching Pinecone index: {self.index_name} with limit={limit}")
         if self.embed is not None:
             # Use Pinecone's integrated embedding model
             results = self.index.query(query=query, top_k=limit, include_metadata=True)
@@ -237,4 +245,5 @@ class PineconeHandshake(BaseHandshake):
                 "score": match.get("score"),
                 **match.get("metadata", {}),
             })
+        logger.info(f"Search complete: found {len(matches)} matching chunks")
         return matches
