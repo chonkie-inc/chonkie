@@ -302,22 +302,29 @@ class CodeChunker(BaseChunker):
         return chunk_texts
 
     def _create_chunks(self,
-                       texts: List[str],
-                       token_counts: List[int],
-                       node_groups: List[List["Node"]]) -> List[Chunk]:
-        """Create Code Chunks."""
-        chunks = []
-        current_index = 0
-        for i in range(len(texts)):
-            text = texts[i]
-            token_count = token_counts[i]
+                   texts: List[str],
+                   token_counts: List[int],
+                   node_groups: List[List["Node"]]) -> List[Chunk]:
+    """Create Code Chunks with start and end line numbers."""
+    chunks = []
+    current_index = 0
+    full_text = "".join(texts)  # Combine all chunk texts for line number calculation
 
-            chunks.append(Chunk(text=text,
-                                start_index=current_index,
-                                end_index=current_index + len(text),
-                                token_count=token_count))  # type: ignore[attr-defined]
-            current_index += len(text)
-        return chunks
+    for i in range(len(texts)):
+        text = texts[i]
+        token_count = token_counts[i]
+
+        chunks.append(Chunk(
+            text=text,
+            start_index=current_index,
+            end_index=current_index + len(text),
+            token_count=token_count,
+            start_line=CodeChunker.char_index_to_line_number(full_text, current_index),
+            end_line=CodeChunker.char_index_to_line_number(full_text, current_index + len(text))
+        ))
+        current_index += len(text)
+    return chunks
+
         
     def chunk(self, text: str) -> List[Chunk]:
         """Recursively chunks the code based on context from tree-sitter."""
@@ -361,3 +368,23 @@ class CodeChunker(BaseChunker):
         return (f"CodeChunker(tokenizer_or_token_counter={self.tokenizer},"
                 f"chunk_size={self.chunk_size},"
                 f"language={self.language})")
+    
+    class CodeChunker(BaseChunker):
+    ...
+    def __repr__(self) -> str:
+        return (f"CodeChunker(tokenizer_or_token_counter={self.tokenizer},"
+                f"chunk_size={self.chunk_size},"
+                f"language={self.language})")
+
+    @staticmethod
+    def char_index_to_line_number(code: str, char_index: int) -> int:
+        """
+        Convert a character index in `code` to a line number (1-based).
+        """
+        lines = code.splitlines(keepends=True)
+        cumulative = 0
+        for i, line in enumerate(lines, start=1):
+            cumulative += len(line)
+            if cumulative > char_index:
+                return i
+        return len(lines)
