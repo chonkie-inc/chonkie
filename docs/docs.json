@@ -234,7 +234,7 @@
   },
   "api": {
     "playground": {
-      "display": "interactive"
+      "display": "none"
     }
   },
   "seo": {
