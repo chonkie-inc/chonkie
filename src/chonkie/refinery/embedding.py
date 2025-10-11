@@ -4,6 +4,7 @@ from typing import Any, Dict, List, Union
 
 from chonkie.embeddings import AutoEmbeddings, BaseEmbeddings
 from chonkie.logger import get_logger
+from chonkie.pipeline import refinery
 from chonkie.types import Chunk
 
 from .base import BaseRefinery
@@ -11,6 +12,7 @@ from .base import BaseRefinery
 logger = get_logger(__name__)
 
 
+@refinery("embeddings")
 class EmbeddingsRefinery(BaseRefinery):
     """Embedding Refinery.
 

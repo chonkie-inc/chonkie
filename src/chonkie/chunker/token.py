@@ -10,12 +10,14 @@ from tqdm import trange
 
 from chonkie.chunker.base import BaseChunker
 from chonkie.logger import get_logger
+from chonkie.pipeline import chunker
 from chonkie.tokenizer import TokenizerProtocol
 from chonkie.types import Chunk
 
 logger = get_logger(__name__)
 
 
+@chunker("token")
 class TokenChunker(BaseChunker):
     """Chunker that splits text into chunks of a specified token size.
 
