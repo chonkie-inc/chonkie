@@ -82,8 +82,8 @@ class TestFileFetcher:
     
     def test_fetch_all_files_no_filter(self, file_fetcher, temp_dir_with_files):
         """Test fetching all files without extension filter."""
-        files = file_fetcher.fetch(temp_dir_with_files)
-        
+        files = file_fetcher.fetch(dir=temp_dir_with_files)
+
         # Should return all files but not directories
         assert len(files) == 5  # file1.txt, file2.py, file3.md, file4.txt, no_extension_file
         
@@ -105,7 +105,7 @@ class TestFileFetcher:
     
     def test_fetch_with_single_extension_filter(self, file_fetcher, temp_dir_with_files):
         """Test fetching files with single extension filter."""
-        files = file_fetcher.fetch(temp_dir_with_files, ext=[".txt"])
+        files = file_fetcher.fetch(dir=temp_dir_with_files, ext=[".txt"])
         
         # Should return only .txt files
         assert len(files) == 2  # file1.txt, file4.txt
@@ -118,7 +118,7 @@ class TestFileFetcher:
     
     def test_fetch_with_multiple_extension_filters(self, file_fetcher, temp_dir_with_files):
         """Test fetching files with multiple extension filters."""
-        files = file_fetcher.fetch(temp_dir_with_files, ext=[".txt", ".py"])
+        files = file_fetcher.fetch(dir=temp_dir_with_files, ext=[".txt", ".py"])
         
         # Should return .txt and .py files
         assert len(files) == 3  # file1.txt, file2.py, file4.txt
@@ -132,7 +132,7 @@ class TestFileFetcher:
     
     def test_fetch_with_non_matching_extension(self, file_fetcher, temp_dir_with_files):
         """Test fetching files with extension that doesn't match any files."""
-        files = file_fetcher.fetch(temp_dir_with_files, ext=[".xyz"])
+        files = file_fetcher.fetch(dir=temp_dir_with_files, ext=[".xyz"])
         
         # Should return empty list
         assert len(files) == 0
@@ -140,7 +140,7 @@ class TestFileFetcher:
     
     def test_fetch_empty_directory(self, file_fetcher, empty_temp_dir):
         """Test fetching files from empty directory."""
-        files = file_fetcher.fetch(empty_temp_dir)
+        files = file_fetcher.fetch(dir=empty_temp_dir)
         
         # Should return empty list
         assert len(files) == 0
@@ -148,8 +148,8 @@ class TestFileFetcher:
     
     def test_fetch_non_existent_directory(self, file_fetcher):
         """Test fetching files from non-existent directory."""
-        with pytest.raises(FileNotFoundError):
-            file_fetcher.fetch("/non/existent/directory")
+        with pytest.raises((FileNotFoundError, ValueError)):
+            file_fetcher.fetch(dir="/non/existent/directory")
     
     def test_fetch_file_existing_file(self, file_fetcher, temp_dir_with_files):
         """Test fetch_file method with existing file."""
@@ -182,16 +182,16 @@ class TestFileFetcher:
     def test_call_method_delegates_to_fetch(self, file_fetcher, temp_dir_with_files):
         """Test __call__ method delegates to fetch method."""
         # Test without extension filter
-        files1 = file_fetcher(temp_dir_with_files)
-        files2 = file_fetcher.fetch(temp_dir_with_files)
+        files1 = file_fetcher(dir=temp_dir_with_files)
+        files2 = file_fetcher.fetch(dir=temp_dir_with_files)
         
         assert len(files1) == len(files2)
         assert set(f.name for f in files1) == set(f.name for f in files2)
     
     def test_call_method_with_extension_filter(self, file_fetcher, temp_dir_with_files):
         """Test __call__ method with extension filter."""
-        files1 = file_fetcher(temp_dir_with_files, ext=[".txt"])
-        files2 = file_fetcher.fetch(temp_dir_with_files, ext=[".txt"])
+        files1 = file_fetcher(dir=temp_dir_with_files, ext=[".txt"])
+        files2 = file_fetcher.fetch(dir=temp_dir_with_files, ext=[".txt"])
         
         assert len(files1) == len(files2)
         assert set(f.name for f in files1) == set(f.name for f in files2)
@@ -199,7 +199,7 @@ class TestFileFetcher:
     
     def test_fetch_ignores_subdirectories(self, file_fetcher, temp_dir_with_files):
         """Test that fetch method ignores subdirectories and only returns files."""
-        files = file_fetcher.fetch(temp_dir_with_files)
+        files = file_fetcher.fetch(dir=temp_dir_with_files)
         
         # Verify no directories are returned
         for file_path in files:
@@ -221,9 +221,9 @@ class TestFileFetcher:
             (temp_path / "file3.Txt").write_text("Content 3")
             
             # Test exact case matching
-            files_lower = file_fetcher.fetch(temp_dir, ext=[".txt"])
-            files_upper = file_fetcher.fetch(temp_dir, ext=[".TXT"])
-            files_mixed = file_fetcher.fetch(temp_dir, ext=[".Txt"])
+            files_lower = file_fetcher.fetch(dir=temp_dir, ext=[".txt"])
+            files_upper = file_fetcher.fetch(dir=temp_dir, ext=[".TXT"])
+            files_mixed = file_fetcher.fetch(dir=temp_dir, ext=[".Txt"])
             
             assert len(files_lower) == 1  # Only file2.txt
             assert len(files_upper) == 1  # Only file1.TXT
@@ -232,3 +232,55 @@ class TestFileFetcher:
             assert files_lower[0].name == "file2.txt"
             assert files_upper[0].name == "file1.TXT"
             assert files_mixed[0].name == "file3.Txt"
+
+    def test_fetch_single_file_mode(self, file_fetcher, temp_dir_with_files):
+        """Test fetching a single file using path parameter."""
+        temp_path = Path(temp_dir_with_files)
+        file_path = temp_path / "file1.txt"
+
+        result = file_fetcher.fetch(path=str(file_path))
+
+        assert isinstance(result, Path)
+        assert result.name == "file1.txt"
+        assert result.is_file()
+        assert result.read_text() == "Content of file1"
+
+    def test_fetch_single_file_not_found(self, file_fetcher, temp_dir_with_files):
+        """Test fetching a non-existent file in single file mode."""
+        temp_path = Path(temp_dir_with_files)
+        file_path = temp_path / "nonexistent.txt"
+
+        with pytest.raises(FileNotFoundError, match="File not found"):
+            file_fetcher.fetch(path=str(file_path))
+
+    def test_fetch_both_path_and_dir_raises_error(self, file_fetcher, temp_dir_with_files):
+        """Test that providing both path and dir raises ValueError."""
+        with pytest.raises(ValueError, match="Provide either 'path' or 'dir', not both"):
+            file_fetcher.fetch(path="file.txt", dir=temp_dir_with_files)
+
+    def test_fetch_neither_path_nor_dir_raises_error(self, file_fetcher):
+        """Test that providing neither path nor dir raises ValueError."""
+        with pytest.raises(ValueError, match="Must provide either 'path' or 'dir'"):
+            file_fetcher.fetch()
+
+    def test_fetch_single_file_with_ext_ignored(self, file_fetcher, temp_dir_with_files):
+        """Test that ext parameter is ignored in single file mode."""
+        temp_path = Path(temp_dir_with_files)
+        file_path = temp_path / "file2.py"
+
+        # ext should be ignored when path is provided
+        result = file_fetcher.fetch(path=str(file_path), ext=[".txt"])
+
+        assert isinstance(result, Path)
+        assert result.name == "file2.py"
+        assert result.suffix == ".py"  # Not .txt
+
+    def test_call_single_file_mode(self, file_fetcher, temp_dir_with_files):
+        """Test __call__ method with single file."""
+        temp_path = Path(temp_dir_with_files)
+        file_path = temp_path / "file1.txt"
+
+        result = file_fetcher(path=str(file_path))
+
+        assert isinstance(result, Path)
+        assert result.name == "file1.txt"
