@@ -4,33 +4,32 @@ description: "Get started with Chonkie's Cloud API for intelligent text processi
 icon: "rocket"
 ---
 
-Welcome to Chonkie's Cloud API! Build powerful AI applications with enterprise-grade text chunking, semantic search, and intelligent agents.
+Welcome to Chonkie's API! Build powerful AI applications with enterprise-grade text chunking, semantic search, and intelligent agents.
 
-## What is Chonkie Cloud?
+## Available APIs
 
-Chonkie Cloud provides two complementary APIs:
+Chonkie provides two complementary APIs:
 
-### 🔪 Chunking & Embedding API
+### Chunking & Embedding API
 
 **Base URL**: `https://api.chonkie.ai`
 
 Transform raw text into perfectly-sized, semantically meaningful chunks for RAG applications. Includes:
 
-- **8 Advanced Chunkers** - Token, Sentence, Recursive, Semantic, Late, Code, Neural, and Slumber
-- **2 Refineries** - Add embeddings and overlap for better retrieval
+- **All Chunkers** - Split your documents using our finetuned chunkers.
+- **All Refineries** - Add embeddings and overlap for better retrieval
 - **Multiple Embeddings** - Support for all major embedding models
-- **Battle-tested** - Used in production by thousands of developers
 
-### 🧠 Context as a Service API
+### Labs API
 
 **Base URL**: `https://labs.chonkie.ai/api`
 
-Build AI applications with persistent knowledge and intelligent agents:
+Build AI applications with persistent knowledge and intelligent agents. This is _Context as a Service_:
 
 - **Knowledge Bases** - Store and index documents with automatic chunking and embedding
 - **Semantic Search** - Three-mode search (fast/balanced/deep) over your documents
-- **AI Agents** - Configurable agents with LLM integration and RAG capabilities
-- **MCP Integration** - Connect to Claude Desktop via Model Context Protocol
+- **AI Agents** - Create LLM powered agents over your documents in natural language
+- **MCP Integration** - Connect your data to desktop apps or IDEs with one click MCP deployments
 
 ## Quick Start
 
@@ -144,73 +143,6 @@ export CHONKIE_API_KEY="your-api-key-here"
 
 The SDK automatically reads from `CHONKIE_API_KEY` if no key is provided explicitly.
 
-## API Overview
-
-### Chunking API
-
-Perfect for developers who need:
-
-- Text preprocessing for RAG pipelines
-- Embedding generation at scale
-- Flexible chunking strategies
-- Direct integration with existing systems
-
-**Popular Endpoints:**
-
-- [Token Chunker](/api/chunking/token-chunker) - Fast, simple chunking
-- [Semantic Chunker](/api/chunking/semantic-chunker) - Topic-aware boundaries
-- [Code Chunker](/api/chunking/code-chunker) - Language-aware code splitting
-- [Embeddings Refinery](/api/refineries/embeddings) - Add vector embeddings
-
-### Context as a Service API
-
-Perfect for teams who need:
-
-- Managed knowledge base infrastructure
-- Built-in semantic search
-- AI agents with knowledge integration
-- No vector database setup required
-
-**Popular Endpoints:**
-
-- [Create Knowledge Base](/api/knowledge/create) - Store documents
-- [Semantic Search](/api/search/search) - Query knowledge
-- [Create Agent](/api/agents/create) - Build AI assistants
-- [Chat](/api/agents/chat) - OpenAI-compatible chat
-
-## Use Cases
-
-<CardGroup cols={2}>
-
-<Card title="RAG Applications" icon="brain">
-  Chunk documents, generate embeddings, and build retrieval systems for LLMs
-</Card>
-
-<Card title="Document Search" icon="magnifying-glass">
-  Create semantic search over documentation, support articles, or knowledge
-  bases
-</Card>
-
-<Card title="AI Chatbots" icon="comments">
-  Build context-aware chatbots that answer questions from your documents
-</Card>
-
-<Card title="Code Analysis" icon="code">
-  Index and search codebases with language-aware chunking
-</Card>
-
-</CardGroup>
-
-## Rate Limits
-
-| Plan           | Chunking API    | Context API    | Knowledge Bases | Agents     |
-| -------------- | --------------- | -------------- | --------------- | ---------- |
-| **Free**       | 1,000 req/day   | 100 req/day    | 1 KB            | 1 agent    |
-| **Pro**        | 10,000 req/day  | 1,000 req/day  | 10 KBs          | 10 agents  |
-| **Team**       | 100,000 req/day | 10,000 req/day | 100 KBs         | 100 agents |
-| **Enterprise** | Custom          | Custom         | Unlimited       | Unlimited  |
-
-Check your current usage at [labs.chonkie.ai/settings](https://labs.chonkie.ai/settings)
 
 ## SDKs and Libraries
 
@@ -222,71 +154,10 @@ Official SDKs available:
 Both SDKs provide:
 
 - Type-safe interfaces
-- Automatic retries
 - Error handling
 - Environment variable support
 - Full feature parity with REST API
 
-## Response Format
-
-All API responses use JSON format:
-
-### Success Response
-
-```json
-{
-  "data": {...},
-  "message": "Success"
-}
-```
-
-### Error Response
-
-```json
-{
-  "error": "Error message",
-  "details": "Additional context",
-  "code": "ERROR_CODE"
-}
-```
-
-## Common HTTP Status Codes
-
-| Code    | Meaning      | Action                             |
-| ------- | ------------ | ---------------------------------- |
-| **200** | Success      | Request completed successfully     |
-| **400** | Bad Request  | Check request parameters           |
-| **401** | Unauthorized | Verify API key is correct          |
-| **404** | Not Found    | Resource doesn't exist             |
-| **429** | Rate Limited | Slow down requests or upgrade plan |
-| **500** | Server Error | Retry with exponential backoff     |
-
-## Best Practices
-
-<Tip>
-  **Cache API responses** when possible to reduce latency and stay within rate
-  limits.
-</Tip>
-
-<Tip>
-  **Use appropriate chunk sizes** based on your LLM's context window. Common
-  sizes: 512 for GPT-3.5, 1024 for GPT-4.
-</Tip>
-
-<Tip>
-  **Add overlap** between chunks (10-20%) to avoid losing information at
-  boundaries.
-</Tip>
-
-<Tip>
-  **Choose the right chunker** for your content type. Use Semantic for varied
-  topics, Code for source code, Token for general text.
-</Tip>
-
-<Warning>
-  **Never commit API keys** to version control. Use environment variables or
-  secrets management.
-</Warning>
 
 ## Getting Help
 
@@ -302,11 +173,11 @@ Need assistance?
 <CardGroup cols={2}>
 
 <Card title="Try the Playground" icon="flask" href="/api/common/playground">
-  Test chunkers visually without writing code
+  Test chunkers visually on our interactive web app
 </Card>
 
 <Card
-  title="Build with Chunking"
+  title="CHONK your first document"
   icon="scissors"
   href="/api/chunking/token-chunker"
 >
@@ -314,7 +185,7 @@ Need assistance?
 </Card>
 
 <Card
-  title="Create Knowledge Base"
+  title="Create a Knowledge Base"
   icon="database"
   href="/api/knowledge/create"
 >
@@ -326,10 +197,3 @@ Need assistance?
 </Card>
 
 </CardGroup>
-
----
-
-<Info>
-  **New to RAG?** Check out our [concepts guide](/common/concepts) to learn
-  about chunking, embeddings, and retrieval.
-</Info>
