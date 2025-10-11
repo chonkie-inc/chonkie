@@ -6,6 +6,65 @@ description: "Modify an agent's configuration"
 
 Update an existing agent's configuration.
 
+## Examples
+
+<CodeGroup>
+
+```python Python
+import requests
+
+agent_slug = "documentation-assistant"
+url = f"https://labs.chonkie.ai/api/v1/agents/{agent_slug}"
+headers = {
+    "Authorization": "Bearer YOUR_API_KEY",
+    "Content-Type": "application/json"
+}
+
+data = {
+    "model": "gpt-4o",
+    "temperature": 0.5
+}
+
+response = requests.put(url, headers=headers, json=data)
+result = response.json()
+
+print(f"Updated agent: {result['agent']['name']}")
+print(f"New model: {result['agent']['model']}")
+```
+
+```javascript JavaScript
+const agentSlug = "documentation-assistant";
+const response = await fetch(
+  `https://labs.chonkie.ai/api/v1/agents/${agentSlug}`,
+  {
+    method: "PUT",
+    headers: {
+      Authorization: "Bearer YOUR_API_KEY",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "gpt-4o",
+      temperature: 0.5,
+    }),
+  }
+);
+
+const result = await response.json();
+console.log(`Updated agent: ${result.agent.name}`);
+```
+
+```bash cURL
+curl -X PUT https://labs.chonkie.ai/api/v1/agents/documentation-assistant \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gpt-4o",
+    "temperature": 0.5
+  }'
+```
+
+</CodeGroup>
+
 ## Request
 
 #### Path Parameters
@@ -34,10 +93,6 @@ All parameters are optional. Only include fields you want to update.
   Update system prompt.
 </ParamField>
 
-<ParamField path="temperature" type="float">
-  Adjust temperature (0.0-2.0).
-</ParamField>
-
 <ParamField path="maxContextChunks" type="integer">
   Change max context chunks.
 </ParamField>
@@ -57,62 +112,3 @@ All parameters are optional. Only include fields you want to update.
 <ResponseField name="agent" type="object">
   Updated agent configuration.
 </ResponseField>
-
-## Examples
-
-<CodeGroup>
-
-```python Python
-import requests
-
-agent_slug = "documentation-assistant"
-url = f"https://labs.chonkie.ai/api/v1/agents/{agent_slug}"
-headers = {
-    "Authorization": "Bearer YOUR_API_KEY",
-    "Content-Type": "application/json"
-}
-
-data = {
-    "model": "gpt-4o",
-    "temperature": 0.5
-}
-
-response = requests.put(url, headers=headers, json=data)
-result = response.json()
-
-print(f"Updated agent: {result['agent']['name']}")
-print(f"New model: {result['agent']['model']}")
-```
-
-```javascript JavaScript
-const agentSlug = 'documentation-assistant';
-const response = await fetch(
-  `https://labs.chonkie.ai/api/v1/agents/${agentSlug}`,
-  {
-    method: 'PUT',
-    headers: {
-      'Authorization': 'Bearer YOUR_API_KEY',
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      model: 'gpt-4o',
-      temperature: 0.5
-    })
-  }
-);
-
-const result = await response.json();
-console.log(`Updated agent: ${result.agent.name}`);
-```
-
-```bash cURL
-curl -X PUT https://labs.chonkie.ai/api/v1/agents/documentation-assistant \
-  -H "Authorization: Bearer YOUR_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "gpt-4o",
-    "temperature": 0.5
-  }'
-```
-
-</CodeGroup>

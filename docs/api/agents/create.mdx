@@ -1,58 +1,10 @@
 ---
 title: "Create Agent"
-api: "POST https://labs.chonkie.ai/api/v1/agents"
+api: "POST labs.chonkie.ai/api/v1/agents"
 description: "Create an AI agent with custom configuration and knowledge base access"
 ---
 
 Create a new AI agent with customizable LLM settings, system prompts, and knowledge base integration.
-
-## Request
-
-#### Parameters
-
-<ParamField path="name" type="string" required>
-  Agent name (3-100 characters).
-</ParamField>
-
-<ParamField path="description" type="string">
-  Description of the agent's purpose and capabilities.
-</ParamField>
-
-<ParamField path="model" type="string" default="gpt-4o-mini">
-  LLM model to use. Options: "gpt-4o", "gpt-4o-mini", "gpt-4-turbo", "gpt-3.5-turbo", "groq/llama-3.1-70b", "groq/mixtral-8x7b".
-</ParamField>
-
-<ParamField path="systemPrompt" type="string">
-  System prompt that defines the agent's behavior and personality.
-</ParamField>
-
-<ParamField path="temperature" type="float" default="0.7">
-  Creativity level (0.0-2.0). Lower is more focused, higher is more creative.
-</ParamField>
-
-<ParamField path="maxContextChunks" type="integer" default="5">
-  Maximum number of knowledge base chunks to include in context.
-</ParamField>
-
-<ParamField path="useContext" type="boolean" default="false">
-  Whether to inject knowledge base context into conversations.
-</ParamField>
-
-<ParamField path="knowledge" type="string">
-  Knowledge base slug to use for context (required if useContext is true).
-</ParamField>
-
-## Response
-
-#### Returns
-
-<ResponseField name="slug" type="string">
-  Unique slug for the agent (used in API calls).
-</ResponseField>
-
-<ResponseField name="agent" type="object">
-  Complete agent configuration.
-</ResponseField>
 
 ## Examples
 
@@ -86,22 +38,22 @@ print(f"Slug: {result['slug']}")
 ```
 
 ```javascript JavaScript
-const response = await fetch('https://labs.chonkie.ai/api/v1/agents', {
-  method: 'POST',
+const response = await fetch("https://labs.chonkie.ai/api/v1/agents", {
+  method: "POST",
   headers: {
-    'Authorization': 'Bearer YOUR_API_KEY',
-    'Content-Type': 'application/json'
+    Authorization: "Bearer YOUR_API_KEY",
+    "Content-Type": "application/json",
   },
   body: JSON.stringify({
-    name: 'Documentation Assistant',
-    description: 'Helps users navigate product documentation',
-    model: 'gpt-4o-mini',
-    systemPrompt: 'You are a helpful documentation assistant.',
+    name: "Documentation Assistant",
+    description: "Helps users navigate product documentation",
+    model: "gpt-4o-mini",
+    systemPrompt: "You are a helpful documentation assistant.",
     temperature: 0.3,
     maxContextChunks: 5,
     useContext: true,
-    knowledge: 'product-documentation'
-  })
+    knowledge: "product-documentation",
+  }),
 });
 
 const result = await response.json();
@@ -126,3 +78,47 @@ curl -X POST https://labs.chonkie.ai/api/v1/agents \
 ```
 
 </CodeGroup>
+
+## Request
+
+#### Parameters
+
+<ParamField path="name" type="string" required>
+  Agent name (3-100 characters).
+</ParamField>
+
+<ParamField path="description" type="string">
+  Description of the agent's purpose and capabilities.
+</ParamField>
+
+<ParamField path="model" type="string" default="gpt-5-mini">
+  LLM model to use. We support openAI models.
+</ParamField>
+
+<ParamField path="systemPrompt" type="string">
+  System prompt that defines the agent's behavior and personality.
+</ParamField>
+
+<ParamField path="maxContextChunks" type="integer" default="5">
+  Maximum number of knowledge base chunks to include in context.
+</ParamField>
+
+<ParamField path="useContext" type="boolean" default="false">
+  Whether to inject knowledge base context into conversations.
+</ParamField>
+
+<ParamField path="knowledge" type="string">
+  Knowledge base slug to use for context (required if useContext is true).
+</ParamField>
+
+## Response
+
+#### Returns
+
+<ResponseField name="slug" type="string">
+  Unique slug for the agent (used in API calls).
+</ResponseField>
+
+<ResponseField name="agent" type="object">
+  Complete agent configuration.
+</ResponseField>

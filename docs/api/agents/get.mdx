@@ -1,26 +1,10 @@
 ---
 title: "Get Agent"
-api: "GET https://labs.chonkie.ai/api/v1/agents/{agent_slug}"
+api: "GET labs.chonkie.ai/api/v1/agents/{agent_slug}"
 description: "Retrieve a specific agent's configuration"
 ---
 
 Get detailed information about a specific agent.
-
-## Request
-
-#### Path Parameters
-
-<ParamField path="agent_slug" type="string" required>
-  The slug of the agent to retrieve.
-</ParamField>
-
-## Response
-
-#### Returns
-
-<ResponseField name="agent" type="object">
-  Complete agent configuration and metadata.
-</ResponseField>
 
 ## Examples
 
@@ -45,13 +29,13 @@ print(f"Temperature: {agent['temperature']}")
 ```
 
 ```javascript JavaScript
-const agentSlug = 'documentation-assistant';
+const agentSlug = "documentation-assistant";
 const response = await fetch(
   `https://labs.chonkie.ai/api/v1/agents/${agentSlug}`,
   {
     headers: {
-      'Authorization': 'Bearer YOUR_API_KEY'
-    }
+      Authorization: "Bearer YOUR_API_KEY",
+    },
   }
 );
 
@@ -66,3 +50,19 @@ curl -X GET https://labs.chonkie.ai/api/v1/agents/documentation-assistant \
 ```
 
 </CodeGroup>
+
+## Request
+
+#### Path Parameters
+
+<ParamField path="agent_slug" type="string" required>
+  The slug of the agent to retrieve.
+</ParamField>
+
+## Response
+
+#### Returns
+
+<ResponseField name="agent" type="object">
+  Complete agent configuration and metadata.
+</ResponseField>
