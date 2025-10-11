@@ -1,13 +1,16 @@
 ---
 title: "MCP Integration"
 description: "Connect your Chonkie agents to Claude Desktop and other MCP-compatible applications"
+icon: server
 ---
 
 Model Context Protocol (MCP) integration enables your Chonkie agents to function as context servers for Claude Desktop, Cursor, and other MCP-compatible applications. This allows you to seamlessly access your knowledge bases and agent capabilities directly within these tools.
 
 ## What is MCP?
 
-The Model Context Protocol is an open standard that connects AI applications to external context sources. When you enable MCP for a Chonkie agent, that agent becomes accessible as a context server, providing your knowledge base content and agent capabilities to any MCP-compatible client.
+The Model Context Protocol is an open standard that connects AI applications to external context sources.
+When you enable this option for a Chonkie agent, that agent becomes accessible as an MCP server,
+providing your knowledge base content and agent capabilities to any MCP-compatible client.
 
 ## Benefits of MCP Integration
 
@@ -28,45 +31,56 @@ Share MCP-enabled agents across your team, ensuring everyone has access to the s
 MCP integration is managed directly in the Chonkie Labs interface:
 
 1. Navigate to your agent in the dashboard
-2. Go to the "MCP" or "Integrations" section
-3. Toggle MCP status to "Active"
+2. Click on "Actions" and select "Deploy MCP Server"
+3. Confirm your choice
 4. Configure visibility settings (private or public)
-5. Copy the MCP server configuration
 
 Once deployed, your agent is available as an MCP server at the provided endpoint.
+
+Depending on the visibility setting you choose, your MCP sercver will either be public (no auth required)
+or private (requires a `Bearer` API key).
+
+For private MCP servers, you can generate API keys from the [Access Keys page](https://labs.chonkie.ai/settings/access-keys)
 
 ## Monitoring and Observability
 
 After your MCP server is deployed, an observability dashboard is available at **mcp.chonkie.ai** where you can:
 
 - Monitor MCP server usage and requests
-- View connection logs and statistics
-- Track which clients are accessing your agent
-- Analyze performance metrics
-- Troubleshoot connection issues
+- See installation instructions for different MCP clients
 
-## Connecting to Claude Desktop
-
-Once MCP is enabled for your agent, you can add it to Claude Desktop:
-
-1. Enable MCP for your agent in Chonkie Labs
-2. Copy the MCP configuration provided
-3. Add the configuration to your Claude Desktop settings
-4. Restart Claude Desktop
-5. Your Chonkie agent will appear as an available context source
-
-Your agent's knowledge base and capabilities are now accessible directly in Claude Desktop conversations.
-
-## Security and Access Control
-
-**Private Agents**
-By default, MCP-enabled agents are private and require authentication. Only authorized users with valid API keys can access your agent through MCP.
-
-**Public Agents**
-You can optionally make agents publicly accessible through MCP for open-source documentation or public knowledge bases.
-
-**Access Monitoring**
-The observability dashboard at mcp.chonkie.ai provides detailed logs of all access attempts and usage patterns, helping you maintain security and compliance.
+<div className="flex justify-center">
+  <img
+    className="block dark:hidden"
+    src="/assets/mcp/dashboard-light.png"
+    alt="MCP Dashboard Light"
+    noZoom
+    width="800"
+  />
+  <img
+    className="hidden dark:block"
+    src="/assets/mcp/dashboard-dark.png"
+    alt="MCP Dashboard Dark"
+    noZoom
+    width="800"
+  />
+</div>
+<div className="flex justify-center">
+  <img
+    className="block dark:hidden"
+    src="/assets/mcp/installation-light.png"
+    alt="MCP installation Light"
+    noZoom
+    width="800"
+  />
+  <img
+    className="hidden dark:block"
+    src="/assets/mcp/installation-dark.png"
+    alt="MCP installation Dark"
+    noZoom
+    width="800"
+  />
+</div>
 
 ## Use Cases
 
@@ -86,8 +100,8 @@ Access research databases, technical papers, and analysis reports directly in yo
 
 You can enable or disable MCP for any agent at any time through the Chonkie Labs interface. Changes take effect immediately:
 
-- **Activate**: Enable MCP access for an agent
-- **Deactivate**: Temporarily disable MCP without removing configuration
-- **Remove**: Completely remove MCP integration from an agent
+- **Active and Public**: Enable MCP access for everyone. No auth required.
+- **Active and Private**: Enable MCP access for authorized clients only.
+- **Inactive**: Disable MCP integration. All clients will be disconnected.
 
-When you deactivate or remove MCP, existing client connections will be terminated, and the agent will no longer be accessible through the MCP protocol.
+All changes take effect immediately.
