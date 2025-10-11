@@ -1,54 +1,10 @@
 ---
 title: "Create Knowledge Base"
-api: "POST https://labs.chonkie.ai/api/v1/knowledge"
+api: "POST labs.chonkie.ai/api/v1/knowledge"
 description: "Create a new knowledge base for storing and indexing documents"
 ---
 
 Create a new knowledge base that can store documents, generate embeddings, and enable semantic search.
-
-## Request
-
-#### Parameters
-
-<ParamField path="name" type="string" required>
-  Name of the knowledge base. Will be used to generate a unique slug.
-</ParamField>
-
-<ParamField path="description" type="string">
-  Optional description of what this knowledge base contains.
-</ParamField>
-
-## Response
-
-#### Returns
-
-<ResponseField name="id" type="string">
-  Unique identifier for the knowledge base.
-</ResponseField>
-
-<ResponseField name="slug" type="string">
-  URL-safe slug generated from the name. Use this for subsequent API calls.
-</ResponseField>
-
-<ResponseField name="name" type="string">
-  The knowledge base name.
-</ResponseField>
-
-<ResponseField name="description" type="string">
-  The knowledge base description.
-</ResponseField>
-
-<ResponseField name="bucket" type="string">
-  R2 bucket name for file storage.
-</ResponseField>
-
-<ResponseField name="collection" type="string">
-  Qdrant collection name for vector storage.
-</ResponseField>
-
-<ResponseField name="createdAt" type="string">
-  ISO 8601 timestamp of creation.
-</ResponseField>
 
 ## Examples
 
@@ -104,3 +60,27 @@ curl -X POST https://labs.chonkie.ai/api/v1/knowledge \
 ```
 
 </CodeGroup>
+
+## Request
+
+#### Parameters
+
+<ParamField path="name" type="string" required>
+  Name of the knowledge base. Will be used to generate a unique slug.
+</ParamField>
+
+<ParamField path="description" type="string">
+  Optional description of what this knowledge base contains.
+</ParamField>
+
+## Response
+
+#### Returns
+
+<ResponseField name="slug" type="string">
+  URL-safe slug generated from the name. Use this for subsequent API calls.
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  The knowledge base name.
+</ResponseField>

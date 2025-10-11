@@ -6,30 +6,6 @@ description: "Remove a specific file from a knowledge base"
 
 Delete a file from a knowledge base. This removes the file from storage and its vectors from the search index.
 
-## Request
-
-#### Path Parameters
-
-<ParamField path="knowledge_base_slug" type="string" required>
-  The slug of the knowledge base.
-</ParamField>
-
-<ParamField path="file_id" type="string" required>
-  The file key to delete. Format: `{timestamp}-{filename}`
-</ParamField>
-
-## Response
-
-#### Returns
-
-<ResponseField name="message" type="string">
-  Success message confirming deletion.
-</ResponseField>
-
-<ResponseField name="knowledgeBaseId" type="string">
-  ID of the knowledge base.
-</ResponseField>
-
 ## Examples
 
 <CodeGroup>
@@ -75,3 +51,27 @@ curl -X DELETE \
 ```
 
 </CodeGroup>
+
+## Request
+
+#### Path Parameters
+
+<ParamField path="knowledge_base_slug" type="string" required>
+  The slug of the knowledge base.
+</ParamField>
+
+<ParamField path="file_id" type="string" required>
+  The file key to delete. Format: `{timestamp}-{filename}`
+</ParamField>
+
+## Response
+
+#### Returns
+
+<ResponseField name="message" type="string">
+  Success message confirming deletion.
+</ResponseField>
+
+<ResponseField name="knowledgeBaseId" type="string">
+  ID of the knowledge base.
+</ResponseField>

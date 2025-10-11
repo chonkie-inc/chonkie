@@ -1,44 +1,10 @@
 ---
 title: "Download File"
-api: "GET https://labs.chonkie.ai/api/v1/knowledge/{knowledge_base_slug}/{file_id}"
+api: "GET labs.chonkie.ai/api/v1/knowledge/{knowledge_base_slug}/{file_id}"
 description: "Download a specific file from a knowledge base"
 ---
 
 Download the original file from a knowledge base. Returns the file as a binary stream.
-
-## Request
-
-#### Path Parameters
-
-<ParamField path="knowledge_base_slug" type="string" required>
-  The slug of the knowledge base.
-</ParamField>
-
-<ParamField path="file_id" type="string" required>
-  The file key from Get Knowledge Base Files. Format: `{timestamp}-{filename}`
-</ParamField>
-
-## Response
-
-#### Returns
-
-Binary file stream with headers:
-
-<ResponseField name="Content-Type" type="header">
-  MIME type of the file (e.g., "application/pdf", "text/plain").
-</ResponseField>
-
-<ResponseField name="Content-Length" type="header">
-  File size in bytes.
-</ResponseField>
-
-<ResponseField name="Content-Disposition" type="header">
-  Attachment header with original filename.
-</ResponseField>
-
-<ResponseField name="ETag" type="header">
-  Entity tag for caching.
-</ResponseField>
 
 ## Examples
 
@@ -100,3 +66,33 @@ curl -X GET \
 ```
 
 </CodeGroup>
+
+## Request
+
+#### Path Parameters
+
+<ParamField path="knowledge_base_slug" type="string" required>
+  The slug of the knowledge base.
+</ParamField>
+
+<ParamField path="file_id" type="string" required>
+  The file key from Get Knowledge Base Files. Format: `{timestamp}-{filename}`
+</ParamField>
+
+## Response
+
+#### Returns
+
+Binary file stream with headers
+
+<ResponseField name="Content-Type" type="header">
+  MIME type of the file (e.g., "application/pdf", "text/plain").
+</ResponseField>
+
+<ResponseField name="Content-Length" type="header">
+  File size in bytes.
+</ResponseField>
+
+<ResponseField name="Content-Disposition" type="header">
+  Attachment header with original filename.
+</ResponseField>

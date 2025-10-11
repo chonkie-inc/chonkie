@@ -1,48 +1,10 @@
 ---
-title: "Get Knowledge Base Files"
-api: "GET https://labs.chonkie.ai/api/v1/knowledge/{knowledge_base_slug}"
+title: "Get Files"
+api: "GET labs.chonkie.ai/api/v1/knowledge/{knowledge_base_slug}"
 description: "List all files in a knowledge base"
 ---
 
 Retrieve a list of all files stored in a specific knowledge base.
-
-## Request
-
-#### Path Parameters
-
-<ParamField path="knowledge_base_slug" type="string" required>
-  The slug of the knowledge base to query.
-</ParamField>
-
-## Response
-
-#### Returns
-
-<ResponseField name="files" type="array">
-  Array of file objects in the knowledge base.
-</ResponseField>
-
-Each file object contains:
-
-<ResponseField name="key" type="string">
-  Unique file identifier (format: timestamp-filename).
-</ResponseField>
-
-<ResponseField name="name" type="string">
-  Original filename.
-</ResponseField>
-
-<ResponseField name="size" type="integer">
-  File size in bytes.
-</ResponseField>
-
-<ResponseField name="lastModified" type="string">
-  ISO 8601 timestamp of last modification.
-</ResponseField>
-
-<ResponseField name="contentType" type="string">
-  MIME type of the file.
-</ResponseField>
 
 ## Examples
 
@@ -93,3 +55,41 @@ curl -X GET https://labs.chonkie.ai/api/v1/knowledge/product-documentation \
 ```
 
 </CodeGroup>
+
+## Request
+
+#### Path Parameters
+
+<ParamField path="knowledge_base_slug" type="string" required>
+  The slug of the knowledge base to query.
+</ParamField>
+
+## Response
+
+#### Returns
+
+<ResponseField name="files" type="array">
+  Array of file objects in the knowledge base.
+</ResponseField>
+
+Each file object contains:
+
+<ResponseField name="key" type="string">
+  Unique file identifier (format: timestamp-filename).
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  Original filename.
+</ResponseField>
+
+<ResponseField name="size" type="integer">
+  File size in bytes.
+</ResponseField>
+
+<ResponseField name="lastModified" type="string">
+  ISO 8601 timestamp of last modification.
+</ResponseField>
+
+<ResponseField name="contentType" type="string">
+  MIME type of the file.
+</ResponseField>

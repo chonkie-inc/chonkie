@@ -1,6 +1,6 @@
 ---
 title: "List Knowledge Bases"
-api: "GET https://labs.chonkie.ai/api/v1/knowledge"
+api: "GET labs.chonkie.ai/api/v1/knowledge"
 description: "Get all knowledge bases in your organization"
 ---
 
@@ -30,22 +30,6 @@ Array of knowledge base objects:
 
 <ResponseField name="description" type="string">
   Knowledge base description.
-</ResponseField>
-
-<ResponseField name="bucket" type="string">
-  R2 bucket name for file storage.
-</ResponseField>
-
-<ResponseField name="collection" type="string">
-  Qdrant collection name for vectors.
-</ResponseField>
-
-<ResponseField name="createdAt" type="string">
-  Creation timestamp.
-</ResponseField>
-
-<ResponseField name="updatedAt" type="string">
-  Last update timestamp.
 </ResponseField>
 
 ## Examples

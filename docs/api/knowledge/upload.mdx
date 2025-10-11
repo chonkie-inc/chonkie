@@ -1,58 +1,10 @@
 ---
 title: "Upload Files"
-api: "POST https://labs.chonkie.ai/api/v1/knowledge/{knowledge_base_slug}"
+api: "POST labs.chonkie.ai/api/v1/knowledge/{knowledge_base_slug}"
 description: "Upload one or more files to a knowledge base"
 ---
 
-Upload files to a knowledge base for indexing and semantic search. Files are automatically chunked, embedded, and indexed.
-
-## Request
-
-#### Path Parameters
-
-<ParamField path="knowledge_base_slug" type="string" required>
-  The slug of the knowledge base to upload to.
-</ParamField>
-
-#### Body Parameters
-
-<ParamField path="files" type="file | file[]" required>
-  Single file or multiple files to upload. Use multipart/form-data encoding with field name "files".
-</ParamField>
-
-## Response
-
-#### Returns
-
-<ResponseField name="message" type="string">
-  Success message.
-</ResponseField>
-
-<ResponseField name="files" type="array">
-  Array of uploaded file information.
-</ResponseField>
-
-<ResponseField name="knowledgeBaseId" type="string">
-  ID of the knowledge base.
-</ResponseField>
-
-Each file object contains:
-
-<ResponseField name="key" type="string">
-  Unique file identifier (timestamp-filename).
-</ResponseField>
-
-<ResponseField name="originalName" type="string">
-  Original filename.
-</ResponseField>
-
-<ResponseField name="size" type="integer">
-  File size in bytes.
-</ResponseField>
-
-<ResponseField name="type" type="string">
-  MIME type of the file.
-</ResponseField>
+Upload files to a knowledge base. Files are automatically chunked, embedded, and indexed.
 
 ## Examples
 
@@ -146,3 +98,52 @@ curl -X POST https://labs.chonkie.ai/api/v1/knowledge/product-documentation \
 ```
 
 </CodeGroup>
+
+## Request
+
+#### Path Parameters
+
+<ParamField path="knowledge_base_slug" type="string" required>
+  The slug of the knowledge base to upload to.
+</ParamField>
+
+#### Body Parameters
+
+<ParamField path="files" type="file | file[]" required>
+  Single file or multiple files to upload. Use multipart/form-data encoding with
+  field name "files".
+</ParamField>
+
+## Response
+
+#### Returns
+
+<ResponseField name="message" type="string">
+  Success message.
+</ResponseField>
+
+<ResponseField name="files" type="array">
+  Array of uploaded file information.
+</ResponseField>
+
+<ResponseField name="knowledgeBaseId" type="string">
+  ID of the knowledge base.
+</ResponseField>
+
+Each file object contains:
+
+<ResponseField name="key" type="string">
+  Unique file identifier (timestamp-filename).
+</ResponseField>
+
+<ResponseField name="originalName" type="string">
+  Original filename.
+</ResponseField>
+
+<ResponseField name="size" type="integer">
+  File size in bytes.
+</ResponseField>
+
+<ResponseField name="type" type="string">
+  MIME type of the file.
+</ResponseField>
