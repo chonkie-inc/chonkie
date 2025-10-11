@@ -184,6 +184,10 @@
               "api/agents/research",
               "api/agents/mcp"
             ]
+          },
+          {
+            "group": "Parse",
+            "pages": ["api/parse/parse"]
           }
         ]
       }
