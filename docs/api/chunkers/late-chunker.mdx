@@ -6,17 +6,67 @@ description: "Late chunking with contextual embeddings for each token"
 
 The Late Chunker generates contextual embeddings for each token before chunking, enabling more semantically aware chunk boundaries.
 
+## Examples
+
+<CodeGroup>
+
+```python Python
+from chonkie.cloud import LateChunker
+
+chunker = LateChunker(
+    embedding_model="minishlab/potion-base-8M",
+    chunk_size=512
+)
+
+text = "Your text here..."
+chunks = chunker.chunk(text)
+```
+
+```javascript JavaScript
+import { LateChunker } from "@chonkiejs/cloud";
+
+const chunker = new LateChunker({
+  embeddingModel: "minishlab/potion-base-8M",
+  chunkSize: 512,
+});
+
+const text = "Your text here...";
+const chunks = await chunker.chunk({ text });
+```
+
+```bash cURL
+curl -X POST https://api.chonkie.ai/v1/chunk/late \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "Your text here...",
+    "embedding_model": "minishlab/potion-base-8M",
+    "chunk_size": 512
+  }'
+```
+
+</CodeGroup>
+
 ## Request
 
 #### Parameters
 
 <ParamField path="text" type="string | string[]" required>
-  The text to chunk. Can be a single string or an array of strings for batch processing.
+  The text to chunk. Can be a single string or an array of strings for batch
+  processing.
 </ParamField>
 
-<ParamField path="embedding_model" type="string" default="minishlab/potion-base-8M">
-  The embedding model to use. 
-  <Note> Chosen embedding model must return token level embeddings. Request will fail otherwise </Note>
+<ParamField
+  path="embedding_model"
+  type="string"
+  default="minishlab/potion-base-8M"
+>
+  The embedding model to use.
+  <Note>
+    {" "}
+    Chosen embedding model must return token level embeddings. Request will fail
+    otherwise{" "}
+  </Note>
 </ParamField>
 
 <ParamField path="chunk_size" type="integer" default="512">
@@ -24,7 +74,8 @@ The Late Chunker generates contextual embeddings for each token before chunking,
 </ParamField>
 
 <ParamField path="recipe" type="string" default="default">
-  Recursive rules recipe to follow. See all recipes on our [Hugging Face repo](https://huggingface.co/datasets/chonkie-ai/recipes)
+  Recursive rules recipe to follow. See all recipes on our [Hugging Face
+  repo](https://huggingface.co/datasets/chonkie-ai/recipes)
 </ParamField>
 
 <ParamField path="lang" type="string" default="en">
@@ -52,44 +103,3 @@ Array of `Chunk` objects, each containing:
 <ResponseField name="token_count" type="integer">
   Number of tokens in the chunk.
 </ResponseField>
-
-## Examples
-
-<CodeGroup>
-
-```python Python
-from chonkie.cloud import LateChunker
-
-chunker = LateChunker(
-    embedding_model="minishlab/potion-base-8M",
-    chunk_size=512
-)
-
-text = "Your text here..."
-chunks = chunker.chunk(text)
-```
-
-```javascript JavaScript
-import { LateChunker } from '@chonkiejs/cloud';
-
-const chunker = new LateChunker({
-  embeddingModel: 'minishlab/potion-base-8M',
-  chunkSize: 512
-});
-
-const text = "Your text here...";
-const chunks = await chunker.chunk({ text });
-```
-
-```bash cURL
-curl -X POST https://api.chonkie.ai/v1/chunk/late \
-  -H "Authorization: Bearer YOUR_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "text": "Your text here...",
-    "embedding_model": "minishlab/potion-base-8M",
-    "chunk_size": 512
-  }'
-```
-
-</CodeGroup>

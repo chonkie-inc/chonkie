@@ -6,6 +6,47 @@ description: "Create semantically coherent chunks using embedding similarity"
 
 The Semantic Chunker uses embeddings to identify natural break points in text based on semantic meaning, creating chunks where topic transitions occur.
 
+## Examples
+
+<CodeGroup>
+
+```python Python
+from chonkie.cloud import SemanticChunker
+
+chunker = SemanticChunker(
+    embedding_model="minishlab/potion-base-8M",
+    chunk_size=512,
+)
+
+text = "Your text here..."
+chunks = chunker.chunk(text)
+```
+
+```javascript JavaScript
+import { SemanticChunker } from '@chonkiejs/cloud';
+
+const chunker = new SemanticChunker({
+  embeddingModel: 'minishlab/potion-base-8M',
+  chunkSize: 512,
+});
+
+const text = "Your text here...";
+const chunks = await chunker.chunk({ text });
+```
+
+```bash cURL
+curl -X POST https://api.chonkie.ai/v1/chunk/semantic \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "Your text here...",
+    "embedding_model": "minishlab/potion-base-8M",
+    "chunk_size": 512,
+  }'
+```
+
+</CodeGroup>
+
 ## Request
 
 #### Parameters
@@ -56,46 +97,4 @@ Array of `Chunk` objects with semantically coherent text segments.
   Number of tokens in the chunk.
 </ResponseField>
 
-## Examples
 
-<CodeGroup>
-
-```python Python
-from chonkie.cloud import SemanticChunker
-
-chunker = SemanticChunker(
-    embedding_model="minishlab/potion-base-8M",
-    chunk_size=512,
-    similarity_threshold=0.5
-)
-
-text = "Your text here..."
-chunks = chunker.chunk(text)
-```
-
-```javascript JavaScript
-import { SemanticChunker } from '@chonkiejs/cloud';
-
-const chunker = new SemanticChunker({
-  embeddingModel: 'minishlab/potion-base-8M',
-  chunkSize: 512,
-  similarityThreshold: 0.5
-});
-
-const text = "Your text here...";
-const chunks = await chunker.chunk({ text });
-```
-
-```bash cURL
-curl -X POST https://api.chonkie.ai/v1/chunk/semantic \
-  -H "Authorization: Bearer YOUR_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "text": "Your text here...",
-    "embedding_model": "minishlab/potion-base-8M",
-    "chunk_size": 512,
-    "similarity_threshold": 0.5
-  }'
-```
-
-</CodeGroup>

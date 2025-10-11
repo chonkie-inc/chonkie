@@ -6,15 +6,54 @@ description: "Neural network-based chunking for optimal semantic boundaries"
 
 The Neural Chunker uses a neural network model to identify optimal chunk boundaries based on learned patterns of semantic coherence.
 
+## Examples
+
+<CodeGroup>
+
+```python Python
+from chonkie.cloud import NeuralChunker
+
+chunker = NeuralChunker(
+  model="mirth/chonky_modernbert_large_1"
+)
+
+text = "Your text here..."
+chunks = chunker.chunk(text)
+```
+
+```javascript JavaScript
+import { NeuralChunker } from "@chonkiejs/cloud";
+
+const chunker = new NeuralChunker({
+  model:"mirth/chonky_modernbert_large_1"
+});
+
+const text = "Your text here...";
+const chunks = await chunker.chunk({ text });
+```
+
+```bash cURL
+curl -X POST https://api.chonkie.ai/v1/chunk/neural \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "Your text here...",
+    "model": "mirth/chonky_modernbert_large_1"
+  }'
+```
+
+</CodeGroup>
+
 ## Request
 
 #### Parameters
 
 <ParamField path="text" type="string | string[]" required>
-  The text to chunk. Can be a single string or an array of strings for batch processing.
+  The text to chunk. Can be a single string or an array of strings for batch
+  processing.
 </ParamField>
 
-<ParamField path="model" type="string" default="default">
+<ParamField path="model" type="string" default="mirth/chonky_modernbert_large_1">
   The neural chunking model to use.
 </ParamField>
 
@@ -43,44 +82,3 @@ Array of `Chunk` objects, each containing:
 <ResponseField name="token_count" type="integer">
   Number of tokens in the chunk.
 </ResponseField>
-
-## Examples
-
-<CodeGroup>
-
-```python Python
-from chonkie.cloud import NeuralChunker
-
-chunker = NeuralChunker(
-    chunk_size=512,
-    threshold=0.5
-)
-
-text = "Your text here..."
-chunks = chunker.chunk(text)
-```
-
-```javascript JavaScript
-import { NeuralChunker } from '@chonkiejs/cloud';
-
-const chunker = new NeuralChunker({
-  chunkSize: 512,
-  threshold: 0.5
-});
-
-const text = "Your text here...";
-const chunks = await chunker.chunk({ text });
-```
-
-```bash cURL
-curl -X POST https://api.chonkie.ai/v1/chunk/neural \
-  -H "Authorization: Bearer YOUR_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "text": "Your text here...",
-    "chunk_size": 512,
-    "threshold": 0.5
-  }'
-```
-
-</CodeGroup>

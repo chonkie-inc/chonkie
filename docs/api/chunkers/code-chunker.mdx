@@ -1,21 +1,63 @@
 ---
 title: "Code Chunker"
-api: "POST https://api.chonkie.ai/v1/chunk/code"
+api: "POST v1/chunk/code"
 description: "Split code at logical boundaries while preserving structure"
 ---
 
 The Code Chunker splits source code at logical boundaries (functions, classes, methods) while preserving code structure and syntax.
 
+## Examples
+
+<CodeGroup>
+
+```python Python
+from chonkie.cloud import CodeChunker
+
+chunker = CodeChunker(
+    language="python",
+    chunk_size=512
+)
+
+code = "def example():\n    return True"
+chunks = chunker.chunk(code)
+```
+
+```javascript JavaScript
+import { CodeChunker } from "@chonkiejs/cloud";
+
+const chunker = new CodeChunker({
+  language: "python",
+  chunkSize: 512,
+});
+
+const code = "def example():\n    return True";
+const chunks = await chunker.chunk({ text: code });
+```
+
+```bash cURL
+curl -X POST https://api.chonkie.ai/v1/chunk/code \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "def example():\n    return True",
+    "language": "python",
+    "chunk_size": 512
+  }'
+```
+
+</CodeGroup>
 ## Request
 
 #### Parameters
 
 <ParamField path="text" type="string | string[]" required>
-  The code to chunk. Can be a single string or an array of strings for batch processing.
+  The code to chunk. Can be a single string or an array of strings for batch
+  processing.
 </ParamField>
 
 <ParamField path="language" type="string" default="python">
-  Programming language of the code. Supports: python, javascript, typescript, java, cpp, etc.
+  Programming language of the code. Supports: python, javascript, typescript,
+  java, cpp, etc.
 </ParamField>
 
 <ParamField path="tokenizer" type="string" default="gpt2">
@@ -47,44 +89,3 @@ Array of `Chunk` objects, each containing:
 <ResponseField name="token_count" type="integer">
   Number of tokens in the chunk.
 </ResponseField>
-
-## Examples
-
-<CodeGroup>
-
-```python Python
-from chonkie.cloud import CodeChunker
-
-chunker = CodeChunker(
-    language="python",
-    chunk_size=512
-)
-
-code = "def example():\n    return True"
-chunks = chunker.chunk(code)
-```
-
-```javascript JavaScript
-import { CodeChunker } from '@chonkiejs/cloud';
-
-const chunker = new CodeChunker({
-  language: 'python',
-  chunkSize: 512
-});
-
-const code = "def example():\n    return True";
-const chunks = await chunker.chunk({ text: code });
-```
-
-```bash cURL
-curl -X POST https://api.chonkie.ai/v1/chunk/code \
-  -H "Authorization: Bearer YOUR_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "text": "def example():\n    return True",
-    "language": "python",
-    "chunk_size": 512
-  }'
-```
-
-</CodeGroup>
