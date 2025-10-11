@@ -5,7 +5,10 @@ from pathlib import Path
 from typing import TYPE_CHECKING, List, Union
 
 from chonkie.chef.base import BaseChef
-from chonkie.types import MarkdownTable
+from chonkie.logger import get_logger
+from chonkie.types import Document, MarkdownDocument, MarkdownTable
+
+logger = get_logger(__name__)
 
 if TYPE_CHECKING:
     import pandas as pd
@@ -27,69 +30,97 @@ class TableChef(BaseChef):
                 "Pandas is required to use TableChef. Please install it with `pip install chonkie[table]`."
             ) from e
 
-    def process(
-        self, path: Union[str, Path]
-    ) -> Union[MarkdownTable, List[MarkdownTable], None]:
-        """Process a CSV file and return a pandas DataFrame.
+    def parse(self, text: str) -> Document:
+        """Parse raw markdown text and extract tables into a MarkdownDocument.
 
         Args:
-            path (Union[str, Path]): Path to the CSV file.
+            text: Raw markdown text.
 
         Returns:
-            Union[MarkdownTable, List[MarkdownTable], None]: Markdown string of the table or list of markdown tables.
+            Document: MarkdownDocument with extracted tables.
 
         """
+        logger.debug("Parsing markdown text for tables")
+        tables = self.extract_tables_from_markdown(text)
+        logger.info(f"Markdown table extraction complete: found {len(tables)} tables")
+        return MarkdownDocument(content=text, tables=tables)
+
+    def process(self, path: Union[str, Path]) -> Document:
+        """Process a CSV/Excel file or markdown text into a MarkdownDocument.
+
+        Args:
+            path (Union[str, Path]): Path to the CSV/Excel file, or markdown text string.
+
+        Returns:
+            Document: MarkdownDocument with extracted tables.
+
+        """
+        logger.debug(f"Processing table file/string: {path}")
         self._lazy_import_pandas()
         # if file exists
-        if Path(path).is_file():
+        path_obj = Path(path)
+        if path_obj.is_file():
             str_path = str(path)
             if str_path.endswith(".csv"):
+                logger.debug("Processing CSV file")
                 df = pd.read_csv(str_path)
-                text = df.to_markdown(index=False)
-                return MarkdownTable(content=text, start_index=0, end_index=len(text))
+                markdown = df.to_markdown(index=False)
+                logger.info(f"CSV processing complete: converted {len(df)} rows to markdown")
+                # CSV always produces a single table
+                table = MarkdownTable(
+                    content=markdown, start_index=0, end_index=len(markdown)
+                )
+                return MarkdownDocument(content=markdown, tables=[table])
             elif str_path.endswith(".xls") or str_path.endswith(".xlsx"):
+                logger.debug("Processing Excel file")
                 all_df = pd.read_excel(str_path, sheet_name=None)
-                if len(all_df.keys()) > 1:
-                    out: List[MarkdownTable] = []
-                    for df in all_df.values():
-                        text = df.to_markdown(index=False)
-                        out.append(
-                            MarkdownTable(
-                                content=text, start_index=0, end_index=len(text)
-                            )
-                        )
-                    return out
-                else:
-                    df = list(all_df.values())[0]
+                tables: List[MarkdownTable] = []
+                all_content = []
+                for df in all_df.values():
                     text = df.to_markdown(index=False)
-                    return MarkdownTable(
-                        content=text, start_index=0, end_index=len(text)
+                    all_content.append(text)
+                    tables.append(
+                        MarkdownTable(
+                            content=text, start_index=0, end_index=len(text)
+                        )
                     )
-        return self.extract_tables_from_markdown(str(path))
+                # Join all sheets with double newline
+                content = "\n\n".join(all_content)
+                logger.info(f"Excel processing complete: converted {len(all_df)} sheets to markdown")
+                return MarkdownDocument(content=content, tables=tables)
+        # Not a file, treat as markdown string and extract tables
+        logger.debug("Extracting tables from markdown string")
+        return self.parse(str(path))
 
     def process_batch(
         self, paths: Union[List[str], List[Path]]
-    ) -> List[Union[MarkdownTable, List[MarkdownTable], None]]:
-        """Process multiple CSV files and return a list of DataFrames.
+    ) -> List[Document]:
+        """Process multiple CSV/Excel files or markdown texts.
 
         Args:
-            paths (Union[List[str], List[Path]]): Paths to the CSV files.
+            paths (Union[List[str], List[Path]]): Paths to files or markdown text strings.
 
         Returns:
-            List[Union[MarkdownTable, List[MarkdownTable], None]]: List of DataFrames or None for each file.
+            List[Document]: List of MarkdownDocuments with extracted tables.
 
         """
-        return [self.process(path) for path in paths]
+        logger.debug(f"Processing batch of {len(paths)} files/strings")
+        results = [self.process(path) for path in paths]
+        logger.info(f"Completed batch processing of {len(paths)} files/strings")
+        return results
 
-    def __call__(
+    def __call__(  # type: ignore[override]
         self, path: Union[str, Path, List[str], List[Path]]
-    ) -> Union[
-        MarkdownTable,
-        List[MarkdownTable],
-        None,
-        List[Union[MarkdownTable, List[MarkdownTable], None]],
-    ]:
-        """Process a single file or a batch of files."""
+    ) -> Union[Document, List[Document]]:
+        """Process a single file/text or a batch of files/texts.
+
+        Args:
+            path: Single file path, markdown text string, or list of paths/texts.
+
+        Returns:
+            Union[Document, List[Document]]: MarkdownDocument or list of MarkdownDocuments.
+
+        """
         if isinstance(path, (list, tuple)):
             return self.process_batch(path)
         elif isinstance(path, (str, Path)):

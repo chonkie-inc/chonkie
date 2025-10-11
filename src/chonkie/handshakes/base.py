@@ -8,7 +8,10 @@ from typing import (
     Union,
 )
 
+from chonkie.logger import get_logger
 from chonkie.types import Chunk
+
+logger = get_logger(__name__)
 
 # TODO: Move this to inside the BaseHandshake class
 # Why is this even outside the class?
@@ -44,6 +47,18 @@ class BaseHandshake(ABC):
 
         """
         if isinstance(chunks, Chunk) or isinstance(chunks, Sequence):
-            return self.write(chunks)
+            chunk_count = 1 if isinstance(chunks, Chunk) else len(chunks)
+            logger.info(f"Writing {chunk_count} chunk(s) to database with {self.__class__.__name__}")
+            try:
+                result = self.write(chunks)
+                logger.debug(f"Successfully wrote {chunk_count} chunk(s)")
+                return result
+            except Exception as e:
+                logger.error(
+                    f"Failed to write {chunk_count} chunk(s) to database",
+                    error=str(e),
+                    error_type=type(e).__name__
+                )
+                raise
         else:
             raise TypeError("Input must be a Chunk or a sequence of Chunks.")
