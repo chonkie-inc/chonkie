@@ -1,0 +1,89 @@
+---
+title: "Overlap Refinery"
+api: "POST https://api.chonkie.ai/v1/refine/overlap"
+description: "Add contextual overlap between chunks for better continuity"
+---
+
+The Overlap Refinery adds overlapping context between adjacent chunks for better continuity.
+
+## Request
+
+#### Parameters
+
+<ParamField path="chunks" type="array" required>
+  Array of chunk objects to add overlap to. Must be in sequential order from the same document.
+</ParamField>
+
+<ParamField path="overlap_size" type="integer" default="128">
+  Number of tokens to overlap between consecutive chunks.
+</ParamField>
+
+<ParamField path="tokenizer" type="string" default="gpt2">
+  Tokenizer to use for measuring overlap.
+</ParamField>
+
+## Response
+
+#### Returns
+
+Array of chunks with added overlapping context.
+
+<ResponseField name="text" type="string">
+  The chunk text with added overlap.
+</ResponseField>
+
+<ResponseField name="start_index" type="integer">
+  Updated starting position reflecting overlap.
+</ResponseField>
+
+<ResponseField name="end_index" type="integer">
+  Updated ending position reflecting overlap.
+</ResponseField>
+
+<ResponseField name="token_count" type="integer">
+  Updated token count including overlap.
+</ResponseField>
+
+## Examples
+
+<CodeGroup>
+
+```python Python
+from chonkie.cloud import TokenChunker, OverlapRefinery
+
+chunker = TokenChunker(chunk_size=100, chunk_overlap=0)
+chunks = chunker.chunk("Your text here...")
+
+refinery = OverlapRefinery(overlap_size=25, tokenizer="gpt2")
+refined_chunks = refinery.refine(chunks)
+```
+
+```javascript JavaScript
+import { TokenChunker, OverlapRefinery } from '@chonkiejs/cloud';
+
+const chunker = new TokenChunker({ chunkSize: 100, chunkOverlap: 0 });
+const chunks = await chunker.chunk({ text: "Your text here..." });
+
+const refinery = new OverlapRefinery({ overlapSize: 25, tokenizer: 'gpt2' });
+const refinedChunks = await refinery.refine(chunks);
+```
+
+```bash cURL
+curl -X POST https://api.chonkie.ai/v1/refine/overlap \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "chunks": [
+      {
+        "text": "Your text here...",
+        "start_index": 0,
+        "end_index": 17,
+        "token_count": 4
+      }
+    ],
+    "overlap_size": 5,
+    "tokenizer": "gpt2"
+  }'
+```
+
+</CodeGroup>
