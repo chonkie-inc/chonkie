@@ -227,14 +227,14 @@
     },
     "links": [
       {
-        "label": "Chonkie Cloud",
-        "href": "https://cloud.chonkie.ai"
+        "label": "API Dashboard",
+        "href": "https://labs.chonkie.ai"
       }
     ]
   },
   "api": {
     "playground": {
-      "display": "none"
+      "display": "interactive"
     }
   },
   "seo": {
