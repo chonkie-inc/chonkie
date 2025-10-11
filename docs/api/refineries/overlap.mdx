@@ -1,20 +1,10 @@
 ---
 title: "Overlap Refinery"
-api: "POST /v1/refine/overlap"
+api: "POST https://api.chonkie.ai/v1/refine/overlap"
 description: "Add contextual overlap between chunks for better continuity"
 ---
 
-The Overlap Refinery adds overlapping context between adjacent chunks, ensuring that no information is lost at chunk boundaries. This is especially useful when chunks were created without overlap initially.
-
-## Authentication
-
-Set your API key as an environment variable or pass it to the SDK:
-
-```bash
-export CHONKIE_API_KEY="your-api-key-here"
-```
-
-Get your API key from [labs.chonkie.ai](https://labs.chonkie.ai)
+The Overlap Refinery adds overlapping context between adjacent chunks for better continuity.
 
 ## Request
 
@@ -32,15 +22,11 @@ Get your API key from [labs.chonkie.ai](https://labs.chonkie.ai)
   Tokenizer to use for measuring overlap.
 </ParamField>
 
-<ParamField path="original_text" type="string">
-  Optional. The original text to ensure accurate overlap extraction.
-</ParamField>
-
 ## Response
 
 #### Returns
 
-Array of chunks with added overlapping context from adjacent chunks.
+Array of chunks with added overlapping context.
 
 <ResponseField name="text" type="string">
   The chunk text with added overlap.
@@ -65,85 +51,21 @@ Array of chunks with added overlapping context from adjacent chunks.
 ```python Python
 from chonkie.cloud import TokenChunker, OverlapRefinery
 
-# Step 1: Create chunks without overlap
-chunker = TokenChunker(
-    chunk_size=100,
-    chunk_overlap=0  # No overlap initially
-)
+chunker = TokenChunker(chunk_size=100, chunk_overlap=0)
+chunks = chunker.chunk("Your text here...")
 
-text = """
-The history of artificial intelligence dates back to the 1950s.
-Early researchers believed that human intelligence could be replicated
-by machines. Initial progress was slow due to limited computing power.
-
-However, the field evolved significantly over the decades. Neural networks
-emerged as a powerful paradigm in the 1980s. Deep learning revolution
-began in the 2010s with breakthrough results in computer vision.
-
-Today, AI systems can perform many tasks that once seemed impossible.
-Language models understand and generate human-like text. The pace of
-progress continues to accelerate with new discoveries every year.
-"""
-
-chunks = chunker.chunk(text)
-
-# Step 2: Add overlap for better context
-refinery = OverlapRefinery(
-    overlap_size=25,  # 25 tokens overlap
-    tokenizer="gpt2"
-)
+refinery = OverlapRefinery(overlap_size=25, tokenizer="gpt2")
 refined_chunks = refinery.refine(chunks)
-
-# Compare before and after
-print("Before overlap:")
-for i, chunk in enumerate(chunks):
-    print(f"  Chunk {i+1}: {chunk.token_count} tokens")
-
-print("\nAfter overlap:")
-for i, chunk in enumerate(refined_chunks):
-    print(f"  Chunk {i+1}: {chunk.token_count} tokens")
-    print(f"  Text: {chunk.text[:80]}...\n")
 ```
 
 ```javascript JavaScript
 import { TokenChunker, OverlapRefinery } from '@chonkiejs/cloud';
 
-// Step 1: Create chunks without overlap
-const chunker = new TokenChunker({
-  chunkSize: 100,
-  chunkOverlap: 0  // No overlap initially
-});
+const chunker = new TokenChunker({ chunkSize: 100, chunkOverlap: 0 });
+const chunks = await chunker.chunk({ text: "Your text here..." });
 
-const text = `
-The history of artificial intelligence dates back to the 1950s.
-Early researchers believed that human intelligence could be replicated.
-
-However, the field evolved significantly over the decades. Neural networks
-emerged as a powerful paradigm in the 1980s.
-
-Today, AI systems can perform many tasks that once seemed impossible.
-`;
-
-const chunks = await chunker.chunk({ text });
-
-// Step 2: Add overlap for better context
-const refinery = new OverlapRefinery({
-  overlapSize: 25,  // 25 tokens overlap
-  tokenizer: 'gpt2'
-});
+const refinery = new OverlapRefinery({ overlapSize: 25, tokenizer: 'gpt2' });
 const refinedChunks = await refinery.refine(chunks);
-
-// Compare results
-console.log('Before overlap:');
-chunks.forEach((chunk, i) => {
-  console.log(`  Chunk ${i+1}: ${chunk.tokenCount} tokens`);
-});
-
-console.log('\nAfter overlap:');
-refinedChunks.forEach((chunk, i) => {
-  console.log(`  Chunk ${i+1}: ${chunk.tokenCount} tokens`);
-  console.log(`  Text: ${chunk.text.substring(0, 80)}...\n`);
-});
 ```
 
 ```bash cURL
@@ -153,16 +75,10 @@ curl -X POST https://api.chonkie.ai/v1/refine/overlap \
   -d '{
     "chunks": [
       {
-        "text": "The history of artificial intelligence dates back to the 1950s.",
+        "text": "Your text here...",
         "start_index": 0,
-        "end_index": 63,
-        "token_count": 13
-      },
-      {
-        "text": "Early researchers believed machines could replicate human intelligence.",
-        "start_index": 64,
-        "end_index": 135,
-        "token_count": 11
+        "end_index": 17,
+        "token_count": 4
       }
     ],
     "overlap_size": 5,
@@ -171,147 +87,3 @@ curl -X POST https://api.chonkie.ai/v1/refine/overlap \
 ```
 
 </CodeGroup>
-
-## How Overlap Works
-
-The refinery adds context from adjacent chunks:
-
-```
-Original Chunks (no overlap):
-┌──────────────┐
-│   Chunk 1    │
-└──────────────┘
-                ┌──────────────┐
-                │   Chunk 2    │
-                └──────────────┘
-
-After Overlap Refinery:
-┌──────────────────┐
-│   Chunk 1        │
-└────────┬─────────┘
-         │  ┌──────────────────┐
-         └──┤   Chunk 2         │
-            └──────────┬─────────┘
-                       │  ┌──────────────────┐
-                       └──┤   Chunk 3         │
-                          └───────────────────┘
-```
-
-Each chunk now includes context from the previous chunk, ensuring continuity.
-
-## Choosing Overlap Size
-
-Balance context vs. redundancy:
-
-```python
-# Minimal overlap (5-10% of chunk size)
-refinery = OverlapRefinery(overlap_size=10)  # For chunk_size=100
-
-# Moderate overlap (10-20% of chunk size)
-refinery = OverlapRefinery(overlap_size=25)  # For chunk_size=200
-
-# High overlap (20-30% of chunk size)
-refinery = OverlapRefinery(overlap_size=100)  # For chunk_size=500
-```
-
-## Response Example
-
-```json
-[
-  {
-    "text": "The history of artificial intelligence dates back to the 1950s. Early researchers believed that human intelligence could be replicated.",
-    "start_index": 0,
-    "end_index": 135,
-    "token_count": 24
-  },
-  {
-    "text": "believed that human intelligence could be replicated. However, the field evolved significantly over the decades.",
-    "start_index": 89,
-    "end_index": 201,
-    "token_count": 21
-  }
-]
-```
-
-## Use Cases
-
-- **Post-Processing** - Add overlap to chunks created without it
-- **Context Preservation** - Ensure no information loss at boundaries
-- **Question Answering** - Provide more context for better answers
-- **Summarization** - Maintain narrative flow across chunks
-- **Migration** - Update existing chunk databases with overlap
-
-## Combining with Embeddings
-
-Create a complete refinement pipeline:
-
-```python
-from chonkie.cloud import TokenChunker, OverlapRefinery, EmbeddingsRefinery
-
-# 1. Initial chunking
-chunker = TokenChunker(chunk_size=512, chunk_overlap=0)
-chunks = chunker.chunk(document)
-
-# 2. Add overlap
-overlap_refinery = OverlapRefinery(overlap_size=50)
-overlapped_chunks = overlap_refinery.refine(chunks)
-
-# 3. Add embeddings
-embedding_refinery = EmbeddingsRefinery(
-    embedding_model="sentence-transformers/all-mpnet-base-v2"
-)
-final_chunks = embedding_refinery.refine(overlapped_chunks)
-
-# Now chunks have both overlap and embeddings
-```
-
-## Best Practices
-
-<Tip>
-  Set `overlap_size` to 10-20% of your original `chunk_size` for optimal balance between context and redundancy.
-</Tip>
-
-<Tip>
-  Apply Overlap Refinery before Embeddings Refinery so that embeddings capture the full overlapped context.
-</Tip>
-
-<Tip>
-  For question answering tasks, use higher overlap (20-30%) to ensure answers aren't split across chunks.
-</Tip>
-
-<Warning>
-  Very large overlap sizes significantly increase storage requirements and may introduce too much redundancy.
-</Warning>
-
-<Info>
-  The Overlap Refinery intelligently handles edge cases like first and last chunks, which only get overlap on one side.
-</Info>
-
-## Overlap vs. Initial Chunking with Overlap
-
-You have two options for adding overlap:
-
-**Option 1: Chunk with overlap from the start**
-```python
-chunker = TokenChunker(chunk_size=512, chunk_overlap=50)
-chunks = chunker.chunk(text)
-```
-
-**Option 2: Add overlap post-processing**
-```python
-chunker = TokenChunker(chunk_size=512, chunk_overlap=0)
-chunks = chunker.chunk(text)
-refinery = OverlapRefinery(overlap_size=50)
-overlapped_chunks = refinery.refine(chunks)
-```
-
-**When to use Overlap Refinery:**
-- You already have chunks without overlap
-- You want to experiment with different overlap sizes
-- You're working with chunks from different sources
-- You need to add overlap to existing chunk databases
-
-**When to chunk with overlap initially:**
-- You're creating new chunks from scratch
-- You know the overlap size you need
-- You want slightly better performance (one-pass processing)

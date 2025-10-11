@@ -1,20 +1,10 @@
 ---
 title: "Delete Knowledge Base"
-api: "DELETE /v1/knowledge/{knowledge_base_slug}"
+api: "DELETE https://labs.chonkie.ai/api/v1/knowledge/{knowledge_base_slug}"
 description: "Permanently delete an entire knowledge base and all its contents"
 ---
 
-Delete an entire knowledge base, including all files, vectors, and metadata. This operation removes the knowledge base completely and is irreversible.
-
-## Authentication
-
-Include your API key in the Authorization header:
-
-```bash
-Authorization: Bearer YOUR_API_KEY
-```
-
-Get your API key from [labs.chonkie.ai](https://labs.chonkie.ai)
+Delete an entire knowledge base, including all files, vectors, and metadata. This operation is irreversible.
 
 ## Request
 
@@ -45,45 +35,26 @@ headers = {
     "Authorization": "Bearer YOUR_API_KEY"
 }
 
-# Confirm before deleting
-confirm = input(
-    f"Are you sure you want to delete '{kb_slug}' "
-    f"and all its contents? (yes/no): "
-)
-
-if confirm.lower() == 'yes':
-    response = requests.delete(url, headers=headers)
-    result = response.json()
-    print(result["message"])
-else:
-    print("Deletion cancelled")
+response = requests.delete(url, headers=headers)
+result = response.json()
+print(result["message"])
 ```
 
 ```javascript JavaScript
 const kbSlug = 'old-project-docs';
 
-// Confirm before deleting
-const confirmed = confirm(
-  `Are you sure you want to delete '${kbSlug}' and all its contents? ` +
-  `This action cannot be undone.`
+const response = await fetch(
+  `https://labs.chonkie.ai/api/v1/knowledge/${kbSlug}`,
+  {
+    method: 'DELETE',
+    headers: {
+      'Authorization': 'Bearer YOUR_API_KEY'
+    }
+  }
 );
 
-if (confirmed) {
-  const response = await fetch(
-    `https://labs.chonkie.ai/api/v1/knowledge/${kbSlug}`,
-    {
-      method: 'DELETE',
-      headers: {
-        'Authorization': 'Bearer YOUR_API_KEY'
-      }
-    }
-  );
-
-  const result = await response.json();
-  console.log(result.message);
-} else {
-  console.log('Deletion cancelled');
-}
+const result = await response.json();
+console.log(result.message);
 ```
 
 ```bash cURL
@@ -93,198 +64,3 @@ curl -X DELETE \
 ```
 
 </CodeGroup>
-
-## Response Example
-
-```json
-{
-  "message": "Knowledge base deleted successfully"
-}
-```
-
-## What Gets Deleted
-
-Deleting a knowledge base removes:
-
-1. **All Files** - All uploaded files removed from R2 storage
-2. **Vector Index** - Entire Qdrant collection deleted
-3. **R2 Bucket** - Storage bucket removed
-4. **Database Entry** - Knowledge base metadata deleted
-5. **Search Capability** - Knowledge base no longer searchable
-6. **Agent References** - Agents using this KB will no longer have access
-
-This is a complete removal - nothing remains after deletion.
-
-## Safe Deletion Workflow
-
-Implement a comprehensive safety check before deletion:
-
-```python
-import requests
-
-def safe_delete_knowledge_base(kb_slug):
-    """Delete knowledge base with safety checks."""
-    headers = {"Authorization": "Bearer YOUR_API_KEY"}
-    base_url = "https://labs.chonkie.ai/api/v1/knowledge"
-
-    # 1. Get knowledge base info
-    kb_response = requests.get(f"{base_url}", headers=headers)
-    kbs = kb_response.json()
-    kb = next((k for k in kbs if k['slug'] == kb_slug), None)
-
-    if not kb:
-        print(f"Knowledge base '{kb_slug}' not found")
-        return False
-
-    print(f"Knowledge Base: {kb['name']}")
-    print(f"Description: {kb['description']}")
-    print(f"Created: {kb['createdAt']}")
-
-    # 2. Get file count
-    files_response = requests.get(f"{base_url}/{kb_slug}", headers=headers)
-    files = files_response.json()["files"]
-    print(f"Files: {len(files)}")
-
-    # 3. Confirm deletion
-    confirm = input(
-        f"\nAre you ABSOLUTELY sure you want to delete this knowledge base "
-        f"and all {len(files)} files? Type the name '{kb['name']}' to confirm: "
-    )
-
-    if confirm != kb['name']:
-        print("Confirmation failed. Deletion cancelled.")
-        return False
-
-    # 4. Create backup list
-    print("\nCreating backup file list...")
-    with open(f"deleted_{kb_slug}_files.txt", "w") as f:
-        for file in files:
-            f.write(f"{file['key']}\t{file['name']}\t{file['size']}\n")
-    print(f"Backup list saved to: deleted_{kb_slug}_files.txt")
-
-    # 5. Delete
-    delete_response = requests.delete(
-        f"{base_url}/{kb_slug}",
-        headers=headers
-    )
-
-    if delete_response.status_code == 200:
-        print("\n✓ Knowledge base deleted successfully")
-        return True
-    else:
-        print(f"\n✗ Deletion failed: {delete_response.text}")
-        return False
-```
-
-## Use Cases
-
-- **Project Cleanup** - Remove knowledge bases from completed projects
-- **Testing** - Clean up test knowledge bases
-- **Reorganization** - Delete and recreate with better organization
-- **Compliance** - Remove knowledge bases containing outdated or sensitive data
-- **Cost Management** - Remove unused knowledge bases to reduce storage costs
-
-## Best Practices
-
-<Tip>
-  Before deleting, export a list of all files in the knowledge base for your records. This helps with recovery if you realize you deleted the wrong one.
-</Tip>
-
-<Tip>
-  Check if any agents are using this knowledge base before deletion. Update or delete those agents first to avoid broken references.
-</Tip>
-
-<Warning>
-  This is the most destructive operation in the API. Deletion is permanent and irreversible. All files and vectors are permanently removed with no recovery option.
-</Warning>
-
-<Warning>
-  There is no "soft delete" or "archive" feature. Once deleted, the knowledge base and all its contents are gone forever.
-</Warning>
-
-<Info>
-  Deletion may take a few seconds to complete for large knowledge bases with many files. The API call will wait for complete deletion before returning.
-</Info>
-
-## Check Dependencies
-
-Before deletion, check if agents are using this knowledge base:
-
-```python
-def check_kb_dependencies(kb_slug):
-    """Check if any agents use this knowledge base."""
-    headers = {"Authorization": "Bearer YOUR_API_KEY"}
-
-    # Get all agents
-    response = requests.get(
-        "https://labs.chonkie.ai/api/v1/agents",
-        headers=headers
-    )
-    agents = response.json()
-
-    # Find agents using this KB
-    dependent_agents = [
-        agent for agent in agents
-        if agent.get('knowledge') == kb_slug
-    ]
-
-    if dependent_agents:
-        print(f"⚠️  Warning: {len(dependent_agents)} agent(s) use this KB:")
-        for agent in dependent_agents:
-            print(f"  - {agent['name']} ({agent['slug']})")
-        return False
-    else:
-        print("✓ No agents depend on this knowledge base")
-        return True
-```
-
-## Deletion Timing
-
-- **Small KB** (<10 files): ~1-2 seconds
-- **Medium KB** (10-100 files): ~3-5 seconds
-- **Large KB** (100+ files): ~5-10 seconds
-- **Very Large KB** (1000+ files): ~10-30 seconds
-
-The API waits for complete deletion before responding.
-
-## Error Responses
-
-<ResponseField name="401 Unauthorized">
-  Invalid or missing API key.
-</ResponseField>
-
-<ResponseField name="404 Not Found">
-  Knowledge base doesn't exist or you don't have access.
-</ResponseField>
-
-<ResponseField name="429 Too Many Requests">
-  Rate limit exceeded.
-</ResponseField>
-
-<ResponseField name="500 Internal Server Error">
-  Server error during deletion. Knowledge base may be partially deleted. Contact support.
-</ResponseField>
-
-## Alternative: Archive Pattern
-
-If you might need the data later, consider an archive approach instead:
-
-1. **Rename** the knowledge base (add "ARCHIVED-" prefix to name)
-2. **Document** what it contains and why it's archived
-3. **Keep it** but stop using it
-4. **Delete** only after you're certain you won't need it
-
-```python
-# Instead of deleting, rename to archive
-headers = {"Authorization": "Bearer YOUR_API_KEY"}
-response = requests.put(
-    f"https://labs.chonkie.ai/api/v1/knowledge/{kb_slug}",
-    headers=headers,
-    json={
-        "name": f"ARCHIVED-{original_name}",
-        "description": f"Archived on {datetime.now().date()}. {original_description}"
-    }
-)
-```
-
-Note: The update endpoint doesn't currently exist for knowledge bases, but this pattern shows the concept.

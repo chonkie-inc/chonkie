@@ -1,20 +1,54 @@
 ---
 title: "Token Chunker"
-api: "POST https://api.chonkie.ai/v1/chunk/token"
+api: "POST /v1/chunk/token"
 description: "Split text into fixed-size token chunks with configurable overlap"
 ---
 
-The Token Chunker splits text into chunks based on token count, ensuring each chunk stays within specified token limits. This is the most straightforward chunking strategy and works well for most use cases.
+The Token Chunker splits text into chunks based on token count, ensuring each chunk stays within specified token limits.
 
-## Authentication
+## Examples
 
-Set your API key as an environment variable or pass it to the SDK:
+<CodeGroup>
 
-```bash
-export CHONKIE_API_KEY="your-api-key-here"
+```python Python
+from chonkie.cloud import TokenChunker
+
+chunker = TokenChunker(
+    tokenizer="gpt2",
+    chunk_size=512,
+    chunk_overlap=128
+)
+
+text = "Your text here..."
+chunks = chunker.chunk(text)
 ```
 
-Get your API key from [labs.chonkie.ai](https://labs.chonkie.ai)
+```javascript JavaScript
+import { TokenChunker } from '@chonkiejs/cloud';
+
+const chunker = new TokenChunker({
+  tokenizer: 'gpt2',
+  chunkSize: 512,
+  chunkOverlap: 128
+});
+
+const text = "Your text here...";
+const chunks = await chunker.chunk({ text });
+```
+
+```bash cURL
+curl -X POST https://api.chonkie.ai/v1/chunk/token \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "Your text here...",
+    "tokenizer": "gpt2",
+    "chunk_size": 512,
+    "chunk_overlap": 128
+  }'
+```
+
+</CodeGroup>
 
 ## Request
 
@@ -33,7 +67,7 @@ Get your API key from [labs.chonkie.ai](https://labs.chonkie.ai)
 </ParamField>
 
 <ParamField path="chunk_overlap" type="integer" default="0">
-  Number of tokens to overlap between consecutive chunks. Helps maintain context across chunk boundaries.
+  Number of tokens to overlap between consecutive chunks.
 </ParamField>
 
 ## Response
@@ -58,137 +92,3 @@ Array of `Chunk` objects, each containing:
   Number of tokens in the chunk.
 </ResponseField>
 
-## Examples
-
-<CodeGroup>
-
-```python Python
-from chonkie.cloud import TokenChunker
-
-# Initialize the chunker
-chunker = TokenChunker(
-    tokenizer="gpt2",
-    chunk_size=512,
-    chunk_overlap=128
-)
-
-# Chunk your text
-text = """
-Natural language processing has revolutionized how we interact with computers.
-Machine learning models can now understand context, generate text, and even
-translate between languages with remarkable accuracy.
-"""
-
-chunks = chunker.chunk(text)
-
-# Access chunk information
-for chunk in chunks:
-    print(f"Text: {chunk.text[:50]}...")
-    print(f"Tokens: {chunk.token_count}")
-    print(f"Position: [{chunk.start_index}:{chunk.end_index}]")
-    print()
-```
-
-```javascript JavaScript
-import { TokenChunker } from '@chonkiejs/cloud';
-
-// Initialize the chunker
-const chunker = new TokenChunker({
-  tokenizer: 'gpt2',
-  chunkSize: 512,
-  chunkOverlap: 128
-});
-
-// Chunk your text
-const text = `
-Natural language processing has revolutionized how we interact with computers.
-Machine learning models can now understand context, generate text, and even
-translate between languages with remarkable accuracy.
-`;
-
-const chunks = await chunker.chunk({ text });
-
-// Access chunk information
-for (const chunk of chunks) {
-  console.log(`Text: ${chunk.text.substring(0, 50)}...`);
-  console.log(`Tokens: ${chunk.tokenCount}`);
-  console.log(`Position: [${chunk.startIndex}:${chunk.endIndex}]`);
-  console.log();
-}
-```
-
-```bash cURL
-curl -X POST https://api.chonkie.ai/v1/chunk/token \
-  -H "Authorization: Bearer YOUR_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "text": "Natural language processing has revolutionized how we interact with computers. Machine learning models can now understand context, generate text, and even translate between languages with remarkable accuracy.",
-    "tokenizer": "gpt2",
-    "chunk_size": 512,
-    "chunk_overlap": 128
-  }'
-```
-
-</CodeGroup>
-
-## Batch Processing
-
-<Note>Batch processing is supported in Python by passing a list of texts</Note>
-
-```python
-from chonkie.cloud import TokenChunker
-
-chunker = TokenChunker(chunk_size=512)
-
-texts = [
-    "First document about machine learning...",
-    "Second document about natural language processing...",
-    "Third document about computer vision..."
-]
-
-# Returns List[List[Chunk]]
-batch_chunks = chunker.chunk(texts)
-
-for i, doc_chunks in enumerate(batch_chunks):
-    print(f"Document {i+1}: {len(doc_chunks)} chunks")
-```
-
-## Response Example
-
-```json
-[
-  {
-    "text": "Natural language processing has revolutionized how we interact with computers.",
-    "start_index": 0,
-    "end_index": 78,
-    "token_count": 15
-  },
-  {
-    "text": "Machine learning models can now understand context, generate text, and even translate between languages with remarkable accuracy.",
-    "start_index": 79,
-    "end_index": 209,
-    "token_count": 22
-  }
-]
-```
-
-## Use Cases
-
-- **RAG Applications** - Prepare documents for embedding and retrieval
-- **API Input Limits** - Split long texts to fit within API token limits
-- **Semantic Search** - Create searchable chunks from large documents
-- **Context Windows** - Manage context for language models
-
-## Best Practices
-
-<Tip>
-  Set `chunk_overlap` to 10-20% of `chunk_size` to maintain context across chunk boundaries. For example, with `chunk_size=512`, use `chunk_overlap=50-100`.
-</Tip>
-
-<Tip>
-  Choose a tokenizer that matches your downstream model. Use "gpt2" for OpenAI models, or match your specific embedding model's tokenizer.
-</Tip>
-
-<Warning>
-  Very large texts may take longer to process. Consider breaking extremely large documents into sections before chunking.
-</Warning>

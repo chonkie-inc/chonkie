@@ -1,18 +1,10 @@
 ---
 title: "Delete Agent"
-api: "DELETE /v1/agents/{agent_slug}"
+api: "DELETE https://labs.chonkie.ai/api/v1/agents/{agent_slug}"
 description: "Permanently delete an agent"
 ---
 
 Delete an agent permanently. This removes the agent configuration but does not affect the knowledge base it was using.
-
-## Authentication
-
-Include your API key in the Authorization header:
-
-```bash
-Authorization: Bearer YOUR_API_KEY
-```
 
 ## Request
 
@@ -70,35 +62,3 @@ curl -X DELETE https://labs.chonkie.ai/api/v1/agents/old-agent \
 ```
 
 </CodeGroup>
-
-## Response Example
-
-```json
-{
-  "message": "Agent deleted successfully"
-}
-```
-
-## What Gets Deleted
-
-- Agent configuration
-- Agent metadata
-- MCP integrations (if any)
-
-**Not deleted:**
-- Knowledge base (remains intact)
-- Chat history (if stored separately)
-
-<Warning>
-  Deletion is permanent and cannot be undone. The agent cannot be recovered.
-</Warning>
-
-## Error Responses
-
-<ResponseField name="401 Unauthorized">
-  Invalid or missing API key.
-</ResponseField>
-
-<ResponseField name="404 Not Found">
-  Agent doesn't exist or you don't have access.
-</ResponseField>

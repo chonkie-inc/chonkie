@@ -1,27 +1,59 @@
 ---
 title: "Sentence Chunker"
-api: "POST /v1/chunk/sentence"
-description: "Chunk text by sentence boundaries while respecting token limits"
+api: "POST v1/chunk/sentence"
+description: "Split text into chunks at sentence boundaries"
 ---
 
-The Sentence Chunker splits text into chunks at sentence boundaries, ensuring that sentences are never split mid-way. This creates more semantically coherent chunks compared to simple token-based chunking.
+The Sentence Chunker splits text at sentence boundaries, ensuring chunks contain complete sentences for better readability.
 
-## Authentication
+## Examples
 
-Set your API key as an environment variable or pass it to the SDK:
+<CodeGroup>
 
-```bash
-export CHONKIE_API_KEY="your-api-key-here"
+```python Python
+from chonkie.cloud import SentenceChunker
+
+chunker = SentenceChunker(
+    chunk_size=512,
+    min_sentences_per_chunk=2
+)
+
+text = "Your text here..."
+chunks = chunker.chunk(text)
 ```
 
-Get your API key from [labs.chonkie.ai](https://labs.chonkie.ai)
+```javascript JavaScript
+import { SentenceChunker } from "@chonkiejs/cloud";
+
+const chunker = new SentenceChunker({
+  chunkSize: 512,
+  minSentencesPerChunk: 2,
+});
+
+const text = "Your text here...";
+const chunks = await chunker.chunk({ text });
+```
+
+```bash cURL
+curl -X POST https://api.chonkie.ai/v1/chunk/sentence \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "Your text here...",
+    "chunk_size": 512,
+    "min_sentences_per_chunk": 2
+  }'
+```
+
+</CodeGroup>
 
 ## Request
 
 #### Parameters
 
 <ParamField path="text" type="string | string[]" required>
-  The text to chunk. Can be a single string or an array of strings for batch processing.
+  The text to chunk. Can be a single string or an array of strings for batch
+  processing.
 </ParamField>
 
 <ParamField path="tokenizer" type="string" default="gpt2">
@@ -37,23 +69,7 @@ Get your API key from [labs.chonkie.ai](https://labs.chonkie.ai)
 </ParamField>
 
 <ParamField path="min_sentences_per_chunk" type="integer" default="1">
-  Minimum number of sentences that must be in each chunk.
-</ParamField>
-
-<ParamField path="min_characters_per_sentence" type="integer" default="12">
-  Minimum character length for text to be considered a sentence.
-</ParamField>
-
-<ParamField path="approximate" type="boolean" default="true">
-  Use approximate token counting for better performance.
-</ParamField>
-
-<ParamField path="delim" type="string | string[]" default='[". ", "! ", "? ", "\n"]'>
-  Sentence delimiters to use for splitting. Can be a single delimiter or array of delimiters.
-</ParamField>
-
-<ParamField path="include_delim" type="string" default="prev">
-  Where to include the delimiter: "prev" (previous chunk), "next" (next chunk), or null (remove it).
+  Minimum number of sentences to include in each chunk.
 </ParamField>
 
 ## Response
@@ -77,150 +93,3 @@ Array of `Chunk` objects, each containing:
 <ResponseField name="token_count" type="integer">
   Number of tokens in the chunk.
 </ResponseField>
-
-## Examples
-
-<CodeGroup>
-
-```python Python
-from chonkie.cloud import SentenceChunker
-
-# Initialize the chunker
-chunker = SentenceChunker(
-    tokenizer="gpt2",
-    chunk_size=512,
-    chunk_overlap=50,
-    min_sentences_per_chunk=2,
-    delim=[". ", "! ", "? ", "\n"]
-)
-
-# Chunk your text
-text = """
-Natural language processing is fascinating. It enables computers to understand human language.
-Machine learning models power these capabilities. They learn patterns from vast amounts of data.
-The results are impressive. Applications range from chatbots to translation services.
-"""
-
-chunks = chunker.chunk(text)
-
-# Access chunk information
-for i, chunk in enumerate(chunks):
-    print(f"Chunk {i+1}:")
-    print(f"  Text: {chunk.text}")
-    print(f"  Tokens: {chunk.token_count}")
-    print(f"  Sentences: {chunk.text.count('.')}")
-    print()
-```
-
-```javascript JavaScript
-import { SentenceChunker } from '@chonkiejs/cloud';
-
-// Initialize the chunker
-const chunker = new SentenceChunker({
-  tokenizer: 'gpt2',
-  chunkSize: 512,
-  chunkOverlap: 50,
-  minSentencesPerChunk: 2,
-  delim: ['. ', '! ', '? ', '\n']
-});
-
-// Chunk your text
-const text = `
-Natural language processing is fascinating. It enables computers to understand human language.
-Machine learning models power these capabilities. They learn patterns from vast amounts of data.
-The results are impressive. Applications range from chatbots to translation services.
-`;
-
-const chunks = await chunker.chunk({ text });
-
-// Access chunk information
-chunks.forEach((chunk, i) => {
-  console.log(`Chunk ${i+1}:`);
-  console.log(`  Text: ${chunk.text}`);
-  console.log(`  Tokens: ${chunk.tokenCount}`);
-  console.log(`  Sentences: ${chunk.text.split('.').length - 1}`);
-  console.log();
-});
-```
-
-```bash cURL
-curl -X POST https://api.chonkie.ai/v1/chunk/sentence \
-  -H "Authorization: Bearer YOUR_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "text": "Natural language processing is fascinating. It enables computers to understand human language. Machine learning models power these capabilities.",
-    "tokenizer": "gpt2",
-    "chunk_size": 512,
-    "chunk_overlap": 50,
-    "min_sentences_per_chunk": 2,
-    "delim": [". ", "! ", "? ", "\n"],
-    "include_delim": "prev"
-  }'
-```
-
-</CodeGroup>
-
-## Custom Delimiters
-
-You can customize sentence delimiters for different languages or text types:
-
-```python
-# For academic papers (include semicolons)
-chunker = SentenceChunker(
-    delim=[". ", "! ", "? ", "; ", "\n"]
-)
-
-# For dialogue (include question marks and exclamations)
-chunker = SentenceChunker(
-    delim=[".", "!", "?", "\n"]
-)
-
-# For structured text (paragraph breaks only)
-chunker = SentenceChunker(
-    delim=["\n\n"]
-)
-```
-
-## Response Example
-
-```json
-[
-  {
-    "text": "Natural language processing is fascinating. It enables computers to understand human language.",
-    "start_index": 0,
-    "end_index": 94,
-    "token_count": 18
-  },
-  {
-    "text": "Machine learning models power these capabilities. They learn patterns from vast amounts of data.",
-    "start_index": 95,
-    "end_index": 191,
-    "token_count": 19
-  }
-]
-```
-
-## Use Cases
-
-- **Document Summarization** - Maintain sentence integrity for better summaries
-- **Question Answering** - Keep complete thoughts together for better context
-- **Text Analysis** - Preserve linguistic structure for NLP tasks
-- **Reading Applications** - Create natural reading segments
-
-## Best Practices
-
-<Tip>
-  Set `min_sentences_per_chunk=2` or higher to ensure chunks contain complete thoughts and sufficient context.
-</Tip>
-
-<Tip>
-  Adjust `min_characters_per_sentence` to filter out very short fragments that aren't real sentences.
-</Tip>
-
-<Tip>
-  Use `approximate=true` for faster processing on large documents. Set to `false` for exact token counts.
-</Tip>
-
-<Warning>
-  Very long sentences may exceed your `chunk_size`. The chunker will still create a chunk for them, potentially exceeding the limit.
-</Warning>

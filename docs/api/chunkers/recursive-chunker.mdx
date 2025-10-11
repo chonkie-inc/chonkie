@@ -1,27 +1,61 @@
 ---
 title: "Recursive Chunker"
 api: "POST /v1/chunk/recursive"
-description: "Hierarchically chunk text using multiple delimiters for structured content"
+description: "Recursively split text using multiple delimiters for natural chunks"
 ---
 
-The Recursive Chunker uses a hierarchical approach to split text, trying multiple delimiters in order until the desired chunk size is achieved. This is ideal for structured documents like markdown, code, or formatted text.
+The Recursive Chunker splits text by trying multiple delimiters in order (paragraphs, sentences, words) to create natural, coherent chunks.
 
-## Authentication
+## Examples
 
-Set your API key as an environment variable or pass it to the SDK:
+<CodeGroup>
 
-```bash
-export CHONKIE_API_KEY="your-api-key-here"
+```python Python
+from chonkie.cloud import RecursiveChunker
+
+chunker = RecursiveChunker(
+    chunk_size=512,
+    chunk_overlap=128,
+    recipe="markdown"
+)
+
+text = "Your text here..."
+chunks = chunker.chunk(text)
 ```
 
-Get your API key from [labs.chonkie.ai](https://labs.chonkie.ai)
+```javascript JavaScript
+import { RecursiveChunker } from "@chonkiejs/cloud";
+
+const chunker = new RecursiveChunker({
+  chunkSize: 512,
+  chunkOverlap: 128,
+  recipe: "markdown"
+});
+
+const text = "Your text here...";
+const chunks = await chunker.chunk({ text });
+```
+
+```bash cURL
+curl -X POST https://api.chonkie.ai/v1/chunk/recursive \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "Your text here...",
+    "chunk_size": 512,
+    "chunk_overlap": 128
+  }'
+```
+
+</CodeGroup>
 
 ## Request
 
 #### Parameters
 
 <ParamField path="text" type="string | string[]" required>
-  The text to chunk.
+  The text to chunk. Can be a single string or an array of strings for batch
+  processing.
 </ParamField>
 
 <ParamField path="tokenizer" type="string" default="gpt2">
@@ -32,147 +66,41 @@ Get your API key from [labs.chonkie.ai](https://labs.chonkie.ai)
   Maximum number of tokens per chunk.
 </ParamField>
 
-<ParamField path="chunk_overlap" type="integer" default="0">
-  Number of tokens to overlap between chunks.
+<ParamField path="min_characters_per_chunk" type="integer" default="0">
+  The minimum number of characters a chunk should have.
 </ParamField>
 
-<ParamField path="min_characters_per_chunk" type="integer" default="24">
-  Minimum character length for chunks.
+<ParamField path="recipe" type="string" default="default">
+  Recursive rules recipe to follow. See all recipes on our [Hugging Face repo](https://huggingface.co/datasets/chonkie-ai/recipes)
 </ParamField>
+
+<ParamField path="lang" type="string" default="en">
+  Language of the document to chunk
+</ParamField>
+
+<ParamField path="min_characters_per_chunk" type="integer" default="0">
+  The minimum number of characters a chunk should have.
+</ParamField>
+
 
 ## Response
 
 #### Returns
 
-Array of `Chunk` objects with text, start_index, end_index, and token_count.
+Array of `Chunk` objects, each containing:
 
-## Examples
+<ResponseField name="text" type="string">
+  The chunk text content.
+</ResponseField>
 
-<CodeGroup>
+<ResponseField name="start_index" type="integer">
+  Starting character position in the original text.
+</ResponseField>
 
-```python Python
-from chonkie.cloud import RecursiveChunker
+<ResponseField name="end_index" type="integer">
+  Ending character position in the original text.
+</ResponseField>
 
-# Initialize with default rules (good for markdown/text)
-chunker = RecursiveChunker(
-    tokenizer="gpt2",
-    chunk_size=512,
-    chunk_overlap=50
-)
-
-# Chunk markdown content
-text = """
-# Machine Learning
-
-Machine learning is a subset of artificial intelligence.
-
-## Supervised Learning
-
-In supervised learning, models learn from labeled data.
-
-## Unsupervised Learning
-
-Unsupervised learning finds patterns without labels.
-"""
-
-chunks = chunker.chunk(text)
-
-for chunk in chunks:
-    print(f"Chunk: {chunk.text[:80]}...")
-    print(f"Tokens: {chunk.token_count}\n")
-```
-
-```javascript JavaScript
-import { RecursiveChunker } from '@chonkiejs/cloud';
-
-// Initialize with default rules
-const chunker = new RecursiveChunker({
-  tokenizer: 'gpt2',
-  chunkSize: 512,
-  chunkOverlap: 50
-});
-
-// Chunk markdown content
-const text = `
-# Machine Learning
-
-Machine learning is a subset of artificial intelligence.
-
-## Supervised Learning
-
-In supervised learning, models learn from labeled data.
-`;
-
-const chunks = await chunker.chunk({ text });
-
-for (const chunk of chunks) {
-  console.log(`Chunk: ${chunk.text.substring(0, 80)}...`);
-  console.log(`Tokens: ${chunk.tokenCount}\n`);
-}
-```
-
-```bash cURL
-curl -X POST https://api.chonkie.ai/v1/chunk/recursive \
-  -H "Authorization: Bearer YOUR_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "text": "# Machine Learning\n\nMachine learning is a subset of artificial intelligence.\n\n## Supervised Learning\n\nIn supervised learning, models learn from labeled data.",
-    "tokenizer": "gpt2",
-    "chunk_size": 512,
-    "chunk_overlap": 50
-  }'
-```
-
-</CodeGroup>
-
-## How It Works
-
-The Recursive Chunker tries delimiters in this order:
-
-1. **Double newlines** (`\n\n`) - Paragraph breaks
-2. **Single newlines** (`\n`) - Line breaks
-3. **Periods** (`. `) - Sentence ends
-4. **Spaces** (` `) - Word boundaries
-5. **Characters** - Individual characters as last resort
-
-This ensures the most natural split points are used first.
-
-## Response Example
-
-```json
-[
-  {
-    "text": "# Machine Learning\n\nMachine learning is a subset of artificial intelligence.",
-    "start_index": 0,
-    "end_index": 74,
-    "token_count": 16
-  },
-  {
-    "text": "## Supervised Learning\n\nIn supervised learning, models learn from labeled data.",
-    "start_index": 76,
-    "end_index": 155,
-    "token_count": 18
-  }
-]
-```
-
-## Use Cases
-
-- **Markdown Documents** - Preserve heading hierarchy and structure
-- **Code Files** - Maintain logical code sections
-- **Structured Text** - Keep formatting and organization intact
-- **Mixed Content** - Handle documents with varied structure
-
-## Best Practices
-
-<Tip>
-  The Recursive Chunker works best with well-structured documents that have clear hierarchical markers like headings, paragraphs, and sections.
-</Tip>
-
-<Tip>
-  For code files, the recursive approach preserves function and class boundaries better than simple token chunking.
-</Tip>
-
-<Warning>
-  Unstructured text without clear delimiters may not benefit much from recursive chunking. Consider using Sentence or Token chunker instead.
-</Warning>
+<ResponseField name="token_count" type="integer">
+  Number of tokens in the chunk.
+</ResponseField>

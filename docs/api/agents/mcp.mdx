@@ -1,46 +1,38 @@
 ---
 title: "MCP Integration"
+api: "GET https://labs.chonkie.ai/api/v1/agents/{agent_slug}/mcp"
 description: "Connect agents to Claude Desktop and other MCP-compatible clients"
-icon: "plug"
 ---
 
-Model Context Protocol (MCP) enables your Chonkie agents to work as context servers for Claude Desktop and other MCP-compatible applications, providing seamless knowledge base access.
-
-<Info>
-  MCP is a protocol developed by Anthropic that allows AI applications to connect to external data sources and tools.
-</Info>
-
-## What is MCP?
-
-Model Context Protocol provides:
-
-- **Standardized Interface** - Common protocol for connecting AI to data
-- **Context Servers** - Expose knowledge bases to AI applications
-- **Tool Integration** - Enable agents to use external tools
-- **Multi-Client Support** - Works with Claude Desktop, IDEs, and more
-
-## How Chonkie MCP Works
-
-When you enable MCP for an agent:
-
-1. **MCP Server Created** - Chonkie creates an MCP-compatible endpoint
-2. **Knowledge Base Exposed** - Agent's knowledge base available via MCP
-3. **Claude Desktop Connects** - Add to Claude Desktop config
-4. **Seamless Access** - Claude can search your knowledge base
+Model Context Protocol (MCP) enables your Chonkie agents to work as context servers for Claude Desktop and other MCP-compatible applications.
 
 ## Get Agent MCP Configuration
 
-#### Endpoint
+Retrieve MCP configuration for an agent.
 
-```
-GET /v1/agents/{agent_slug}/mcp
-```
+## Request
 
-#### Examples
+#### Path Parameters
+
+<ParamField path="agent_slug" type="string" required>
+  The slug of the agent.
+</ParamField>
+
+## Response
+
+#### Returns
+
+<ResponseField name="mcp" type="object">
+  MCP configuration object (null if not configured).
+</ResponseField>
+
+## Examples
 
 <CodeGroup>
 
 ```python Python
+import requests
+
 agent_slug = "documentation-assistant"
 url = f"https://labs.chonkie.ai/api/v1/agents/{agent_slug}/mcp"
 headers = {"Authorization": "Bearer YOUR_API_KEY"}
@@ -51,10 +43,9 @@ data = response.json()
 if data["mcp"]:
     mcp = data["mcp"]
     print(f"MCP Status: {mcp['status']}")
-    print(f"Public: {mcp['public']}")
     print(f"Endpoint: {mcp['endpoint']}")
 else:
-    print("MCP not configured for this agent")
+    print("MCP not configured")
 ```
 
 ```javascript JavaScript
@@ -67,18 +58,20 @@ const response = await fetch(
 const { mcp } = await response.json();
 if (mcp) {
   console.log(`MCP Status: ${mcp.status}`);
-  console.log(`Public: ${mcp.public}`);
   console.log(`Endpoint: ${mcp.endpoint}`);
-} else {
-  console.log('MCP not configured for this agent');
 }
+```
+
+```bash cURL
+curl -X GET https://labs.chonkie.ai/api/v1/agents/documentation-assistant/mcp \
+  -H "Authorization: Bearer YOUR_API_KEY"
 ```
 
 </CodeGroup>
 
 ## Update MCP Status
 
-#### Endpoint
+Enable or disable MCP for an agent:
 
 ```
 PATCH /v1/agents/{agent_slug}/mcp
@@ -94,227 +87,10 @@ PATCH /v1/agents/{agent_slug}/mcp
   Whether MCP endpoint is publicly accessible (default: false)
 </ParamField>
 
-#### Examples
-
-<CodeGroup>
-
-```python Python
-agent_slug = "documentation-assistant"
-url = f"https://labs.chonkie.ai/api/v1/agents/{agent_slug}/mcp"
-headers = {
-    "Authorization": "Bearer YOUR_API_KEY",
-    "Content-Type": "application/json"
-}
-
-data = {
-    "status": "active",
-    "public": False
-}
-
-response = requests.patch(url, headers=headers, json=data)
-result = response.json()
-
-print(f"MCP {result['mcp']['status']}")
-```
-
-```javascript JavaScript
-const agentSlug = 'documentation-assistant';
-const response = await fetch(
-  `https://labs.chonkie.ai/api/v1/agents/${agentSlug}/mcp`,
-  {
-    method: 'PATCH',
-    headers: {
-      'Authorization': 'Bearer YOUR_API_KEY',
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      status: 'active',
-      public: false
-    })
-  }
-);
-
-const { mcp } = await response.json();
-console.log(`MCP ${mcp.status}`);
-```
-
-</CodeGroup>
-
 ## Delete MCP Configuration
 
-#### Endpoint
+Remove MCP configuration from an agent:
 
 ```
 DELETE /v1/agents/{agent_slug}/mcp
 ```
-
-## Claude Desktop Setup
-
-Add your Chonkie agent to Claude Desktop:
-
-### 1. Get MCP Endpoint
-
-Enable MCP for your agent and retrieve the endpoint URL.
-
-### 2. Update Claude Desktop Config
-
-Edit your Claude Desktop config file:
-
-**macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`
-
-**Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
-
-### 3. Add Configuration
-
-```json
-{
-  "mcpServers": {
-    "chonkie-docs": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-fetch",
-        "https://labs.chonkie.ai/api/mcp/documentation-assistant"
-      ],
-      "env": {
-        "CHONKIE_API_KEY": "your-api-key-here"
-      }
-    }
-  }
-}
-```
-
-### 4. Restart Claude Desktop
-
-Close and reopen Claude Desktop to load the new configuration.
-
-### 5. Verify Connection
-
-In Claude Desktop, you should see your knowledge base available as a context source.
-
-## Using MCP with Claude Desktop
-
-Once configured, Claude can:
-
-- **Search Knowledge Base** - Query your documentation
-- **Access Context** - Pull relevant information automatically
-- **Answer Questions** - Use your knowledge to respond accurately
-
-Example conversation:
-
-```
-You: What are the authentication methods?
-
-Claude: [Searches your knowledge base via MCP]
-Based on your documentation, the supported authentication methods are:
-1. Bearer Token Authentication
-2. OAuth 2.0
-3. API Keys
-...
-```
-
-## MCP Capabilities
-
-Chonkie MCP servers provide:
-
-### Resources
-- Access to knowledge base documents
-- File metadata and content
-
-### Tools
-- `search` - Semantic search across knowledge base
-- `retrieve` - Get specific document by ID
-
-### Prompts
-- Pre-configured search templates
-- Common query patterns
-
-## Security Considerations
-
-<Warning>
-  MCP endpoints with `public=false` require authentication. Keep your API keys secure and don't share them.
-</Warning>
-
-<Tip>
-  For team use, each team member should use their own API key for MCP access.
-</Tip>
-
-## Use Cases
-
-- **Developer Tools** - Access documentation in Claude Desktop while coding
-- **Research** - Query knowledge bases during research
-- **Customer Support** - Support agents using Claude with company knowledge
-- **Content Creation** - Writers accessing reference material
-
-## Troubleshooting
-
-### Claude Desktop Not Connecting
-
-1. Check config file syntax (valid JSON)
-2. Verify API key is correct
-3. Ensure MCP status is "active"
-4. Restart Claude Desktop
-5. Check logs: `~/Library/Logs/Claude/` (macOS)
-
-### Search Not Working
-
-1. Verify knowledge base has indexed files
-2. Check agent has `useContext=true`
-3. Ensure knowledge base slug is correct
-4. Test search via API first
-
-## Advanced Configuration
-
-### Custom Server Name
-
-Use a descriptive name in the config:
-
-```json
-{
-  "mcpServers": {
-    "product-docs": {  // Descriptive name
-      "command": "npx",
-      "args": [...]
-    }
-  }
-}
-```
-
-### Multiple Agents
-
-Add multiple Chonkie agents:
-
-```json
-{
-  "mcpServers": {
-    "product-docs": {
-      "command": "npx",
-      "args": ["...", "https://labs.chonkie.ai/api/mcp/docs-agent"]
-    },
-    "support-kb": {
-      "command": "npx",
-      "args": ["...", "https://labs.chonkie.ai/api/mcp/support-agent"]
-    }
-  }
-}
-```
-
-## Best Practices
-
-<Tip>
-  Use descriptive agent names that reflect the knowledge base content. This helps identify which context source to use in Claude Desktop.
-</Tip>
-
-<Tip>
-  Keep MCP endpoints private (`public=false`) unless you specifically need public access.
-</Tip>
-
-<Info>
-  MCP is actively evolving. Check [modelcontextprotocol.io](https://modelcontextprotocol.io) for the latest spec and capabilities.
-</Info>
-
-## Learn More
-
-- **MCP Specification**: [modelcontextprotocol.io/specification](https://modelcontextprotocol.io/specification)
-- **Claude Desktop Docs**: [claude.ai/desktop](https://claude.ai/desktop)
-- **MCP Examples**: [github.com/modelcontextprotocol](https://github.com/modelcontextprotocol)

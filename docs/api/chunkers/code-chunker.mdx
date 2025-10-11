@@ -1,31 +1,21 @@
 ---
 title: "Code Chunker"
-api: "POST /v1/chunk/code"
-description: "Language-aware chunking for source code files"
+api: "POST https://api.chonkie.ai/v1/chunk/code"
+description: "Split code at logical boundaries while preserving structure"
 ---
 
-The Code Chunker uses Abstract Syntax Tree (AST) analysis to intelligently chunk source code while preserving syntactic structure. It understands programming language semantics and creates chunks at natural boundaries like function and class definitions.
-
-## Authentication
-
-Set your API key as an environment variable or pass it to the SDK:
-
-```bash
-export CHONKIE_API_KEY="your-api-key-here"
-```
-
-Get your API key from [labs.chonkie.ai](https://labs.chonkie.ai)
+The Code Chunker splits source code at logical boundaries (functions, classes, methods) while preserving code structure and syntax.
 
 ## Request
 
 #### Parameters
 
 <ParamField path="text" type="string | string[]" required>
-  The source code to chunk.
+  The code to chunk. Can be a single string or an array of strings for batch processing.
 </ParamField>
 
-<ParamField path="language" type="string" required>
-  Programming language of the code. Supported: "python", "javascript", "typescript", "java", "cpp", "rust", "go", and more.
+<ParamField path="language" type="string" default="python">
+  Programming language of the code. Supports: python, javascript, typescript, java, cpp, etc.
 </ParamField>
 
 <ParamField path="tokenizer" type="string" default="gpt2">
@@ -33,18 +23,30 @@ Get your API key from [labs.chonkie.ai](https://labs.chonkie.ai)
 </ParamField>
 
 <ParamField path="chunk_size" type="integer" default="512">
-  Target maximum tokens per chunk.
-</ParamField>
-
-<ParamField path="chunk_overlap" type="integer" default="0">
-  Number of tokens to overlap between chunks.
+  Maximum number of tokens per chunk.
 </ParamField>
 
 ## Response
 
 #### Returns
 
-Array of `Chunk` objects containing syntactically complete code segments.
+Array of `Chunk` objects, each containing:
+
+<ResponseField name="text" type="string">
+  The chunk text content.
+</ResponseField>
+
+<ResponseField name="start_index" type="integer">
+  Starting character position in the original text.
+</ResponseField>
+
+<ResponseField name="end_index" type="integer">
+  Ending character position in the original text.
+</ResponseField>
+
+<ResponseField name="token_count" type="integer">
+  Number of tokens in the chunk.
+</ResponseField>
 
 ## Examples
 
@@ -53,77 +55,25 @@ Array of `Chunk` objects containing syntactically complete code segments.
 ```python Python
 from chonkie.cloud import CodeChunker
 
-# Initialize the code chunker
 chunker = CodeChunker(
     language="python",
-    chunk_size=512,
-    chunk_overlap=50
+    chunk_size=512
 )
 
-# Chunk Python code
-code = '''
-def calculate_fibonacci(n):
-    """Calculate the nth Fibonacci number."""
-    if n <= 1:
-        return n
-    return calculate_fibonacci(n-1) + calculate_fibonacci(n-2)
-
-class DataProcessor:
-    """Process and analyze data."""
-
-    def __init__(self, data):
-        self.data = data
-
-    def clean(self):
-        return [x for x in self.data if x is not None]
-
-    def analyze(self):
-        return {"mean": sum(self.data) / len(self.data)}
-'''
-
+code = "def example():\n    return True"
 chunks = chunker.chunk(code)
-
-for i, chunk in enumerate(chunks):
-    print(f"Chunk {i+1}:")
-    print(chunk.text)
-    print(f"Tokens: {chunk.token_count}\n")
 ```
 
 ```javascript JavaScript
 import { CodeChunker } from '@chonkiejs/cloud';
 
-// Initialize the code chunker
 const chunker = new CodeChunker({
-  language: 'javascript',
-  chunkSize: 512,
-  chunkOverlap: 50
+  language: 'python',
+  chunkSize: 512
 });
 
-// Chunk JavaScript code
-const code = `
-function calculateFibonacci(n) {
-  if (n <= 1) return n;
-  return calculateFibonacci(n-1) + calculateFibonacci(n-2);
-}
-
-class DataProcessor {
-  constructor(data) {
-    this.data = data;
-  }
-
-  clean() {
-    return this.data.filter(x => x !== null);
-  }
-}
-`;
-
+const code = "def example():\n    return True";
 const chunks = await chunker.chunk({ text: code });
-
-chunks.forEach((chunk, i) => {
-  console.log(`Chunk ${i+1}:`);
-  console.log(chunk.text);
-  console.log(`Tokens: ${chunk.tokenCount}\n`);
-});
 ```
 
 ```bash cURL
@@ -131,81 +81,10 @@ curl -X POST https://api.chonkie.ai/v1/chunk/code \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "text": "def hello():\n    print(\"Hello, World!\")\n\nclass Greeter:\n    def greet(self, name):\n        return f\"Hello, {name}!\"",
+    "text": "def example():\n    return True",
     "language": "python",
     "chunk_size": 512
   }'
 ```
 
 </CodeGroup>
-
-## Supported Languages
-
-The Code Chunker supports major programming languages:
-
-- **Python** - Functions, classes, methods
-- **JavaScript/TypeScript** - Functions, classes, arrow functions
-- **Java** - Classes, methods, interfaces
-- **C/C++** - Functions, classes, structs
-- **Rust** - Functions, impl blocks, traits
-- **Go** - Functions, methods, interfaces
-- **And many more...**
-
-## How It Works
-
-The chunker analyzes code structure using AST parsing:
-
-1. **Parse** - Build abstract syntax tree
-2. **Identify** - Find functions, classes, and logical blocks
-3. **Group** - Combine related code sections
-4. **Split** - Create chunks at natural boundaries
-5. **Preserve** - Maintain syntactic completeness
-
-## Response Example
-
-```json
-[
-  {
-    "text": "def calculate_fibonacci(n):\n    \"\"\"Calculate the nth Fibonacci number.\"\"\"\n    if n <= 1:\n        return n\n    return calculate_fibonacci(n-1) + calculate_fibonacci(n-2)",
-    "start_index": 0,
-    "end_index": 156,
-    "token_count": 45
-  },
-  {
-    "text": "class DataProcessor:\n    \"\"\"Process and analyze data.\"\"\"\n    \n    def __init__(self, data):\n        self.data = data\n    \n    def clean(self):\n        return [x for x in self.data if x is not None]",
-    "start_index": 158,
-    "end_index": 305,
-    "token_count": 52
-  }
-]
-```
-
-## Use Cases
-
-- **Code Search** - Index codebases for semantic search
-- **Documentation** - Generate docs from code chunks
-- **Code Review** - Analyze code in logical segments
-- **RAG for Code** - Build AI assistants that understand code structure
-- **Code Analysis** - Process large codebases in structured chunks
-
-## Best Practices
-
-<Tip>
-  Set `chunk_size` based on your use case: 256-512 for code search, 1024+ for code generation contexts.
-</Tip>
-
-<Tip>
-  Use `chunk_overlap=50-100` to ensure that context from one chunk is available in adjacent chunks, helpful for understanding relationships between functions.
-</Tip>
-
-<Tip>
-  For mixed-language projects, chunk files individually with their specific language setting.
-</Tip>
-
-<Warning>
-  Malformed or incomplete code may produce unexpected chunks. The chunker works best with syntactically valid code.
-</Warning>
-
-<Info>
-  The Code Chunker preserves comments and docstrings, ensuring that documentation stays with the relevant code.
-</Info>

@@ -1,20 +1,10 @@
 ---
 title: "Delete File"
-api: "DELETE /v1/knowledge/{knowledge_base_slug}/{file_id}"
+api: "DELETE https://labs.chonkie.ai/api/v1/knowledge/{knowledge_base_slug}/{file_id}"
 description: "Remove a specific file from a knowledge base"
 ---
 
-Delete a file from a knowledge base. This removes the file from storage and its vectors from the search index. The operation is irreversible.
-
-## Authentication
-
-Include your API key in the Authorization header:
-
-```bash
-Authorization: Bearer YOUR_API_KEY
-```
-
-Get your API key from [labs.chonkie.ai](https://labs.chonkie.ai)
+Delete a file from a knowledge base. This removes the file from storage and its vectors from the search index.
 
 ## Request
 
@@ -57,9 +47,7 @@ headers = {
 
 response = requests.delete(url, headers=headers)
 result = response.json()
-
 print(result["message"])
-print(f"Knowledge base ID: {result['knowledgeBaseId']}")
 ```
 
 ```javascript JavaScript
@@ -78,7 +66,6 @@ const response = await fetch(
 
 const result = await response.json();
 console.log(result.message);
-console.log(`Knowledge base ID: ${result.knowledgeBaseId}`);
 ```
 
 ```bash cURL
@@ -88,183 +75,3 @@ curl -X DELETE \
 ```
 
 </CodeGroup>
-
-## Response Example
-
-```json
-{
-  "message": "File deleted successfully",
-  "knowledgeBaseId": "kb_abc123def456"
-}
-```
-
-## What Gets Deleted
-
-When you delete a file, the following are removed:
-
-1. **Original File** - Removed from R2 storage
-2. **Vector Embeddings** - Removed from Qdrant index
-3. **Search Results** - File no longer appears in searches
-4. **Metadata** - File no longer listed in knowledge base
-
-The operation is atomic - either everything is deleted or nothing is deleted.
-
-## Bulk Deletion
-
-To delete multiple files, make separate requests:
-
-```python
-import requests
-
-files_to_delete = [
-    "1705320000000-old-doc-1.pdf",
-    "1705320001234-old-doc-2.pdf",
-    "1705320002345-old-doc-3.pdf"
-]
-
-kb_slug = "product-documentation"
-headers = {"Authorization": "Bearer YOUR_API_KEY"}
-
-for file_id in files_to_delete:
-    url = f"https://labs.chonkie.ai/api/v1/knowledge/{kb_slug}/{file_id}"
-    response = requests.delete(url, headers=headers)
-
-    if response.status_code == 200:
-        print(f"✓ Deleted: {file_id}")
-    else:
-        print(f"✗ Failed to delete: {file_id}")
-```
-
-## Confirmation Pattern
-
-For safety, implement a confirmation prompt in your application:
-
-```python
-def delete_file_with_confirmation(kb_slug, file_id, filename):
-    """Delete file with user confirmation."""
-    confirmation = input(
-        f"Are you sure you want to delete '{filename}'? "
-        f"This action cannot be undone. (yes/no): "
-    )
-
-    if confirmation.lower() != 'yes':
-        print("Deletion cancelled")
-        return False
-
-    url = f"https://labs.chonkie.ai/api/v1/knowledge/{kb_slug}/{file_id}"
-    headers = {"Authorization": "Bearer YOUR_API_KEY"}
-    response = requests.delete(url, headers=headers)
-
-    if response.status_code == 200:
-        print(f"File '{filename}' deleted successfully")
-        return True
-    else:
-        print(f"Failed to delete file: {response.text}")
-        return False
-```
-
-## Use Cases
-
-- **Version Management** - Remove outdated versions of documents
-- **Content Cleanup** - Delete obsolete or incorrect files
-- **Storage Management** - Free up storage space
-- **Compliance** - Remove files that should no longer be stored
-- **Error Correction** - Delete files uploaded by mistake
-
-## Best Practices
-
-<Tip>
-  Before deleting, consider downloading the file as a backup in case you need it
-  later.
-</Tip>
-
-<Tip>
-  Log all deletions in your application for audit trails and recovery purposes.
-</Tip>
-
-<Warning>
-  Deletion is permanent and cannot be undone. There is no "trash" or recovery
-  mechanism. Make sure you want to delete the file before proceeding.
-</Warning>
-
-<Info>
-  After deletion, search results are updated immediately. The file will no
-  longer appear in search queries.
-</Info>
-
-## Safe Deletion Pattern
-
-Implement safe deletion with backup:
-
-```python
-import requests
-from datetime import datetime
-
-def safe_delete_file(kb_slug, file_id, backup_dir="backups"):
-    """Delete file after creating a backup."""
-    headers = {"Authorization": "Bearer YOUR_API_KEY"}
-
-    # 1. Download backup
-    download_url = f"https://labs.chonkie.ai/api/v1/knowledge/{kb_slug}/{file_id}"
-    response = requests.get(download_url, headers=headers)
-
-    if response.status_code == 200:
-        # Extract original filename
-        disposition = response.headers['Content-Disposition']
-        filename = disposition.split('filename="')[1].rstrip('"')
-
-        # Save backup with timestamp
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        backup_path = f"{backup_dir}/{timestamp}_{filename}"
-
-        with open(backup_path, "wb") as f:
-            f.write(response.content)
-        print(f"Backup saved: {backup_path}")
-
-    # 2. Delete file
-    delete_url = f"https://labs.chonkie.ai/api/v1/knowledge/{kb_slug}/{file_id}"
-    delete_response = requests.delete(delete_url, headers=headers)
-
-    if delete_response.status_code == 200:
-        print(f"File deleted successfully")
-        return True
-    else:
-        print(f"Deletion failed: {delete_response.text}")
-        return False
-```
-
-## Error Responses
-
-<ResponseField name="401 Unauthorized">
-  Invalid or missing API key.
-</ResponseField>
-
-<ResponseField name="404 Not Found">
-  File or knowledge base doesn't exist, or you don't have access.
-</ResponseField>
-
-<ResponseField name="429 Too Many Requests">Rate limit exceeded.</ResponseField>
-
-<ResponseField name="500 Internal Server Error">
-  Server error during deletion. File may or may not have been deleted. Check
-  with [Get Knowledge Base Files](/api/knowledge/get-files).
-</ResponseField>
-
-## Idempotency
-
-Deleting an already-deleted file returns a 404 error. If you need idempotent deletion (no error if file doesn't exist):
-
-```python
-def idempotent_delete(kb_slug, file_id):
-    """Delete file, ignore if it doesn't exist."""
-    url = f"https://labs.chonkie.ai/api/v1/knowledge/{kb_slug}/{file_id}"
-    headers = {"Authorization": "Bearer YOUR_API_KEY"}
-    response = requests.delete(url, headers=headers)
-
-    if response.status_code == 200:
-        return "deleted"
-    elif response.status_code == 404:
-        return "not_found"
-    else:
-        raise Exception(f"Deletion failed: {response.text}")
-```
