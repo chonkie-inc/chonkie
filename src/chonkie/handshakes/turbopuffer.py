@@ -176,7 +176,7 @@ class TurbopufferHandshake(BaseHandshake):
         return [
             {
                 "id": result["id"],
-                "score": result["$dist"],
+                "score": 1.0 - result["$dist"],
                 "token_count": result["token_count"],
                 "text": result["text"],
                 "start_index": result["start_index"],
