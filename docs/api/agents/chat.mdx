@@ -1,44 +1,10 @@
 ---
 title: "Chat with Agent"
-api: "POST https://labs.chonkie.ai/api/v1/chat/completions"
+api: "POST labs.chonkie.ai/api/v1/chat/completions"
 description: "Have conversations with AI agents using OpenAI-compatible API"
 ---
 
 Chat with your agents using an OpenAI-compatible API. Supports both streaming and non-streaming responses.
-
-## Request
-
-#### Parameters
-
-<ParamField path="model" type="string" required>
-  The agent slug to use (replaces OpenAI's model parameter).
-</ParamField>
-
-<ParamField path="messages" type="array" required>
-  Array of message objects in OpenAI format.
-</ParamField>
-
-<ParamField path="stream" type="boolean" default="false">
-  Enable streaming responses.
-</ParamField>
-
-<ParamField path="temperature" type="float">
-  Override agent's default temperature (0.0-2.0).
-</ParamField>
-
-<ParamField path="max_tokens" type="integer">
-  Maximum tokens in response.
-</ParamField>
-
-## Response
-
-#### Returns (Non-streaming)
-
-OpenAI-compatible chat completion response.
-
-#### Returns (Streaming)
-
-Server-Sent Events (SSE) with delta chunks.
 
 ## Examples
 
@@ -97,19 +63,19 @@ print()
 
 ```javascript JavaScript
 const response = await fetch(
-  'https://labs.chonkie.ai/api/v1/chat/completions',
+  "https://labs.chonkie.ai/api/v1/chat/completions",
   {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Authorization': 'Bearer YOUR_API_KEY',
-      'Content-Type': 'application/json'
+      Authorization: "Bearer YOUR_API_KEY",
+      "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: 'documentation-assistant',
+      model: "documentation-assistant",
       messages: [
-        { role: 'user', content: 'How do I configure authentication?' }
-      ]
-    })
+        { role: "user", content: "How do I configure authentication?" },
+      ],
+    }),
   }
 );
 
@@ -131,3 +97,120 @@ curl -X POST https://labs.chonkie.ai/api/v1/chat/completions \
 ```
 
 </CodeGroup>
+
+## OpenAI SDK Compatibility
+
+Chonkie agents are fully compatible with the OpenAI SDK. Simply configure the base URL and use your agent slug as the model name.
+
+<CodeGroup>
+
+```python Python - OpenAI SDK
+from openai import OpenAI
+
+client = OpenAI(
+    api_key="YOUR_API_KEY",
+    base_url="https://labs.chonkie.ai/api/v1"
+)
+
+response = client.chat.completions.create(
+    model="documentation-assistant",  # Use your agent slug
+    messages=[
+        {"role": "user", "content": "How do I configure authentication?"}
+    ]
+)
+
+print(response.choices[0].message.content)
+```
+
+```python Python - OpenAI SDK Streaming
+from openai import OpenAI
+
+client = OpenAI(
+    api_key="YOUR_API_KEY",
+    base_url="https://labs.chonkie.ai/api/v1"
+)
+
+stream = client.chat.completions.create(
+    model="documentation-assistant",
+    messages=[
+        {"role": "user", "content": "Explain API authentication"}
+    ],
+    stream=True
+)
+
+for chunk in stream:
+    if chunk.choices[0].delta.content:
+        print(chunk.choices[0].delta.content, end="", flush=True)
+print()
+```
+
+```javascript JavaScript - OpenAI SDK
+import OpenAI from "openai";
+
+const client = new OpenAI({
+  apiKey: "YOUR_API_KEY",
+  baseURL: "https://labs.chonkie.ai/api/v1",
+});
+
+const response = await client.chat.completions.create({
+  model: "documentation-assistant", // Use your agent slug
+  messages: [{ role: "user", content: "How do I configure authentication?" }],
+});
+
+console.log(response.choices[0].message.content);
+```
+
+```javascript JavaScript - OpenAI SDK Streaming
+import OpenAI from "openai";
+
+const client = new OpenAI({
+  apiKey: "YOUR_API_KEY",
+  baseURL: "https://labs.chonkie.ai/api/v1",
+});
+
+const stream = await client.chat.completions.create({
+  model: "documentation-assistant",
+  messages: [{ role: "user", content: "Explain API authentication" }],
+  stream: true,
+});
+
+for await (const chunk of stream) {
+  const content = chunk.choices[0]?.delta?.content;
+  if (content) {
+    process.stdout.write(content);
+  }
+}
+console.log();
+```
+
+</CodeGroup>
+
+## Request
+
+#### Parameters
+
+<ParamField path="model" type="string" required>
+  The agent slug to use (replaces OpenAI's model parameter).
+</ParamField>
+
+<ParamField path="messages" type="array" required>
+  Array of message objects in OpenAI format.
+</ParamField>
+
+<ParamField path="stream" type="boolean" default="false">
+  Enable streaming responses.
+</ParamField>
+
+<ParamField path="max_tokens" type="integer">
+  Maximum tokens in response.
+</ParamField>
+
+## Response
+
+#### Returns (Non-streaming)
+
+OpenAI-compatible chat completion response.
+
+#### Returns (Streaming)
+
+Server-Sent Events (SSE) with delta chunks.

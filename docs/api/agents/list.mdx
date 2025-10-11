@@ -58,3 +58,73 @@ This endpoint takes no parameters.
 #### Returns
 
 Array of agent objects with full configuration.
+
+**Each agent object contains the following fields**
+
+**Basic Information**
+
+<ParamField path="id" type="string">
+  Unique agent identifier.
+</ParamField>
+
+<ParamField path="slug" type="string">
+  URL-friendly unique identifier for the agent.
+</ParamField>
+
+<ParamField path="name" type="string">
+  Display name of the agent.
+</ParamField>
+
+<ParamField path="description" type="string">
+  Description of the agent's purpose and capabilities.
+</ParamField>
+
+<ParamField path="status" type="string">
+  Agent status (active, inactive, etc.).
+</ParamField>
+
+**Model Configuration**
+
+<ParamField path="model" type="string">
+  The LLM model used by the agent.
+</ParamField>
+
+<ParamField path="systemPrompt" type="string">
+  System prompt that defines the agent's behavior and personality.
+</ParamField>
+
+<ParamField path="temperature" type="float">
+  Temperature setting for response randomness (0.0-2.0).
+</ParamField>
+
+**Knowledge Integration**
+
+<ParamField path="useContext" type="boolean">
+  Whether knowledge base context injection is enabled.
+</ParamField>
+
+<ParamField path="knowledge" type="string">
+  Slug of the connected knowledge base (if any).
+</ParamField>
+
+<ParamField path="maxContextChunks" type="integer">
+  Maximum number of knowledge base chunks to include in context.
+</ParamField>
+
+**Metadata**
+
+<ParamField path="organizationSlug" type="string">
+  Organization that owns this agent.
+</ParamField>
+
+<ParamField path="metadata" type="object">
+  Additional custom metadata.
+</ParamField>
+
+<ParamField path="createdAt" type="string">
+  Timestamp when the agent was created.
+</ParamField>
+
+<ParamField path="updatedAt" type="string">
+  Timestamp when the agent was last updated.
+</ParamField>

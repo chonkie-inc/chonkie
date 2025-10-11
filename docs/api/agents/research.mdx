@@ -1,121 +1,69 @@
 ---
 title: "Deep Research"
-api: "POST https://labs.chonkie.ai/api/v1/research"
-description: "Create comprehensive research reports using AI agents"
+description: "Create comprehensive research reports with AI-powered multi-step analysis"
 ---
 
-Deep Research enables agents to conduct thorough, multi-step research on topics, generating comprehensive reports.
+Deep Research is a powerful feature that enables your Chonkie agents to conduct thorough, multi-step research on complex topics and generate comprehensive, well-structured reports.
 
-## Request
+## How It Works
 
-#### Parameters
+When you initiate a Deep Research task, your agent:
 
-<ParamField path="agent" type="string" required>
-  Agent slug to use for research.
-</ParamField>
+1. **Analyzes Your Query** - Breaks down your research question into key topics and subtopics that need investigation
+2. **Explores Knowledge Base** - Searches through your connected knowledge base to gather relevant information from multiple sources
+3. **Synthesizes Findings** - Organizes and connects the information to identify patterns, relationships, and key insights
+4. **Generates Report** - Creates a structured, comprehensive report with proper citations and organized sections
 
-<ParamField path="query" type="string" required>
-  Research question or topic.
-</ParamField>
+This multi-step process ensures thorough coverage of your topic, drawing from all available information in your knowledge base.
 
-## Response
+## Using Deep Research
 
-#### Returns
+Deep Research is available directly in the Chonkie Labs interface:
 
-<ResponseField name="reportId" type="string">
-  Unique report identifier.
-</ResponseField>
+1. Navigate to your agent in the dashboard
+2. Click on the "Deep Research" tab
+3. Enter your research query or question
+4. The agent will process your request and generate a comprehensive report
+5. View, download, or share your research report
 
-<ResponseField name="agentSlug" type="string">
-  Agent slug used for research.
-</ResponseField>
+## Best Practices
 
-<ResponseField name="query" type="string">
-  The research query.
-</ResponseField>
+**Write Clear Research Questions**
+- Be specific about what you want to know
+- Include context about the depth and scope you need
+- Example: "What are the security best practices for JWT authentication in Node.js APIs?"
 
-<ResponseField name="status" type="string">
-  Processing status.
-</ResponseField>
+**Connect Relevant Knowledge Bases**
+- Ensure your agent has access to a knowledge base with relevant documentation
+- The quality of research depends on the information available in your knowledge base
+- Upload comprehensive documentation for best results
 
-<ResponseField name="createdAt" type="string">
-  Creation timestamp.
-</ResponseField>
+**Review and Iterate**
+- Use research reports as a starting point for deeper investigation
+- Ask follow-up questions to explore specific aspects in more detail
+- Refine your questions based on initial findings
 
-## Examples
+## Use Cases
 
-<CodeGroup>
+**Documentation Analysis**
+Generate comprehensive guides by analyzing multiple documentation sources, creating unified references that combine information from various files and resources.
 
-```python Python
-import requests
+**Technical Research**
+Research complex technical topics by gathering information from API documentation, code examples, and technical specifications across your knowledge base.
 
-url = "https://labs.chonkie.ai/api/v1/research"
-headers = {
-    "Authorization": "Bearer YOUR_API_KEY",
-    "Content-Type": "application/json"
-}
+**Competitive Analysis**
+Analyze multiple product documentations or feature sets to create comparison reports and identify trends or gaps in functionality.
 
-data = {
-    "agent": "documentation-assistant",
-    "query": "What are the best practices for API authentication?"
-}
+**Onboarding Materials**
+Create comprehensive onboarding guides by synthesizing information from various internal documentation sources into structured learning paths.
 
-response = requests.post(url, headers=headers, json=data)
-result = response.json()
+## Report Management
 
-print(f"Research task created: {result['reportId']}")
-print("Processing in background...")
-```
+All research reports are saved and accessible in your agent's Deep Research section. You can:
 
-```javascript JavaScript
-const response = await fetch('https://labs.chonkie.ai/api/v1/research', {
-  method: 'POST',
-  headers: {
-    'Authorization': 'Bearer YOUR_API_KEY',
-    'Content-Type': 'application/json'
-  },
-  body: JSON.stringify({
-    agent: 'documentation-assistant',
-    query: 'What are the best practices for API authentication?'
-  })
-});
+- View past research reports
+- Download reports for offline use
+- Delete reports you no longer need
+- Share reports with team members
 
-const result = await response.json();
-console.log(`Research task created: ${result.reportId}`);
-```
-
-```bash cURL
-curl -X POST https://labs.chonkie.ai/api/v1/research \
-  -H "Authorization: Bearer YOUR_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "agent": "documentation-assistant",
-    "query": "What are the best practices for API authentication?"
-  }'
-```
-
-</CodeGroup>
-
-## Get Research Report
-
-Retrieve a completed research report:
-
-```
-GET /v1/research/{agent_slug}/{report_id}
-```
-
-## List Research Reports
-
-List all research reports for an agent:
-
-```
-GET /v1/research/{agent_slug}
-```
-
-## Delete Research Report
-
-Delete a research report:
-
-```
-DELETE /v1/research/{agent_slug}/{report_id}
-```
+Reports are organized chronologically and searchable by query, making it easy to find and reference previous research.
