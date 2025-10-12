@@ -8,11 +8,13 @@ import numpy as np
 from chonkie.chunker.recursive import RecursiveChunker
 from chonkie.embeddings.sentence_transformer import SentenceTransformerEmbeddings
 from chonkie.logger import get_logger
+from chonkie.pipeline import chunker
 from chonkie.types import Chunk, RecursiveRules
 
 logger = get_logger(__name__)
 
 
+@chunker("late")
 class LateChunker(RecursiveChunker):
     """A chunker that chunks texts based on late interaction.
 
@@ -21,6 +23,8 @@ class LateChunker(RecursiveChunker):
     Args:
         embedding_model: The embedding model to use for chunking.
         chunk_size: The maximum size of each chunk.
+        rules: Recursive rules to chunk by
+        min_characters_per_chunk: Minimum number of characters in a single chunk
 
     """
 

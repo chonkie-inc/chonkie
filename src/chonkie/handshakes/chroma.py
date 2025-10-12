@@ -15,6 +15,7 @@ from uuid import NAMESPACE_OID, uuid5
 
 from chonkie.embeddings import AutoEmbeddings, BaseEmbeddings
 from chonkie.logger import get_logger
+from chonkie.pipeline import handshake
 from chonkie.types import Chunk
 
 from .base import BaseHandshake
@@ -88,6 +89,7 @@ class ChromaEmbeddingFunction:
             raise ValueError("Input must be a string or a list of strings.")
 
 
+@handshake("chroma")
 class ChromaHandshake(BaseHandshake):
     """Chroma Handshake to export Chonkie's Chunks into a Chroma collection.
 

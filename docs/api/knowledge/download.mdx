@@ -1,0 +1,98 @@
+---
+title: "Download File"
+api: "GET labs.chonkie.ai/api/v1/knowledge/{knowledge_base_slug}/{file_id}"
+description: "Download a specific file from a knowledge base"
+---
+
+Download the original file from a knowledge base. Returns the file as a binary stream.
+
+## Examples
+
+<CodeGroup>
+
+```python Python
+import requests
+
+kb_slug = "product-documentation"
+file_id = "1705320000000-api.pdf"
+
+url = f"https://labs.chonkie.ai/api/v1/knowledge/{kb_slug}/{file_id}"
+headers = {
+    "Authorization": "Bearer YOUR_API_KEY"
+}
+
+response = requests.get(url, headers=headers)
+
+# Save to file
+with open("downloaded-api.pdf", "wb") as f:
+    f.write(response.content)
+
+print(f"Downloaded: {file_id}")
+print(f"Size: {len(response.content)} bytes")
+```
+
+```javascript JavaScript
+const kbSlug = "product-documentation";
+const fileId = "1705320000000-api.pdf";
+
+const response = await fetch(
+  `https://labs.chonkie.ai/api/v1/knowledge/${kbSlug}/${fileId}`,
+  {
+    headers: {
+      Authorization: "Bearer YOUR_API_KEY",
+    },
+  }
+);
+
+// Download file
+const blob = await response.blob();
+const url = window.URL.createObjectURL(blob);
+const a = document.createElement("a");
+a.href = url;
+a.download = "downloaded-file.pdf";
+document.body.appendChild(a);
+a.click();
+a.remove();
+window.URL.revokeObjectURL(url);
+
+console.log("Download complete");
+```
+
+```bash cURL
+curl -X GET \
+  https://labs.chonkie.ai/api/v1/knowledge/product-documentation/1705320000000-api.pdf \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -o downloaded-file.pdf
+```
+
+</CodeGroup>
+
+## Request
+
+#### Path Parameters
+
+<ParamField path="knowledge_base_slug" type="string" required>
+  The slug of the knowledge base.
+</ParamField>
+
+<ParamField path="file_id" type="string" required>
+  The file key from Get Knowledge Base Files. Format: `{timestamp}-{filename}`
+</ParamField>
+
+## Response
+
+#### Returns
+
+Binary file stream with headers
+
+<ResponseField name="Content-Type" type="header">
+  MIME type of the file (e.g., "application/pdf", "text/plain").
+</ResponseField>
+
+<ResponseField name="Content-Length" type="header">
+  File size in bytes.
+</ResponseField>
+
+<ResponseField name="Content-Disposition" type="header">
+  Attachment header with original filename.
+</ResponseField>

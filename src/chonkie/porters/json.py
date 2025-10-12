@@ -3,6 +3,7 @@
 import json
 
 from chonkie.logger import get_logger
+from chonkie.pipeline import porter
 from chonkie.types import Chunk
 
 from .base import BasePorter
@@ -13,6 +14,7 @@ logger = get_logger(__name__)
 # right now, except the ability to load in lines or not. 
 
 
+@porter("json")
 class JSONPorter(BasePorter):
     """Porter to convert Chunks into JSON format for storage."""
 

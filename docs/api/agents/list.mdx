@@ -1,0 +1,130 @@
+---
+title: "List Agents"
+api: "GET labs.chonkie.ai/api/v1/agents"
+description: "Get all agents in your organization"
+---
+
+Retrieve a list of all AI agents in your organization.
+
+## Examples
+
+<CodeGroup>
+
+```python Python
+import requests
+
+url = "https://labs.chonkie.ai/api/v1/agents"
+headers = {
+    "Authorization": "Bearer YOUR_API_KEY"
+}
+
+response = requests.get(url, headers=headers)
+agents = response.json()
+
+print(f"Found {len(agents)} agents")
+for agent in agents:
+    print(f"- {agent['name']} ({agent['slug']})")
+    print(f"  Model: {agent['model']}")
+```
+
+```javascript JavaScript
+const response = await fetch("https://labs.chonkie.ai/api/v1/agents", {
+  headers: {
+    Authorization: "Bearer YOUR_API_KEY",
+  },
+});
+
+const agents = await response.json();
+console.log(`Found ${agents.length} agents`);
+agents.forEach((agent) => {
+  console.log(`- ${agent.name} (${agent.slug})`);
+  console.log(`  Model: ${agent.model}`);
+});
+```
+
+```bash cURL
+curl -X GET https://labs.chonkie.ai/api/v1/agents \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+</CodeGroup>
+
+## Request
+
+This endpoint takes no parameters.
+
+## Response
+
+#### Returns
+
+Array of agent objects with full configuration.
+
+**Each agent object contains the following fields**
+
+**Basic Information**
+
+<ParamField path="id" type="string">
+  Unique agent identifier.
+</ParamField>
+
+<ParamField path="slug" type="string">
+  URL-friendly unique identifier for the agent.
+</ParamField>
+
+<ParamField path="name" type="string">
+  Display name of the agent.
+</ParamField>
+
+<ParamField path="description" type="string">
+  Description of the agent's purpose and capabilities.
+</ParamField>
+
+<ParamField path="status" type="string">
+  Agent status (active, inactive, etc.).
+</ParamField>
+
+**Model Configuration**
+
+<ParamField path="model" type="string">
+  The LLM model used by the agent.
+</ParamField>
+
+<ParamField path="systemPrompt" type="string">
+  System prompt that defines the agent's behavior and personality.
+</ParamField>
+
+<ParamField path="temperature" type="float">
+  Temperature setting for response randomness (0.0-2.0).
+</ParamField>
+
+**Knowledge Integration**
+
+<ParamField path="useContext" type="boolean">
+  Whether knowledge base context injection is enabled.
+</ParamField>
+
+<ParamField path="knowledge" type="string">
+  Slug of the connected knowledge base (if any).
+</ParamField>
+
+<ParamField path="maxContextChunks" type="integer">
+  Maximum number of knowledge base chunks to include in context.
+</ParamField>
+
+**Metadata**
+
+<ParamField path="organizationSlug" type="string">
+  Organization that owns this agent.
+</ParamField>
+
+<ParamField path="metadata" type="object">
+  Additional custom metadata.
+</ParamField>
+
+<ParamField path="createdAt" type="string">
+  Timestamp when the agent was created.
+</ParamField>
+
+<ParamField path="updatedAt" type="string">
+  Timestamp when the agent was last updated.
+</ParamField>

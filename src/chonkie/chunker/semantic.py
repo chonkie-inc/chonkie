@@ -11,6 +11,7 @@ import numpy as np
 
 from chonkie.embeddings import AutoEmbeddings, BaseEmbeddings
 from chonkie.logger import get_logger
+from chonkie.pipeline import chunker
 from chonkie.types import Chunk, Sentence
 from chonkie.utils import Hubbie
 
@@ -34,6 +35,7 @@ from .c_extensions.savgol import (
 )
 
 
+@chunker("semantic")
 class SemanticChunker(BaseChunker):
     """SemanticChunker uses peak detection to find split points and direct window embedding calculation.
 

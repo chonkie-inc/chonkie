@@ -8,11 +8,13 @@ from typing_extensions import Tuple
 
 from chonkie.chunker.base import BaseChunker
 from chonkie.logger import get_logger
+from chonkie.pipeline import chunker
 from chonkie.types import Chunk, Document, MarkdownDocument
 
 logger = get_logger(__name__)
 
 
+@chunker("table")
 class TableChunker(BaseChunker):
     """Chunker that chunks tables based on character count on each row."""
 

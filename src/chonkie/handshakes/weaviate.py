@@ -15,6 +15,7 @@ from uuid import NAMESPACE_OID, uuid5
 
 from chonkie.embeddings import AutoEmbeddings, BaseEmbeddings
 from chonkie.logger import get_logger
+from chonkie.pipeline import handshake
 from chonkie.types import Chunk
 
 from .base import BaseHandshake
@@ -26,6 +27,7 @@ if TYPE_CHECKING:
     import weaviate
 
 
+@handshake("weaviate")
 class WeaviateHandshake(BaseHandshake):
     """Weaviate Handshake to export Chonkie's Chunks into a Weaviate collection.
 
