@@ -153,7 +153,7 @@ Chefs handle text preprocessing, while Fetchers load data from various sources.
 
 </details>
 <details>
-<summary><strong>🏭 Refine your CHONKs! Chonkie supports 2+ refineries!</strong></summary>
+<summary><strong>🏭 Refine your CHONKs with Context and Embeddings! Chonkie supports 2+ refineries!</strong></summary>
 
 Refineries help you post-process and enhance your chunks after initial chunking.
 
