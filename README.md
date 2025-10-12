@@ -26,12 +26,13 @@ _The no-nonsense ultra-light RAG pipeline that CHONKs, refines, and ships your t
 Tired of making your gazillionth chunker? Sick of the overhead of large libraries? Want to chunk your texts quickly and efficiently? Chonkie the mighty hippo is here to help!
 
 **🚀 Feature-rich**: All the CHONKs you'd ever need </br>
+**🔄 End-to-end**: Fetch, CHONK, refine, embed and ship straight to your vector DB! </br>
 **✨ Easy to use**: Install, Import, CHONK </br>
 **⚡ Fast**: CHONK at the speed of light! zooooom </br>
 **🪶 Light-weight**: No bloat, just CHONK </br>
-**🌏 Wide support**: CHONKie [integrates](#integrations) with your favorite tokenizer, embedding model and APIs! </br>
+**🔌 32+ [integrations](#integrations)**: Works with your favorite tools and vector DBs out of the box! </br>
 **💬 ️Multilingual**: Out-of-the-box support for 56 languages </br>
-**☁️ Cloud-Ready**: CHONK locally or in the [Chonkie Cloud](https://cloud.chonkie.ai) </br>
+**☁️ Cloud-Friendly**: CHONK locally or in the [Cloud](https://labs.chonkie.ai) </br>
 **🦛 Cute CHONK mascot**: psst it's a pygmy hippo btw </br>
 **❤️ [Moto Moto](#acknowledgements)'s favorite python library** </br>
 
@@ -141,6 +142,58 @@ More on these methods and the approaches taken inside the [docs](https://docs.ch
 Chonkie boasts 32+ integrations across tokenizers, embedding providers, LLMs, refineries, porters, vector databases, and utilities, ensuring it fits seamlessly into your existing workflow.
 
 <details>
+<summary><strong>👨‍🍳 Chefs & 📁 Fetchers! Text preprocessing and data loading!</strong></summary>
+
+Chefs handle text preprocessing, while Fetchers load data from various sources.
+
+| Component | Class         | Description                           | Optional Install |
+| --------- | ------------- | ------------------------------------- | ---------------- |
+| `chef`    | `TextChef`    | Text preprocessing and cleaning.      | `default`        |
+| `fetcher` | `FileFetcher` | Load text from files and directories. | `default`        |
+
+</details>
+<details>
+<summary><strong>🏭 Refine your CHONKs with Context and Embeddings! Chonkie supports 2+ refineries!</strong></summary>
+
+Refineries help you post-process and enhance your chunks after initial chunking.
+
+| Refinery Name | Class                | Description                                   | Optional Install    |
+| ------------- | -------------------- | --------------------------------------------- | ------------------- |
+| `overlap`     | `OverlapRefinery`    | Merge overlapping chunks based on similarity. | `default`           |
+| `embeddings`  | `EmbeddingsRefinery` | Add embeddings to chunks using any provider.  | `chonkie[semantic]` |
+
+</details>
+
+<details>
+<summary><strong>🐴 Exporting CHONKs! Chonkie supports 2+ Porters!</strong></summary>
+
+Porters help you save your chunks easily.
+
+| Porter Name | Class            | Description                            | Optional Install    |
+| ----------- | ---------------- | -------------------------------------- | ------------------- |
+| `json`      | `JSONPorter`     | Export chunks to a JSON file.          | `default`           |
+| `datasets`  | `DatasetsPorter` | Export chunks to HuggingFace datasets. | `chonkie[datasets]` |
+
+</details>
+
+<details>
+<summary><strong>🤝 Shake hands with your DB! Chonkie connects with 8+ vector stores!</strong></summary>
+
+Handshakes provide a unified interface to ingest chunks directly into your favorite vector databases.
+
+| Handshake Name | Class                  | Description                                  | Optional Install    |
+| -------------- | ---------------------- | -------------------------------------------- | ------------------- |
+| `chroma`       | `ChromaHandshake`      | Ingest chunks into ChromaDB.                 | `chonkie[chroma]`   |
+| `elastic`      | `ElasticHandshake`     | Ingest chunks into Elasticsearch.            | `chonkie[elastic]`  |
+| `mongodb`      | `MongoDBHandshake`     | Ingest chunks into MongoDB.                  | `chonkie[mongodb]`  |
+| `pgvector`     | `PgvectorHandshake`    | Ingest chunks into PostgreSQL with pgvector. | `chonkie[pgvector]` |
+| `pinecone`     | `PineconeHandshake`    | Ingest chunks into Pinecone.                 | `chonkie[pinecone]` |
+| `qdrant`       | `QdrantHandshake`      | Ingest chunks into Qdrant.                   | `chonkie[qdrant]`   |
+| `turbopuffer`  | `TurbopufferHandshake` | Ingest chunks into Turbopuffer.              | `chonkie[tpuf]`     |
+| `weaviate`     | `WeaviateHandshake`    | Ingest chunks into Weaviate.                 | `chonkie[weaviate]` |
+
+</details>
+<details>
 <summary><strong>🪓 Slice 'n' Dice! Chonkie supports 5+ ways to tokenize! </strong></summary>
 
 Choose from supported tokenizers or provide your own custom token counting function. Flexibility first!
@@ -209,47 +262,7 @@ genie = OpenAIGenie(model="meta-llama/llama-4-maverick",
 
 </details>
 
-<details>
-<summary><strong>🏭 Refine your CHONKs! Chonkie supports 2+ refineries!</strong></summary>
 
-Refineries help you post-process and enhance your chunks after initial chunking.
-
-| Refinery Name | Class                | Description                                   | Optional Install    |
-| ------------- | -------------------- | --------------------------------------------- | ------------------- |
-| `overlap`     | `OverlapRefinery`    | Merge overlapping chunks based on similarity. | `default`           |
-| `embeddings`  | `EmbeddingsRefinery` | Add embeddings to chunks using any provider.  | `chonkie[semantic]` |
-
-</details>
-
-<details>
-<summary><strong>🐴 Exporting CHONKs! Chonkie supports 2+ Porters!</strong></summary>
-
-Porters help you save your chunks easily.
-
-| Porter Name | Class            | Description                            | Optional Install    |
-| ----------- | ---------------- | -------------------------------------- | ------------------- |
-| `json`      | `JSONPorter`     | Export chunks to a JSON file.          | `default`           |
-| `datasets`  | `DatasetsPorter` | Export chunks to HuggingFace datasets. | `chonkie[datasets]` |
-
-</details>
-
-<details>
-<summary><strong>🤝 Shake hands with your DB! Chonkie connects with 8+ vector stores!</strong></summary>
-
-Handshakes provide a unified interface to ingest chunks directly into your favorite vector databases.
-
-| Handshake Name | Class                  | Description                                  | Optional Install    |
-| -------------- | ---------------------- | -------------------------------------------- | ------------------- |
-| `chroma`       | `ChromaHandshake`      | Ingest chunks into ChromaDB.                 | `chonkie[chroma]`   |
-| `elastic`      | `ElasticHandshake`     | Ingest chunks into Elasticsearch.            | `chonkie[elastic]`  |
-| `mongodb`      | `MongoDBHandshake`     | Ingest chunks into MongoDB.                  | `chonkie[mongodb]`  |
-| `pgvector`     | `PgvectorHandshake`    | Ingest chunks into PostgreSQL with pgvector. | `chonkie[pgvector]` |
-| `pinecone`     | `PineconeHandshake`    | Ingest chunks into Pinecone.                 | `chonkie[pinecone]` |
-| `qdrant`       | `QdrantHandshake`      | Ingest chunks into Qdrant.                   | `chonkie[qdrant]`   |
-| `turbopuffer`  | `TurbopufferHandshake` | Ingest chunks into Turbopuffer.              | `chonkie[tpuf]`     |
-| `weaviate`     | `WeaviateHandshake`    | Ingest chunks into Weaviate.                 | `chonkie[weaviate]` |
-
-</details>
 
 <details>
 <summary><strong>🛠️ Utilities & Helpers! Chonkie includes handy tools!</strong></summary>
@@ -263,17 +276,7 @@ Additional utilities to enhance your chunking workflow.
 
 </details>
 
-<details>
-<summary><strong>👨‍🍳 Chefs & 📁 Fetchers! Text preprocessing and data loading!</strong></summary>
 
-Chefs handle text preprocessing, while Fetchers load data from various sources.
-
-| Component | Class         | Description                           | Optional Install |
-| --------- | ------------- | ------------------------------------- | ---------------- |
-| `chef`    | `TextChef`    | Text preprocessing and cleaning.      | `default`        |
-| `fetcher` | `FileFetcher` | Load text from files and directories. | `default`        |
-
-</details>
 
 With Chonkie's wide range of integrations, you can easily plug it into your existing infrastructure and start CHONKING!
 
