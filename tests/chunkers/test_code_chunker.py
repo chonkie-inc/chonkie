@@ -166,3 +166,14 @@ def test_code_chunker_chunk_size_javascript(js_code: str) -> None:
     # Allow for some leeway
     assert all(chunk.token_count < chunk_size + 15 for chunk in chunks[:-1])
     assert chunks[-1].token_count > 0 
+
+    from chonkie.chunker.code import CodeChunker
+
+def test_chunk_line_numbers():
+    text = "a = 1\nb = 2\nprint(a+b)\n"
+    chunker = CodeChunker(chunk_size=10)
+    chunks = chunker.chunk(text)
+    for chunk in chunks:
+        assert chunk.start_line >= 1
+        assert chunk.end_line >= chunk.start_line
+        print(f"Chunk lines: {chunk.start_line}-{chunk.end_line}, text: {chunk.text}")
