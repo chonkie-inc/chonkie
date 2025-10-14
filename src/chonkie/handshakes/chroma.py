@@ -14,10 +14,14 @@ from typing import (
 from uuid import NAMESPACE_OID, uuid5
 
 from chonkie.embeddings import AutoEmbeddings, BaseEmbeddings
+from chonkie.logger import get_logger
+from chonkie.pipeline import handshake
 from chonkie.types import Chunk
 
 from .base import BaseHandshake
 from .utils import generate_random_collection_name
+
+logger = get_logger(__name__)
 
 if TYPE_CHECKING:
     import chromadb
@@ -85,6 +89,7 @@ class ChromaEmbeddingFunction:
             raise ValueError("Input must be a string or a list of strings.")
 
 
+@handshake("chroma")
 class ChromaHandshake(BaseHandshake):
     """Chroma Handshake to export Chonkie's Chunks into a Chroma collection.
 
@@ -187,6 +192,7 @@ class ChromaHandshake(BaseHandshake):
         if isinstance(chunks, Chunk):
             chunks = [chunks]
 
+        logger.debug(f"Writing {len(chunks)} chunks to Chroma collection: {self.collection_name}")
         # Generate the ids and metadata
         ids = [self._generate_id(index, chunk) for (index, chunk) in enumerate(chunks)]
         metadata = [self._generate_metadata(chunk) for chunk in chunks]
@@ -200,6 +206,7 @@ class ChromaHandshake(BaseHandshake):
             metadatas=metadata,  # type: ignore
         )
 
+        logger.info(f"Successfully wrote {len(chunks)} chunks to Chroma collection: {self.collection_name}")
         print(
             f"🦛 Chonkie wrote {len(chunks)} Chunks to the Chroma collection: {self.collection_name}"
         )
@@ -225,6 +232,7 @@ class ChromaHandshake(BaseHandshake):
             List[Dict[str, Any]]: A list of dictionaries containing the matching chunks and their metadata.
 
         """
+        logger.debug(f"Searching Chroma collection: {self.collection_name} with limit={limit}")
         if query is None and embedding is None:
             raise ValueError("Either 'query' or 'embedding' must be provided.")
 
@@ -295,4 +303,5 @@ class ChromaHandshake(BaseHandshake):
 
             matches.append(match_data)
 
+        logger.info(f"Search complete: found {len(matches)} matching chunks")
         return matches

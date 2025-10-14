@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "chonkie"
-version = "1.3.1"
+version = "1.4.0"
 description = "🦛 CHONK your texts with Chonkie ✨ - The no-nonsense chunking library"
 readme = "README.md"
 requires-python = ">=3.9"
@@ -46,7 +46,7 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Information Analysis",
     "Topic :: Text Processing :: Linguistic",
 ]
-dependencies = ["tqdm>=4.64.0"]
+dependencies = ["tqdm>=4.64.0", "loguru>=0.7.0", "numpy>=2.0.0"]
 
 [project.urls]
 Homepage = "https://github.com/chonkie-inc/chonkie"
@@ -59,7 +59,7 @@ hub = ["huggingface-hub>=0.24.0", "jsonschema>=4.23.0"]
 viz = ["rich>=13.0.0"]
 
 # Optional dependencies for table chef
-table  = ["pandas", "numpy","tabulate", "openpyxl"]
+table  = ["pandas", "tabulate", "openpyxl"]
 
 # Optional dependencies for tokenizers
 tokenizers = ["tokenizers>=0.16.0"]
@@ -74,31 +74,28 @@ code = [
 neural = ["transformers>=4.0.0", "torch>=2.0.0, <3.0"]
 
 # Optional dependencies for the embeddings
-model2vec = ["tokenizers>=0.16.0", "model2vec>=0.3.0", "numpy>=2.0.0, <3.0"]
+model2vec = ["tokenizers>=0.16.0", "model2vec>=0.3.0"]
 st = [
     "tokenizers>=0.16.0",
     "sentence-transformers>=3.0.0",
-    "numpy>=2.0.0, <3.0",
     "accelerate>=1.6.0",
 ]
 openai = [
     "tiktoken>=0.5.0",
     "openai>=1.0.0",
-    "numpy>=2.0.0, <3.0",
     "pydantic>=2.0.0",
 ]
-semantic = ["tokenizers>=0.16.0", "model2vec>=0.3.0", "numpy>=2.0.0, <3.0"]
+semantic = ["tokenizers>=0.16.0", "model2vec>=0.3.0"]
 gemini = ["pydantic>=2.0.0", "google-genai>=1.0.0"]
 azure-openai = [
     "azure-identity>=1.23.0",
     "tiktoken>=0.5.0",
     "openai>=1.0.0",
-    "numpy>=2.0.0, <3.0",
     "pydantic>=2.0.0",
 ]
-voyageai = ["tokenizers>=0.16.0", "voyageai>=0.3.2", "numpy>=2.0.0, <3.0"]
-cohere = ["tokenizers>=0.16.0", "cohere>=5.13.0", "numpy>=2.0.0, <3.0"]
-jina = ["tokenizers>=0.16.0", "numpy>=2.0.0, <3.0"]
+voyageai = ["tokenizers>=0.16.0", "voyageai>=0.3.2"]
+cohere = ["tokenizers>=0.16.0", "cohere>=5.13.0"]
+jina = ["tokenizers>=0.16.0"]
 
 # Optional dependencies for the friends
 chroma = ["chromadb>=1.0.0"]
@@ -124,7 +121,6 @@ all = [
     "tree-sitter-language-pack>=0.7.0",
     "magika>=0.6.0, <0.7.0",
     "sentence-transformers>=3.0.0",
-    "numpy>=2.0.0, <3.0",
     "openai>=1.0.0",
     "model2vec>=0.3.0",
     "cohere>=5.13.0",
@@ -190,6 +186,7 @@ packages = [
     "chonkie.experimental",
     "chonkie.fetcher",
     "chonkie.chef",
+    "chonkie.pipeline"
 ]
 
 [tool.setuptools.package-data]

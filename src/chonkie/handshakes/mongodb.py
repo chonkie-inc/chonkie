@@ -13,15 +13,20 @@ from typing import (
 from uuid import NAMESPACE_OID, uuid5
 
 from chonkie.embeddings import AutoEmbeddings, BaseEmbeddings
+from chonkie.logger import get_logger
+from chonkie.pipeline import handshake
 from chonkie.types import Chunk
 
 from .base import BaseHandshake
 from .utils import generate_random_collection_name
 
+logger = get_logger(__name__)
+
 if TYPE_CHECKING:
     import pymongo
 
 
+@handshake("mongodb")
 class MongoDBHandshake(BaseHandshake):
     """MongoDB Handshake to export Chonkie's Chunks into a MongoDB collection.
 
@@ -155,6 +160,7 @@ class MongoDBHandshake(BaseHandshake):
         """Write chunks to the MongoDB collection."""
         if isinstance(chunks, Chunk):
             chunks = [chunks]
+        logger.debug(f"Writing {len(chunks)} chunks to MongoDB collection: {self.collection_name}")
         texts = [chunk.text for chunk in chunks]
         embeddings = self.embedding_model.embed_batch(texts)  # type: ignore
         documents = []
@@ -167,6 +173,7 @@ class MongoDBHandshake(BaseHandshake):
             documents.append(self._generate_document(index, chunk, embedding_list))
         if documents:
             self.collection.insert_many(documents)
+            logger.info(f"Successfully wrote {len(documents)} chunks to MongoDB collection: {self.collection_name}")
             print(
                 f"🦛 Chonkie wrote {len(documents)} chunks to MongoDB collection: {self.collection_name}"
             )
@@ -192,6 +199,7 @@ class MongoDBHandshake(BaseHandshake):
             A list of dictionaries containing the similar chunks and their metadata.
 
         """
+        logger.debug(f"Searching MongoDB collection: {self.collection_name} with limit={limit}")
         assert (query is not None or embedding is not None), "Either query or embedding must be provided."
         if query is not None:
             embedding = self.embedding_model.embed(query).tolist()
@@ -238,4 +246,6 @@ class MongoDBHandshake(BaseHandshake):
                 results.append(result)
         # Sort by score descending and return limit
         results.sort(key=lambda x: x["score"], reverse=True)
-        return results[:limit]
+        matches = results[:limit]
+        logger.info(f"Search complete: found {len(matches)} matching chunks")
+        return matches

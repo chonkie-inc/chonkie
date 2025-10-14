@@ -1,0 +1,95 @@
+---
+title: "Get Files"
+api: "GET labs.chonkie.ai/api/v1/knowledge/{knowledge_base_slug}"
+description: "List all files in a knowledge base"
+---
+
+Retrieve a list of all files stored in a specific knowledge base.
+
+## Examples
+
+<CodeGroup>
+
+```python Python
+import requests
+
+kb_slug = "product-documentation"
+url = f"https://labs.chonkie.ai/api/v1/knowledge/{kb_slug}"
+headers = {
+    "Authorization": "Bearer YOUR_API_KEY"
+}
+
+response = requests.get(url, headers=headers)
+data = response.json()
+files = data["files"]
+
+print(f"Files in '{kb_slug}':")
+for file in files:
+    size_kb = file["size"] / 1024
+    print(f"- {file['name']} ({size_kb:.2f} KB)")
+```
+
+```javascript JavaScript
+const kbSlug = "product-documentation";
+const response = await fetch(
+  `https://labs.chonkie.ai/api/v1/knowledge/${kbSlug}`,
+  {
+    headers: {
+      Authorization: "Bearer YOUR_API_KEY",
+    },
+  }
+);
+
+const { files } = await response.json();
+
+console.log(`Files in '${kbSlug}':`);
+files.forEach((file) => {
+  const sizeKB = (file.size / 1024).toFixed(2);
+  console.log(`- ${file.name} (${sizeKB} KB)`);
+});
+```
+
+```bash cURL
+curl -X GET https://labs.chonkie.ai/api/v1/knowledge/product-documentation \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+</CodeGroup>
+
+## Request
+
+#### Path Parameters
+
+<ParamField path="knowledge_base_slug" type="string" required>
+  The slug of the knowledge base to query.
+</ParamField>
+
+## Response
+
+#### Returns
+
+<ResponseField name="files" type="array">
+  Array of file objects in the knowledge base.
+</ResponseField>
+
+Each file object contains:
+
+<ResponseField name="key" type="string">
+  Unique file identifier (format: timestamp-filename).
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  Original filename.
+</ResponseField>
+
+<ResponseField name="size" type="integer">
+  File size in bytes.
+</ResponseField>
+
+<ResponseField name="lastModified" type="string">
+  ISO 8601 timestamp of last modification.
+</ResponseField>
+
+<ResponseField name="contentType" type="string">
+  MIME type of the file.
+</ResponseField>

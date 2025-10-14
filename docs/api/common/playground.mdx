@@ -1,0 +1,44 @@
+---
+title: "Playground"
+description: "Test and experiment with Chonkie's chunking algorithms visually"
+icon: "play"
+---
+
+<div className="flex justify-center">
+  <img
+    className="block dark:hidden"
+    src="/assets/playground/playground-light.png"
+    alt="Chonkie Playground Light"
+    noZoom
+    width="700"
+  />
+  <img
+    className="hidden dark:block"
+    src="/assets/playground/playground-dark.png"
+    alt="Chonkie Playground Dark"
+    noZoom
+    width="700"
+  />
+</div>
+
+The Chonkie Playground is an interactive environment where you can test different chunking algorithms on your own text without writing any code.
+
+## Access the Playground
+
+Visit the playground at [labs.chonkie.ai/playground](https://labs.chonkie.ai/playground)
+
+## How to Use
+
+1. **Select a Chunker** - Choose the chunking algorithm you want to test
+2. **Configure Parameters** - Adjust chunk size, overlap, and algorithm-specific settings
+3. **Input Text** - Paste or type your text in the input area
+4. **Run Chunking** - Click the `Chonk!` button to process your text
+5. **View Results** - See your text split into chunks with metadata
+
+## From Playground to Production
+
+Once you've found the right chunking strategy in the playground, you can implement it in your application using:
+
+- **Python SDK** - `pip install chonkie[cloud]`
+- **JavaScript SDK** - `npm install @chonkiejs/cloud`
+- **Direct API** - Make HTTP requests to api.chonkie.ai

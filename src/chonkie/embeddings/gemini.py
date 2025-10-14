@@ -5,10 +5,11 @@ import os
 import warnings
 from typing import TYPE_CHECKING, Any, List, Optional
 
+import numpy as np
+
 from .base import BaseEmbeddings
 
 if TYPE_CHECKING:
-    import numpy as np
     from google import genai
     from google.genai import types
 
@@ -87,7 +88,7 @@ class GeminiEmbeddings(BaseEmbeddings):
 
         self.client = genai.Client(api_key=self._api_key)  # type: ignore
 
-    def embed(self, text: str) -> "np.ndarray":
+    def embed(self, text: str) -> np.ndarray:
         """Get embeddings for a single text."""
         # Check token count and warn if necessary
         if self._show_warnings:
@@ -121,7 +122,7 @@ class GeminiEmbeddings(BaseEmbeddings):
 
         raise RuntimeError("Failed to get embeddings")
 
-    def embed_batch(self, texts: List[str]) -> List["np.ndarray"]:
+    def embed_batch(self, texts: List[str]) -> List[np.ndarray]:
         """Get embeddings for multiple texts."""
         if not texts:
             return []
@@ -221,21 +222,17 @@ class GeminiEmbeddings(BaseEmbeddings):
 
     def _is_available(self) -> bool:
         """Check if the Google GenAI package is available."""
-        return (
-            importutil.find_spec("google.genai") is not None
-            and importutil.find_spec("numpy") is not None
-        )
+        return importutil.find_spec("google.genai") is not None
 
     def _import_dependencies(self) -> None:
         """Lazy import dependencies for the embeddings implementation."""
         if self._is_available():
-            global np, genai, types
-            import numpy as np
+            global genai, types
             from google import genai
             from google.genai import types
         else:
             raise ImportError(
-                'One (or more) of the following packages is not available: google-genai, numpy. Please install it via `pip install "chonkie[gemini]"`'
+                'google-genai is not available. Please install it via `pip install "chonkie[gemini]"`'
             )
 
     def __repr__(self) -> str:
