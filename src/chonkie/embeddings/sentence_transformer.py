@@ -3,10 +3,11 @@
 import importlib.util as importutil
 from typing import TYPE_CHECKING, Any, List, Union
 
+import numpy as np
+
 from .base import BaseEmbeddings
 
 if TYPE_CHECKING:
-    import numpy as np
     from sentence_transformers import SentenceTransformer
     from tokenizers import Tokenizer
 
@@ -55,15 +56,15 @@ class SentenceTransformerEmbeddings(BaseEmbeddings):
 
         self._dimension = self.model.get_sentence_embedding_dimension()
 
-    def embed(self, text: str) -> "np.ndarray":
+    def embed(self, text: str) -> np.ndarray:
         """Embed a single text using the sentence-transformers model."""
         return self.model.encode(text, convert_to_numpy=True)
 
-    def embed_batch(self, texts: List[str]) -> List["np.ndarray"]:
+    def embed_batch(self, texts: List[str]) -> List[np.ndarray]:
         """Embed multiple texts using the sentence-transformers model."""
         return self.model.encode(texts, convert_to_numpy=True)  # type: ignore
 
-    def embed_as_tokens(self, text: str) -> "np.ndarray":
+    def embed_as_tokens(self, text: str) -> np.ndarray:
         """Embed the text as tokens using the sentence-transformers model.
 
         This method is useful for getting the token embeddings of a text. It
@@ -86,7 +87,7 @@ class SentenceTransformerEmbeddings(BaseEmbeddings):
         split_texts = self.model.tokenizer.batch_decode(token_splits)
         # Get the token embeddings
         token_embeddings = self.model.encode(
-            split_texts, output_value="token_embeddings", add_special_tokens=False
+            split_texts, output_value="token_embeddings"
         )
 
         # Since SentenceTransformer doesn't automatically convert embeddings into
@@ -114,7 +115,7 @@ class SentenceTransformerEmbeddings(BaseEmbeddings):
 
         return token_embeddings  # type: ignore
 
-    def embed_as_tokens_batch(self, texts: List[str]) -> List["np.ndarray"]:
+    def embed_as_tokens_batch(self, texts: List[str]) -> List[np.ndarray]:
         """Embed multiple texts as tokens using the sentence-transformers model."""
         return [self.embed_as_tokens(text) for text in texts]
 
@@ -127,7 +128,7 @@ class SentenceTransformerEmbeddings(BaseEmbeddings):
         encodings = self.model.tokenizer(texts)
         return [len(enc) for enc in encodings["input_ids"]]
 
-    def similarity(self, u: "np.ndarray", v: "np.ndarray") -> "np.float32":
+    def similarity(self, u: np.ndarray, v: np.ndarray) -> np.float32:
         """Compute cosine similarity between two embeddings."""
         return float(self.model.similarity(u, v).item())  # type: ignore[return-value]
 
@@ -148,10 +149,7 @@ class SentenceTransformerEmbeddings(BaseEmbeddings):
     @classmethod
     def _is_available(cls) -> bool:
         """Check if sentence-transformers is available."""
-        return (
-            importutil.find_spec("sentence_transformers") is not None
-            and importutil.find_spec("numpy") is not None
-        )
+        return importutil.find_spec("sentence_transformers") is not None
 
     @classmethod
     def _import_dependencies(cls) -> None:
@@ -161,8 +159,7 @@ class SentenceTransformerEmbeddings(BaseEmbeddings):
         additional dependencies. It lazily imports the dependencies only when they are needed.
         """
         if cls._is_available():
-            global np, SentenceTransformer
-            import numpy as np
+            global SentenceTransformer
             from sentence_transformers import SentenceTransformer
         else:
             raise ImportError(

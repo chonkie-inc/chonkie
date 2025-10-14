@@ -5,9 +5,13 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 from uuid import NAMESPACE_OID, uuid5
 
 from chonkie.embeddings import AutoEmbeddings, BaseEmbeddings
+from chonkie.logger import get_logger
+from chonkie.pipeline import handshake
 from chonkie.types import Chunk
 
 from .base import BaseHandshake
+
+logger = get_logger(__name__)
 
 if TYPE_CHECKING:
     import vecs
@@ -16,6 +20,7 @@ if TYPE_CHECKING:
 vecs = None
 
 
+@handshake("pgvector")
 class PgvectorHandshake(BaseHandshake):
     """Pgvector Handshake to export Chonkie's Chunks into a PostgreSQL database with pgvector using vecs.
     
@@ -168,24 +173,26 @@ class PgvectorHandshake(BaseHandshake):
         if isinstance(chunks, Chunk):
             chunks = [chunks]
 
+        logger.debug(f"Writing {len(chunks)} chunks to PostgreSQL collection: {self.collection_name}")
         records = []
         chunk_ids = []
-        
+
         for index, chunk in enumerate(chunks):
             # Generate ID and metadata
             chunk_id = self._generate_id(index, chunk)
             metadata = self._generate_metadata(chunk)
-            
+
             # Generate embedding
             embedding = self.embedding_model.embed(chunk.text)
-            
+
             # Create record tuple for vecs (id, vector, metadata)
             records.append((chunk_id, embedding, metadata))
             chunk_ids.append(chunk_id)
-        
+
         # Upsert all records at once
         self.collection.upsert(records=records)
 
+        logger.info(f"Successfully wrote {len(chunks)} chunks to PostgreSQL collection: {self.collection_name}")
         print(f"🦛 Chonkie wrote {len(chunks)} chunks to PostgreSQL collection: {self.collection_name}")
         return chunk_ids
 
@@ -210,9 +217,10 @@ class PgvectorHandshake(BaseHandshake):
             List[Dict[str, Any]]: List of similar chunks with metadata and scores.
 
         """
+        logger.debug(f"Searching PostgreSQL collection: {self.collection_name} with limit={limit}")
         # Generate embedding for the query
         query_embedding = self.embedding_model.embed(query)
-        
+
         # Search using vecs
         results = self.collection.query(
             data=query_embedding,
@@ -221,22 +229,23 @@ class PgvectorHandshake(BaseHandshake):
             include_metadata=include_metadata,
             include_value=include_value
         )
-        
+
         # Convert vecs results to our format
         formatted_results = []
         for result in results:
             # vecs returns tuples: (id, distance) or (id, distance, metadata)
             result_dict = {"id": result[0]}
-            
+
             if include_value:
                 result_dict["similarity"] = result[1]
-            
+
             if include_metadata and len(result) > 2:
                 metadata = result[2]
                 result_dict.update(metadata)
-            
+
             formatted_results.append(result_dict)
-        
+
+        logger.info(f"Search complete: found {len(formatted_results)} matching chunks")
         return formatted_results
 
     def create_index(self, method: str = "hnsw", **index_params: Any) -> None:

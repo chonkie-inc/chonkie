@@ -3,10 +3,11 @@
 import importlib.util as importutil
 from typing import TYPE_CHECKING, List, Union
 
+import numpy as np
+
 from .base import BaseEmbeddings
 
 if TYPE_CHECKING:
-    import numpy as np
     from model2vec import StaticModel
     from tokenizers import Tokenizer
 
@@ -50,15 +51,15 @@ class Model2VecEmbeddings(BaseEmbeddings):
         """Dimension of the embedding vectors."""
         return self._dimension
 
-    def embed(self, text: str) -> "np.ndarray":
+    def embed(self, text: str) -> np.ndarray:
         """Embed a single text using the model2vec model."""
         return self.model.encode(text, convert_to_numpy=True)  # type: ignore
 
-    def embed_batch(self, texts: List[str]) -> List["np.ndarray"]:
+    def embed_batch(self, texts: List[str]) -> List[np.ndarray]:
         """Embed multiple texts using the model2vec model."""
         return self.model.encode(texts, convert_to_numpy=True)  # type: ignore
 
-    def similarity(self, u: "np.ndarray", v: "np.ndarray") -> "np.float32":  # type: ignore
+    def similarity(self, u: np.ndarray, v: np.ndarray) -> np.float32:  # type: ignore
         """Compute cosine similarity of two embeddings."""
         return np.divide(
             np.dot(u, v), np.linalg.norm(u) * np.linalg.norm(v), dtype=np.float32
@@ -81,8 +82,7 @@ class Model2VecEmbeddings(BaseEmbeddings):
         additional dependencies. It lazily imports the dependencies only when they are needed.
         """
         if cls._is_available():
-            global np, StaticModel
-            import numpy as np
+            global StaticModel
             from model2vec import StaticModel
         else:
             raise ImportError(

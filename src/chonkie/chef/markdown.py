@@ -6,6 +6,8 @@ from typing import Tuple, Union
 
 from typing_extensions import List
 
+from chonkie.logger import get_logger
+from chonkie.pipeline import chef
 from chonkie.tokenizer import AutoTokenizer, TokenizerProtocol
 from chonkie.types import (
   Chunk,
@@ -17,7 +19,10 @@ from chonkie.types import (
 
 from .base import BaseChef
 
+logger = get_logger(__name__)
 
+
+@chef("markdown")
 class MarkdownChef(BaseChef):
   """Chef to process a markdown file into a MarkdownDocument type.
 
@@ -182,26 +187,29 @@ class MarkdownChef(BaseChef):
 
     return chunks
 
-  def parse(self, markdown: str) -> MarkdownDocument:
+  def parse(self, text: str) -> MarkdownDocument:
     """Parse markdown text directly into a MarkdownDocument.
 
     Args:
-        markdown (str): The markdown text to parse.
+        text (str): The markdown text to parse.
 
     Returns:
         MarkdownDocument: The processed markdown document.
 
     """
+    logger.debug(f"Processing markdown text: {len(text)} characters")
+
     # Extract all the tables, code snippets, and images
-    tables = self.prepare_tables(markdown)
-    code = self.prepare_code(markdown)
-    images = self.extract_images(markdown)
+    tables = self.prepare_tables(text)
+    code = self.prepare_code(text)
+    images = self.extract_images(text)
 
     # Extract the chunks
-    chunks: List[Chunk] = self.extract_chunks(markdown, tables, code, images)
+    chunks: List[Chunk] = self.extract_chunks(text, tables, code, images)
 
+    logger.info(f"Markdown processing complete: extracted {len(tables)} tables, {len(code)} code blocks, {len(images)} images, {len(chunks)} chunks")
     return MarkdownDocument(
-      content=markdown,
+      content=text,
       tables=tables,
       code=code,
       images=images,

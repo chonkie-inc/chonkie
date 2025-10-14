@@ -57,6 +57,7 @@ from .handshakes import (
     TurbopufferHandshake,
     WeaviateHandshake,
 )
+from .pipeline import Pipeline
 from .porters import (
     BasePorter,
     DatasetsPorter,

@@ -32,6 +32,14 @@ LIGHT_THEMES = {
         "#eee2fd",
         "#e4f9c0",
         "#fecdd3",
+    ],
+    # New example light theme
+    "ocean_breeze": [
+        "#E0FFFF", # Light Cyan
+        "#B0E0E6", # Powder Blue
+        "#ADD8E6", # Light Blue
+        "#87CEEB", # Sky Blue
+        "#4682B4", # Steel Blue
     ]
 }
 
@@ -59,12 +67,19 @@ DARK_THEMES = {
         "#3A3A3A",  
         "#4F2E5C",  
         "#2E5C3F"   
+    ],
+    # New example dark theme
+    "midnight": [
+        "#00008B", # DarkBlue
+        "#483D8B", # DarkSlateBlue
+        "#2F4F4F", # DarkSlateGray
+        "#191970", # MidnightBlue
     ]
 }
 
 # light mode colors
 BODY_BACKGROUND_COLOR_LIGHT = "#F0F2F5"
-CONTENT_BACKGROUND_COLOR_LIGHT = "#FFFFFF"    
+CONTENT_BACKGROUND_COLOR_LIGHT = "#FFFFFF"      
 TEXT_COLOR_LIGHT = "#333333"
 # dark mode colors
 BODY_BACKGROUND_COLOR_DARK = "#121212"
@@ -217,8 +232,8 @@ class Visualizer:
         try:
             hex_color = hex_color.lstrip('#')
             if len(hex_color) != 6:
-                 if len(hex_color) == 3: hex_color = "".join([c*2 for c in hex_color])
-                 else: raise ValueError("Invalid hex color format")
+                if len(hex_color) == 3: hex_color = "".join([c*2 for c in hex_color])
+                else: raise ValueError("Invalid hex color format")
             rgb = tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
             darker_rgb = tuple(max(0, int(c * amount)) for c in rgb)
             return "#{:02x}{:02x}{:02x}".format(*darker_rgb)
@@ -246,9 +261,9 @@ class Visualizer:
         text_length = len(full_text)
         spans = []
         for i, chunk in enumerate(chunks):
-             try: 
+            try: 
                 spans.append({"id": i, "start": int(chunk.start_index), "end": int(chunk.end_index)})
-             except (AttributeError, TypeError, ValueError):
+            except (AttributeError, TypeError, ValueError):
                 warnings.warn(f"Warning: Skipping chunk with invalid start/end index: {chunk}")
                 continue
         
@@ -280,7 +295,7 @@ class Visualizer:
         Args:
             filename (str): The path to save the HTML file.
             chunks (List[Chunk]): A list of chunk objects with 'start_index'
-                                   and 'end_index'.
+                                     and 'end_index'.
             full_text (Optional[str]): The complete original text. If None, it
                                        attempts reconstruction.
             title (str): The title for the browser tab.
@@ -369,12 +384,12 @@ class Visualizer:
             num_active = len(active_chunk_ids)
             current_bg_color = "transparent"; hover_title = ""
             if num_active > 0:
-                 min_active_chunk_id = min(active_chunk_ids)
-                 primary_chunk_data = next((s for s in validated_spans if s["id"] == min_active_chunk_id), None)
-                 if primary_chunk_data:
-                     base_color = self._get_color(primary_chunk_data["id"])
-                     current_bg_color = base_color if num_active == 1 else self._darken_color(base_color, 0.65)
-                     hover_title = (f"Chunk {primary_chunk_data['id']} | Start: {primary_chunk_data['start']} | End: {primary_chunk_data['end']} | Tokens: {primary_chunk_data['tokens']}{' (Overlap)' if num_active > 1 else ''}")
+                min_active_chunk_id = min(active_chunk_ids)
+                primary_chunk_data = next((s for s in validated_spans if s["id"] == min_active_chunk_id), None)
+                if primary_chunk_data:
+                    base_color = self._get_color(primary_chunk_data["id"])
+                    current_bg_color = base_color if num_active == 1 else self._darken_color(base_color, 0.65)
+                    hover_title = (f"Chunk {primary_chunk_data['id']} | Start: {primary_chunk_data['start']} | End: {primary_chunk_data['end']} | Tokens: {primary_chunk_data['tokens']}{' (Overlap)' if num_active > 1 else ''}")
             if current_bg_color != "transparent":
                 title_attr = f' title="{html.escape(hover_title)}"' if hover_title else ''
                 html_parts.append(f'<span style="background-color: {current_bg_color};"{title_attr}>')
@@ -433,7 +448,7 @@ class Visualizer:
         except IOError as e:
             raise IOError(f"Error: Could not write file '{filename}': {e}")
         except Exception as e:
-             raise Exception(f"An unexpected error occurred during file saving: {e}")
+            raise Exception(f"An unexpected error occurred during file saving: {e}")
             
 
     def __call__(self, chunks: List[Chunk], full_text: Optional[str] = None) -> None:
@@ -443,7 +458,7 @@ class Visualizer:
         
         Args:
             chunks (List[Chunk]): A list of chunk objects with 'start_index'
-                                   and 'end_index'.
+                                     and 'end_index'.
             full_text (Optional[str]): The complete original text. If None, it
                                        attempts reconstruction.
 
@@ -453,5 +468,3 @@ class Visualizer:
     def __repr__(self) -> str:
         """Return the string representation of the Visualizer."""
         return f"Visualizer(theme={self.theme})"
-    
-    

@@ -1,23 +1,20 @@
 """Module containing the LateChunker class."""
 
-import importlib.util as importutil
-from typing import TYPE_CHECKING, Any, List, Optional, Union
+from typing import Any, List, Optional, Union
+
+import numpy as np
 
 # Get all the Chonkie imports
 from chonkie.chunker.recursive import RecursiveChunker
 from chonkie.embeddings.sentence_transformer import SentenceTransformerEmbeddings
+from chonkie.logger import get_logger
+from chonkie.pipeline import chunker
 from chonkie.types import Chunk, RecursiveRules
 
-if TYPE_CHECKING:
-    try:
-        import numpy as np
-    except ImportError:
-        class np:  # type: ignore
-            """Stub class for numpy when not available."""
-
-            pass
+logger = get_logger(__name__)
 
 
+@chunker("late")
 class LateChunker(RecursiveChunker):
     """A chunker that chunks texts based on late interaction.
 
@@ -49,9 +46,6 @@ class LateChunker(RecursiveChunker):
             **kwargs: Additional keyword arguments.
 
         """
-        # Lazy import all the dependencies on initialization
-        self._import_dependencies()
-
         # set all the additional attributes
         if isinstance(embedding_model, SentenceTransformerEmbeddings):
             self.embedding_model = embedding_model
@@ -104,8 +98,10 @@ class LateChunker(RecursiveChunker):
             ValueError: If the recipe is invalid or if the recipe is not found.
 
         """
+        logger.info("Loading LateChunker recipe", name=name, lang=lang)
         # Create a hubbie instance
         rules = RecursiveRules.from_recipe(name, lang, path)
+        logger.debug(f"Recipe loaded successfully with {len(rules.levels or [])} levels")
         return cls(
             embedding_model=embedding_model,
             chunk_size=chunk_size,
@@ -115,14 +111,14 @@ class LateChunker(RecursiveChunker):
         )   
     
     def _get_late_embeddings(
-        self, token_embeddings: "np.ndarray", token_counts: List[int]
-    ) -> List["np.ndarray"]:
+        self, token_embeddings: np.ndarray, token_counts: List[int]
+    ) -> List[np.ndarray]:
         # Split the token embeddings into chunks based on the token counts
         embs = []
-        cum_token_counts = np.cumsum([0] + token_counts)  # type: ignore[name-defined]
+        cum_token_counts = np.cumsum([0] + token_counts)
         for i in range(len(token_counts)):
             embs.append(
-                np.mean(  # type: ignore[name-defined]
+                np.mean(
                     token_embeddings[cum_token_counts[i] : cum_token_counts[i + 1]],
                     axis=0,
                 )
@@ -131,10 +127,12 @@ class LateChunker(RecursiveChunker):
 
     def chunk(self, text: str) -> List[Chunk]:
         """Chunk the text via LateChunking."""
+        logger.debug(f"Starting late chunking for text of length {len(text)}")
         # This would first call upon the _recursive_chunk method
         # and then use the embedding model to get the token token_embeddings
         # Lastly, we would combine the methods together to create the LateChunk objects
         chunks = self._recursive_chunk(text)
+        logger.debug(f"Created {len(chunks)} initial chunks from recursive splitting")
         token_embeddings = self.embedding_model.embed_as_tokens(text)
 
         # Get the token_counts for all the chunks
@@ -176,18 +174,6 @@ class LateChunker(RecursiveChunker):
                     embedding=embedding,
                 )
             )
+        logger.info(f"Created {len(result)} chunks with late interaction embeddings")
         return result
 
-    def _import_dependencies(self) -> None:
-        """Lazy import dependencies for the chunker implementation.
-
-        This method should be implemented by all chunker implementations that require
-        additional dependencies. It lazily imports the dependencies only when they are needed.
-        """
-        if importutil.find_spec("numpy"):
-            global np
-            import numpy as np
-        else:
-            raise ImportError(
-                "numpy is not available. Please install it via `pip install chonkie[semantic]`"
-            )

@@ -43,7 +43,6 @@
               "python-sdk/chunkers/table-chunker",
               "python-sdk/chunkers/code-chunker",
               "python-sdk/chunkers/semantic-chunker",
-              "python-sdk/chunkers/sdpm-chunker",
               "python-sdk/chunkers/late-chunker",
               "python-sdk/chunkers/neural-chunker",
               "python-sdk/chunkers/slumber-chunker"

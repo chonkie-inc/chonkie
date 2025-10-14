@@ -1,12 +1,9 @@
 """Base class for all embeddings implementations."""
 
-import importlib.util as importutil
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Any, List, Union
+from typing import Any, List, Union
 
-# for type checking
-if TYPE_CHECKING:
-    import numpy as np
+import numpy as np
 
 
 class BaseEmbeddings(ABC):
@@ -29,11 +26,10 @@ class BaseEmbeddings(ABC):
             NotImplementedError: If any of the abstract methods are not implemented
 
         """
-        # Lazy import dependencies if they are not already imported
-        self._import_dependencies()
+        super().__init__()
 
     @abstractmethod
-    def embed(self, text: str) -> "np.ndarray":
+    def embed(self, text: str) -> np.ndarray:
         """Embed a text string into a vector representation.
 
         This method should be implemented for all embeddings models.
@@ -47,7 +43,7 @@ class BaseEmbeddings(ABC):
         """
         raise NotImplementedError
 
-    def embed_batch(self, texts: List[str]) -> List["np.ndarray"]:
+    def embed_batch(self, texts: List[str]) -> List[np.ndarray]:
         """Embed a list of text strings into vector representations.
 
         This method should be implemented for embeddings models that support batch processing.
@@ -63,21 +59,7 @@ class BaseEmbeddings(ABC):
         """
         return [self.embed(text) for text in texts]
 
-    def _import_dependencies(self) -> None:
-        """Lazy import dependencies for the embeddings implementation.
-
-        This method should be implemented by all embeddings implementations that require
-        additional dependencies. It lazily imports the dependencies only when they are needed.
-        """
-        if self._is_available():
-            global np
-            import numpy as np
-        else:
-            raise ImportError(
-                "numpy is not available. Please install it via `pip install chonkie[semantic]`"
-            )
-
-    def similarity(self, u: "np.ndarray", v: "np.ndarray") -> "np.float32":
+    def similarity(self, u: np.ndarray, v: np.ndarray) -> np.float32:
         """Compute the similarity between two embeddings.
 
         Most embeddings models will use cosine similarity for this purpose. However,
@@ -109,16 +91,6 @@ class BaseEmbeddings(ABC):
         """
         raise NotImplementedError
 
-    def _is_available(self) -> bool:
-        """Check if this embeddings implementation is available (dependencies installed).
-
-        Override this method to add custom dependency checks.
-
-        Returns:
-            bool: True if the embeddings implementation is available, False otherwise
-
-        """
-        return importutil.find_spec("numpy") is not None
 
     @abstractmethod
     def get_tokenizer(self) -> Any:
@@ -143,7 +115,7 @@ class BaseEmbeddings(ABC):
 
     def __call__(
         self, text: Union[str, List[str]]
-    ) -> Union["np.ndarray", List["np.ndarray"]]:
+    ) -> Union[np.ndarray, List[np.ndarray]]:
         """Embed a text string into a vector representation.
 
         This method allows the embeddings object to be called directly with a text string
