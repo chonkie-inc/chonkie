@@ -93,7 +93,7 @@ for i, chunk in enumerate(chunks):
 chunker = CodeChunker(
     language="python",
     chunk_size=2048,  # Target chunk size in characters
-    tokenizer_or_token_counter="character"
+    tokenizer="character"
 )
 ```
 
