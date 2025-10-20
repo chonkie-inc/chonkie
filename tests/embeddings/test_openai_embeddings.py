@@ -2,7 +2,7 @@
 
 import os
 from typing import List
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pytest
