@@ -27,7 +27,7 @@ if TYPE_CHECKING:
         connections,
         utility,
     )
-
+    from pymilvus.exceptions import ConnectionNotExistException
 
 class MilvusHandshake(BaseHandshake):
     """Milvus Handshake to export Chonkie's Chunks into a Milvus collection.
@@ -48,12 +48,14 @@ class MilvusHandshake(BaseHandshake):
 
     def __init__(
         self,
+        client: Optional[Any] = None,
         collection_name: Union[str, Literal["random"]] = "random",
         embedding_model: Union[str, BaseEmbeddings] = "minishlab/potion-retrieval-32M",
         uri: Optional[str] = None,
         host: str = "localhost",
         port: str = "19530",
         alias: str = "default",
+        api_key: Optional[str] = None,
         **kwargs: Any,
     ) -> None:
         """Initialize the Milvus Handshake."""
@@ -61,6 +63,10 @@ class MilvusHandshake(BaseHandshake):
         self._import_dependencies()
 
         # 1. Establish connection
+        if client is not None:
+            self.client = client
+        else : 
+            self.client = connections.connect(alias=self.alias, uri=uri, api_key=api_key, **kwargs)
         self.alias = alias
         try:
             # Check if a connection with this alias already exists
@@ -68,9 +74,9 @@ class MilvusHandshake(BaseHandshake):
         except ConnectionNotExistException:
             # If not, create a new one
             if uri:
-                connections.connect(alias=self.alias, uri=uri, **kwargs) # type: ignore
+                connections.connect(alias=self.alias, uri=uri, api_key=api_key, **kwargs) # type: ignore
             else:
-                connections.connect(alias=self.alias, host=host, port=port, **kwargs) # type: ignore
+                connections.connect(alias=self.alias, host=host, port=port, api_key=api_key, **kwargs) # type: ignore
 
         # 2. Initialize the embedding model
         if isinstance(embedding_model, str):

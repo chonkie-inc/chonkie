@@ -16,13 +16,16 @@ from chonkie.embeddings import BaseEmbeddings
 from chonkie.handshakes.milvus import MilvusHandshake
 from chonkie.types import Chunk
 
-pytestmark = pytest.mark.skipif(pymilvus is None, reason="pymilvus-client not installed")
+pytestmark = pytest.mark.skipif(
+    pymilvus is None, reason="pymilvus-client not installed"
+)
 
 # ---- Fixtures ----
 
+
 @pytest.fixture
 def mock_pymilvus_modules(monkeypatch) -> MagicMock:
-    """Mocks all required pymilvus modules and classes."""
+    """Mocked modules for pymilvus and classes."""
     mock_connections = MagicMock()
     mock_utility = MagicMock()
     mock_collection = MagicMock()
@@ -36,7 +39,9 @@ def mock_pymilvus_modules(monkeypatch) -> MagicMock:
     monkeypatch.setattr("chonkie.handshakes.milvus.connections", mock_connections)
     monkeypatch.setattr("chonkie.handshakes.milvus.utility", mock_utility)
     monkeypatch.setattr("chonkie.handshakes.milvus.Collection", mock_collection)
-    monkeypatch.setattr("chonkie.handshakes.milvus.CollectionSchema", mock_collection_schema)
+    monkeypatch.setattr(
+        "chonkie.handshakes.milvus.CollectionSchema", mock_collection_schema
+    )
     monkeypatch.setattr("chonkie.handshakes.milvus.FieldSchema", mock_field_schema)
 
     # Return the top-level utility mock for assertions
@@ -46,12 +51,17 @@ def mock_pymilvus_modules(monkeypatch) -> MagicMock:
 @pytest.fixture
 def mock_embeddings() -> Generator[MagicMock, None, None]:
     """Mock AutoEmbeddings to provide consistent numpy array results."""
-    with patch("chonkie.embeddings.AutoEmbeddings.get_embeddings") as mock_get_embeddings:
+    with patch(
+        "chonkie.embeddings.AutoEmbeddings.get_embeddings"
+    ) as mock_get_embeddings:
         mock_embedding_model = MagicMock(spec=BaseEmbeddings)
         mock_embedding_model.dimension = 128
         mock_embedding_model.embed.return_value = np.array([0.1] * 128)
         # embed_batch should return a list of numpy arrays or a 2D numpy array
-        mock_embedding_model.embed_batch.return_value = np.array([[0.1] * 128, [0.2] * 128])
+        mock_embedding_model.embed_batch.return_value = np.array([
+            [0.1] * 128,
+            [0.2] * 128,
+        ])
         mock_get_embeddings.return_value = mock_embedding_model
         yield mock_embedding_model
 
@@ -64,28 +74,38 @@ def sample_chunks() -> list[Chunk]:
         Chunk(text="Second test chunk.", start_index=19, end_index=38, token_count=4),
     ]
 
+
 # ---- Tests ----
 
-def test_milvus_handshake_init_creates_collection(mock_pymilvus_modules, mock_embeddings):
+
+def test_milvus_handshake_init_creates_collection(
+    mock_pymilvus_modules, mock_embeddings
+):
     """Test that a new collection and index are created if one doesn't exist."""
     mock_utility = mock_pymilvus_modules
     mock_utility.has_collection.return_value = False
 
     handshake = MilvusHandshake()
 
-    mock_utility.has_collection.assert_called_with(handshake.collection_name, using=handshake.alias)
+    mock_utility.has_collection.assert_called_with(
+        handshake.collection_name, using=handshake.alias
+    )
     assert handshake.collection.create_index.call_count == 1
     handshake.collection.load.assert_called_once()
 
 
-def test_milvus_handshake_init_uses_existing_collection(mock_pymilvus_modules, mock_embeddings):
+def test_milvus_handshake_init_uses_existing_collection(
+    mock_pymilvus_modules, mock_embeddings
+):
     """Test that a new collection is NOT created if it already exists."""
     mock_utility = mock_pymilvus_modules
     mock_utility.has_collection.return_value = True
 
     handshake = MilvusHandshake(collection_name="my-existing-collection")
 
-    mock_utility.has_collection.assert_called_with("my-existing-collection", using=handshake.alias)
+    mock_utility.has_collection.assert_called_with(
+        "my-existing-collection", using=handshake.alias
+    )
     assert handshake.collection.create_index.call_count == 0
     handshake.collection.load.assert_called_once()
 
@@ -116,7 +136,7 @@ def test_search_with_query(mock_pymilvus_modules, mock_embeddings):
     mock_hit.distance = 0.98
     mock_hit.entity = {"text": "A relevant doc", "start_index": 0}
     mock_results = [[mock_hit]]
-    
+
     # Get the mock Collection instance
     handshake = MilvusHandshake()
     handshake.collection.search.return_value = mock_results
