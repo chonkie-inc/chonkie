@@ -11,6 +11,8 @@ from typing import (
     Union,
 )
 
+import numpy as np
+
 from chonkie.embeddings import AutoEmbeddings, BaseEmbeddings
 from chonkie.types import Chunk
 
@@ -18,16 +20,13 @@ from .base import BaseHandshake
 from .utils import generate_random_collection_name
 
 if TYPE_CHECKING:
-    import numpy as np
     from pymilvus import (
         Collection,
         CollectionSchema,
         DataType,
         FieldSchema,
-        connections,
-        utility,
+        MilvusClient,
     )
-    from pymilvus.exceptions import ConnectionNotExistException
 
 class MilvusHandshake(BaseHandshake):
     """Milvus Handshake to export Chonkie's Chunks into a Milvus collection.
@@ -49,13 +48,13 @@ class MilvusHandshake(BaseHandshake):
     def __init__(
         self,
         client: Optional[Any] = None,
+        uri: Optional[str] = None,
         collection_name: Union[str, Literal["random"]] = "random",
         embedding_model: Union[str, BaseEmbeddings] = "minishlab/potion-retrieval-32M",
-        uri: Optional[str] = None,
         host: str = "localhost",
         port: str = "19530",
-        alias: str = "default",
-        api_key: Optional[str] = None,
+        user: Optional[str] = "",
+        api_key: Optional[str] = "",
         **kwargs: Any,
     ) -> None:
         """Initialize the Milvus Handshake."""
@@ -65,19 +64,9 @@ class MilvusHandshake(BaseHandshake):
         # 1. Establish connection
         if client is not None:
             self.client = client
-        else : 
-            self.client = connections.connect(alias=self.alias, uri=uri, api_key=api_key, **kwargs)
-        self.alias = alias
-        try:
-            # Check if a connection with this alias already exists
-            connections.get_connection_addr(self.alias) # type: ignore
-        except ConnectionNotExistException:
-            # If not, create a new one
-            if uri:
-                connections.connect(alias=self.alias, uri=uri, api_key=api_key, **kwargs) # type: ignore
-            else:
-                connections.connect(alias=self.alias, host=host, port=port, api_key=api_key, **kwargs) # type: ignore
-
+        else:
+            self.client = MilvusClient( uri=uri,user=user, api_key=api_key, **kwargs)
+        
         # 2. Initialize the embedding model
         if isinstance(embedding_model, str):
             self.embedding_model = AutoEmbeddings.get_embeddings(embedding_model)
@@ -89,28 +78,27 @@ class MilvusHandshake(BaseHandshake):
         if collection_name == "random":
             while True:
                 self.collection_name = generate_random_collection_name()
-                if not utility.has_collection(self.collection_name, using=self.alias): # type: ignore
+                if not self.client.has_collection(self.collection_name): # type: ignore
                     break
         else:
             self.collection_name = collection_name
 
-        if not utility.has_collection(self.collection_name, using=self.alias): # type: ignore
+        if not self.client.has_collection(self.collection_name): # type: ignore
             self._create_collection_with_schema()
 
-        self.collection = Collection(self.collection_name, using=self.alias) # type: ignore
+        self.collection = Collection(self.collection_name) # type: ignore
         self.collection.load()
 
     def _import_dependencies(self) -> None:
         """Lazy import the dependencies."""
         if self._is_available():
-            global Collection, CollectionSchema, DataType, FieldSchema, connections, utility, np, ConnectionNotExistException
-
-            import numpy as np
+            global Collection, CollectionSchema, DataType, FieldSchema, connections, utility, ConnectionNotExistException, MilvusClient
             from pymilvus import (
                 Collection,
                 CollectionSchema,
                 DataType,
                 FieldSchema,
+                MilvusClient,
                 connections,
                 utility,
             )
@@ -137,7 +125,7 @@ class MilvusHandshake(BaseHandshake):
             FieldSchema(name="embedding", dtype=DataType.FLOAT_VECTOR, dim=self.dimension), # type: ignore
         ]
         schema = CollectionSchema(fields, description="Chonkie Handshake Collection") # type: ignore
-        collection = Collection(self.collection_name, schema, using=self.alias) # type: ignore
+        collection = Collection(self.collection_name, schema) # type: ignore
         print(f"🦛 Chonkie created a new collection in Milvus: {self.collection_name}")
 
         # Create a default index for the vector field
@@ -172,7 +160,7 @@ class MilvusHandshake(BaseHandshake):
 
     def __repr__(self) -> str:
         """Return the string representation of the MilvusHandshake."""
-        return f"MilvusHandshake(collection_name={self.collection_name}, alias={self.alias})"
+        return f"MilvusHandshake(collection_name={self.collection_name})"
 
     def search(
         self,
