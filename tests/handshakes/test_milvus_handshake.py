@@ -24,8 +24,8 @@ pytestmark = pytest.mark.skipif(
 
 
 @pytest.fixture
-def mock_pymilvus_modules(monkeypatch) -> MagicMock:
-    """Mocked modules for pymilvus and classes."""
+def mock_pymilvus_modules(monkeypatch: pytest.MonkeyPatch) -> MagicMock:
+    """Mock modules for pymilvus and classes."""
     mock_connections = MagicMock()
     mock_utility = MagicMock()
     mock_collection = MagicMock()
