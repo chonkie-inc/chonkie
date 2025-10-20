@@ -163,7 +163,7 @@ def test_repr() -> None:
 
 def test_initialization_with_real_api_key_mock():
     """Test GeminiEmbeddings initializes with a real API key (mocked)."""
-    with patch("google.genai.Client") as mock_client:
+    with patch("google.genai.Client"):
         embeddings = GeminiEmbeddings(api_key="test-key")
         assert embeddings.model == "gemini-embedding-exp-03-07"
         assert embeddings.client is not None
