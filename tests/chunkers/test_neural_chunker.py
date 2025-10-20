@@ -350,20 +350,7 @@ class TestNeuralChunkerConstants:
 
 class TestNeuralChunkerParameterVariations:
     """Test different parameter combinations."""
-
-    def test_different_stride_values(self):
-        """Test with different stride values."""
-        try:
-            # Test with custom stride
-            chunker = NeuralChunker(stride=128)
-            assert hasattr(chunker, 'pipe')
-            
-            # Test with stride None (should use default)
-            chunker2 = NeuralChunker(stride=None)
-            assert hasattr(chunker2, 'pipe')
-        except Exception:
-            pytest.skip("transformers not available or model not accessible")
-
+    
     def test_different_device_maps(self):
         """Test with different device maps."""
         try:

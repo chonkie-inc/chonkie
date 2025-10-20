@@ -11,146 +11,192 @@
   "navigation": {
     "tabs": [
       {
-        "tab": "Python SDK",
+        "tab": "Welcome",
+        "icon": "hippo",
+        "groups": [
+          {
+            "group": "Welcome",
+            "pages": ["common/welcome", "common/concepts"]
+          },
+          {
+            "group": "Products",
+            "pages":  ["common/open-source", "common/chunking-api", "common/labs"]
+          }
+        ]
+      },
+      {
+        "tab": "Open Source",
         "icon": "book",
         "groups": [
           {
             "group": "Getting Started",
             "pages": [
-              "python-sdk/getting-started/introduction",
-              "python-sdk/getting-started/installation",
-              "common/concepts",
-              "common/cloud-overview",
-              "common/pricing"
+              "oss/quick-start",
+              "oss/installation",
+              "oss/pipelines"
             ]
           },
           {
             "group": "Chefs",
             "pages": [
-              "python-sdk/chefs/overview",
-              "python-sdk/chefs/tablechef",
-              "python-sdk/chefs/textchef",
-              "python-sdk/chefs/markdownchef"
+              "oss/chefs/overview",
+              "oss/chefs/tablechef",
+              "oss/chefs/textchef",
+              "oss/chefs/markdownchef"
+            ]
+          },
+          {
+            "group": "Fetchers",
+            "pages": [
+              "oss/fetchers/overview",
+              "oss/fetchers/file-fetcher"
             ]
           },
           {
             "group": "Chunkers",
             "pages": [
-              "python-sdk/chunkers/overview",
-              "python-sdk/chunkers/token-chunker",
-              "python-sdk/chunkers/sentence-chunker",
-              "python-sdk/chunkers/recursive-chunker",
-              "python-sdk/chunkers/table-chunker",
-              "python-sdk/chunkers/code-chunker",
-              "python-sdk/chunkers/semantic-chunker",
-              "python-sdk/chunkers/late-chunker",
-              "python-sdk/chunkers/neural-chunker",
-              "python-sdk/chunkers/slumber-chunker"
+              "oss/chunkers/overview",
+              "oss/chunkers/token-chunker",
+              "oss/chunkers/sentence-chunker",
+              "oss/chunkers/recursive-chunker",
+              "oss/chunkers/table-chunker",
+              "oss/chunkers/code-chunker",
+              "oss/chunkers/semantic-chunker",
+              "oss/chunkers/late-chunker",
+              "oss/chunkers/neural-chunker",
+              "oss/chunkers/slumber-chunker"
             ]
           },
           {
             "group": "Embeddings",
             "pages": [
-              "python-sdk/embeddings/overview",
-              "python-sdk/embeddings/auto-embeddings",
-              "python-sdk/embeddings/cohere-embeddings",
-              "python-sdk/embeddings/sentence-transformer-embeddings",
-              "python-sdk/embeddings/openai-embeddings",
-              "python-sdk/embeddings/azure-embeddings",
-              "python-sdk/embeddings/model2vec-embeddings",
-              "python-sdk/embeddings/jina-embeddings",
-              "python-sdk/embeddings/gemini-embeddings",
-              "python-sdk/embeddings/voyageai-embeddings",
-              "python-sdk/embeddings/custom-embeddings"
+              "oss/embeddings/overview",
+              "oss/embeddings/auto-embeddings",
+              "oss/embeddings/cohere-embeddings",
+              "oss/embeddings/sentence-transformer-embeddings",
+              "oss/embeddings/openai-embeddings",
+              "oss/embeddings/azure-embeddings",
+              "oss/embeddings/model2vec-embeddings",
+              "oss/embeddings/jina-embeddings",
+              "oss/embeddings/gemini-embeddings",
+              "oss/embeddings/voyageai-embeddings",
+              "oss/embeddings/custom-embeddings"
             ]
           },
           {
             "group": "Refinery",
             "pages": [
-              "python-sdk/refinery/overview",
-              "python-sdk/refinery/overlap-refinery",
-              "python-sdk/refinery/embeddings-refinery"
+              "oss/refinery/overview",
+              "oss/refinery/overlap-refinery",
+              "oss/refinery/embeddings-refinery"
             ]
           },
           {
             "group": "Handshakes",
             "pages": [
-              "python-sdk/handshakes/overview",
-              "python-sdk/handshakes/chroma-handshake",
-              "python-sdk/handshakes/qdrant-handshake",
-              "python-sdk/handshakes/weaviate-handshake",
-              "python-sdk/handshakes/tubropuffer-handshake",
-              "python-sdk/handshakes/pinecone-handshake",
-              "python-sdk/handshakes/pgvector-handshake",
-              "python-sdk/handshakes/mongodb-handshake",
-              "python-sdk/handshakes/elastic-handshake",
-              "python-sdk/handshakes/milvus-handshake"
+              "oss/handshakes/overview",
+              "oss/handshakes/chroma-handshake",
+              "oss/handshakes/qdrant-handshake",
+              "oss/handshakes/weaviate-handshake",
+              "oss/handshakes/turbopuffer-handshake",
+              "oss/handshakes/pinecone-handshake",
+              "oss/handshakes/pgvector-handshake",
+              "oss/handshakes/mongodb-handshake",
+              "oss/handshakes/elastic-handshake",
+              "oss/handshakes/milvus-handshake"
             ]
           },
           {
             "group": "Porters",
             "pages": [
-              "python-sdk/porters/overview",
-              "python-sdk/porters/json-porter",
-              "python-sdk/porters/datasets-porter"
+              "oss/porters/overview",
+              "oss/porters/json-porter",
+              "oss/porters/datasets-porter"
             ]
           },
           {
             "group": "Utils",
-            "pages": ["python-sdk/utils/visualizer", "python-sdk/utils/hubbie"]
+            "pages": ["oss/utils/visualizer", "oss/utils/hubbie"]
           },
           {
             "group": "Experimental",
             "pages": [
-              "python-sdk/experimental/overview",
-              "python-sdk/experimental/code-chunker"
+              "oss/experimental/overview",
+              "oss/experimental/code-chunker"
+            ]
+          },
+          {
+            "group": "Deprecated",
+            "pages": [
+              "oss/chunkers/sdpm-chunker"
             ]
           },
           {
             "group": "Changelog",
-            "pages": ["python-sdk/changelog"]
+            "pages": ["oss/changelog"]
           }
         ]
       },
       {
-        "tab": "Typescript SDK",
-        "icon": "book",
+        "tab": "API Reference",
+        "icon": "cloud",
         "groups": [
           {
             "group": "Getting Started",
-            "pages": [
-              "typescript-sdk/getting-started/introduction",
-              "common/concepts",
-              "common/cloud-overview",
-              "common/pricing"
-            ]
+            "pages": ["api/common/introduction", "api/common/playground"]
           },
           {
             "group": "Chunkers",
             "pages": [
-              "typescript-sdk/chunkers/overview",
-              "typescript-sdk/chunkers/token-chunker",
-              "typescript-sdk/chunkers/sentence-chunker",
-              "typescript-sdk/chunkers/recursive-chunker",
-              "typescript-sdk/chunkers/code-chunker"
+              "api/chunkers/token-chunker",
+              "api/chunkers/sentence-chunker",
+              "api/chunkers/recursive-chunker",
+              "api/chunkers/semantic-chunker",
+              "api/chunkers/late-chunker",
+              "api/chunkers/code-chunker",
+              "api/chunkers/neural-chunker",
+              "api/chunkers/slumber-chunker"
             ]
-          }
-        ]
-      },
-      {
-        "tab": "Chonkie Cloud",
-        "icon": "cloud",
-        "openapi": "chonkie-cloud/openapi.json"
-      },
-      {
-        "tab": "Chonkie Parse",
-        "icon": "file-lines",
-        "groups": [
+          },
           {
-            "group": "Getting Started",
+            "group": "Refineries",
             "pages": [
-              "parse/introduction"
+              "api/refineries/embeddings",
+              "api/refineries/overlap"
             ]
+          },
+          {
+            "group": "Knowledge Bases",
+            "pages": [
+              "api/knowledge/create",
+              "api/knowledge/list",
+              "api/knowledge/get-files",
+              "api/knowledge/upload",
+              "api/knowledge/download",
+              "api/knowledge/delete-file",
+              "api/knowledge/delete"
+            ]
+          },
+          {
+            "group": "Search",
+            "pages": ["api/search/search"]
+          },
+          {
+            "group": "Agents",
+            "pages": [
+              "api/agents/create",
+              "api/agents/list",
+              "api/agents/get",
+              "api/agents/update",
+              "api/agents/delete",
+              "api/agents/chat",
+              "api/agents/research",
+              "api/agents/mcp"
+            ]
+          },
+          {
+            "group": "Parse",
+            "pages": ["api/parse/parse"]
           }
         ]
       }
@@ -161,6 +207,11 @@
           "anchor": "Discord",
           "href": "https://discord.gg/Q6zkP8w6ur",
           "icon": "discord"
+        },
+        {
+          "anchor": "Contact",
+          "href": "mailto:support@chonkie.ai",
+          "icon": "envelope"
         }
       ]
     }
@@ -169,8 +220,8 @@
     "codeblocks": "system"
   },
   "logo": {
-    "light": "/logo/chonkie_logo_horizontal_large.png",
-    "dark": "/logo/chonkie_logo_horizontal_large.png"
+    "light": "/assets/logo/chonkie_logo_horizontal_large.png",
+    "dark": "/assets/logo/chonkie_logo_horizontal_large.png"
   },
   "appearance": {
     "default": "light",
@@ -189,8 +240,8 @@
     },
     "links": [
       {
-        "label": "Chonkie Cloud",
-        "href": "https://cloud.chonkie.ai"
+        "label": "API Dashboard",
+        "href": "https://labs.chonkie.ai"
       }
     ]
   },
