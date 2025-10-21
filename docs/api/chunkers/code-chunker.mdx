@@ -74,17 +74,30 @@ const chunker = new CodeChunker({
   chunkSize: 512,
 });
 
-// Chunk from file
-const file = document.querySelector('input[type="file"]').files[0];
-const chunks = await chunker.chunk({ file });
+// Chunk from file path (Node.js)
+const chunks = await chunker.chunk({ filepath: './script.py' });
 ```
 
 ```bash cURL
+# Step 1: Upload the file
+curl -X POST https://api.chonkie.ai/v1/files \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -F "file=@script.py"
+
+# Returns: {"name": "script.py", "size": "2048"}
+
+# Step 2: Chunk the uploaded file
 curl -X POST https://api.chonkie.ai/v1/chunk/code \
   -H "Authorization: Bearer YOUR_API_KEY" \
-  -F "file=@script.py" \
-  -F "language=python" \
-  -F "chunk_size=512"
+  -H "Content-Type: application/json" \
+  -d '{
+    "file": {
+      "type": "document",
+      "content": "script.py"
+    },
+    "language": "python",
+    "chunk_size": 512
+  }'
 ```
 
 </CodeGroup>
