@@ -33,7 +33,7 @@ class CustomEmbeddings(BaseEmbeddings):
     def count_tokens_batch(self, texts: List[str]) -> List[int]:
         ...
 
-    def get_tokenizer_or_token_counter(self):
+    def get_tokenizer(self):
         ...
 
     @classmethod
