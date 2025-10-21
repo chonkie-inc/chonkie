@@ -1,6 +1,5 @@
 """Test the Chonkie Cloud Neural Chunker."""
 
-import os
 from typing import Any, Dict, List
 
 import pytest
@@ -48,12 +47,12 @@ def mock_requests_post_success(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(requests, "post", mock_post)
 
 
-@pytest.mark.skipif(
-    "CHONKIE_API_KEY" not in os.environ,
-    reason="CHONKIE_API_KEY is not set",
-)
-def test_cloud_neural_chunker_initialization(mock_requests_get_success: Any) -> None:
+def test_cloud_neural_chunker_initialization(mock_requests_get_success: Any, monkeypatch: pytest.MonkeyPatch) -> None:
     """Test that the neural chunker can be initialized."""
+    # Set up mock environment
+    mock_api_key = "mock-api-key"
+    monkeypatch.setenv("CHONKIE_API_KEY", mock_api_key)
+
     # Check if model not in SUPPORTED_MODELS raises an error
     with pytest.raises(ValueError):
         NeuralChunker(model="unsupported-model")
@@ -66,7 +65,7 @@ def test_cloud_neural_chunker_initialization(mock_requests_get_success: Any) -> 
     chunker = NeuralChunker()
     assert chunker.model == NeuralChunker.DEFAULT_MODEL
     assert chunker.min_characters_per_chunk == 10
-    assert chunker.api_key == os.getenv("CHONKIE_API_KEY")
+    assert chunker.api_key == mock_api_key
 
     # Check initialization with custom parameters
     custom_model = "mirth/chonky_modernbert_base_1"
@@ -79,39 +78,37 @@ def test_cloud_neural_chunker_initialization(mock_requests_get_success: Any) -> 
     assert custom_chunker.min_characters_per_chunk == 5
     assert custom_chunker.api_key == "test_key"
 
-    # Test initialization without API key (should raise ValueError if not in env)
-    original_api_key = os.environ.pop("CHONKIE_API_KEY", None)
+    # Test initialization without API key
+    monkeypatch.delenv("CHONKIE_API_KEY", raising=False)
     with pytest.raises(ValueError, match="No API key provided"):
-        NeuralChunker(api_key=None) # Explicitly pass None
-    if original_api_key: # Restore API key if it was present
-        os.environ["CHONKIE_API_KEY"] = original_api_key
+        NeuralChunker(api_key=None)  # Explicitly pass None
 
 
-@pytest.mark.skipif(
-    "CHONKIE_API_KEY" not in os.environ,
-    reason="CHONKIE_API_KEY is not set",
-)
 def test_cloud_neural_chunker_initialization_api_down(monkeypatch: pytest.MonkeyPatch) -> None:
     """Test NeuralChunker initialization when the API is down."""
+    # Set up mock environment
+    monkeypatch.setenv("CHONKIE_API_KEY", "mock-api-key")
+
     class MockResponse:
         def __init__(self, status_code: int):
             self.status_code = status_code
-    
+
+        def json(self) -> dict:
+            return {"error": "Service unavailable"}
+
     def mock_get_api_down(*args: Any, **kwargs: Any) -> MockResponse:
         return MockResponse(500) # Simulate API being down
 
     monkeypatch.setattr(requests, "get", mock_get_api_down)
 
+    # The exact error message from the API
     with pytest.raises(ValueError, match="Oh no! You caught Chonkie at a bad time"):
         NeuralChunker()
 
 
-@pytest.mark.skipif(
-    "CHONKIE_API_KEY" not in os.environ,
-    reason="CHONKIE_API_KEY is not set",
-)
-def test_cloud_neural_chunker_single_text(mock_requests_get_success: Any, mock_requests_post_success: Any) -> None:
+def test_cloud_neural_chunker_single_text(mock_requests_get_success: Any, mock_requests_post_success: Any, monkeypatch: pytest.MonkeyPatch) -> None:
     """Test that the Neural Chunker works with a single text."""
+    monkeypatch.setenv("CHONKIE_API_KEY", "mock-api-key")
     chunker = NeuralChunker()
     text = "This is a test sentence for the neural chunker."
     result = chunker(text)
@@ -126,12 +123,9 @@ def test_cloud_neural_chunker_single_text(mock_requests_get_success: Any, mock_r
             assert isinstance(chunk_dict.token_count, int)
 
 
-@pytest.mark.skipif(
-    "CHONKIE_API_KEY" not in os.environ,
-    reason="CHONKIE_API_KEY is not set",
-)
 def test_cloud_neural_chunker_batch_texts(mock_requests_get_success: Any, monkeypatch: pytest.MonkeyPatch) -> None:
     """Test that the Neural Chunker works with a batch of texts."""
+    monkeypatch.setenv("CHONKIE_API_KEY", "mock-api-key")
     class MockResponse:
         def __init__(self, status_code: int, json_data: List[Dict[str, Any]]):
             self.status_code = status_code
@@ -174,12 +168,9 @@ def test_cloud_neural_chunker_batch_texts(mock_requests_get_success: Any, monkey
             assert chunk_obj.token_count == custom_chunks[i][j]['token_count']
 
 
-@pytest.mark.skipif(
-    "CHONKIE_API_KEY" not in os.environ,
-    reason="CHONKIE_API_KEY is not set",
-)
 def test_cloud_neural_chunker_empty_text(mock_requests_get_success: Any, monkeypatch: pytest.MonkeyPatch) -> None:
     """Test that the Neural Chunker works with an empty text."""
+    monkeypatch.setenv("CHONKIE_API_KEY", "mock-api-key")
     class MockResponse:
         def __init__(self, status_code: int, json_data: List[Dict[str, Any]]):
             self.status_code = status_code
@@ -205,12 +196,9 @@ def test_cloud_neural_chunker_empty_text(mock_requests_get_success: Any, monkeyp
     assert len(result) == 0
 
 
-@pytest.mark.skipif(
-    "CHONKIE_API_KEY" not in os.environ,
-    reason="CHONKIE_API_KEY is not set",
-)
 def test_cloud_neural_chunker_api_error_on_chunk(mock_requests_get_success: None, monkeypatch: pytest.MonkeyPatch) -> None:
     """Test NeuralChunker's chunk method when the API returns an error."""
+    monkeypatch.setenv("CHONKIE_API_KEY", "mock-api-key")
     class MockResponse:
         def __init__(self, status_code: int, content: str = "Error content"):
             self.status_code = status_code

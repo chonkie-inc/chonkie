@@ -161,63 +161,72 @@ def test_repr() -> None:
         assert "SEMANTIC_SIMILARITY" in repr_str
 
 
-@pytest.mark.skipif(
-    "GEMINI_API_KEY" not in os.environ,
-    reason="Skipping test because GEMINI_API_KEY is not defined",
-)
-def test_initialization_with_real_api_key(embedding_model: GeminiEmbeddings) -> None:
-    """Test that GeminiEmbeddings initializes with a real API key."""
-    assert embedding_model.model == "gemini-embedding-exp-03-07"  # Updated default model
-    assert embedding_model.client is not None
+def test_initialization_with_real_api_key_mock():
+    """Test GeminiEmbeddings initializes with a real API key (mocked)."""
+    with patch("google.genai.Client"):
+        embeddings = GeminiEmbeddings(api_key="test-key")
+        assert embeddings.model == "gemini-embedding-exp-03-07"
+        assert embeddings.client is not None
 
 
-@pytest.mark.skipif(
-    "GEMINI_API_KEY" not in os.environ,
-    reason="Skipping test because GEMINI_API_KEY is not defined",
-)
-def test_embed_single_text_real(embedding_model: GeminiEmbeddings, sample_text: str) -> None:
-    """Test that GeminiEmbeddings correctly embeds a single text with real API."""
-    embedding = embedding_model.embed(sample_text)
-    
-    assert isinstance(embedding, np.ndarray)
-    assert embedding.dtype == np.float32
-    assert embedding.shape == (3072,)  # Expected dimension for gemini-embedding-exp-03-07
-    assert not np.allclose(embedding, 0)  # Embedding should not be all zeros
-
-
-@pytest.mark.skipif(
-    "GEMINI_API_KEY" not in os.environ,
-    reason="Skipping test because GEMINI_API_KEY is not defined",
-)
-def test_embed_batch_real(embedding_model: GeminiEmbeddings, sample_texts: List[str]) -> None:
-    """Test that GeminiEmbeddings correctly embeds multiple texts with real API."""
-    embeddings = embedding_model.embed_batch(sample_texts)
-    
-    assert isinstance(embeddings, list)
-    assert len(embeddings) == len(sample_texts)
-    
-    for embedding in embeddings:
+def test_embed_single_text_real_mock(sample_text: str):
+    """Test GeminiEmbeddings embeds a single text (mocked)."""
+    mock_embedding_values = [0.1] * 3072
+    with patch("google.genai.Client") as mock_client_class:
+        mock_client = MagicMock()
+        mock_client_class.return_value = mock_client
+        mock_result = MagicMock()
+        mock_result.embeddings = [MagicMock()]
+        mock_result.embeddings[0].values = mock_embedding_values
+        mock_client.models.embed_content.return_value = mock_result
+        embeddings = GeminiEmbeddings(api_key="test-key")
+        embedding = embeddings.embed(sample_text)
         assert isinstance(embedding, np.ndarray)
         assert embedding.dtype == np.float32
         assert embedding.shape == (3072,)
         assert not np.allclose(embedding, 0)
 
 
-@pytest.mark.skipif(
-    "GEMINI_API_KEY" not in os.environ,
-    reason="Skipping test because GEMINI_API_KEY is not defined",
-)
-def test_call_method_real(embedding_model: GeminiEmbeddings, sample_text: str, sample_texts: List[str]) -> None:
-    """Test that GeminiEmbeddings correctly handles __call__ method with real API."""
-    # Test single text
-    single_embedding = embedding_model(sample_text)
-    assert isinstance(single_embedding, np.ndarray)
-    assert single_embedding.shape == (3072,)
-    
-    # Test multiple texts
-    multiple_embeddings = embedding_model(sample_texts)
-    assert isinstance(multiple_embeddings, list)
-    assert len(multiple_embeddings) == len(sample_texts)
+def test_embed_batch_real_mock(sample_texts: List[str]):
+    """Test GeminiEmbeddings embeds multiple texts (mocked)."""
+    mock_embedding_values = [0.1] * 3072
+    with patch("google.genai.Client") as mock_client_class:
+        mock_client = MagicMock()
+        mock_client_class.return_value = mock_client
+        mock_result = MagicMock()
+        mock_result.embeddings = [MagicMock()]
+        mock_result.embeddings[0].values = mock_embedding_values
+        mock_client.models.embed_content.return_value = mock_result
+        embeddings = GeminiEmbeddings(api_key="test-key")
+        results = embeddings.embed_batch(sample_texts)
+        assert isinstance(results, list)
+        assert len(results) == len(sample_texts)
+        for embedding in results:
+            assert isinstance(embedding, np.ndarray)
+            assert embedding.dtype == np.float32
+            assert embedding.shape == (3072,)
+            assert not np.allclose(embedding, 0)
+
+
+def test_call_method_real_mock(sample_text: str, sample_texts: List[str]):
+    """Test GeminiEmbeddings __call__ method (mocked)."""
+    mock_embedding_values = [0.1] * 3072
+    with patch("google.genai.Client") as mock_client_class:
+        mock_client = MagicMock()
+        mock_client_class.return_value = mock_client
+        mock_result = MagicMock()
+        mock_result.embeddings = [MagicMock()]
+        mock_result.embeddings[0].values = mock_embedding_values
+        mock_client.models.embed_content.return_value = mock_result
+        embeddings = GeminiEmbeddings(api_key="test-key")
+        # Test single text
+        single_embedding = embeddings(sample_text)
+        assert isinstance(single_embedding, np.ndarray)
+        assert single_embedding.shape == (3072,)
+        # Test multiple texts
+        multiple_embeddings = embeddings(sample_texts)
+        assert isinstance(multiple_embeddings, list)
+        assert len(multiple_embeddings) == len(sample_texts)
 
 
 def test_embed_mock() -> None:
