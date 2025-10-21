@@ -320,7 +320,7 @@ class SlumberChunker(BaseChunker):
     def __repr__(self) -> str:
         """Return a string representation of the SlumberChunker."""
         return (f"SlumberChunker(genie={self.genie}," +
-                f"tokenizer_or_token_counter={self.tokenizer}, " +
+                f"tokenizer={self.tokenizer}, " +
                 f"chunk_size={self.chunk_size}, " +
                 f"candidate_size={self.candidate_size}, " +
                 f"min_characters_per_chunk={self.min_characters_per_chunk})" # type: ignore

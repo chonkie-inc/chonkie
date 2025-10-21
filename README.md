@@ -214,7 +214,7 @@ To use a custom token counter, you can pass in any function that takes a string 
 def custom_token_counter(text: str) -> int:
     return len(text)
 
-chunker = RecursiveChunker(tokenizer_or_token_counter=custom_token_counter)
+chunker = RecursiveChunker(tokenizer=custom_token_counter)
 ```
 
 You can use this to extend Chonkie to support any tokenization scheme you want!

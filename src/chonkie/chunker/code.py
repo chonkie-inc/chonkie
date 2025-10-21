@@ -358,6 +358,6 @@ class CodeChunker(BaseChunker):
         
     def __repr__(self) -> str:
         """Return the string representation of the CodeChunker."""
-        return (f"CodeChunker(tokenizer_or_token_counter={self.tokenizer},"
+        return (f"CodeChunker(tokenizer={self.tokenizer},"
                 f"chunk_size={self.chunk_size},"
                 f"language={self.language})")
