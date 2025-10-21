@@ -25,7 +25,6 @@ if TYPE_CHECKING:
         CollectionSchema,
         DataType,
         FieldSchema,
-        MilvusClient,
     )
 
 class MilvusHandshake(BaseHandshake):
@@ -47,7 +46,7 @@ class MilvusHandshake(BaseHandshake):
 
     def __init__(
         self,
-        client: Optional[Any] = None,
+        client: Optional[Any] = None, 
         uri: Optional[str] = None,
         collection_name: Union[str, Literal["random"]] = "random",
         embedding_model: Union[str, BaseEmbeddings] = "minishlab/potion-retrieval-32M",
@@ -55,17 +54,20 @@ class MilvusHandshake(BaseHandshake):
         port: str = "19530",
         user: Optional[str] = "",
         api_key: Optional[str] = "",
+        alias: str = "default", # Added alias for clarity
         **kwargs: Any,
     ) -> None:
         """Initialize the Milvus Handshake."""
         super().__init__()
         self._import_dependencies()
 
-        # 1. Establish connection
-        if client is not None:
-            self.client = client
-        else:
-            self.client = MilvusClient( uri=uri,user=user, api_key=api_key, **kwargs)
+         # 1. Establish connection using the ORM's global connection manager
+        try:
+            # Check if a connection with this alias already exists to avoid reconnecting
+            connections.get_connection_addr(alias) # type: ignore
+        except ConnectionNotExistException:
+             # The pymilvus library uses 'token' for the api_key
+            connections.connect(alias=alias, uri=uri, host=host, port=port, user=user, token=api_key, **kwargs) # type: ignore
         
         # 2. Initialize the embedding model
         if isinstance(embedding_model, str):
@@ -92,13 +94,12 @@ class MilvusHandshake(BaseHandshake):
     def _import_dependencies(self) -> None:
         """Lazy import the dependencies."""
         if self._is_available():
-            global Collection, CollectionSchema, DataType, FieldSchema, connections, utility, ConnectionNotExistException, MilvusClient
+            global Collection, CollectionSchema, DataType, FieldSchema, connections, utility, ConnectionNotExistException
             from pymilvus import (
                 Collection,
                 CollectionSchema,
                 DataType,
                 FieldSchema,
-                MilvusClient,
                 connections,
                 utility,
             )
