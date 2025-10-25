@@ -102,7 +102,8 @@
               "oss/handshakes/pinecone-handshake",
               "oss/handshakes/pgvector-handshake",
               "oss/handshakes/mongodb-handshake",
-              "oss/handshakes/elastic-handshake"
+              "oss/handshakes/elastic-handshake",
+              "oss/handshakes/milvus-handshake"
             ]
           },
           {
