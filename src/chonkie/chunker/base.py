@@ -2,7 +2,6 @@
 
 import warnings
 from abc import ABC, abstractmethod
-from multiprocessing import Pool, cpu_count
 from typing import List, Sequence, Union
 
 from tqdm import tqdm
@@ -68,6 +67,7 @@ class BaseChunker(ABC):
     def _get_optimal_worker_count(self) -> int:
         """Get the optimal number of workers for parallel processing."""
         try:
+            from multiprocessing import cpu_count
             cpu_cores = cpu_count()
             worker_count = min(8, max(1, cpu_cores * 3 // 4))
             logger.debug(f"Using {worker_count} workers for parallel processing", cpu_cores=cpu_cores)
@@ -103,6 +103,8 @@ class BaseChunker(ABC):
         self, texts: Sequence[str], show_progress: bool = True
     ) -> List[List[Chunk]]:
         """Process a batch of texts using multiprocessing."""
+        from multiprocessing import Pool
+
         num_workers = self._get_optimal_worker_count()
         total = len(texts)
         chunk_size = max(1, min(total // (num_workers * 16), 10))
