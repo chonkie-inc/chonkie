@@ -27,8 +27,8 @@ from .cloud import (
 )
 from .embeddings import (
     AutoEmbeddings,
-    BaseEmbeddings,
     AzureOpenAIEmbeddings,
+    BaseEmbeddings,
     CohereEmbeddings,
     GeminiEmbeddings,
     JinaEmbeddings,
@@ -42,8 +42,8 @@ from .fetcher import (
     FileFetcher,
 )
 from .genie import (
-    BaseGenie,
     AzureOpenAIGenie,
+    BaseGenie,
     GeminiGenie,
     OpenAIGenie,
 )
