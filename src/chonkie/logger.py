@@ -95,9 +95,9 @@ def _configure_default() -> None:
             logger.remove(_handler_id)
         except ValueError:
             pass  # Handler already removed
-    else:
-        # On first configuration, remove the default handler
-        logger.remove()
+    # NOTE: Do NOT call logger.remove() here as it would remove all handlers,
+    # including those configured by the user. This was causing user's loguru
+    # configuration to be overwritten when importing chonkie.
 
     # Parse CHONKIE_LOG environment variable
     enabled, level = _parse_log_setting(os.getenv("CHONKIE_LOG"))
@@ -109,12 +109,15 @@ def _configure_default() -> None:
         return
 
     # Add stderr handler with formatting and store its ID
+    # Use filter to only process logs from chonkie modules to avoid
+    # interfering with user's logging configuration
     _handler_id = logger.add(
         sys.stderr,
         format=DEFAULT_FORMAT,
         level=level,
         colorize=True,
         enqueue=True,  # Thread-safe
+        filter=lambda record: record["extra"].get("name", "").startswith("chonkie"),
     )
 
     _configured = True
@@ -194,12 +197,15 @@ def configure_logging(
     log_format = format or DEFAULT_FORMAT
 
     # Add stderr handler and store its ID
+    # Use filter to only process logs from chonkie modules to avoid
+    # interfering with user's logging configuration
     _handler_id = logger.add(
         sys.stderr,
         format=log_format,
         level=log_level,
         colorize=True,
         enqueue=enqueue,
+        filter=lambda record: record["extra"].get("name", "").startswith("chonkie"),
     )
 
     # Re-enable if it was previously disabled

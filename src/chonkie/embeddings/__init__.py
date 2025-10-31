@@ -1,6 +1,7 @@
 """Embeddings classes for text embedding."""
 
 from .auto import AutoEmbeddings
+from .azure_openai import AzureOpenAIEmbeddings
 from .base import BaseEmbeddings
 from .cohere import CohereEmbeddings
 from .gemini import GeminiEmbeddings
@@ -17,6 +18,7 @@ __all__ = [
     "Model2VecEmbeddings",
     "SentenceTransformerEmbeddings",
     "OpenAIEmbeddings",
+    "AzureOpenAIEmbeddings",
     "CohereEmbeddings",
     "GeminiEmbeddings",
     "AutoEmbeddings",
