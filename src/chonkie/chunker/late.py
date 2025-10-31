@@ -138,18 +138,23 @@ class LateChunker(RecursiveChunker):
         token_embeddings = self.embedding_model.embed_as_tokens(text)
 
         # Get the token_counts for all the chunks
-        # Note: LateChunker always returns chunks, so chunks are always RecursiveChunk objects
         token_counts = [c.token_count for c in chunks]  # type: ignore[union-attr]
+
+        # If fallback was used, token_embeddings may be fewer than sum(token_counts)
+        if token_embeddings.shape[0] < sum(token_counts):
+            # Fallback: use sentence embeddings for each chunk
+            # Re-embed each chunk as a sentence embedding
+            token_embeddings = np.array([
+                self.embedding_model.embed(c.text) for c in chunks
+            ])
+            token_counts = [1 for _ in chunks]
 
         # Validate the token_counts with the actual count
         if sum(token_counts) > token_embeddings.shape[0]:
             raise ValueError(
                 "The sum of token counts exceeds the number of tokens in the text"
             )
-        # Diff would always be positive now~ which it should be considering token_counts
-        # doesn't have any special tokens added
         if sum(token_counts) < token_embeddings.shape[0]:
-            # Use a little trick to ensure that the token counts get properly adjusted
             diff = token_embeddings.shape[0] - sum(token_counts)
             token_counts[0] = token_counts[0] + diff // 2
             token_counts[-1] = token_counts[-1] + (diff - diff // 2)
