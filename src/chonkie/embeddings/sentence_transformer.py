@@ -147,7 +147,7 @@ class SentenceTransformerEmbeddings(BaseEmbeddings):
         """Return the maximum sequence length, using chunk_size or fallback to 512 if needed."""
         max_seq_length = self.model.get_max_seq_length()  # type: ignore
         # Try max_seq_length first
-        if isinstance(max_seq_length, int) and max_seq_length != float("inf"):
+        if isinstance(max_seq_length, int):
             return max_seq_length
         # Try chunk_size if available and valid
         chunk_size = getattr(self, "chunk_size", None)
