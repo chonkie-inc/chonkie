@@ -116,18 +116,6 @@ class SentenceTransformerEmbeddings(BaseEmbeddings):
         token_embeddings_np = np.concatenate(token_embeddings, axis=0)
         return token_embeddings_np
 
-        # Ensure all embeddings are numpy arrays
-        if isinstance(token_embeddings, list):
-            np_token_embeddings: List[np.ndarray] = []
-            for emb in token_embeddings:
-                if hasattr(emb, "cpu"):
-                    np_token_embeddings.append(emb.cpu().numpy())
-                else:
-                    np_token_embeddings.append(np.array(emb))
-            token_embeddings = np_token_embeddings
-        token_embeddings_np = np.concatenate(token_embeddings, axis=0)
-        return token_embeddings_np
-
     def embed_as_tokens_batch(self, texts: List[str]) -> List[np.ndarray]:
         """Embed multiple texts as tokens using the sentence-transformers model."""
         return [self.embed_as_tokens(text) for text in texts]
