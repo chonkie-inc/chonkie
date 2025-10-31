@@ -69,16 +69,29 @@ const chunker = new NeuralChunker({
   model:"mirth/chonky_modernbert_large_1"
 });
 
-// Chunk from file
-const file = document.querySelector('input[type="file"]').files[0];
-const chunks = await chunker.chunk({ file });
+// Chunk from file path (Node.js)
+const chunks = await chunker.chunk({ filepath: './document.txt' });
 ```
 
 ```bash cURL
+# Step 1: Upload the file
+curl -X POST https://api.chonkie.ai/v1/files \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -F "file=@document.txt"
+
+# Returns: {"name": "document.txt", "size": "1024"}
+
+# Step 2: Chunk the uploaded file
 curl -X POST https://api.chonkie.ai/v1/chunk/neural \
   -H "Authorization: Bearer YOUR_API_KEY" \
-  -F "file=@document.txt" \
-  -F "model=mirth/chonky_modernbert_large_1"
+  -H "Content-Type: application/json" \
+  -d '{
+    "file": {
+      "type": "document",
+      "content": "document.txt"
+    },
+    "model": "mirth/chonky_modernbert_large_1"
+  }'
 ```
 
 </CodeGroup>

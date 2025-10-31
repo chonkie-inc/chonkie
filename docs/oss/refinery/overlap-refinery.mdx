@@ -23,7 +23,7 @@ overlap_refinery = OverlapRefinery()
 
 # Initialize with a specific tokenizer and context size
 overlap_refinery_token = OverlapRefinery(
-    tokenizer_or_token_counter="character", # Default tokenizer (or use "gpt2", etc.)
+    tokenizer="character",             # Default tokenizer (or use "gpt2", etc.)
     context_size=0.25,                 # The size of the context to add to the chunks.
     method="prefix",                   # Add context from the previous chunk
     merge=True                         # Merge context directly into chunk text
@@ -39,7 +39,7 @@ rules = RecursiveRules(
     ]
 )
 overlap_refinery_recursive = OverlapRefinery(
-    tokenizer_or_token_counter="character",
+    tokenizer="character",
     context_size=0.25,
     mode="recursive",
     rules=rules,
@@ -60,7 +60,7 @@ chunks = chunker(test_string)
 
 # Initialize refinery to add suffix overlap
 overlap_refinery = OverlapRefinery(
-    tokenizer_or_token_counter="character",
+    tokenizer="character",
     context_size=0.5,
     method="suffix",
     merge=True
@@ -72,13 +72,13 @@ refined_chunks = overlap_refinery(chunks)
 ## Parameters
 
 <ParamField
-  path="tokenizer_or_token_counter"
+  path="tokenizer"
   type="Union[str, Callable, Any]"
   default='"character"'
 >
-  The tokenizer or token counter to use for calculating overlap size. Can be a
+  The tokenizer to use for calculating overlap size. Can be a
   string identifier (e.g., "character", "word", "gpt2"), a callable, or a
-  `chonkie.Tokenizer` instance. Defaults to character counting.
+  `chonkie.Tokenizer` instance. Defaults to "character".
 </ParamField>
 
 <ParamField path="context_size" type="Union[int, float]" default="0.25">

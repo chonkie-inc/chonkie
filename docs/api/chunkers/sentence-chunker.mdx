@@ -74,17 +74,30 @@ const chunker = new SentenceChunker({
   minSentencesPerChunk: 2,
 });
 
-// Chunk from file
-const file = document.querySelector('input[type="file"]').files[0];
-const chunks = await chunker.chunk({ file });
+// Chunk from file path (Node.js)
+const chunks = await chunker.chunk({ filepath: './document.txt' });
 ```
 
 ```bash cURL
+# Step 1: Upload the file
+curl -X POST https://api.chonkie.ai/v1/files \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -F "file=@document.txt"
+
+# Returns: {"name": "document.txt", "size": "1024"}
+
+# Step 2: Chunk the uploaded file
 curl -X POST https://api.chonkie.ai/v1/chunk/sentence \
   -H "Authorization: Bearer YOUR_API_KEY" \
-  -F "file=@document.txt" \
-  -F "chunk_size=512" \
-  -F "min_sentences_per_chunk=2"
+  -H "Content-Type: application/json" \
+  -d '{
+    "file": {
+      "type": "document",
+      "content": "document.txt"
+    },
+    "chunk_size": 512,
+    "min_sentences_per_chunk": 2
+  }'
 ```
 
 </CodeGroup>
