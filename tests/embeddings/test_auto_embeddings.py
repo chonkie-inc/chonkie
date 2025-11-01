@@ -6,6 +6,7 @@ import warnings
 import pytest
 
 from chonkie import AutoEmbeddings
+from chonkie.embeddings.azure_openai import AzureOpenAIEmbeddings
 from chonkie.embeddings.base import BaseEmbeddings
 from chonkie.embeddings.cohere import CohereEmbeddings
 from chonkie.embeddings.jina import JinaEmbeddings
@@ -112,6 +113,30 @@ class TestAutoEmbeddingsProviderPrefix:
         embeddings = AutoEmbeddings.get_embeddings("jina://jina-embeddings-v3")
         assert isinstance(embeddings, JinaEmbeddings)
         assert embeddings.model == "jina-embeddings-v3"
+
+    @pytest.mark.skipif(
+        not os.getenv("AZURE_OPENAI_ENDPOINT"), reason="Azure OpenAI endpoint not set"
+    )
+    def test_azure_openai_provider_prefix(self) -> None:
+        """Test Azure OpenAI embeddings with provider prefix."""
+        embeddings = AutoEmbeddings.get_embeddings(
+            "azure_openai://text-embedding-3-small"
+        )
+        assert isinstance(embeddings, AzureOpenAIEmbeddings)
+        assert embeddings.model == "text-embedding-3-small"
+
+    @pytest.mark.skipif(
+        not os.getenv("AZURE_OPENAI_ENDPOINT"), reason="Azure OpenAI endpoint not set"
+    )
+    def test_azure_openai_provider_prefix_with_params(self) -> None:
+        """Test Azure OpenAI embeddings with provider prefix and explicit parameters."""
+        embeddings = AutoEmbeddings.get_embeddings(
+            "azure_openai://text-embedding-3-large",
+            azure_endpoint=os.environ.get("AZURE_OPENAI_ENDPOINT"),
+            azure_api_key=os.environ.get("AZURE_OPENAI_API_KEY"),
+        )
+        assert isinstance(embeddings, AzureOpenAIEmbeddings)
+        assert embeddings.model == "text-embedding-3-large"
 
 
 class TestAutoEmbeddingsProviderLookup:
