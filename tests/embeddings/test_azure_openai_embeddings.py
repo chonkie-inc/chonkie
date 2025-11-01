@@ -12,11 +12,12 @@ from chonkie.embeddings.azure_openai import AzureOpenAIEmbeddings
 @pytest.fixture
 def azure_embedding_model() -> AzureOpenAIEmbeddings:
     """Fixture to create an AzureOpenAIEmbeddings instance."""
+    # Note: With the new parameter order, model comes first
     return AzureOpenAIEmbeddings(
         model="text-embedding-3-small",
-        deployment="text-embedding-3-small",
         azure_endpoint=os.environ.get("AZURE_OPENAI_ENDPOINT"),
         azure_api_key=os.environ.get("AZURE_OPENAI_API_KEY"),
+        deployment="text-embedding-3-small",
     )
 
 
@@ -112,9 +113,9 @@ def test_is_available() -> None:
     assert (
         AzureOpenAIEmbeddings(
             model="text-embedding-3-small",
-            deployment="text-embedding-3-small",
             azure_endpoint=os.environ.get("AZURE_OPENAI_ENDPOINT"),
             azure_api_key=os.environ.get("AZURE_OPENAI_API_KEY"),
+            deployment="text-embedding-3-small",
         )._is_available()
         is True
     )
@@ -129,3 +130,28 @@ def test_repr(azure_embedding_model: AzureOpenAIEmbeddings) -> None:
     repr_str = repr(azure_embedding_model)
     assert isinstance(repr_str, str)
     assert repr_str.startswith("AzureOpenAIEmbeddings")
+
+
+@pytest.mark.skipif(
+    "AZURE_OPENAI_ENDPOINT" not in os.environ,
+    reason="Skipping test because AZURE_OPENAI_ENDPOINT is not defined",
+)
+def test_initialization_with_env_vars() -> None:
+    """Test that AzureOpenAIEmbeddings can use environment variables."""
+    # This should use AZURE_OPENAI_ENDPOINT and AZURE_OPENAI_API_KEY from environment
+    embeddings = AzureOpenAIEmbeddings(model="text-embedding-3-small")
+    assert embeddings.model == "text-embedding-3-small"
+    assert embeddings.client is not None
+    assert embeddings.base_url == os.environ.get("AZURE_OPENAI_ENDPOINT")
+
+
+@pytest.mark.skipif(
+    "AZURE_OPENAI_ENDPOINT" not in os.environ,
+    reason="Skipping test because AZURE_OPENAI_ENDPOINT is not defined",
+)
+def test_initialization_model_as_first_param() -> None:
+    """Test that AzureOpenAIEmbeddings accepts model as first positional parameter."""
+    # This tests the new parameter order for AutoEmbeddings compatibility
+    embeddings = AzureOpenAIEmbeddings("text-embedding-3-small")
+    assert embeddings.model == "text-embedding-3-small"
+    assert embeddings.client is not None
