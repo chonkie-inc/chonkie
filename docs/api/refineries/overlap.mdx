@@ -77,7 +77,7 @@ from chonkie.cloud import TokenChunker, OverlapRefinery
 chunker = TokenChunker(chunk_size=100, chunk_overlap=0)
 chunks = chunker.chunk("Your text here...")
 
-refinery = OverlapRefinery(overlap_size=25, tokenizer="gpt2")
+refinery = OverlapRefinery(context_size=25, tokenizer="gpt2")
 refined_chunks = refinery.refine(chunks)
 ```
 
@@ -87,7 +87,7 @@ import { TokenChunker, OverlapRefinery } from "@chonkiejs/cloud";
 const chunker = new TokenChunker({ chunkSize: 100, chunkOverlap: 0 });
 const chunks = await chunker.chunk({ text: "Your text here..." });
 
-const refinery = new OverlapRefinery({ overlapSize: 25, tokenizer: "gpt2" });
+const refinery = new OverlapRefinery({ contextSize: 25, tokenizer: "gpt2" });
 const refinedChunks = await refinery.refine(chunks);
 ```
 
@@ -104,7 +104,7 @@ curl -X POST https://api.chonkie.ai/v1/refine/overlap \
         "token_count": 4
       }
     ],
-    "overlap_size": 5,
+    "context_size": 5,
     "tokenizer": "gpt2"
   }'
 ```
