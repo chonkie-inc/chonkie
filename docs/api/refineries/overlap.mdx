@@ -1,6 +1,6 @@
 ---
 title: "Overlap Refinery"
-api: "POST https://api.chonkie.ai/v1/refine/overlap"
+api: "POST v1/refine/overlap"
 description: "Add contextual overlap between chunks for better continuity"
 ---
 
@@ -11,15 +11,38 @@ The Overlap Refinery adds overlapping context between adjacent chunks for better
 #### Parameters
 
 <ParamField path="chunks" type="array" required>
-  Array of chunk objects to add overlap to. Must be in sequential order from the same document.
-</ParamField>
-
-<ParamField path="overlap_size" type="integer" default="128">
-  Number of tokens to overlap between consecutive chunks.
+  Array of chunk objects to add overlap to. Must be in sequential order from the
+  same document.
 </ParamField>
 
 <ParamField path="tokenizer" type="string" default="gpt2">
   Tokenizer to use for measuring overlap.
+</ParamField>
+
+<ParamField path="context_size / contextSize" type="number" default="0.25">
+  Context size as fraction or token count. Can be a float (0.0-1.0) representing
+  a fraction of chunk size, or an integer representing exact token count.
+</ParamField>
+
+<ParamField path="mode" type="string" default="token">
+  Mode for overlap. Options: "token" or "recursive".
+</ParamField>
+
+<ParamField path="method" type="string" default="suffix">
+  Method for adding context. Options: "suffix" (add context after chunk) or
+  "prefix" (add context before chunk).
+</ParamField>
+
+<ParamField path="recipe" type="string" default="default">
+  Recipe name for recursive mode. Used when mode is set to "recursive".
+</ParamField>
+
+<ParamField path="lang" type="string" default="en">
+  Language for recipe in recursive mode.
+</ParamField>
+
+<ParamField path="merge" type="boolean" default="true">
+  Whether to merge overlapping chunks.
 </ParamField>
 
 ## Response
@@ -59,12 +82,12 @@ refined_chunks = refinery.refine(chunks)
 ```
 
 ```javascript JavaScript
-import { TokenChunker, OverlapRefinery } from '@chonkiejs/cloud';
+import { TokenChunker, OverlapRefinery } from "@chonkiejs/cloud";
 
 const chunker = new TokenChunker({ chunkSize: 100, chunkOverlap: 0 });
 const chunks = await chunker.chunk({ text: "Your text here..." });
 
-const refinery = new OverlapRefinery({ overlapSize: 25, tokenizer: 'gpt2' });
+const refinery = new OverlapRefinery({ overlapSize: 25, tokenizer: "gpt2" });
 const refinedChunks = await refinery.refine(chunks);
 ```
 
