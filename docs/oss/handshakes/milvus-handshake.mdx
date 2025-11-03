@@ -35,8 +35,10 @@ from chonkie import MilvusHandshake
 
 # Recommended for connecting to remote or secured instances
 handshake = MilvusHandshake(
-    uri="https://your-milvus-instance:19530",
-    collection_name="my_documents"
+    uri=os.getenv("MILVUS_URI"),
+    user=os.getenv("MILVUS_USER"),
+    api_key=os.getenv("MILVUS_API_KEY"),
+    collection_name="test_collection",
 )
 ```
 

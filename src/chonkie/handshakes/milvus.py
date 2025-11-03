@@ -98,7 +98,7 @@ class MilvusHandshake(BaseHandshake):
 
         if collection_name == "random":
             while True:
-                self.collection_name = generate_random_collection_name()
+                self.collection_name = generate_random_collection_name(sep="_")
                 # Pass alias explicitly to utility.has_collection
                 if not self.client.has_collection(self.collection_name): # type: ignore
                     break
