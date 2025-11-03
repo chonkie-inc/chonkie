@@ -27,6 +27,7 @@ _current_mock_embeddings = None
 
 @pytest.fixture
 def mock_embeddings() -> Generator[MagicMock, None, None]:
+    """Mock the AutoEmbeddings to provide a fake embedding model."""
     global _current_mock_embeddings
     with patch(
         "chonkie.embeddings.AutoEmbeddings.get_embeddings"
@@ -45,6 +46,7 @@ def mock_embeddings() -> Generator[MagicMock, None, None]:
 
 @pytest.fixture
 def mock_pymilvus_modules(monkeypatch: pytest.MonkeyPatch) -> MagicMock:
+    """Mock the pymilvus modules used in MilvusHandshake."""
     global _current_mock_embeddings
     mock_connections = MagicMock()
     mock_utility = MagicMock()
@@ -62,6 +64,7 @@ def mock_pymilvus_modules(monkeypatch: pytest.MonkeyPatch) -> MagicMock:
     monkeypatch.setattr("pymilvus.CollectionSchema", mock_collection_schema)
     monkeypatch.setattr("pymilvus.FieldSchema", mock_field_schema)
     monkeypatch.setattr("pymilvus.MilvusClient", MagicMock())
+
     # Patch MilvusHandshake.__init__ to avoid real initialization logic
     def fake_init(self, *args, **kwargs):
         global _current_mock_embeddings
@@ -74,6 +77,7 @@ def mock_pymilvus_modules(monkeypatch: pytest.MonkeyPatch) -> MagicMock:
         if not exists:
             self.collection.create_index()
         self.collection.load()
+
     monkeypatch.setattr("chonkie.handshakes.milvus.MilvusHandshake.__init__", fake_init)
 
     # Return the top-level utility mock for assertions
