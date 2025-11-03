@@ -69,7 +69,7 @@ tiktoken = ["tiktoken>=0.5.0"]
 code = [
     "tree-sitter>=0.20.0",
     "tree-sitter-language-pack>=0.7.0",
-    "magika>=0.6.0, <0.7.0",
+    "magika>=0.6.0, <1.1.0",
 ]
 neural = ["transformers>=4.0.0", "torch>=2.0.0, <3.0"]
 
@@ -118,7 +118,7 @@ all = [
     "rich>=13.0.0",
     "tree-sitter>=0.20.0",
     "tree-sitter-language-pack>=0.7.0",
-    "magika>=0.6.0, <0.7.0",
+    "magika>=0.6.0, <1.1.0",
     "sentence-transformers>=3.0.0",
     "openai>=1.0.0",
     "model2vec>=0.3.0",
