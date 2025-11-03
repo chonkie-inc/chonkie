@@ -32,7 +32,7 @@ class LateChunker(RecursiveChunker):
         self,
         embedding_model: Union[
             str, SentenceTransformerEmbeddings, Any
-        ] = "sentence-transformers/all-MiniLM-L6-v2",
+        ] = "nomic-ai/modernbert-embed-base",
         chunk_size: int = 2048,
         rules: RecursiveRules = RecursiveRules(),
         min_characters_per_chunk: int = 24,
