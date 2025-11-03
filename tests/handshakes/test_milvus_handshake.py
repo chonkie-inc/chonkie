@@ -35,6 +35,8 @@ def mock_pymilvus_modules(monkeypatch: pytest.MonkeyPatch) -> MagicMock:
     # Default behaviors
     mock_utility.has_collection.return_value = False
     mock_collection.return_value.insert.return_value = MagicMock(insert_count=2)
+    # Prevent real connection attempts
+    mock_connections.connect.return_value = None
 
     monkeypatch.setattr("pymilvus.connections", mock_connections)
     monkeypatch.setattr("pymilvus.utility", mock_utility)
