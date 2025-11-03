@@ -36,13 +36,11 @@ def mock_pymilvus_modules(monkeypatch: pytest.MonkeyPatch) -> MagicMock:
     mock_utility.has_collection.return_value = False
     mock_collection.return_value.insert.return_value = MagicMock(insert_count=2)
 
-    monkeypatch.setattr("chonkie.handshakes.milvus.connections", mock_connections)
-    monkeypatch.setattr("chonkie.handshakes.milvus.utility", mock_utility)
-    monkeypatch.setattr("chonkie.handshakes.milvus.Collection", mock_collection)
-    monkeypatch.setattr(
-        "chonkie.handshakes.milvus.CollectionSchema", mock_collection_schema
-    )
-    monkeypatch.setattr("chonkie.handshakes.milvus.FieldSchema", mock_field_schema)
+    monkeypatch.setattr("pymilvus.connections", mock_connections)
+    monkeypatch.setattr("pymilvus.utility", mock_utility)
+    monkeypatch.setattr("pymilvus.Collection", mock_collection)
+    monkeypatch.setattr("pymilvus.CollectionSchema", mock_collection_schema)
+    monkeypatch.setattr("pymilvus.FieldSchema", mock_field_schema)
 
     # Return the top-level utility mock for assertions
     return mock_utility
