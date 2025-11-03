@@ -76,6 +76,7 @@ class MilvusHandshake(BaseHandshake):
         """
         self._import_dependencies()
         super().__init__()
+        self.alias = alias
 
         # 1. Establish connection using the ORM's global connection manager
         if client is not None:
