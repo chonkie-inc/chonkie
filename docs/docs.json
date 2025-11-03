@@ -96,13 +96,14 @@
             "pages": [
               "oss/handshakes/overview",
               "oss/handshakes/chroma-handshake",
-              "oss/handshakes/qdrant-handshake",
-              "oss/handshakes/weaviate-handshake",
-              "oss/handshakes/turbopuffer-handshake",
-              "oss/handshakes/pinecone-handshake",
-              "oss/handshakes/pgvector-handshake",
+              "oss/handshakes/elastic-handshake",
+              "oss/handshakes/milvus-handshake",
               "oss/handshakes/mongodb-handshake",
-              "oss/handshakes/elastic-handshake"
+              "oss/handshakes/pgvector-handshake",
+              "oss/handshakes/pinecone-handshake",
+              "oss/handshakes/qdrant-handshake",
+              "oss/handshakes/turbopuffer-handshake",
+              "oss/handshakes/weaviate-handshake"
             ]
           },
           {
