@@ -51,6 +51,7 @@ from .handshakes import (
     BaseHandshake,
     ChromaHandshake,
     ElasticHandshake,
+    MilvusHandshake,
     MongoDBHandshake,
     PgvectorHandshake,
     PineconeHandshake,
