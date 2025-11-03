@@ -34,12 +34,14 @@ class MilvusHandshake(BaseHandshake):
     defined schema, and ingests chunks for similarity search.
 
     Args:
+        client: An optional pre-initialized MilvusClient instance.
+        uri: The URI to connect to Milvus (e.g., "http://localhost:19530").
         collection_name: The name of the collection to use. If "random", a unique name is generated.
         embedding_model: The embedding model to use for vectorizing chunks.
-        uri: The URI to connect to Milvus (e.g., "http://localhost:19530").
         host: The host of the Milvus instance. Defaults to "localhost".
         port: The port of the Milvus instance. Defaults to "19530".
-        alias: The connection alias to use. Defaults to "default".
+        user: The username to connect to Milvus. Defaults to "".
+        api_key: The API key to connect to Milvus. Defaults to "".
         **kwargs: Additional keyword arguments for future use.
         
     """
@@ -54,38 +56,57 @@ class MilvusHandshake(BaseHandshake):
         port: str = "19530",
         user: Optional[str] = "",
         api_key: Optional[str] = "",
-        alias: str = "default", # Added alias for clarity
+        alias: str = "default",
         **kwargs: Any,
     ) -> None:
-        """Initialize the Milvus Handshake."""
-        super().__init__()
-        self._import_dependencies()
+        """Initialize the Milvus Handshake.
 
-         # 1. Establish connection using the ORM's global connection manager
+        Args:
+            client: An optional pre-initialized MilvusClient instance.
+            uri: The URI to connect to Milvus (e.g., "http://localhost:19530").
+            collection_name: The name of the collection to use. If "random", a unique name is generated.
+            embedding_model: The embedding model to use for vectorizing chunks.
+            host: The host of the Milvus instance. Defaults to "localhost".
+            port: The port of the Milvus instance. Defaults to "19530".
+            user: The username to connect to Milvus. Defaults to "".
+            api_key: The API key to connect to Milvus. Defaults to "".
+            alias: The alias to use for the Milvus connection. Defaults to "default".
+            **kwargs: Additional keyword arguments for future use.
+
+        """
+        self._import_dependencies()
+        super().__init__()
+
+        # 1. Establish connection using the ORM's global connection manager
+        if client is not None:
+            self.client = client
+        else:
+            self.client = MilvusClient(uri=uri, host=host, port=port, user=user, password=api_key, alias=alias, **kwargs) # type: ignore
+        # Always connect using ORM before any collection operations
         try:
-            # Check if a connection with this alias already exists to avoid reconnecting
-            connections.get_connection_addr(alias) # type: ignore
-        except ConnectionNotExistException:
-             # The pymilvus library uses 'token' for the api_key
-            connections.connect(alias=alias, uri=uri, host=host, port=port, user=user, token=api_key, **kwargs) # type: ignore
-        
-        # 2. Initialize the embedding model
+            connections.connect(uri=uri, host=host, port=port, user=user, password=api_key, alias=alias, **kwargs) # type: ignore
+        except Exception as e:
+            print(f"Warning: Could not connect with ORM connections: {e}")
+        # 3. Initialize the embedding model
         if isinstance(embedding_model, str):
             self.embedding_model = AutoEmbeddings.get_embeddings(embedding_model)
         else:
             self.embedding_model = embedding_model
         self.dimension = self.embedding_model.dimension
 
-        # 3. Handle collection name and schema
+        # 4. Handle collection name and schema
+
         if collection_name == "random":
             while True:
                 self.collection_name = generate_random_collection_name()
+                # Pass alias explicitly to utility.has_collection
                 if not self.client.has_collection(self.collection_name): # type: ignore
                     break
         else:
             self.collection_name = collection_name
 
-        if not self.client.has_collection(self.collection_name): # type: ignore
+        # Pass alias explicitly to utility.has_collection
+        if not self.client.has_collection(self.collection_name):
             self._create_collection_with_schema()
 
         self.collection = Collection(self.collection_name) # type: ignore
@@ -94,12 +115,13 @@ class MilvusHandshake(BaseHandshake):
     def _import_dependencies(self) -> None:
         """Lazy import the dependencies."""
         if self._is_available():
-            global Collection, CollectionSchema, DataType, FieldSchema, connections, utility, ConnectionNotExistException
+            global Collection, CollectionSchema, DataType, FieldSchema, connections, utility, ConnectionNotExistException, MilvusClient
             from pymilvus import (
                 Collection,
                 CollectionSchema,
                 DataType,
                 FieldSchema,
+                MilvusClient,
                 connections,
                 utility,
             )
