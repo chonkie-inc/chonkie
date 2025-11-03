@@ -17,7 +17,6 @@ from chonkie.cloud import RecursiveChunker
 
 chunker = RecursiveChunker(
     chunk_size=512,
-    chunk_overlap=128,
     recipe="markdown"
 )
 
@@ -30,7 +29,6 @@ import { RecursiveChunker } from "@chonkiejs/cloud";
 
 const chunker = new RecursiveChunker({
   chunkSize: 512,
-  chunkOverlap: 128,
   recipe: "markdown"
 });
 
@@ -45,7 +43,6 @@ curl -X POST https://api.chonkie.ai/v1/chunk/recursive \
   -d '{
     "text": "Your text here...",
     "chunk_size": 512,
-    "chunk_overlap": 128
   }'
 ```
 
@@ -60,7 +57,6 @@ from chonkie.cloud import RecursiveChunker
 
 chunker = RecursiveChunker(
     chunk_size=512,
-    chunk_overlap=128,
     recipe="markdown"
 )
 
@@ -74,7 +70,6 @@ import { RecursiveChunker } from "@chonkiejs/cloud";
 
 const chunker = new RecursiveChunker({
   chunkSize: 512,
-  chunkOverlap: 128,
   recipe: "markdown"
 });
 
@@ -100,7 +95,6 @@ curl -X POST https://api.chonkie.ai/v1/chunk/recursive \
       "content": "document.txt"
     },
     "chunk_size": 512,
-    "chunk_overlap": 128,
     "recipe": "markdown"
   }'
 ```
