@@ -39,7 +39,7 @@ class FileFetcher(BaseFetcher):
 
         Raises:
             ValueError: If neither or both path and dir are provided
-            FileNotFoundError: If the specified file doesn't exist
+            FileNotFoundError: If the specified file or directory doesn't exist
 
         Examples:
             ```python
@@ -62,10 +62,14 @@ class FileFetcher(BaseFetcher):
             return file_path
 
         elif dir is not None:
+            dir_path = Path(dir)
+            if not dir_path.is_dir():
+                raise FileNotFoundError(f"Directory not found: {dir}")
+            
             # Directory mode (current behavior)
             return [
                 file
-                for file in Path(dir).iterdir()
+                for file in dir_path.rglob("*")
                 if file.is_file() and (ext is None or file.suffix in ext)
             ]
         else:
