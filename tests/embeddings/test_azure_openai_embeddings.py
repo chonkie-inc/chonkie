@@ -14,8 +14,8 @@ def azure_embedding_model() -> AzureOpenAIEmbeddings:
     """Fixture to create an AzureOpenAIEmbeddings instance."""
     return AzureOpenAIEmbeddings(
         model="text-embedding-3-small",
-        azure_endpoint=os.environ.get("AZURE_OPENAI_ENDPOINT"),
-        azure_api_key=os.environ.get("AZURE_OPENAI_API_KEY"),
+        azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
+        azure_api_key=os.getenv("AZURE_OPENAI_API_KEY"),
         deployment="text-embedding-3-small",
     )
 
