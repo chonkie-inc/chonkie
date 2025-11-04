@@ -3,6 +3,7 @@
 import re
 from typing import Any, Dict, List, Optional, Pattern, Type, Union
 
+from .azure_openai import AzureOpenAIEmbeddings
 from .base import BaseEmbeddings
 from .cohere import CohereEmbeddings
 from .gemini import GeminiEmbeddings
@@ -190,6 +191,9 @@ EmbeddingsRegistry.register_pattern(r"^text-embedding-", OpenAIEmbeddings)
 EmbeddingsRegistry.register_model("text-embedding-ada-002", OpenAIEmbeddings)
 EmbeddingsRegistry.register_model("text-embedding-3-small", OpenAIEmbeddings)
 EmbeddingsRegistry.register_model("text-embedding-3-large", OpenAIEmbeddings)
+
+# Register Azure OpenAI embeddings
+EmbeddingsRegistry.register_provider("azure_openai", AzureOpenAIEmbeddings)
 
 # Register model2vec embeddings
 EmbeddingsRegistry.register_provider("model2vec", Model2VecEmbeddings)
