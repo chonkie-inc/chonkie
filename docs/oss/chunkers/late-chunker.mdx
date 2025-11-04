@@ -40,7 +40,7 @@ pip install "chonkie[st]"
 from chonkie import LateChunker
 
 chunker = LateChunker(
-    embedding_model="all-MiniLM-L6-v2",
+    embedding_model="nomic-ai/modernbert-embed-base",
     chunk_size=2048,
     rules=RecursiveRules(),
     min_characters_per_chunk=24,

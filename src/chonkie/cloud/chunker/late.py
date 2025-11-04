@@ -17,7 +17,7 @@ class LateChunker(RecursiveChunker):
 
     def __init__(
         self,
-        embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2",
+        embedding_model: str = "nomic-ai/modernbert-embed-base",
         chunk_size: int = 512,
         min_characters_per_chunk: int = 24,
         recipe: str = "default",

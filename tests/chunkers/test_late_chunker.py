@@ -11,7 +11,7 @@ from chonkie.types import Chunk, RecursiveLevel, RecursiveRules
 @pytest.fixture
 def embedding_model() -> SentenceTransformerEmbeddings:
     """Return an object of SentenceTransformerEmbeddings type."""
-    return SentenceTransformerEmbeddings("all-MiniLM-L6-v2")
+    return SentenceTransformerEmbeddings("nomic-ai/modernbert-embed-base")
 
 
 @pytest.fixture
