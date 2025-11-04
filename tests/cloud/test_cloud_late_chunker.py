@@ -70,7 +70,7 @@ def test_cloud_late_chunker_initialization(mock_requests_get) -> None:
 
     # Check default initialization
     chunker = LateChunker(api_key="test_key")
-    assert chunker.embedding_model == "sentence-transformers/all-MiniLM-L6-v2"
+    assert chunker.embedding_model == "nomic-ai/modernbert-embed-base"
     assert chunker.chunk_size == 512
     assert chunker.min_characters_per_chunk == 24  # Default for LateChunker
     # Verify attributes set for the superclass
