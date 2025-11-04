@@ -144,7 +144,7 @@ def test_initialization_with_env_vars() -> None:
 
 
 @pytest.mark.skipif(
-    "AZURE_OPENAI_ENDPOINT" not in os.environ,
+    not os.getenv("AZURE_OPENAI_ENDPOINT"),
     reason="Skipping test because AZURE_OPENAI_ENDPOINT is not defined",
 )
 def test_initialization_model_as_first_param() -> None:
