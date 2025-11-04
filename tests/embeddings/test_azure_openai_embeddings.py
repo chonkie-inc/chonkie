@@ -140,7 +140,7 @@ def test_initialization_with_env_vars() -> None:
     embeddings = AzureOpenAIEmbeddings(model="text-embedding-3-small")
     assert embeddings.model == "text-embedding-3-small"
     assert embeddings.client is not None
-    assert embeddings.base_url == os.environ.get("AZURE_OPENAI_ENDPOINT")
+    assert embeddings.base_url == os.getenv("AZURE_OPENAI_ENDPOINT")
 
 
 @pytest.mark.skipif(
