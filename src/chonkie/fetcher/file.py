@@ -1,5 +1,6 @@
 """FileFetcher is a fetcher that fetches paths of files from local directories."""
 
+import os
 from pathlib import Path
 from typing import List, Optional, Union
 
@@ -65,13 +66,17 @@ class FileFetcher(BaseFetcher):
             dir_path = Path(dir)
             if not dir_path.is_dir():
                 raise FileNotFoundError(f"Directory not found: {dir}")
-            
-            # Directory mode (current behavior)
-            return [
-                file
-                for file in dir_path.rglob("*")
-                if file.is_file() and (ext is None or file.suffix in ext)
-            ]
+
+            # Use os.walk for a safe recursive walk, avoiding symlink loops.
+            all_files: List[Path] = []
+            for root, _, filenames in os.walk(dir_path, followlinks=False):
+                for filename in filenames:
+                    # Check extension if a filter is provided
+                    if ext is None or os.path.splitext(filename)[1] in ext:
+                        # Construct the full path and add it to the list
+                        full_path = Path(os.path.join(root, filename))
+                        all_files.append(full_path)
+            return all_files
         else:
             raise ValueError("Must provide either 'path' or 'dir'")
 
