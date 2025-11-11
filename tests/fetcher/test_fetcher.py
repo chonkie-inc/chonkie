@@ -62,7 +62,7 @@ class TestFileFetcher:
             (temp_path / "file4.txt").write_text("Content of file4")
             (temp_path / "no_extension_file").write_text("File without extension")
             
-            # Create a subdirectory with a file (should be ignored by fetch)
+            # Create a subdirectory with a file (should now be included by fetch)
             subdir = temp_path / "subdirectory"
             subdir.mkdir()
             (subdir / "nested_file.txt").write_text("Nested file content")
@@ -81,11 +81,11 @@ class TestFileFetcher:
         assert isinstance(file_fetcher, BaseFetcher)
     
     def test_fetch_all_files_no_filter(self, file_fetcher, temp_dir_with_files):
-        """Test fetching all files without extension filter."""
+        """Test fetching all files, now including nested files."""
         files = file_fetcher.fetch(dir=temp_dir_with_files)
 
-        # Should return all files but not directories
-        assert len(files) == 5  # file1.txt, file2.py, file3.md, file4.txt, no_extension_file
+        # Should return all files, including the nested one.
+        assert len(files) == 6  # file1.txt, file2.py, file3.md, file4.txt, no_extension_file, nested_file.txt
         
         # Verify all returned items are Path objects and files
         for file_path in files:
@@ -99,6 +99,7 @@ class TestFileFetcher:
         assert "file3.md" in file_names
         assert "file4.txt" in file_names
         assert "no_extension_file" in file_names
+        assert "nested_file.txt" in file_names # Verify the nested file is found
         
         # Verify subdirectory is not included
         assert "subdirectory" not in file_names
@@ -107,12 +108,13 @@ class TestFileFetcher:
         """Test fetching files with single extension filter."""
         files = file_fetcher.fetch(dir=temp_dir_with_files, ext=[".txt"])
         
-        # Should return only .txt files
-        assert len(files) == 2  # file1.txt, file4.txt
+        # NOTE: This test now implicitly tests recursion. It should find 3 .txt files.
+        assert len(files) == 3  # file1.txt, file4.txt, nested_file.txt
         
         file_names = [f.name for f in files]
         assert "file1.txt" in file_names
         assert "file4.txt" in file_names
+        assert "nested_file.txt" in file_names # Check for nested .txt file
         assert "file2.py" not in file_names
         assert "file3.md" not in file_names
     
@@ -120,13 +122,14 @@ class TestFileFetcher:
         """Test fetching files with multiple extension filters."""
         files = file_fetcher.fetch(dir=temp_dir_with_files, ext=[".txt", ".py"])
         
-        # Should return .txt and .py files
-        assert len(files) == 3  # file1.txt, file2.py, file4.txt
+        # NOTE: This test now implicitly tests recursion. It should find 4 files.
+        assert len(files) == 4  # file1.txt, file2.py, file4.txt, nested_file.txt
         
         file_names = [f.name for f in files]
         assert "file1.txt" in file_names
         assert "file2.py" in file_names
         assert "file4.txt" in file_names
+        assert "nested_file.txt" in file_names
         assert "file3.md" not in file_names
         assert "no_extension_file" not in file_names
     
@@ -195,10 +198,10 @@ class TestFileFetcher:
         
         assert len(files1) == len(files2)
         assert set(f.name for f in files1) == set(f.name for f in files2)
-        assert len(files1) == 2  # Should have 2 .txt files
+        assert len(files1) == 3  # Should have 3 .txt files now
     
     def test_fetch_ignores_subdirectories(self, file_fetcher, temp_dir_with_files):
-        """Test that fetch method ignores subdirectories and only returns files."""
+        """Test that fetch method returns files, not the directories themselves."""
         files = file_fetcher.fetch(dir=temp_dir_with_files)
         
         # Verify no directories are returned
@@ -206,7 +209,7 @@ class TestFileFetcher:
             assert file_path.is_file()
             assert not file_path.is_dir()
         
-        # Verify subdirectory is not in results
+        # Verify subdirectory name is not in the results as a file
         file_names = [f.name for f in files]
         assert "subdirectory" not in file_names
     
