@@ -1,13 +1,14 @@
 """Centralized logging configuration for Chonkie.
 
 This module provides a simple, extensible logging interface using Python's standard logging.
-Logging defaults to ERROR level but can be customized via the CHONKIE_LOG environment
-variable or programmatic API.
+Logging is disabled by default (library pattern) but can be enabled via the CHONKIE_LOG
+environment variable or programmatic API.
 
 Environment Variable:
     CHONKIE_LOG: Control logging behavior
-        - off/false/0/disabled/none: Disable logging
-        - error/1: ERROR level only (default)
+        - Not set: Disabled (default, no output)
+        - off/false/0/disabled/none: Explicitly disable logging
+        - error/1: ERROR level only
         - warning/2: WARNING and above
         - info/3: INFO and above
         - debug/4: DEBUG and above (most verbose)
@@ -27,7 +28,7 @@ Example:
 import logging
 import os
 import sys
-from typing import Optional, Tuple
+from typing import Any, Dict, MutableMapping, Optional, Tuple
 
 # Track if we've configured the logger
 _configured = False
@@ -49,9 +50,9 @@ def _parse_log_setting(value: Optional[str]) -> Tuple[bool, str]:
         (enabled, level) tuple where enabled is bool and level is string
 
     """
-    # If not set (None or empty), default to ERROR level (show errors but not info/debug)
+    # If not set (None or empty), logging is disabled (library pattern)
     if not value:
-        return True, DEFAULT_LOG_LEVEL
+        return False, DEFAULT_LOG_LEVEL
 
     value = value.lower().strip()
 
@@ -80,10 +81,9 @@ def _parse_log_setting(value: Optional[str]) -> Tuple[bool, str]:
 def _configure_default() -> None:
     """Configure logger with default settings if not already configured.
 
-    Default behavior:
-    - Logs ERROR level messages to stderr (show critical issues)
-    - Can be disabled with CHONKIE_LOG=off
-    - Can be made more verbose with CHONKIE_LOG=info or CHONKIE_LOG=debug
+    Default behavior (library pattern):
+    - Logging is disabled by default (NullHandler)
+    - Can be enabled with CHONKIE_LOG=error/warning/info/debug
     - Supports hierarchical loggers (e.g., chonkie.chunker.base)
     """
     global _configured, _enabled, _handler
@@ -101,11 +101,11 @@ def _configure_default() -> None:
 
     # Configure handler based on enabled state
     if not enabled:
-        # User explicitly disabled logging (CHONKIE_LOG=off)
+        # Logging is disabled (default or CHONKIE_LOG=off)
         if not logger.handlers:
             logger.addHandler(logging.NullHandler())
     else:
-        # Logging is enabled (either by default at ERROR level, or explicitly set)
+        # Logging is explicitly enabled via CHONKIE_LOG
         # Remove NullHandler if present
         logger.handlers = [h for h in logger.handlers if not isinstance(h, logging.NullHandler)]
 
@@ -136,7 +136,7 @@ class LoggerAdapter(logging.LoggerAdapter):
     Standard logging doesn't support this, so we capture kwargs and ignore them.
     """
 
-    def process(self, msg, kwargs):
+    def process(self, msg: str, kwargs: MutableMapping[str, Any]) -> Tuple[str, MutableMapping[str, Any]]:
         # Remove any extra keyword arguments that aren't supported by standard logging
         # Standard logging only supports: exc_info, stack_info, stacklevel, extra
         valid_keys = {'exc_info', 'stack_info', 'stacklevel', 'extra'}
@@ -183,12 +183,12 @@ def configure_logging(
 
     Args:
         level: Log level or control string:
-            - "off"/"false"/"0"/"disabled": Disable logging
-            - "error"/"1": ERROR level only (default)
+            - "off"/"false"/"0"/"disabled": Disable logging (default)
+            - "error"/"1": ERROR level only
             - "warning"/"2": WARNING and above
             - "info"/"3": INFO and above
             - "debug"/"4": DEBUG and above
-            - None: Use CHONKIE_LOG env var or default to ERROR
+            - None: Use CHONKIE_LOG env var or disabled if not set
         format: Optional custom format string. Uses default if None.
 
     Example:
