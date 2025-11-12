@@ -178,10 +178,10 @@ class TestVisualizerThemeManagement:
         """Test color darkening with invalid hex colors."""
         with patch('rich.console.Console'):
             viz = Visualizer()
-            with patch('builtins.print') as mock_print:
+            with patch('chonkie.utils.viz.logger.warning') as mock_warning:
                 result = viz._darken_color("invalid", 0.5)
                 assert result == "#808080"
-                mock_print.assert_called_once()
+                mock_warning.assert_called_once()
 
     def test_darken_color_edge_cases(self) -> None:
         """Test color darkening edge cases."""
@@ -276,16 +276,16 @@ class TestVisualizerSaveMethod:
 
     def test_save_empty_chunks(self) -> None:
         """Test saving with empty chunks."""
-        with patch('rich.console.Console'), patch('builtins.print') as mock_print:
+        with patch('rich.console.Console'), patch('chonkie.utils.viz.logger.info') as mock_info:
             viz = Visualizer()
             viz.save("test.html", [])
-            mock_print.assert_called_with("No chunks to visualize. HTML file not saved.")
+            mock_info.assert_called_with("No chunks to visualize. HTML file not saved.")
 
     def test_save_with_full_text(self, sample_chunks: List[Chunk], sample_text: str) -> None:
         """Test saving with provided full text."""
         with patch('rich.console.Console'), tempfile.TemporaryDirectory() as tmpdir:
             filepath = os.path.join(tmpdir, "test.html")
-            with patch('builtins.print') as mock_print:
+            with patch('chonkie.utils.viz.logger.info') as mock_info:
                 viz = Visualizer()
                 viz.save(filepath, sample_chunks, sample_text)
                 assert os.path.exists(filepath)
@@ -297,8 +297,9 @@ class TestVisualizerSaveMethod:
                 assert "a test." in content
                 assert 'Chunk Visualization' in content
                 assert 'background-color:' in content
-                mock_print.assert_called_once()
-                assert f"file://{os.path.abspath(filepath)}" in mock_print.call_args[0][0]
+                # Check that logger.info was called with the success message
+                mock_info.assert_called_once()
+                assert f"file://{os.path.abspath(filepath)}" in mock_info.call_args[0][0]
 
     def test_save_without_full_text(self, sample_chunks: List[Chunk]) -> None:
         """Test saving without provided full text (reconstruction)."""
@@ -384,11 +385,11 @@ class TestVisualizerSaveMethod:
 
     def test_save_favicon_encoding_error(self, sample_chunks: List[Chunk]) -> None:
         """Test handling of favicon encoding errors."""
-        with patch('rich.console.Console'), patch('base64.b64encode', side_effect=Exception("Encoding error")), patch('builtins.print') as mock_print, tempfile.TemporaryDirectory() as tmpdir:
+        with patch('rich.console.Console'), patch('base64.b64encode', side_effect=Exception("Encoding error")), patch('chonkie.utils.viz.logger.warning') as mock_warning, tempfile.TemporaryDirectory() as tmpdir:
             filepath = os.path.join(tmpdir, "test.html")
             viz = Visualizer()
             viz.save(filepath, sample_chunks)
-            mock_print.assert_any_call("Warning: Could not encode embedded hippo favicon: Encoding error")
+            mock_warning.assert_any_call("Could not encode embedded hippo favicon: Encoding error")
 
     def test_save_invalid_chunks(self) -> None:
         """Test saving with invalid chunks."""

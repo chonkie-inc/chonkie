@@ -1,14 +1,14 @@
 """Centralized logging configuration for Chonkie.
 
 This module provides a simple, extensible logging interface using Python's standard logging.
-Logging is disabled by default (library pattern) but can be customized
-via the CHONKIE_LOG environment variable or programmatic API.
+Logging defaults to ERROR level but can be customized via the CHONKIE_LOG environment
+variable or programmatic API.
 
 Environment Variable:
     CHONKIE_LOG: Control logging behavior
         - off/false/0/disabled/none: Disable logging
-        - error/1: ERROR level only
-        - warning/2: WARNING and above (default if enabled)
+        - error/1: ERROR level only (default)
+        - warning/2: WARNING and above
         - info/3: INFO and above
         - debug/4: DEBUG and above (most verbose)
 
@@ -35,7 +35,7 @@ _enabled = True
 _handler: Optional[logging.Handler] = None
 
 # Default configuration
-DEFAULT_LOG_LEVEL = "WARNING"
+DEFAULT_LOG_LEVEL = "ERROR"
 DEFAULT_FORMAT = "%(asctime)s | %(levelname)-8s | %(name)s:%(funcName)s:%(lineno)d - %(message)s"
 
 
@@ -49,12 +49,13 @@ def _parse_log_setting(value: Optional[str]) -> Tuple[bool, str]:
         (enabled, level) tuple where enabled is bool and level is string
 
     """
+    # If not set (None or empty), default to ERROR level (show errors but not info/debug)
     if not value:
         return True, DEFAULT_LOG_LEVEL
 
     value = value.lower().strip()
 
-    # Handle disable cases
+    # Handle explicit disable cases
     if value in ("off", "false", "0", "disabled", "none"):
         return False, DEFAULT_LOG_LEVEL
 
@@ -72,17 +73,18 @@ def _parse_log_setting(value: Optional[str]) -> Tuple[bool, str]:
     if value.upper() in ("ERROR", "WARNING", "INFO", "DEBUG"):
         return True, value.upper()
 
-    # Default to WARNING if value is unclear (e.g., "true", "on", etc.)
+    # If set to something unclear (e.g., "true", "on"), enable at WARNING level
     return True, DEFAULT_LOG_LEVEL
 
 
 def _configure_default() -> None:
     """Configure logger with default settings if not already configured.
 
-    Following Python logging best practices for libraries:
-    - By default, add NullHandler (no output unless user configures)
-    - Only add handlers if user explicitly opts in via CHONKIE_LOG env var
-    - Support hierarchical loggers (e.g., chonkie.chunker.base)
+    Default behavior:
+    - Logs ERROR level messages to stderr (show critical issues)
+    - Can be disabled with CHONKIE_LOG=off
+    - Can be made more verbose with CHONKIE_LOG=info or CHONKIE_LOG=debug
+    - Supports hierarchical loggers (e.g., chonkie.chunker.base)
     """
     global _configured, _enabled, _handler
 
@@ -92,18 +94,18 @@ def _configure_default() -> None:
     # Get the chonkie logger (parent of all chonkie.* loggers)
     logger = logging.getLogger("chonkie")
 
-    # Library pattern: Add NullHandler by default (no output)
-    # This prevents "No handlers found" warnings
-    if not logger.handlers:
-        logger.addHandler(logging.NullHandler())
-
     # Parse CHONKIE_LOG environment variable
     chonkie_log = os.getenv("CHONKIE_LOG")
     enabled, level = _parse_log_setting(chonkie_log)
     _enabled = enabled
 
-    # Only configure if user explicitly wants logs (CHONKIE_LOG is set and not disabled)
-    if enabled and chonkie_log is not None:
+    # Configure handler based on enabled state
+    if not enabled:
+        # User explicitly disabled logging (CHONKIE_LOG=off)
+        if not logger.handlers:
+            logger.addHandler(logging.NullHandler())
+    else:
+        # Logging is enabled (either by default at ERROR level, or explicitly set)
         # Remove NullHandler if present
         logger.handlers = [h for h in logger.handlers if not isinstance(h, logging.NullHandler)]
 
@@ -182,11 +184,11 @@ def configure_logging(
     Args:
         level: Log level or control string:
             - "off"/"false"/"0"/"disabled": Disable logging
-            - "error"/"1": ERROR level only
+            - "error"/"1": ERROR level only (default)
             - "warning"/"2": WARNING and above
             - "info"/"3": INFO and above
             - "debug"/"4": DEBUG and above
-            - None: Use CHONKIE_LOG env var or default to WARNING
+            - None: Use CHONKIE_LOG env var or default to ERROR
         format: Optional custom format string. Uses default if None.
 
     Example:
