@@ -28,7 +28,7 @@ Example:
 import logging
 import os
 import sys
-from typing import Any, Dict, MutableMapping, Optional, Tuple
+from typing import Any, MutableMapping, Optional, Tuple
 
 # Track if we've configured the logger
 _configured = False
