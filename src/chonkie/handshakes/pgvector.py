@@ -192,8 +192,7 @@ class PgvectorHandshake(BaseHandshake):
         # Upsert all records at once
         self.collection.upsert(records=records)
 
-        logger.info(f"Successfully wrote {len(chunks)} chunks to PostgreSQL collection: {self.collection_name}")
-        print(f"🦛 Chonkie wrote {len(chunks)} chunks to PostgreSQL collection: {self.collection_name}")
+        logger.info(f"Chonkie wrote {len(chunks)} chunks to PostgreSQL collection: {self.collection_name}")
         return chunk_ids
 
     def search(
@@ -258,13 +257,13 @@ class PgvectorHandshake(BaseHandshake):
         """
         # Create index using vecs (vecs handles the specifics)
         self.collection.create_index(method=method, **index_params)
-        
-        print(f"🦛 Created {method} index on collection: {self.collection_name}")
+
+        logger.info(f"Created {method} index on collection: {self.collection_name}")
 
     def delete_collection(self) -> None:
         """Delete the entire collection."""
         self.client.delete_collection(self.collection_name)
-        print(f"🦛 Deleted collection: {self.collection_name}")
+        logger.info(f"Deleted collection: {self.collection_name}")
 
     def get_collection_info(self) -> Dict[str, Any]:
         """Get information about the collection."""

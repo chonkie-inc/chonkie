@@ -46,7 +46,7 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Information Analysis",
     "Topic :: Text Processing :: Linguistic",
 ]
-dependencies = ["tqdm>=4.64.0", "loguru>=0.7.0", "numpy>=2.0.0"]
+dependencies = ["tqdm>=4.64.0", "numpy>=2.0.0"]
 
 [project.urls]
 Homepage = "https://github.com/chonkie-inc/chonkie"

@@ -99,7 +99,7 @@ class PineconeHandshake(BaseHandshake):
                 self.index_name = generate_random_collection_name()
                 if not self.client.has_index(self.index_name):
                     break
-            print(f"🦛 Chonkie created a new index in Pinecone: {self.index_name}")
+            logger.info(f"Chonkie created a new index in Pinecone: {self.index_name}")
         else:
             self.index_name = index_name
 
@@ -191,10 +191,7 @@ class PineconeHandshake(BaseHandshake):
         logger.debug(f"Writing {len(chunks)} chunks to Pinecone index: {self.index_name}")
         vectors = self._get_vectors(chunks)
         self.index.upsert(vectors)
-        logger.info(f"Successfully wrote {len(chunks)} chunks to Pinecone index: {self.index_name}")
-        print(
-            f"🦛 Chonkie wrote {len(chunks)} chunks to Pinecone index: {self.index_name}"
-        )
+        logger.info(f"Chonkie wrote {len(chunks)} chunks to Pinecone index: {self.index_name}")
 
     def __repr__(self) -> str:
         """Return a string representation of the PineconeHandshake instance.
@@ -233,7 +230,7 @@ class PineconeHandshake(BaseHandshake):
         elif query is not None:
             # warning if both query and embedding are provided, query is used
             if embedding is not None:
-                print("⚠️ Warning: Both query and embedding provided. Using query.")
+                logger.warning("Both query and embedding provided. Using query.")
             # Use custom embedding model to embed the query
             embedding = self.embedding_model.embed(query).tolist()  # type: ignore
         results = self.index.query(vector=embedding, top_k=limit, include_metadata=True)

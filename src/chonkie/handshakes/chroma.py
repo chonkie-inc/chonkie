@@ -152,9 +152,7 @@ class ChromaHandshake(BaseHandshake):
                     break
                 except Exception:
                     pass
-            print(
-                f"🦛 Chonkie created a new collection in ChromaDB: {self.collection_name}"
-            )
+            logger.info(f"Chonkie created a new collection in ChromaDB: {self.collection_name}")
 
         # Now that we have a collection, we can write the Chunks to it!
 
@@ -206,10 +204,7 @@ class ChromaHandshake(BaseHandshake):
             metadatas=metadata,  # type: ignore
         )
 
-        logger.info(f"Successfully wrote {len(chunks)} chunks to Chroma collection: {self.collection_name}")
-        print(
-            f"🦛 Chonkie wrote {len(chunks)} Chunks to the Chroma collection: {self.collection_name}"
-        )
+        logger.info(f"Chonkie wrote {len(chunks)} chunks to the Chroma collection: {self.collection_name}")
 
     def __repr__(self) -> str:
         """Return the string representation of the ChromaHandshake."""

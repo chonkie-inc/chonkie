@@ -77,7 +77,7 @@ class TurbopufferHandshake(BaseHandshake):
                     if namespace_name not in namespaces:
                         break
             self.namespace = self.tpuf.namespace(namespace_name)  # type: ignore[attr-defined]
-            print(f"🦛 Chonkie has created a new namespace: {self.namespace.id}")  # type: ignore[attr-defined]
+            logger.info(f"Chonkie has created a new namespace: {self.namespace.id}")  # type: ignore[attr-defined]
         else:
             self.namespace = namespace
 
@@ -137,8 +137,7 @@ class TurbopufferHandshake(BaseHandshake):
             distance_metric="cosine_distance",
         )
 
-        logger.info(f"Successfully wrote {len(chunks)} chunks to Turbopuffer namespace: {self.namespace.name}")  # type: ignore[attr-defined]
-        print(f"🦛 Chonkie has written {len(chunks)} chunks to the namespace: {self.namespace.name}")  # type: ignore[attr-defined]
+        logger.info(f"Chonkie has written {len(chunks)} chunks to the namespace: {self.namespace.name}")  # type: ignore[attr-defined]
 
     def __repr__(self) -> str:
         """Return the representation of the Turbopuffer Handshake."""

@@ -6,7 +6,10 @@ import os
 import warnings
 from typing import List, Optional, Union
 
+from chonkie.logger import get_logger
 from chonkie.types import Chunk
+
+logger = get_logger(__name__)
 
 # light themes
 LIGHT_THEMES = {
@@ -238,7 +241,7 @@ class Visualizer:
             darker_rgb = tuple(max(0, int(c * amount)) for c in rgb)
             return "#{:02x}{:02x}{:02x}".format(*darker_rgb)
         except Exception as e:
-            print(f"Warning: Could not darken color {hex_color}: {e}")
+            logger.warning(f"Could not darken color {hex_color}: {e}")
             return "#808080"
 
     def print(self, chunks: List[Chunk], full_text: Optional[str] = None) -> None:
@@ -302,8 +305,8 @@ class Visualizer:
 
         """
         # (Input validation and text reconstruction logic remains the same)
-        if not chunks: 
-            print("No chunks to visualize. HTML file not saved.")
+        if not chunks:
+            logger.info("No chunks to visualize. HTML file not saved.")
             return
         # If the full text is not provided, we'll try to reconstruct it (assuming the chunks are reconstructable)
         if full_text is None:
@@ -409,7 +412,7 @@ class Visualizer:
             favicon_data_uri = f"data:image/svg+xml;base64,{encoded_svg}"
             favicon_link_tag = f'<link rel="icon" type="image/svg+xml" href="{favicon_data_uri}">'
         except Exception as e:
-            print(f"Warning: Could not encode embedded hippo favicon: {e}")
+            logger.warning(f"Could not encode embedded hippo favicon: {e}")
 
         # Footer and Main Content (remain the same)
         footer_content = FOOTER_TEMPLATE
@@ -444,7 +447,7 @@ class Visualizer:
             filepath = os.path.abspath(filename)
             with open(filepath, 'w', encoding='utf-8') as f:
                 f.write(html_content)
-            print(f"HTML visualization saved to: file://{filepath}")
+            logger.info(f"HTML visualization saved to: file://{filepath}")
         except IOError as e:
             raise IOError(f"Error: Could not write file '{filename}': {e}")
         except Exception as e:
