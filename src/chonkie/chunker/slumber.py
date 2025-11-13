@@ -192,11 +192,11 @@ class SlumberChunker(BaseChunker):
                 return base + addition
             
             # Don't add space before punctuation
-            if first_char in ",.;:?!)]}":
+            if first_char in ",.;:?!)]}'\"":
                 return base + addition
             
             # Don't add space after opening brackets
-            if last_char in "([{":
+            if last_char in "([{'\"":
                 return base + addition
             
             # Otherwise, add a space
