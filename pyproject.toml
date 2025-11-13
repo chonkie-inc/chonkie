@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "chonkie"
 version = "1.4.1"
-description = "🦛 CHONK your texts with Chonkie ✨ - The no-nonsense chunking library"
+description = "🦛 CHONK your texts with Chonkie ✨ - The lightweight ingestion library for fast, efficient and robust RAG pipelines"
 readme = "README.md"
 requires-python = ">=3.9"
 license = { file = "LICENSE" }
