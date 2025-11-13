@@ -254,13 +254,13 @@
     "metatags": {
       "og:site_map": "Chonkie Documentation",
       "og:title": "Chonkie Documentation",
-      "og:description": "🦛 CHONK your text with Chonkie✨ - A no nonsense text chunking library for RAGs",
+      "og:description": "🦛 CHONK your text with Chonkie✨ - The lightweight ingestion library for fast, efficient and robust RAG pipelines",
       "og:url": "https://docs.chonkie.ai",
       "og:image": "/images/chonkie_logo_white_bg_brown.png",
       "og:logo": "/logo/chonkie_logo_horizontal_large.png",
       "article:publisher": "https://github.com/chonkie-inc",
       "twitter:title": "Chonkie Documentation",
-      "twitter:description": "🦛 CHONK your text with Chonkie✨ - A no nonsense text chunking library for RAGS",
+      "twitter:description": "🦛 CHONK your text with Chonkie✨ - The lightweight ingestion library for fast, efficient and robust RAG pipelines",
       "twitter:site": "https://docs.chonkie.ai",
       "twitter:image": "/images/chonkie_logo_white_bg_brown.png"
     },
