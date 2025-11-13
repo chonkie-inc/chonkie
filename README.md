@@ -13,7 +13,7 @@
 [![Discord](https://dcbadge.limes.pink/api/server/https://discord.gg/vH3SkRqmUz?style=flat)](https://discord.gg/vH3SkRqmUz)
 [![GitHub stars](https://img.shields.io/github/stars/chonkie-inc/chonkie.svg)](https://github.com/chonkie-inc/chonkie/stargazers)
 
-_The no-nonsense ultra-light RAG pipeline that CHONKs, refines, and ships your texts!_
+_The lightweight ingestion library for fast, efficient and robust RAG pipelines_
 
 [Installation](#installation) •
 [Usage](#usage) •
@@ -321,7 +321,7 @@ If you use Chonkie in your research, please cite it as follows:
 ```bibtex
 @software{chonkie2025,
   author = {Minhas, Bhavnick AND Nigam, Shreyash},
-  title = {Chonkie: A no-nonsense fast, lightweight, and efficient text chunking library},
+  title = {Chonkie: The lightweight ingestion library for fast, efficient and robust RAG pipelines},
   year = {2025},
   publisher = {GitHub},
   howpublished = {\url{https://github.com/chonkie-inc/chonkie}},
