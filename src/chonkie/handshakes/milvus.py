@@ -14,10 +14,13 @@ from typing import (
 import numpy as np
 
 from chonkie.embeddings import AutoEmbeddings, BaseEmbeddings
+from chonkie.logger import get_logger
 from chonkie.types import Chunk
 
 from .base import BaseHandshake
 from .utils import generate_random_collection_name
+
+logger = get_logger(__name__)
 
 if TYPE_CHECKING:
     from pymilvus import (
@@ -87,7 +90,7 @@ class MilvusHandshake(BaseHandshake):
         try:
             connections.connect(uri=uri, host=host, port=port, user=user, password=api_key, alias=alias, **kwargs) # type: ignore
         except Exception as e:
-            print(f"Warning: Could not connect with ORM connections: {e}")
+            logger.warning(f"Could not connect with ORM connections: {e}")
         # 3. Initialize the embedding model
         if isinstance(embedding_model, str):
             self.embedding_model = AutoEmbeddings.get_embeddings(embedding_model)
@@ -150,7 +153,7 @@ class MilvusHandshake(BaseHandshake):
         ]
         schema = CollectionSchema(fields, description="Chonkie Handshake Collection") # type: ignore
         collection = Collection(self.collection_name, schema) # type: ignore
-        print(f"🦛 Chonkie created a new collection in Milvus: {self.collection_name}")
+        logger.info(f"Chonkie created a new collection in Milvus: {self.collection_name}")
 
         # Create a default index for the vector field
         index_params = {
@@ -159,7 +162,7 @@ class MilvusHandshake(BaseHandshake):
             "params": {"M": 16, "efConstruction": 200},
         }
         collection.create_index(field_name="embedding", index_params=index_params)
-        print("✅ Created default HNSW index on 'embedding' field.")
+        logger.info("Created default HNSW index on 'embedding' field.")
 
     def write(self, chunks: Union[Chunk, List[Chunk]]) -> None:
         """Write the chunks to the Milvus collection."""
@@ -178,9 +181,7 @@ class MilvusHandshake(BaseHandshake):
         mutation_result = self.collection.insert(data_to_insert)
         self.collection.flush() # Essential to make data searchable
 
-        print(
-            f"🦛 Chonkie wrote {mutation_result.insert_count} chunks to Milvus collection: {self.collection_name}"
-        )
+        logger.info(f"Chonkie wrote {mutation_result.insert_count} chunks to Milvus collection: {self.collection_name}")
 
     def __repr__(self) -> str:
         """Return the string representation of the MilvusHandshake."""

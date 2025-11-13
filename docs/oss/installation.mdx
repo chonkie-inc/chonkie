@@ -202,3 +202,16 @@ _(Note: Specific dependencies for `[genie]` might vary slightly based on impleme
 - We provide separate `semantic` and `all` installs pre-packaged that might match other installation options breeding redundancy. This redundancy is intentional to provide users with the best experience and freedom to choose their preferred means.
 - The `semantic` and `all` optional installs may change in future versions, so what you download today may not be the same for tomorrow.
 - Installing either 'semantic' or 'openai' extras will enable SemanticChunker and SDPMChunker, as these chunkers can work with any embeddings provider. The difference is in which embedding providers are available for use with these chunkers.
+
+## Logging
+
+Chonkie logs warnings and errors by default. Control logging with the `CHONKIE_LOG` environment variable:
+
+```bash
+export CHONKIE_LOG=off     # Disable logging
+export CHONKIE_LOG=warning # Warnings and errors (default)
+export CHONKIE_LOG=info    # More verbose
+export CHONKIE_LOG=debug   # Everything
+```
+
+See [Logging](/oss/utils/logging) for more details.
