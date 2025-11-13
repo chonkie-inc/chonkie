@@ -24,16 +24,16 @@ export CHONKIE_LOG=off    # Disable all logging
 Configure logging from your Python code:
 
 ```python
-from chonkie.logger import configure_logging
+import chonkie
 
 # Enable debug logging
-configure_logging("debug")
+chonkie.logger.configure("debug")
 
 # Disable logging completely
-configure_logging("off")
+chonkie.logger.configure("off")
 
 # Back to warnings and errors
-configure_logging("warning")
+chonkie.logger.configure("warning")
 ```
 
 ## Log Levels
@@ -44,11 +44,58 @@ configure_logging("warning")
 - `error` - Only errors
 - `off` - Silent
 
-## Example Output
+## Custom Format
 
-```
-2025-11-13 13:54:00,432 | WARNING  | chonkie.chunker.base:__init__:32 - Token limit exceeded
-2025-11-13 13:54:00,432 | ERROR    | chonkie.handshakes.chroma:write:207 - Failed to write chunks
-```
+Change the log format to suit your needs:
+
+<Tabs>
+  <Tab title="Default">
+    ```python
+    import chonkie
+    chonkie.logger.configure("info")
+    ```
+
+    Output:
+    ```
+    2025-11-13 14:18:58,714 | INFO | chonkie.chunker.token:chunk:143 - Created 5 chunks
+    ```
+  </Tab>
+
+  <Tab title="Simple">
+    ```python
+    import chonkie
+    chonkie.logger.configure("info", format="%(levelname)s - %(message)s")
+    ```
+
+    Output:
+    ```
+    INFO - Created 5 chunks
+    ```
+  </Tab>
+
+  <Tab title="Minimal">
+    ```python
+    import chonkie
+    chonkie.logger.configure("info", format="%(message)s")
+    ```
+
+    Output:
+    ```
+    Created 5 chunks
+    ```
+  </Tab>
+
+  <Tab title="Detailed">
+    ```python
+    import chonkie
+    chonkie.logger.configure("info", format="[%(name)s] %(levelname)s: %(message)s")
+    ```
+
+    Output:
+    ```
+    [chonkie.chunker.token] INFO: Created 5 chunks
+    ```
+  </Tab>
+</Tabs>
 
 That's it. Logging is simple and stays out of your way.

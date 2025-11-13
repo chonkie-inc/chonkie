@@ -4,9 +4,9 @@
 import pytest
 
 from chonkie.logger import (
-    configure_logging,
-    disable_logging,
-    enable_logging,
+    configure,
+    disable,
+    enable,
     get_logger,
     is_enabled,
 )
@@ -18,28 +18,28 @@ def test_get_logger():
     assert logger is not None
 
 
-def test_configure_logging_levels():
+def test_configure_levels():
     """Test configuring different log levels."""
     # Test each level
     for level in ["off", "error", "warning", "info", "debug", "1", "2", "3", "4"]:
-        configure_logging(level)
+        configure(level)
         # If not "off", logging should be enabled
         if level not in ("off", "false", "0", "disabled"):
             assert is_enabled()
 
 
-def test_disable_enable_logging():
+def test_disable_enable():
     """Test disabling and re-enabling logging."""
     # Enable first
-    enable_logging("info")
+    enable("info")
     assert is_enabled()
 
     # Disable
-    disable_logging()
+    disable()
     assert not is_enabled()
 
     # Re-enable
-    enable_logging("debug")
+    enable("debug")
     assert is_enabled()
 
 
@@ -48,7 +48,7 @@ def test_logging_with_chunker():
     from chonkie import TokenChunker
 
     # Enable logging at INFO level
-    configure_logging("info")
+    configure("info")
 
     # Create a chunker and process some text
     chunker = TokenChunker(chunk_size=10)
@@ -62,7 +62,7 @@ def test_logging_disabled_with_chunker():
     from chonkie import TokenChunker
 
     # Disable logging
-    disable_logging()
+    disable()
     assert not is_enabled()
 
     # Create a chunker - should work without logs
@@ -72,44 +72,44 @@ def test_logging_disabled_with_chunker():
     assert len(chunks) > 0
 
     # Re-enable for other tests
-    enable_logging("info")
+    enable("info")
 
 
 def test_chonkie_log_env_var():
-    """Test that CHONKIE_LOG environment variable behavior via configure_logging."""
+    """Test that CHONKIE_LOG environment variable behavior via configure."""
     # Test with debug level
-    configure_logging("debug")
+    configure("debug")
 
     # Should be enabled
     assert is_enabled()
 
 
 def test_chonkie_log_off_env_var():
-    """Test that CHONKIE_LOG=off disables logging via configure_logging."""
-    # Test setting off via configure_logging (which is what env var would do)
-    configure_logging("off")
+    """Test that CHONKIE_LOG=off disables logging via configure."""
+    # Test setting off via configure (which is what env var would do)
+    configure("off")
 
     # Should be disabled
     assert not is_enabled()
 
     # Re-enable for other tests
-    enable_logging("info")
+    enable("info")
     assert is_enabled()
 
 
 def test_numeric_log_levels():
     """Test numeric log level configuration."""
     # Test numeric levels
-    configure_logging("1")  # ERROR
+    configure("1")  # ERROR
     assert is_enabled()
 
-    configure_logging("2")  # WARNING
+    configure("2")  # WARNING
     assert is_enabled()
 
-    configure_logging("3")  # INFO
+    configure("3")  # INFO
     assert is_enabled()
 
-    configure_logging("4")  # DEBUG
+    configure("4")  # DEBUG
     assert is_enabled()
 
 
@@ -117,7 +117,7 @@ def test_batch_processing_logs():
     """Test that batch processing generates appropriate logs."""
     from chonkie import SentenceChunker
 
-    configure_logging("info")
+    configure("info")
 
     chunker = SentenceChunker(chunk_size=50)
     texts = ["First sentence.", "Second sentence.", "Third sentence."]

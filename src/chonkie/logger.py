@@ -19,9 +19,9 @@ Example:
     >>> logger.info("Processing chunks")
 
     >>> # Configure programmatically
-    >>> from chonkie.logger import configure_logging
-    >>> configure_logging("debug")
-    >>> configure_logging("off")  # Disable
+    >>> import chonkie
+    >>> chonkie.logger.configure("debug")
+    >>> chonkie.logger.configure("off")  # Disable
 
 """
 
@@ -174,7 +174,7 @@ def get_logger(module_name: str) -> LoggerAdapter:
     return LoggerAdapter(base_logger, {})
 
 
-def configure_logging(
+def configure(
     level: Optional[str] = None,
     format: Optional[str] = None,
 ) -> None:
@@ -194,9 +194,10 @@ def configure_logging(
         format: Optional custom format string. Uses default if None.
 
     Example:
-        >>> configure_logging("debug")
-        >>> configure_logging("off")  # Disable logging
-        >>> configure_logging("info")  # Re-enable at INFO level
+        >>> import chonkie
+        >>> chonkie.logger.configure("debug")
+        >>> chonkie.logger.configure("off")  # Disable logging
+        >>> chonkie.logger.configure("info")  # Re-enable at INFO level
 
     """
     global _configured, _enabled, _handler
@@ -240,34 +241,36 @@ def configure_logging(
     _configured = True
 
 
-def disable_logging() -> None:
+def disable() -> None:
     """Disable all Chonkie logging.
 
-    This is equivalent to configure_logging("off").
+    This is equivalent to configure("off").
     Useful for suppressing logs in production or testing environments.
 
     Example:
-        >>> disable_logging()
+        >>> import chonkie
+        >>> chonkie.logger.disable()
         >>> # No logs will be output
 
     """
-    configure_logging("off")
+    configure("off")
 
 
-def enable_logging(level: str = "INFO") -> None:
+def enable(level: str = "INFO") -> None:
     """Re-enable Chonkie logging after it has been disabled.
 
     Args:
         level: The log level to enable. Defaults to INFO.
 
     Example:
-        >>> disable_logging()
+        >>> import chonkie
+        >>> chonkie.logger.disable()
         >>> # ... do some work without logs ...
-        >>> enable_logging("debug")
+        >>> chonkie.logger.enable("debug")
         >>> # Logs are back at DEBUG level
 
     """
-    configure_logging(level)
+    configure(level)
 
 
 def is_enabled() -> bool:
@@ -287,8 +290,8 @@ def is_enabled() -> bool:
 # Export the main functions
 __all__ = [
     "get_logger",
-    "configure_logging",
-    "disable_logging",
-    "enable_logging",
+    "configure",
+    "disable",
+    "enable",
     "is_enabled",
 ]
