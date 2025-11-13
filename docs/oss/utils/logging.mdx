@@ -1,0 +1,54 @@
+---
+title: Logging
+description: Control Chonkie's log output
+icon: "terminal"
+iconType: "solid"
+---
+
+By default, Chonkie logs warnings and errors. You can control what gets logged using the `CHONKIE_LOG` environment variable or configure it programmatically.
+
+## Quick Setup
+
+Set the `CHONKIE_LOG` environment variable before importing chonkie:
+
+```bash
+export CHONKIE_LOG=debug  # Show everything
+export CHONKIE_LOG=info   # Show info, warnings, and errors
+export CHONKIE_LOG=warning # Show warnings and errors (default)
+export CHONKIE_LOG=error  # Show only errors
+export CHONKIE_LOG=off    # Disable all logging
+```
+
+## Programmatic Configuration
+
+Configure logging from your Python code:
+
+```python
+from chonkie.logger import configure_logging
+
+# Enable debug logging
+configure_logging("debug")
+
+# Disable logging completely
+configure_logging("off")
+
+# Back to warnings and errors
+configure_logging("warning")
+```
+
+## Log Levels
+
+- `debug` - Everything (chunker initialization, text processing, chunk counts)
+- `info` - High-level operations (chunk creation, file operations)
+- `warning` - Potential issues (default)
+- `error` - Only errors
+- `off` - Silent
+
+## Example Output
+
+```
+2025-11-13 13:54:00,432 | WARNING  | chonkie.chunker.base:__init__:32 - Token limit exceeded
+2025-11-13 13:54:00,432 | ERROR    | chonkie.handshakes.chroma:write:207 - Failed to write chunks
+```
+
+That's it. Logging is simple and stays out of your way.

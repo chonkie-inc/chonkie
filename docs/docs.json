@@ -116,7 +116,7 @@
           },
           {
             "group": "Utils",
-            "pages": ["oss/utils/visualizer", "oss/utils/hubbie"]
+            "pages": ["oss/utils/visualizer", "oss/utils/hubbie", "oss/utils/logging"]
           },
           {
             "group": "Experimental",
