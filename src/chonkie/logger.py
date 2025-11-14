@@ -135,15 +135,25 @@ class LoggerAdapter(logging.LoggerAdapter):
     This allows backwards compatibility with code that uses loguru's pattern:
         logger.debug("message", key=value)
 
-    Standard logging doesn't support this, so we capture kwargs and ignore them.
+    Standard logging doesn't support arbitrary kwargs, so we move them into
+    the 'extra' dict to preserve structured logging data.
     """
 
     def process(self, msg: str, kwargs: MutableMapping[str, Any]) -> Tuple[str, MutableMapping[str, Any]]:
-        # Remove any extra keyword arguments that aren't supported by standard logging
         # Standard logging only supports: exc_info, stack_info, stacklevel, extra
         valid_keys = {'exc_info', 'stack_info', 'stacklevel', 'extra'}
-        filtered_kwargs = {k: v for k, v in kwargs.items() if k in valid_keys}
-        return msg, filtered_kwargs
+
+        # Separate valid kwargs from extra context data
+        extra_data = {k: v for k, v in kwargs.items() if k not in valid_keys}
+        valid_kwargs = {k: v for k, v in kwargs.items() if k in valid_keys}
+
+        # Merge extra data into the 'extra' dict (preserving structured logging)
+        if extra_data:
+            if 'extra' not in valid_kwargs:
+                valid_kwargs['extra'] = {}
+            valid_kwargs['extra'].update(extra_data)
+
+        return msg, valid_kwargs
 
 
 def get_logger(module_name: str) -> LoggerAdapter:

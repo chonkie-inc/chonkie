@@ -96,6 +96,6 @@ from .utils import (
 )
 
 # This hippo grows with every release 🦛✨~
-__version__ = "1.4.1"
+__version__ = "1.4.2"
 __name__ = "chonkie"
 __author__ = "🦛 Chonkie Inc"
