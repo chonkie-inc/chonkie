@@ -119,9 +119,7 @@ class QdrantHandshake(BaseHandshake):
                     break
                 else:
                     pass
-            print(
-                f"🦛 Chonkie created a new collection in Qdrant: {self.collection_name}"
-            )
+            logger.info(f"Chonkie created a new collection in Qdrant: {self.collection_name}")
         else:
             self.collection_name = collection_name
 
@@ -196,10 +194,7 @@ class QdrantHandshake(BaseHandshake):
             collection_name=self.collection_name, points=points, wait=True
         )
 
-        logger.info(f"Successfully wrote {len(chunks)} chunks to Qdrant collection: {self.collection_name}")
-        print(
-            f"🦛 Chonkie wrote {len(chunks)} chunks to Qdrant collection: {self.collection_name}"
-        )
+        logger.info(f"Chonkie wrote {len(chunks)} chunks to Qdrant collection: {self.collection_name}")
 
     def __repr__(self) -> str:
         """Return the string representation of the QdrantHandshake."""

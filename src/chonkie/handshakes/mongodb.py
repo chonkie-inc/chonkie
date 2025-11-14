@@ -90,7 +90,7 @@ class MongoDBHandshake(BaseHandshake):
                         uri = f"mongodb://{hostname}"
                 # use localhost
                 else:
-                    print("No hostname provided, using localhost instead")
+                    logger.info("No hostname provided, using localhost instead")
                     port = str(port) if port is not None else "27017"
                     uri = f"mongodb://localhost:{port}"
                     # clear port
@@ -104,16 +104,14 @@ class MongoDBHandshake(BaseHandshake):
 
         if db_name == "random":
             self.db_name = generate_random_collection_name()
-            print(f"🦛 Chonkie created a new MongoDB database: {self.db_name}")
+            logger.info(f"Chonkie created a new MongoDB database: {self.db_name}")
         else:
             self.db_name = db_name
         self.db = self.client[self.db_name]
 
         if collection_name == "random":
             self.collection_name = generate_random_collection_name()
-            print(
-                f"🦛 Chonkie created a new MongoDB collection: {self.collection_name}"
-            )
+            logger.info(f"Chonkie created a new MongoDB collection: {self.collection_name}")
         else:
             self.collection_name = collection_name
         self.collection = self.db[self.collection_name]
@@ -173,10 +171,7 @@ class MongoDBHandshake(BaseHandshake):
             documents.append(self._generate_document(index, chunk, embedding_list))
         if documents:
             self.collection.insert_many(documents)
-            logger.info(f"Successfully wrote {len(documents)} chunks to MongoDB collection: {self.collection_name}")
-            print(
-                f"🦛 Chonkie wrote {len(documents)} chunks to MongoDB collection: {self.collection_name}"
-            )
+            logger.info(f"Chonkie wrote {len(documents)} chunks to MongoDB collection: {self.collection_name}")
 
     def __repr__(self) -> str:
         """Return a string representation of the MongoDBHandshake instance."""

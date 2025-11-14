@@ -13,11 +13,14 @@ from typing import (
 from uuid import NAMESPACE_OID, uuid5
 
 from chonkie.embeddings import AutoEmbeddings, BaseEmbeddings
+from chonkie.logger import get_logger
 from chonkie.pipeline import handshake
 from chonkie.types import Chunk
 
 from .base import BaseHandshake
 from .utils import generate_random_collection_name
+
+logger = get_logger(__name__)
 
 if TYPE_CHECKING:
     from elasticsearch import Elasticsearch
@@ -80,7 +83,7 @@ class ElasticHandshake(BaseHandshake):
                 self.index_name = generate_random_collection_name()
                 if not self.client.indices.exists(index=self.index_name):
                     break
-            print(f"🦛 Chonkie will create a new index in Elasticsearch: {self.index_name}")
+            logger.info(f"Chonkie will create a new index in Elasticsearch: {self.index_name}")
         else:
             self.index_name = index_name
 
@@ -96,7 +99,7 @@ class ElasticHandshake(BaseHandshake):
                 }
             }
             self.client.indices.create(index=self.index_name, mappings=mapping)
-            print(f"✅ Index '{self.index_name}' created with vector mapping.")
+            logger.info(f"Index '{self.index_name}' created with vector mapping.")
 
     def _is_available(self) -> bool:
         """Check if the dependencies are installed."""
@@ -149,12 +152,12 @@ class ElasticHandshake(BaseHandshake):
         success, errors = bulk(self.client, actions, raise_on_error=False)
 
         if errors:
-            print(f"⚠️ Encountered {len(errors)} errors during bulk indexing.") # type: ignore
+            logger.warning(f"Encountered {len(errors)} errors during bulk indexing.") # type: ignore
             # Optionally log the first few errors for debugging
             for i, error in enumerate(errors[:5]): # type: ignore
-                print(f"  Error {i+1}: {error}")
+                logger.error(f"Error {i+1}: {error}")
 
-        print(f"🦛 Chonkie wrote {success} chunks to Elasticsearch index: {self.index_name}")
+        logger.info(f"Chonkie wrote {success} chunks to Elasticsearch index: {self.index_name}")
 
     def __repr__(self) -> str:
         """Return the string representation of the ElasticHandshake."""
