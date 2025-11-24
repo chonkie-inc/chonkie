@@ -1,0 +1,50 @@
+---
+title: "Delete Pipeline"
+api: "DELETE /v1/pipeline/{slug}"
+description: "Delete a pipeline from your organization"
+---
+
+Permanently remove a pipeline and its configuration.
+
+## Examples
+
+<CodeGroup>
+
+```python Python
+from chonkie.cloud import Pipeline
+
+# Fetch and delete
+pipeline = Pipeline.get("my-rag-pipeline")
+pipeline.delete()
+
+# Or delete directly if you have the instance
+pipeline = Pipeline(slug="temp-pipeline")
+pipeline.chunk_with("sentence", chunk_size=256)
+chunks = pipeline.run(text="...")
+pipeline.delete()  # Clean up
+```
+
+```bash cURL
+curl -X DELETE https://api.chonkie.ai/v1/pipeline/my-rag-pipeline \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+</CodeGroup>
+
+## Path Parameters
+
+<ParamField path="slug" type="string" required>
+  The pipeline slug to delete.
+</ParamField>
+
+## Response
+
+<ResponseField name="message" type="string">
+  Confirmation message indicating successful deletion.
+</ResponseField>
+
+## Errors
+
+| Status | Description |
+|--------|-------------|
+| 404 | Pipeline not found |

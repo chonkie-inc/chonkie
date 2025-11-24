@@ -12,6 +12,7 @@ from .chunker import (
     TokenChunker,
 )
 from .file import FileManager
+from .pipeline import Pipeline, PipelineStep
 from .refineries import EmbeddingsRefinery, OverlapRefinery
 
 __all__ = [
@@ -27,4 +28,6 @@ __all__ = [
     "EmbeddingsRefinery",
     "OverlapRefinery",
     "FileManager",
+    "Pipeline",
+    "PipelineStep",
 ]
