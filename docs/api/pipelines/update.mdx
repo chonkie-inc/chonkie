@@ -23,6 +23,19 @@ pipeline.chunk_with("sentence", chunk_size=256)
 pipeline.update(description="Updated to use sentence chunker")
 ```
 
+```typescript ChonkieJS
+import { Pipeline } from '@chonkiejs/cloud';
+
+// Fetch existing pipeline
+const pipeline = await Pipeline.get('my-rag-pipeline');
+
+// Modify steps
+pipeline.chunkWith('sentence', { chunk_size: 256 });
+
+// Update in cloud
+await pipeline.update({ description: 'Updated to use sentence chunker' });
+```
+
 ```bash cURL
 curl -X PUT https://api.chonkie.ai/v1/pipeline/my-rag-pipeline \
   -H "Authorization: Bearer YOUR_API_KEY" \

@@ -20,6 +20,16 @@ print(f"Description: {pipeline.description}")
 print(f"Steps: {pipeline.to_config()}")
 ```
 
+```typescript ChonkieJS
+import { Pipeline } from '@chonkiejs/cloud';
+
+const pipeline = await Pipeline.get('my-rag-pipeline');
+
+console.log(`Slug: ${pipeline.slug}`);
+console.log(`Description: ${pipeline.description}`);
+console.log(`Steps: ${JSON.stringify(pipeline.toConfig())}`);
+```
+
 ```bash cURL
 curl -X GET https://api.chonkie.ai/v1/pipeline/my-rag-pipeline \
   -H "Authorization: Bearer YOUR_API_KEY"

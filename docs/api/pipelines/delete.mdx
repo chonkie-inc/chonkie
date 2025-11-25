@@ -24,6 +24,20 @@ chunks = pipeline.run(text="...")
 pipeline.delete()  # Clean up
 ```
 
+```typescript ChonkieJS
+import { Pipeline } from '@chonkiejs/cloud';
+
+// Fetch and delete
+const pipeline = await Pipeline.get('my-rag-pipeline');
+await pipeline.delete();
+
+// Or delete directly if you have the instance
+const tempPipeline = new Pipeline({ slug: 'temp-pipeline' });
+tempPipeline.chunkWith('sentence', { chunk_size: 256 });
+const chunks = await tempPipeline.run({ text: '...' });
+await tempPipeline.delete(); // Clean up
+```
+
 ```bash cURL
 curl -X DELETE https://api.chonkie.ai/v1/pipeline/my-rag-pipeline \
   -H "Authorization: Bearer YOUR_API_KEY"

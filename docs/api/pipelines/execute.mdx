@@ -29,6 +29,23 @@ for chunk in chunks:
     print(f"Tokens: {chunk.token_count}")
 ```
 
+```typescript ChonkieJS
+import { Pipeline } from '@chonkiejs/cloud';
+
+// Execute with text
+const pipeline = await Pipeline.get('my-rag-pipeline');
+const chunks = await pipeline.run({ text: 'Your document text here...' });
+
+// Execute with file (auto-uploaded)
+const fileChunks = await pipeline.run({ filepath: 'document.pdf' });
+
+// Access chunk data
+for (const chunk of chunks) {
+  console.log(`Text: ${chunk.text.slice(0, 100)}...`);
+  console.log(`Tokens: ${chunk.tokenCount}`);
+}
+```
+
 ```bash cURL
 # With text
 curl -X POST https://api.chonkie.ai/v1/pipeline/my-rag-pipeline \

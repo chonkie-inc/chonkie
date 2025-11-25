@@ -19,6 +19,16 @@ for p in pipelines:
     print(f"{p.slug}: {p.describe()}")
 ```
 
+```typescript ChonkieJS
+import { Pipeline } from '@chonkiejs/cloud';
+
+const pipelines = await Pipeline.list();
+
+for (const p of pipelines) {
+  console.log(`${p.slug}: ${p.describe()}`);
+}
+```
+
 ```bash cURL
 curl -X GET https://api.chonkie.ai/v1/pipeline \
   -H "Authorization: Bearer YOUR_API_KEY"

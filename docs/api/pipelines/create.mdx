@@ -22,6 +22,22 @@ pipeline = Pipeline(
 chunks = pipeline.run(text="Your document text here")
 ```
 
+```typescript ChonkieJS
+import { Pipeline } from '@chonkiejs/cloud';
+
+const pipeline = new Pipeline({
+  slug: 'my-rag-pipeline',
+  description: 'Pipeline for RAG processing',
+});
+
+pipeline
+  .chunkWith('recursive', { chunk_size: 512 })
+  .refineWith('overlap', { context_size: 64 });
+
+// Pipeline is auto-saved on first run
+const chunks = await pipeline.run({ text: 'Your document text here' });
+```
+
 ```bash cURL
 curl -X POST https://api.chonkie.ai/v1/pipeline \
   -H "Authorization: Bearer YOUR_API_KEY" \

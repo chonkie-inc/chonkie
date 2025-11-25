@@ -27,6 +27,24 @@ else:
     print(f"Errors: {errors}")
 ```
 
+```typescript ChonkieJS
+import { Pipeline } from '@chonkiejs/cloud';
+
+// Validate steps configuration
+const steps = [
+  { type: 'chunk', component: 'recursive', chunk_size: 512 },
+  { type: 'refine', component: 'overlap', context_size: 64 },
+];
+
+const { valid, errors } = await Pipeline.validate(steps);
+
+if (valid) {
+  console.log('Configuration is valid!');
+} else {
+  console.log(`Errors: ${errors}`);
+}
+```
+
 ```bash cURL
 curl -X POST https://api.chonkie.ai/v1/pipeline/validate \
   -H "Authorization: Bearer YOUR_API_KEY" \
