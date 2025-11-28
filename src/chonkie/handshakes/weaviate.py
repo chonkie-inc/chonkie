@@ -14,15 +14,20 @@ from urllib.parse import urlparse
 from uuid import NAMESPACE_OID, uuid5
 
 from chonkie.embeddings import AutoEmbeddings, BaseEmbeddings
+from chonkie.logger import get_logger
+from chonkie.pipeline import handshake
 from chonkie.types import Chunk
 
 from .base import BaseHandshake
 from .utils import generate_random_collection_name
 
+logger = get_logger(__name__)
+
 if TYPE_CHECKING:
     import weaviate
 
 
+@handshake("weaviate")
 class WeaviateHandshake(BaseHandshake):
     """Weaviate Handshake to export Chonkie's Chunks into a Weaviate collection.
 
@@ -164,9 +169,7 @@ class WeaviateHandshake(BaseHandshake):
                 # Check if the collection exists
                 if not self._collection_exists(self.collection_name):
                     break
-            print(
-                f"🦛 Chonkie created a new collection in Weaviate: {self.collection_name}"
-            )
+            logger.info(f"Chonkie created a new collection in Weaviate: {self.collection_name}")
         else:
             self.collection_name = collection_name
 
@@ -204,7 +207,7 @@ class WeaviateHandshake(BaseHandshake):
             exists = self.client.collections.exists(collection_name)
             return exists
         except Exception as e:
-            print(f"Warning: Failed to check for collection '{collection_name}': {e}")
+            logger.warning(f"Failed to check for collection '{collection_name}': {e}")
             return False
 
     def _create_collection(self) -> None:
@@ -245,7 +248,7 @@ class WeaviateHandshake(BaseHandshake):
                 ],
             )
 
-            print(f"🦛 Created Weaviate collection: {self.collection_name}")
+            logger.info(f"Created Weaviate collection: {self.collection_name}")
         except Exception:
             raise
 
@@ -312,6 +315,7 @@ class WeaviateHandshake(BaseHandshake):
         elif not isinstance(chunks, list):
             chunks = list(chunks)
 
+        logger.debug(f"Writing {len(chunks)} chunks to Weaviate collection: {self.collection_name}")
         # Get the collection
         collection = self.client.collections.get(self.collection_name)
 
@@ -326,7 +330,7 @@ class WeaviateHandshake(BaseHandshake):
                 # Check if we've hit too many errors
                 if batch.number_errors > max_errors:
                     error_msg = f"Too many errors during batch processing ({batch.number_errors}). Aborting."
-                    print(f"🦛 Error: {error_msg}")
+                    logger.error(error_msg)
 
                     raise RuntimeError(error_msg)
 
@@ -351,28 +355,24 @@ class WeaviateHandshake(BaseHandshake):
 
                     chunk_ids.append(chunk_id)
                 except Exception as e:
-                    print(f"🦛 Error processing chunk {index}: {str(e)}")
+                    logger.error(f"Error processing chunk {index}: {str(e)}")
                     # Continue with next chunk
 
             # After batch is complete, check for errors
             if batch.number_errors > 0:
-                print(f"🦛 Completed with {batch.number_errors} errors")
+                logger.warning(f"Completed with {batch.number_errors} errors")
 
         failed_objects = collection.batch.failed_objects
         if failed_objects:
-            print(f"Number of failed imports: {len(failed_objects)}")
+            logger.warning(f"Number of failed imports: {len(failed_objects)}")
             if len(failed_objects) > 0:
-                print(f"First failed object: {failed_objects[0]}")
+                logger.error(f"First failed object: {failed_objects[0]}")
 
         # Report success
         successful_chunks = len(chunk_ids)
-        print(
-            f"🦛 Chonkie wrote {successful_chunks} chunks to Weaviate collection: {self.collection_name}"
-        )
+        logger.info(f"Chonkie wrote {successful_chunks} chunks to Weaviate collection: {self.collection_name}")
         if successful_chunks < len(chunks):
-            print(
-                f"🦛 Warning: {len(chunks) - successful_chunks} chunks failed to write"
-            )
+            logger.warning(f"{len(chunks) - successful_chunks} chunks failed to write")
 
         return chunk_ids
 
@@ -380,7 +380,7 @@ class WeaviateHandshake(BaseHandshake):
         """Delete the entire collection."""
         if self._collection_exists(self.collection_name):
             self.client.collections.delete(self.collection_name)
-            print(f"🦛 Deleted Weaviate collection: {self.collection_name}")
+            logger.info(f"Deleted Weaviate collection: {self.collection_name}")
 
     def get_collection_info(self) -> Dict[str, Any]:
         """Get information about the collection.
@@ -456,6 +456,7 @@ class WeaviateHandshake(BaseHandshake):
             List[Dict[str, Any]]: The list of most similar chunks with their metadata.
 
         """
+        logger.debug(f"Searching Weaviate collection: {self.collection_name} with limit={limit}")
         if embedding is None and query is None:
             raise ValueError("Either query or embedding must be provided")
         if query is not None:
@@ -483,4 +484,5 @@ class WeaviateHandshake(BaseHandshake):
                 "chunk_type": obj.properties.get("chunk_type"),
             }
             matches.append(match)
+        logger.info(f"Search complete: found {len(matches)} matching chunks")
         return matches

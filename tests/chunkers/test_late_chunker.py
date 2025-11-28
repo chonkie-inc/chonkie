@@ -11,7 +11,7 @@ from chonkie.types import Chunk, RecursiveLevel, RecursiveRules
 @pytest.fixture
 def embedding_model() -> SentenceTransformerEmbeddings:
     """Return an object of SentenceTransformerEmbeddings type."""
-    return SentenceTransformerEmbeddings("all-MiniLM-L6-v2")
+    return SentenceTransformerEmbeddings("nomic-ai/modernbert-embed-base")
 
 
 @pytest.fixture
@@ -37,7 +37,7 @@ def test_late_chunker_init_with_instance(embedding_model: SentenceTransformerEmb
 
 def test_late_chunker_init_with_string() -> None:
     """Test the initialization of the LateChunker with a model name string."""
-    model_name = "all-MiniLM-L6-v2"
+    model_name = "nomic-ai/modernbert-embed-base"
     chunker = LateChunker(
         embedding_model=model_name,
         chunk_size=512,

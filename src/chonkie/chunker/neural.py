@@ -8,9 +8,13 @@ It trains an encoder style model on the task of token-classification (think: NER
 import importlib.util as importutil
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
+from chonkie.logger import get_logger
+from chonkie.pipeline import chunker
 from chonkie.types import Chunk
 
 from .base import BaseChunker
+
+logger = get_logger(__name__)
 
 if TYPE_CHECKING:
     try:
@@ -35,6 +39,7 @@ if TYPE_CHECKING:
 # TODO: Add stride parameters for the pipeline (also does the pipeline do it sequentially or in parallel?)
 # If they do it sequentially, then we are making a huge mistake by not batching and processing multiple texts at once. 
 
+@chunker("neural")
 class NeuralChunker(BaseChunker):
   """Class for chunking text using a complete Neural Approach.
   
@@ -96,7 +101,7 @@ class NeuralChunker(BaseChunker):
       raise ValueError(f"Error initializing tokenizer: {e}")
 
     # Initialize the Parent class with the tokenizer
-    super().__init__(tokenizer)
+    super().__init__(tokenizer)  # type: ignore[arg-type]
 
     # Initialize the model and stride
     try:
@@ -202,7 +207,7 @@ class NeuralChunker(BaseChunker):
 
   def chunk(self, text: str) -> List[Chunk]:
     """Chunk the text into a list of chunks.
-    
+
     Args:
       text: The text to chunk.
 
@@ -210,8 +215,10 @@ class NeuralChunker(BaseChunker):
       A list of chunks.
 
     """
+    logger.debug(f"Starting neural chunking for text of length {len(text)}")
     # Get the spans
     spans = self.pipe(text)
+    logger.debug(f"Model predicted {len(spans)} split points")
 
     # Merge close spans, since the model sometimes predicts spans that are too close to each other
     # and we want to ensure that we don't have chunks that are too small
@@ -222,6 +229,7 @@ class NeuralChunker(BaseChunker):
 
     # Return the chunks
     chunks = self._get_chunks_from_splits(splits)
+    logger.info(f"Created {len(chunks)} chunks using neural token classification")
     return chunks
 
   def __repr__(self) -> str:

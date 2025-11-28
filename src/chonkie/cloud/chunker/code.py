@@ -19,19 +19,19 @@ class CodeChunker(CloudChunker):
 
     def __init__(
         self,
-        tokenizer_or_token_counter: str = "gpt2",
+        tokenizer: str = "gpt2",
         chunk_size: int = 512,
         language: Union[Literal["auto"], str] = "auto",
         api_key: Optional[str] = None,
     ) -> None:
         """Initialize the Cloud CodeChunker.
-        
+
         Args:
-            tokenizer_or_token_counter: The tokenizer or token counter to use.
+            tokenizer: The tokenizer to use.
             chunk_size: The size of the chunks to create.
             language: The language of the code to parse. Accepts any of the languages supported by tree-sitter-language-pack.
             api_key: The API key for the Chonkie API.
-            
+
         Raises:
             ValueError: If the API key is not provided or if parameters are invalid.
 
@@ -49,7 +49,7 @@ class CodeChunker(CloudChunker):
             raise ValueError("Chunk size must be greater than 0.")
 
         # Assign all the attributes to the instance
-        self.tokenizer_or_token_counter = tokenizer_or_token_counter
+        self.tokenizer = tokenizer
         self.chunk_size = chunk_size
         self.language = language
 
@@ -84,7 +84,7 @@ class CodeChunker(CloudChunker):
         if text is not None:
             payload = {
                 "text": text,
-                "tokenizer_or_token_counter": self.tokenizer_or_token_counter,
+                "tokenizer_or_token_counter": self.tokenizer,
                 "chunk_size": self.chunk_size,
                 "language": self.language,
                 "lang": self.language, # For backward compatibility
@@ -97,7 +97,7 @@ class CodeChunker(CloudChunker):
                     "type": "document",
                     "content": file_response.name,
                 },
-                "tokenizer_or_token_counter": self.tokenizer_or_token_counter,
+                "tokenizer_or_token_counter": self.tokenizer,
                 "chunk_size": self.chunk_size,
                 "language": self.language,
                 "lang": self.language, # For backward compatibility

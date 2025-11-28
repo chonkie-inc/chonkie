@@ -5,10 +5,12 @@ import os
 import warnings
 from typing import TYPE_CHECKING, List, Optional
 
+import numpy as np
 import requests
 
+from .base import BaseEmbeddings
+
 if TYPE_CHECKING:
-    import numpy as np
     import tokenizers
     try:
         from cohere import ClientV2
@@ -17,8 +19,6 @@ if TYPE_CHECKING:
             """Stub class for cohere ClientV2 when not available."""
 
             pass
-
-from .base import BaseEmbeddings
 
 
 class CohereEmbeddings(BaseEmbeddings):
@@ -125,7 +125,7 @@ class CohereEmbeddings(BaseEmbeddings):
             timeout=timeout,
         )
 
-    def embed(self, text: str) -> "np.ndarray":
+    def embed(self, text: str) -> np.ndarray:
         """Generate embeddings for a single text."""
         token_count = self.count_tokens(text)
         if (
@@ -154,7 +154,7 @@ class CohereEmbeddings(BaseEmbeddings):
 
         raise RuntimeError("Unable to generate embeddings through Cohere.")
 
-    def embed_batch(self, texts: List[str]) -> List["np.ndarray"]:
+    def embed_batch(self, texts: List[str]) -> List[np.ndarray]:
         """Get embeddings for multiple texts using batched API calls."""
         if not texts:
             return []
@@ -219,7 +219,7 @@ class CohereEmbeddings(BaseEmbeddings):
         tokens = self._tokenizer.encode_batch(texts, add_special_tokens=False)
         return [len(t) for t in tokens]
 
-    def similarity(self, u: "np.ndarray", v: "np.ndarray") -> "np.float32":
+    def similarity(self, u: np.ndarray, v: np.ndarray) -> np.float32:
         """Compute cosine similarity between two embeddings."""
         return np.divide(
             np.dot(u, v), np.linalg.norm(u) * np.linalg.norm(v), dtype=np.float32
@@ -230,7 +230,7 @@ class CohereEmbeddings(BaseEmbeddings):
         """Return the embedding dimension."""
         return self._dimension
 
-    def get_tokenizer_or_token_counter(self) -> "tokenizers.Tokenizer":
+    def get_tokenizer(self) -> "tokenizers.Tokenizer":
         """Return a tokenizers tokenizer object of the current model."""
         return self._tokenizer
 
@@ -248,8 +248,7 @@ class CohereEmbeddings(BaseEmbeddings):
 
         """
         if cls._is_available():
-            global np, tokenizers, ClientV2
-            import numpy as np
+            global tokenizers, ClientV2
             import tokenizers
             from cohere import ClientV2
         else:

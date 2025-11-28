@@ -1,0 +1,161 @@
+---
+title: Chunking API
+description: Enterprise-grade text chunking and embedding service, powered by Chonkie
+icon: "scissors"
+iconType: "solid"
+sidebarTitle: Chunking API
+---
+
+<div align="center">
+  <img
+    src="/assets/logo/chonkie_cutting.png"
+    alt="Chonkie Logo"
+    height={120}
+    width={175}
+    noZoom
+  />
+  _✨Transform your text into perfect chunks✨_
+</div>
+
+<br />
+
+**Chonkie's Chunking API** is an enterprise-grade text processing service built on Chonkie OSS.
+Get instant access to all of our chunking algorithms, embedding generation, and text refinement.
+Avialble through simple REST APIs.
+
+No chunking logic to write, tokenizers to configure, or edge cases to debug.
+
+Just perfect chunks, delivered fast.
+
+## Key Features
+
+<CardGroup cols={2}>
+  <Card title="All Our Chunkers" icon="scissors">
+    Use any of our awesome chunkers to split your data.
+    Each optimized for different document types and use cases.
+  </Card>
+  <Card title="Embeddings Refinery" icon="sparkles">
+    Add vector embeddings to your chunks using any Hugging Face or OpenAI model. 
+    Supports all major embedding providers.
+  </Card>
+  <Card title="Overlap Refinery" icon="layer-group">
+    Add contextual overlap between chunks to prevent information loss at
+    boundaries. Configurable overlap sizes for optimal retrieval quality.
+  </Card>
+  <Card title="Multi-Language SDKs" icon="code">
+    Official Python and JavaScript/TypeScript SDKs with 
+    full type safety and environment variable support.
+  </Card>
+  <Card title="Production-Ready" icon="shield-check">
+    Battle-tested algorithms refined through thousands of real-world
+    deployments. Used by startups to enterprises for mission-critical RAG
+    systems.
+  </Card>
+  <Card title="Auto-Scaling" icon="gauge-high">
+    Automatically scales to handle your workload. From prototyping with single
+    documents to production pipelines processing millions of chunks.
+  </Card>
+</CardGroup>
+
+## Why Use Hosted Chunking?
+
+Building chunking from scratch means dealing with:
+
+- **Algorithm complexity**: Implementing semantic chunking, code parsing, recursive splitting
+- **Tokenizer headaches**: Managing multiple tokenizers, handling edge cases, counting accurately
+- **Performance optimization**: Caching, batching, parallelization, memory management
+- **Maintenance burden**: Updating dependencies, fixing bugs, handling new file formats
+
+Chonkie Chunking API eliminates all of this. You get:
+
+<CardGroup cols={3}>
+  <Card title="Instant Integration" icon="bolt">
+    Add chunking to your application in minutes with simple REST APIs or SDKs.
+    No complex setup or configuration required.
+  </Card>
+  <Card title="Battle-Tested Algorithms" icon="trophy">
+    Proven chunking strategies refined through thousands of production
+    deployments across diverse document types and use cases.
+  </Card>
+  <Card title="Always Up-to-Date" icon="arrows-rotate">
+    Automatic updates with new chunkers, optimizations, and bug fixes. You get
+    improvements without changing a line of code.
+  </Card>
+</CardGroup>
+
+
+## Use Cases
+
+<AccordionGroup>
+  <Accordion title="RAG Pipelines" icon="diagram-project">
+    Preprocess documents for retrieval augmented generation. Chunk once, embed,
+    and store in your vector database for lightning-fast retrieval.
+  </Accordion>
+
+  <Accordion title="Document Analysis" icon="file-magnifying-glass">
+    Break down large documents for analysis, summarization, or classification.
+    Process documents too large for single LLM calls.
+  </Accordion>
+
+  <Accordion title="Semantic Search" icon="magnifying-glass">
+    Create search indices over documentation, support articles, or knowledge
+    bases. Combine with embeddings for powerful semantic search.
+  </Accordion>
+
+  <Accordion title="Code Indexing" icon="brackets-curly">
+    Index codebases for AI-powered code search, documentation generation, or
+    code review tools. Language-aware chunking preserves context.
+  </Accordion>
+
+  <Accordion title="Content Processing" icon="file-lines">
+    Process blogs, articles, and content at scale. Perfect for content
+    recommendation systems or editorial tools.
+  </Accordion>
+</AccordionGroup>
+
+## Refineries: Enhance Your Chunks
+
+<CardGroup cols={2}>
+  <Card
+    title="Add Embeddings"
+    icon="sparkles"
+    href="/api/refineries/embeddings"
+  >
+    Generate vector embeddings for your chunks using any Hugging Face model.
+    Supports all major providers: OpenAI, Cohere, Sentence Transformers, and
+    more.
+  </Card>
+  <Card
+    title="Add Overlap"
+    icon="layer-group"
+    href="/api/refineries/overlap"
+  >
+    Add contextual overlap between chunks post-processing. Perfect for adding
+    overlap to existing chunks or experimenting with different overlap sizes.
+  </Card>
+</CardGroup>
+
+## Pricing
+
+Visit our [pricing page](https://www.chonkie.ai/#pricing) to see which plan works best for you.
+
+## Next Steps
+
+Ready to start chunking?
+
+<CardGroup cols={2}>
+  <Card
+    title="API Documentation"
+    icon="book"
+    href="/api/chunkers/token-chunker"
+  >
+    Explore detailed API docs for all chunkers and refineries
+  </Card>
+  <Card
+    title="Get API Key"
+    icon="key"
+    href="https://labs.chonkie.ai"
+  >
+    Sign up for free and get your API key in seconds
+  </Card>
+</CardGroup>

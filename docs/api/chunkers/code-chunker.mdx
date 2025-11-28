@@ -1,0 +1,149 @@
+---
+title: "Code Chunker"
+api: "POST v1/chunk/code"
+description: "Split code at logical boundaries while preserving structure"
+---
+
+The Code Chunker splits source code at logical boundaries (functions, classes, methods) while preserving code structure and syntax.
+
+## Examples
+
+### Text Input
+
+<CodeGroup>
+
+```python Python
+from chonkie.cloud import CodeChunker
+
+chunker = CodeChunker(
+    language="python",
+    chunk_size=512
+)
+
+code = "def example():\n    return True"
+chunks = chunker.chunk(code)
+```
+
+```javascript JavaScript
+import { CodeChunker } from "@chonkiejs/cloud";
+
+const chunker = new CodeChunker({
+  language: "python",
+  chunkSize: 512,
+});
+
+const code = "def example():\n    return True";
+const chunks = await chunker.chunk({ text: code });
+```
+
+```bash cURL
+curl -X POST https://api.chonkie.ai/v1/chunk/code \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "def example():\n    return True",
+    "language": "python",
+    "chunk_size": 512
+  }'
+```
+
+</CodeGroup>
+
+### File Input
+
+<CodeGroup>
+
+```python Python
+from chonkie.cloud import CodeChunker
+
+chunker = CodeChunker(
+    language="python",
+    chunk_size=512
+)
+
+# Chunk from file
+with open("script.py", "rb") as f:
+    chunks = chunker.chunk(file=f)
+```
+
+```javascript JavaScript
+import { CodeChunker } from "@chonkiejs/cloud";
+
+const chunker = new CodeChunker({
+  language: "python",
+  chunkSize: 512,
+});
+
+// Chunk from file path (Node.js)
+const chunks = await chunker.chunk({ filepath: './script.py' });
+```
+
+```bash cURL
+# Step 1: Upload the file
+curl -X POST https://api.chonkie.ai/v1/files \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -F "file=@script.py"
+
+# Returns: {"name": "script.py", "size": "2048"}
+
+# Step 2: Chunk the uploaded file
+curl -X POST https://api.chonkie.ai/v1/chunk/code \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "file": {
+      "type": "document",
+      "content": "script.py"
+    },
+    "language": "python",
+    "chunk_size": 512
+  }'
+```
+
+</CodeGroup>
+## Request
+
+#### Parameters
+
+<ParamField path="text" type="string | string[]">
+  The code to chunk. Can be a single string or an array of strings for batch processing. Either `text` or `file` is required.
+</ParamField>
+
+<ParamField path="file" type="file">
+  Code file to chunk. Use multipart/form-data encoding. Either `text` or `file` is required.
+</ParamField>
+
+<ParamField path="language" type="string" default="python">
+  Programming language of the code. Supports: python, javascript, typescript,
+  java, cpp, etc.
+</ParamField>
+
+<ParamField path="tokenizer" type="string" default="gpt2">
+  Tokenizer to use for counting tokens.
+</ParamField>
+
+<ParamField path="chunk_size" type="integer" default="512">
+  Maximum number of tokens per chunk.
+</ParamField>
+
+## Response
+
+#### Returns
+
+Array of `Chunk` objects, each containing:
+
+<ResponseField name="text" type="string">
+  The chunk text content.
+</ResponseField>
+
+<ResponseField name="start_index" type="integer">
+  Starting character position in the original text.
+</ResponseField>
+
+<ResponseField name="end_index" type="integer">
+  Ending character position in the original text.
+</ResponseField>
+
+<ResponseField name="token_count" type="integer">
+  Number of tokens in the chunk.
+</ResponseField>
