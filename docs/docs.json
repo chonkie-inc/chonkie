@@ -166,6 +166,18 @@
             ]
           },
           {
+            "group": "Pipelines",
+            "pages": [
+              "api/pipelines/create",
+              "api/pipelines/list",
+              "api/pipelines/get",
+              "api/pipelines/update",
+              "api/pipelines/delete",
+              "api/pipelines/execute",
+              "api/pipelines/validate"
+            ]
+          },
+          {
             "group": "Knowledge Bases",
             "pages": [
               "api/knowledge/create",
