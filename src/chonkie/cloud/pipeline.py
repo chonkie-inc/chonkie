@@ -381,10 +381,9 @@ class Pipeline:
             headers=self._get_headers(),
         )
 
-        if response.status_code == 409:
-            raise ValueError(f"Pipeline '{self._slug}' already exists.")
         if response.status_code != 200:
-            raise ValueError(f"Failed to save pipeline: {response.text}")
+            # Pipeline might already exist, try to update instead
+            return self.update()
 
         data = response.json()
         self._is_saved = True
