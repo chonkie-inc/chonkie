@@ -2,7 +2,7 @@
 
 import re
 import warnings
-from typing import Any, Callable, List, Union
+from typing import Any, Callable, List, Literal, Union
 
 from typing_extensions import Tuple
 
@@ -20,7 +20,7 @@ class TableChunker(BaseChunker):
 
     def __init__(
         self,
-        tokenizer: Union[str, Callable[[str], int], Any] = "character",
+        tokenizer: Union[Literal["row", "character"],str, Callable[[str], int], Any] = "character",
         chunk_size: int = 2048,
     ) -> None:
         """Initialize the TableChunker with configuration parameters.
@@ -45,6 +45,7 @@ class TableChunker(BaseChunker):
         self.sep = "✄"
     
     def _split_table(self, table: str) -> Tuple[str, List[str]]:
+        table = table.strip()
         # insert separator right after the newline that precedes a pipe
         raw = self.newline_pattern.sub(rf"\n{self.sep}", table)
         chunks = [c for c in raw.split(self.sep) if c]   # keep empty strings away
