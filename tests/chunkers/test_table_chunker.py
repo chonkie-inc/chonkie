@@ -41,7 +41,7 @@ def large_table() -> str:
 
 def test_table_chunker_initialization() -> None:
     """Test that the TableChunker can be initialized with default parameters."""
-    chunker = TableChunker()
+    chunker = TableChunker(tokenizer="character")
 
     assert chunker is not None
     assert chunker.chunk_size == 2048
