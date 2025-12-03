@@ -26,7 +26,18 @@ TableChunker is included in the base installation of Chonkie. No additional depe
 
 ## Initialization
 
-```python
+<CodeGroup>
+```python row chunker
+from chonkie import TableChunker
+
+# Basic initialization custom parameters
+chunker = TableChunker(
+	tokenizer="row", # Chunk by rows, valid only for TableChunker
+	chunk_size=3 # Maximum number of rows per chunk (not including header)
+)
+```
+
+```python token chunker
 from chonkie import TableChunker
 
 # Basic initialization with default parameters
@@ -35,6 +46,7 @@ chunker = TableChunker(
 	chunk_size=2048         # Maximum tokens or characters per chunk
 )
 ```
+</CodeGroup>
 
 ## Parameters
 
@@ -52,8 +64,38 @@ chunker = TableChunker(
 </ParamField>
 
 ## Usage
+<CodeGroup>
+```python row chunker
+from chonkie import TableChunker
 
-```python
+table = """
+| Name   | Age | City     |
+|--------|-----|----------|
+| Alice  | 30  | New York |
+| Bob    | 25  | London   |
+| Carol  | 28  | Paris    |
+| Dave   | 35  | Berlin   |
+"""
+
+chunker = TableChunker(tokenizer="row", chunk_size=3)
+chunks = chunker.chunk(table)
+for chunk in chunks:
+	print(chunk.text)
+
+# Each chunk is a valid markdown table segment, always including the header. For the example above and `chunk_size=3`, you might get:
+# >>>
+# | Name   | Age | City     |
+# |--------|-----|----------|
+# | Alice  | 30  | New York |
+# | Bob    | 25  | London   |
+# | Carol  | 28  | Paris    |
+
+# | Name   | Age | City     |
+# |--------|-----|----------|
+# | Dave   | 35  | Berlin   |
+```
+
+```python token chunker
 from chonkie import TableChunker
 
 table = """
@@ -69,30 +111,24 @@ chunker = TableChunker(chunk_size=16)
 chunks = chunker.chunk(table)
 for chunk in chunks:
 	print(chunk.text)
+
+# Each chunk is a valid markdown table segment, always including the header. For the example above and `chunk_size=16`, you might get:
+# >>>
+# | Name  | Age | City     |
+# | ----- | --- | -------- |
+# | Alice | 30  | New York |
+# | Bob   | 25  | London   |
+
+# | Name  | Age | City   |
+# | ----- | --- | ------ |
+# | Carol | 28  | Paris  |
+# | Dave  | 35  | Berlin |
 ```
-
-## Example Output
-
-Each chunk is a valid markdown table segment, always including the header. For the example above and `chunk_size=16`, you might get:
-
-```markdown
-| Name  | Age | City     |
-| ----- | --- | -------- |
-| Alice | 30  | New York |
-| Bob   | 25  | London   |
-```
-
-```markdown
-| Name  | Age | City   |
-| ----- | --- | ------ |
-| Carol | 28  | Paris  |
-| Dave  | 35  | Berlin |
-```
-
+</CodeGroup>
 ## Methods
 
 - `chunk(table: str) -> List[Chunk]`: Chunk a markdown table string.
-- `chunk_document(document: Document) -> Document`: Chunk all tables in a `MarkdownDocument`.
+- `chunk_document(document: Document) -> Document`: Chunk all tables in a `MarkdownDocument`
 
 ## Notes
 
