@@ -22,8 +22,8 @@ class TableChunker(BaseChunker):
         self,
         tokenizer: Union[
             Literal["row", "character"], str, Callable[[str], int], Any
-        ] = "character",
-        chunk_size: int = 2048,
+        ] = "row",
+        chunk_size: int = 3,
     ) -> None:
         """Initialize the TableChunker with configuration parameters.
 
@@ -39,9 +39,9 @@ class TableChunker(BaseChunker):
 
         if chunk_size <= 0:
             raise ValueError("Chunk size must be greater than 0.")
-        if chunk_size == 2048 and tokenizer == "row":
+        if chunk_size == 3 and tokenizer != "row":
             warnings.warn(
-                "Using default chunk size of 2048 with 'row' tokenizer may not be optimal."
+                "Using default chunk size of 3 with 'row' tokenizer may not be optimal."
             )
 
         self.chunk_size = chunk_size

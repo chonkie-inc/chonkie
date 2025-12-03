@@ -40,10 +40,10 @@ chunker = TableChunker(
 ```python token chunker
 from chonkie import TableChunker
 
-# Basic initialization with default parameters
+# Basic initialization
 chunker = TableChunker(
-	tokenizer="character",  # Default tokenizer (or use "gpt2", etc.)
-	chunk_size=2048         # Maximum tokens or characters per chunk
+  tokenizer="character",  # using Character chunker (or you can use "gpt2", ...)
+  chunk_size=16 # Maximum number of tokens/characters per chunk
 )
 ```
 </CodeGroup>
@@ -52,15 +52,15 @@ chunker = TableChunker(
 
 <ParamField
   path="tokenizer"
-  type="Union[str, Callable, Any]"
-  default="character"
+  type='Union[ Literal["row", "character"], str, Callable[[str], int], Any]'
+  default="row"
 >
-  Tokenizer to use. Can be a string identifier ("character", "word", "gpt2",
+  Tokenizer to use. Default is "row". Can be a string identifier ("row", "character", "word", "gpt2",
   etc.) or a tokenizer instance.
 </ParamField>
 
-<ParamField path="chunk_size" type="int" default="2048">
-  Maximum number of tokens or characters per chunk.
+<ParamField path="chunk_size" type="int" default="3">
+  Maximum number of rows (if tokenizer="row") or tokens/characters per chunk.
 </ParamField>
 
 ## Usage
@@ -107,7 +107,7 @@ table = """
 | Dave   | 35  | Berlin   |
 """
 
-chunker = TableChunker(chunk_size=16)
+chunker = TableChunker(tokenizer="character",chunk_size=16)
 chunks = chunker.chunk(table)
 for chunk in chunks:
 	print(chunk.text)
