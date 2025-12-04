@@ -1,6 +1,5 @@
 """Test the SentenceTransformerEmbeddings class."""
 
-from typing import List
 
 import numpy as np
 import pytest
@@ -22,7 +21,7 @@ def sample_text() -> str:
 
 
 @pytest.fixture
-def sample_texts() -> List[str]:
+def sample_texts() -> list[str]:
     """Return a list of sample texts for testing."""
     return [
         "This is the first sample text.",
@@ -61,7 +60,7 @@ def test_embed_single_text(
 
 
 def test_embed_batch_texts(
-    embedding_model: SentenceTransformerEmbeddings, sample_texts: List[str]
+    embedding_model: SentenceTransformerEmbeddings, sample_texts: list[str]
 ) -> None:
     """Test the embed_batch method with a list of texts."""
     embeddings = embedding_model.embed_batch(sample_texts)
@@ -83,7 +82,7 @@ def test_count_tokens_single_text(
 
 
 def test_count_tokens_batch_texts(
-    embedding_model: SentenceTransformerEmbeddings, sample_texts: List[str]
+    embedding_model: SentenceTransformerEmbeddings, sample_texts: list[str]
 ) -> None:
     """Test the count_tokens_batch method with a list of texts."""
     token_counts = embedding_model.count_tokens_batch(sample_texts)
@@ -94,7 +93,7 @@ def test_count_tokens_batch_texts(
 
 
 def test_similarity(
-    embedding_model: SentenceTransformerEmbeddings, sample_texts: List[str]
+    embedding_model: SentenceTransformerEmbeddings, sample_texts: list[str]
 ) -> None:
     """Test the similarity method."""
     embeddings = embedding_model.embed_batch(sample_texts)

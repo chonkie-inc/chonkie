@@ -2,9 +2,7 @@
 
 import re
 import warnings
-from typing import Any, Callable, List, Union
-
-from typing_extensions import Tuple
+from typing import Any, Callable, Union
 
 from chonkie.chunker.base import BaseChunker
 from chonkie.logger import get_logger
@@ -40,7 +38,7 @@ class TableChunker(BaseChunker):
         self.newline_pattern = re.compile(r"\n(?=\|)")
         self.sep = "✄"
     
-    def _split_table(self, table: str) -> Tuple[str, List[str]]:
+    def _split_table(self, table: str) -> tuple[str, list[str]]:
         # insert separator right after the newline that precedes a pipe
         raw = self.newline_pattern.sub(rf"\n{self.sep}", table)
         chunks = [c for c in raw.split(self.sep) if c]   # keep empty strings away
@@ -48,14 +46,14 @@ class TableChunker(BaseChunker):
         rows   = chunks[2:]                # data rows still contain their trailing \n
         return header, rows
 
-    def chunk(self, table: str) -> List[Chunk]:
+    def chunk(self, table: str) -> list[Chunk]:
         """Chunk the table into smaller tables based on the chunk size.
 
         Args:
             table: The input markdown table as a string.
 
         Returns:
-            List[MarkdownTable]: A list of MarkdownTable chunks.
+            list[MarkdownTable]: A list of MarkdownTable chunks.
 
         """
         logger.debug(f"Starting table chunking for table of length {len(table)}")
@@ -76,7 +74,7 @@ class TableChunker(BaseChunker):
 
         header, data_rows = self._split_table(table)
 
-        chunks: List[Chunk] = []
+        chunks: list[Chunk] = []
         header_token_count = self.tokenizer.count_tokens(header)
         current_token_count = header_token_count
         current_index = 0

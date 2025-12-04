@@ -1,7 +1,7 @@
 """Registry for embedding implementations with pattern matching support."""
 
 import re
-from typing import Any, Dict, List, Optional, Pattern, Type, Union
+from typing import Any, Optional, Pattern, Union
 
 from .azure_openai import AzureOpenAIEmbeddings
 from .base import BaseEmbeddings
@@ -18,16 +18,16 @@ class EmbeddingsRegistry:
     """Registry for embedding implementations with pattern matching support."""
 
     # Create a registry for the model names, provider aliases, patterns, and supported types
-    model_registry: Dict[str, Type[BaseEmbeddings]] = {}
-    provider_registry: Dict[str, Type[BaseEmbeddings]] = {}
-    pattern_registry: Dict[Pattern, Type[BaseEmbeddings]] = {}
-    type_registry: Dict[str, Type[BaseEmbeddings]] = {}
+    model_registry: dict[str, type[BaseEmbeddings]] = {}
+    provider_registry: dict[str, type[BaseEmbeddings]] = {}
+    pattern_registry: dict[Pattern, type[BaseEmbeddings]] = {}
+    type_registry: dict[str, type[BaseEmbeddings]] = {}
 
     @classmethod
     def register_model(
         cls,
         name: str,
-        embedding_cls: Type[BaseEmbeddings]
+        embedding_cls: type[BaseEmbeddings]
     ) -> None:
         """Register a new embeddings implementation.
 
@@ -47,7 +47,7 @@ class EmbeddingsRegistry:
     def register_provider(
         cls,
         alias: str,
-        embeddings_cls: Type[BaseEmbeddings],
+        embeddings_cls: type[BaseEmbeddings],
     ) -> None:
         """Register a new provider.
 
@@ -65,7 +65,7 @@ class EmbeddingsRegistry:
     def register_pattern(
         cls,
         pattern: str,
-        embeddings_cls: Type[BaseEmbeddings]
+        embeddings_cls: type[BaseEmbeddings]
     ) -> None:
         """Register a new pattern."""
         if not issubclass(embeddings_cls, BaseEmbeddings):
@@ -77,8 +77,8 @@ class EmbeddingsRegistry:
     @classmethod
     def register_types(
         cls,
-        types: Union[str, List[str]],
-        embeddings_cls: Type[BaseEmbeddings]
+        types: Union[str, list[str]],
+        embeddings_cls: type[BaseEmbeddings]
     ) -> None:
         """Register a new type."""
         if not issubclass(embeddings_cls, BaseEmbeddings):
@@ -93,12 +93,12 @@ class EmbeddingsRegistry:
             raise ValueError(f"Invalid types: {types}")
 
     @classmethod
-    def get_provider(cls, alias: str) -> Optional[Type[BaseEmbeddings]]:
+    def get_provider(cls, alias: str) -> Optional[type[BaseEmbeddings]]:
         """Get the embeddings class for a given provider alias."""
         return cls.provider_registry.get(alias)
 
     @classmethod
-    def match(cls, identifier: str) -> Optional[Type[BaseEmbeddings]]:
+    def match(cls, identifier: str) -> Optional[type[BaseEmbeddings]]:
         """Find matching embeddings class using both exact matches and patterns.
 
         Args:

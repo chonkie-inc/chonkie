@@ -3,7 +3,7 @@
 import importlib.util as importutil
 import os
 import warnings
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Optional
 
 import numpy as np
 
@@ -50,7 +50,7 @@ class AzureOpenAIEmbeddings(BaseEmbeddings):
         max_retries: int = 3,
         timeout: float = 60.0,
         batch_size: int = 128,
-        **kwargs: Dict[str, Any],
+        **kwargs: dict[str, Any],
     ):
         """Initialize Azure OpenAI embeddings.
 
@@ -141,7 +141,7 @@ class AzureOpenAIEmbeddings(BaseEmbeddings):
 
         return np.array(response.data[0].embedding, dtype=np.float32)
 
-    def embed_batch(self, texts: List[str]) -> List[np.ndarray]:
+    def embed_batch(self, texts: list[str]) -> list[np.ndarray]:
         """Embed a batch of strings."""
         if not texts:
             return []

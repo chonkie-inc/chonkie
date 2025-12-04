@@ -4,8 +4,6 @@ import importlib.util as importutil
 from typing import (
     TYPE_CHECKING,
     Any,
-    Dict,
-    List,
     Literal,
     Optional,
     Union,
@@ -40,11 +38,11 @@ class WeaviateHandshake(BaseHandshake):
         embedding_model: Union[str, BaseEmbeddings]: The embedding model to use.
         url: Optional[str]: The URL to the Weaviate server.
         api_key: Optional[str]: The API key for authentication.
-        auth_config: Optional[Dict[str, Any]]: OAuth configuration for authentication.
+        auth_config: Optional[dict[str, Any]]: OAuth configuration for authentication.
         batch_size: int: The batch size for batch operations. Defaults to 100.
         batch_dynamic: bool: Whether to use dynamic batching. Defaults to True.
         batch_timeout_retries: int: Number of retries for batch timeouts. Defaults to 3.
-        additional_headers: Optional[Dict[str, str]]: Additional headers for the Weaviate client.
+        additional_headers: Optional[dict[str, str]]: Additional headers for the Weaviate client.
 
     """
 
@@ -55,11 +53,11 @@ class WeaviateHandshake(BaseHandshake):
         embedding_model: Union[str, BaseEmbeddings] = "minishlab/potion-retrieval-32M",
         url: Optional[str] = None,
         api_key: Optional[str] = None,
-        auth_config: Optional[Dict[str, Any]] = None,
+        auth_config: Optional[dict[str, Any]] = None,
         batch_size: int = 100,
         batch_dynamic: bool = True,
         batch_timeout_retries: int = 3,
-        additional_headers: Optional[Dict[str, str]] = None,
+        additional_headers: Optional[dict[str, str]] = None,
         http_secure: bool = False,
         grpc_host: Optional[str] = None,
         grpc_port: int = 50051,
@@ -73,11 +71,11 @@ class WeaviateHandshake(BaseHandshake):
             embedding_model: Union[str, BaseEmbeddings]: The embedding model to use.
             url: Optional[str]: The URL to the Weaviate server.
             api_key: Optional[str]: The API key for authentication.
-            auth_config: Optional[Dict[str, Any]]: OAuth configuration for authentication.
+            auth_config: Optional[dict[str, Any]]: OAuth configuration for authentication.
             batch_size: int: The batch size for batch operations. Defaults to 100.
             batch_dynamic: bool: Whether to use dynamic batching. Defaults to True.
             batch_timeout_retries: int: Number of retries for batch timeouts. Defaults to 3.
-            additional_headers: Optional[Dict[str, str]]: Additional headers for the Weaviate client.
+            additional_headers: Optional[dict[str, str]]: Additional headers for the Weaviate client.
             http_secure: bool: Whether to use HTTPS for HTTP connections. Defaults to False.
             grpc_host: Optional[str]: The host for gRPC connections. Defaults to the same as HTTP host.
             grpc_port: int: The port for gRPC connections. Defaults to 50051.
@@ -267,14 +265,14 @@ class WeaviateHandshake(BaseHandshake):
             uuid5(NAMESPACE_OID, f"{self.collection_name}::chunk-{index}:{chunk.text}")
         )
 
-    def _generate_properties(self, chunk: Chunk) -> Dict[str, Any]:
+    def _generate_properties(self, chunk: Chunk) -> dict[str, Any]:
         """Generate properties for the chunk.
 
         Args:
             chunk: The chunk to generate properties for.
 
         Returns:
-            Dict[str, Any]: The properties for the chunk.
+            dict[str, Any]: The properties for the chunk.
 
         """
         properties = {
@@ -297,14 +295,14 @@ class WeaviateHandshake(BaseHandshake):
 
         return properties
 
-    def write(self, chunks: Union[Chunk, List[Chunk]]) -> List[str]:
+    def write(self, chunks: Union[Chunk, list[Chunk]]) -> list[str]:
         """Write chunks to the Weaviate collection.
 
         Args:
             chunks: A single chunk or sequence of chunks to write.
 
         Returns:
-            List[str]: List of IDs of the inserted chunks.
+            list[str]: List of IDs of the inserted chunks.
 
         Raises:
             RuntimeError: If there are too many errors during batch processing.
@@ -342,7 +340,7 @@ class WeaviateHandshake(BaseHandshake):
                     # Generate embedding
                     embedding = self.embedding_model.embed(chunk.text)
 
-                    vector: List[float]
+                    vector: list[float]
                     if hasattr(embedding, "tolist"):
                         vector = embedding.tolist()  # type: ignore[assignment]
                     else:
@@ -382,11 +380,11 @@ class WeaviateHandshake(BaseHandshake):
             self.client.collections.delete(self.collection_name)
             logger.info(f"Deleted Weaviate collection: {self.collection_name}")
 
-    def get_collection_info(self) -> Dict[str, Any]:
+    def get_collection_info(self) -> dict[str, Any]:
         """Get information about the collection.
 
         Returns:
-            Dict[str, Any]: Information about the collection.
+            dict[str, Any]: Information about the collection.
 
         """
         if not self._collection_exists(self.collection_name):
@@ -442,18 +440,18 @@ class WeaviateHandshake(BaseHandshake):
     def search(
         self,
         query: Optional[str] = None,
-        embedding: Optional[List[float]] = None,
+        embedding: Optional[list[float]] = None,
         limit: int = 5,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Retrieve the top_k most similar chunks to the query.
 
         Args:
             query: Optional[str]: The query string to search for.
-            embedding: Optional[List[float]]: The embedding vector to search for. If provided, `query` is ignored.
+            embedding: Optional[list[float]]: The embedding vector to search for. If provided, `query` is ignored.
             limit: int: The number of top similar chunks to retrieve.
 
         Returns:
-            List[Dict[str, Any]]: The list of most similar chunks with their metadata.
+            list[dict[str, Any]]: The list of most similar chunks with their metadata.
 
         """
         logger.debug(f"Searching Weaviate collection: {self.collection_name} with limit={limit}")

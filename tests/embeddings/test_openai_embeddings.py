@@ -1,7 +1,6 @@
 """Test suite for OpenAIEmbeddings."""
 
 import os
-from typing import List
 from unittest.mock import patch
 
 import numpy as np
@@ -24,7 +23,7 @@ def sample_text() -> str:
 
 
 @pytest.fixture
-def sample_texts() -> List[str]:
+def sample_texts() -> list[str]:
     """Fixture to create a list of sample texts for testing."""
     return [
         "This is the first sample text.",
@@ -61,7 +60,7 @@ def test_embed_single_text(mock_embed, embedding_model: OpenAIEmbeddings, sample
     reason="Skipping test because OPENAI_API_KEY is not defined",
 )
 @patch("chonkie.embeddings.openai.OpenAIEmbeddings.embed_batch")
-def test_embed_batch_texts(mock_embed_batch, embedding_model: OpenAIEmbeddings, sample_texts: List[str]) -> None:
+def test_embed_batch_texts(mock_embed_batch, embedding_model: OpenAIEmbeddings, sample_texts: list[str]) -> None:
     """Test that OpenAIEmbeddings correctly embeds a batch of texts."""
     mock_embed_batch.return_value = [np.zeros(embedding_model.dimension) for _ in sample_texts]
     embeddings = embedding_model.embed_batch(sample_texts)
@@ -81,7 +80,7 @@ def test_embed_batch_texts(mock_embed_batch, embedding_model: OpenAIEmbeddings, 
 )
 @patch("chonkie.embeddings.openai.OpenAIEmbeddings.embed_batch")
 @patch("chonkie.embeddings.openai.OpenAIEmbeddings.similarity")
-def test_similarity(mock_similarity, mock_embed_batch, embedding_model: OpenAIEmbeddings, sample_texts: List[str]) -> None:
+def test_similarity(mock_similarity, mock_embed_batch, embedding_model: OpenAIEmbeddings, sample_texts: list[str]) -> None:
     """Test that OpenAIEmbeddings correctly calculates similarity between two embeddings."""
     mock_embed_batch.return_value = [np.zeros(embedding_model.dimension) for _ in sample_texts]
     mock_similarity.return_value = np.float32(0.5)

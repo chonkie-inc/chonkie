@@ -4,7 +4,6 @@ import html
 import os
 import tempfile
 import warnings
-from typing import List
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -27,7 +26,7 @@ from chonkie.utils.viz import (
 
 
 @pytest.fixture
-def sample_chunks() -> List[Chunk]:
+def sample_chunks() -> list[Chunk]:
     """Create sample chunks for testing."""
     return [
         Chunk(text="Hello ", start_index=0, end_index=6, token_count=2),
@@ -44,7 +43,7 @@ def sample_text() -> str:
 
 
 @pytest.fixture
-def overlapping_chunks() -> List[Chunk]:
+def overlapping_chunks() -> list[Chunk]:
     """Create overlapping chunks for testing."""
     return [
         Chunk(text="Hello world", start_index=0, end_index=11, token_count=2),
@@ -54,7 +53,7 @@ def overlapping_chunks() -> List[Chunk]:
 
 
 @pytest.fixture
-def empty_chunks() -> List[Chunk]:
+def empty_chunks() -> list[Chunk]:
     """Create empty chunks list for testing."""
     return []
 
@@ -205,7 +204,7 @@ class TestVisualizerPrintMethod:
             viz.print([])
             mock_console.print.assert_called_once_with("No chunks to visualize.")
 
-    def test_print_with_full_text(self, sample_chunks: List[Chunk], sample_text: str) -> None:
+    def test_print_with_full_text(self, sample_chunks: list[Chunk], sample_text: str) -> None:
         """Test printing with provided full text."""
         with patch('rich.console.Console') as mock_console_class, patch('rich.text.Text') as mock_text_class:
             mock_console = MagicMock()
@@ -217,7 +216,7 @@ class TestVisualizerPrintMethod:
             mock_text_class.assert_called_once_with(sample_text)
             mock_console.print.assert_called_once_with(mock_text)
 
-    def test_print_without_full_text(self, sample_chunks: List[Chunk]) -> None:
+    def test_print_without_full_text(self, sample_chunks: list[Chunk]) -> None:
         """Test printing without provided full text (reconstruction)."""
         with patch('rich.console.Console') as mock_console_class, patch('rich.text.Text') as mock_text_class:
             mock_console = MagicMock()
@@ -255,7 +254,7 @@ class TestVisualizerPrintMethod:
                 assert len(w) == 2
                 assert "invalid start/end index" in str(w[0].message)
 
-    def test_print_stylize_error_handling(self, sample_chunks: List[Chunk], sample_text: str) -> None:
+    def test_print_stylize_error_handling(self, sample_chunks: list[Chunk], sample_text: str) -> None:
         """Test error handling during text stylization."""
         with patch('rich.console.Console') as mock_console_class, patch('rich.text.Text') as mock_text_class:
             mock_console = MagicMock()
@@ -281,7 +280,7 @@ class TestVisualizerSaveMethod:
             viz.save("test.html", [])
             mock_info.assert_called_with("No chunks to visualize. HTML file not saved.")
 
-    def test_save_with_full_text(self, sample_chunks: List[Chunk], sample_text: str) -> None:
+    def test_save_with_full_text(self, sample_chunks: list[Chunk], sample_text: str) -> None:
         """Test saving with provided full text."""
         with patch('rich.console.Console'), tempfile.TemporaryDirectory() as tmpdir:
             filepath = os.path.join(tmpdir, "test.html")
@@ -301,7 +300,7 @@ class TestVisualizerSaveMethod:
                 mock_info.assert_called_once()
                 assert f"file://{os.path.abspath(filepath)}" in mock_info.call_args[0][0]
 
-    def test_save_without_full_text(self, sample_chunks: List[Chunk]) -> None:
+    def test_save_without_full_text(self, sample_chunks: list[Chunk]) -> None:
         """Test saving without provided full text (reconstruction)."""
         with patch('rich.console.Console'), tempfile.TemporaryDirectory() as tmpdir:
             filepath = os.path.join(tmpdir, "test.html")
@@ -315,7 +314,7 @@ class TestVisualizerSaveMethod:
             assert "This is" in content
             assert "a test." in content
 
-    def test_save_auto_add_html_extension(self, sample_chunks: List[Chunk]) -> None:
+    def test_save_auto_add_html_extension(self, sample_chunks: list[Chunk]) -> None:
         """Test automatic addition of .html extension."""
         with patch('rich.console.Console'), tempfile.TemporaryDirectory() as tmpdir:
             filepath = os.path.join(tmpdir, "test")
@@ -324,7 +323,7 @@ class TestVisualizerSaveMethod:
             expected_path = filepath + ".html"
             assert os.path.exists(expected_path)
 
-    def test_save_custom_title(self, sample_chunks: List[Chunk]) -> None:
+    def test_save_custom_title(self, sample_chunks: list[Chunk]) -> None:
         """Test saving with custom title."""
         with patch('rich.console.Console'), tempfile.TemporaryDirectory() as tmpdir:
             filepath = os.path.join(tmpdir, "test.html")
@@ -335,7 +334,7 @@ class TestVisualizerSaveMethod:
                 content = f.read()
             assert f"<title>{html.escape(custom_title)}</title>" in content
 
-    def test_save_dark_theme_styling(self, sample_chunks: List[Chunk]) -> None:
+    def test_save_dark_theme_styling(self, sample_chunks: list[Chunk]) -> None:
         """Test saving with dark theme styling."""
         with patch('rich.console.Console'), tempfile.TemporaryDirectory() as tmpdir:
             filepath = os.path.join(tmpdir, "test.html")
@@ -347,7 +346,7 @@ class TestVisualizerSaveMethod:
             assert CONTENT_BACKGROUND_COLOR_DARK in content
             assert TEXT_COLOR_DARK in content
 
-    def test_save_light_theme_styling(self, sample_chunks: List[Chunk]) -> None:
+    def test_save_light_theme_styling(self, sample_chunks: list[Chunk]) -> None:
         """Test saving with light theme styling."""
         with patch('rich.console.Console'), tempfile.TemporaryDirectory() as tmpdir:
             filepath = os.path.join(tmpdir, "test.html")
@@ -359,7 +358,7 @@ class TestVisualizerSaveMethod:
             assert CONTENT_BACKGROUND_COLOR_LIGHT in content
             assert TEXT_COLOR_LIGHT in content
 
-    def test_save_overlapping_chunks(self, overlapping_chunks: List[Chunk]) -> None:
+    def test_save_overlapping_chunks(self, overlapping_chunks: list[Chunk]) -> None:
         """Test saving with overlapping chunks."""
         with patch('rich.console.Console'), tempfile.TemporaryDirectory() as tmpdir:
             filepath = os.path.join(tmpdir, "test.html")
@@ -371,7 +370,7 @@ class TestVisualizerSaveMethod:
             assert "(Overlap)" in content
             assert "title=" in content
 
-    def test_save_hippo_favicon_embedding(self, sample_chunks: List[Chunk]) -> None:
+    def test_save_hippo_favicon_embedding(self, sample_chunks: list[Chunk]) -> None:
         """Test that hippo favicon is properly embedded."""
         with patch('rich.console.Console'), tempfile.TemporaryDirectory() as tmpdir:
             filepath = os.path.join(tmpdir, "test.html")
@@ -383,7 +382,7 @@ class TestVisualizerSaveMethod:
             assert 'type="image/svg+xml"' in content
             assert 'data:image/svg+xml;base64,' in content
 
-    def test_save_favicon_encoding_error(self, sample_chunks: List[Chunk]) -> None:
+    def test_save_favicon_encoding_error(self, sample_chunks: list[Chunk]) -> None:
         """Test handling of favicon encoding errors."""
         with patch('rich.console.Console'), patch('base64.b64encode', side_effect=Exception("Encoding error")), patch('chonkie.utils.viz.logger.warning') as mock_warning, tempfile.TemporaryDirectory() as tmpdir:
             filepath = os.path.join(tmpdir, "test.html")
@@ -399,7 +398,7 @@ class TestVisualizerSaveMethod:
             with pytest.raises(AttributeError, match="Chunks must have 'text'"):
                 viz.save("test.html", invalid_chunks)
 
-    def test_save_file_write_error(self, sample_chunks: List[Chunk]) -> None:
+    def test_save_file_write_error(self, sample_chunks: list[Chunk]) -> None:
         """Test handling of file write errors."""
         with patch('rich.console.Console'):
             viz = Visualizer()
@@ -445,7 +444,7 @@ class TestVisualizerSaveMethod:
 class TestVisualizerCallMethod:
     """Test the __call__ method functionality."""
 
-    def test_call_delegates_to_print(self, sample_chunks: List[Chunk], sample_text: str) -> None:
+    def test_call_delegates_to_print(self, sample_chunks: list[Chunk], sample_text: str) -> None:
         """Test that __call__ delegates to print method."""
         with patch('rich.console.Console') as mock_console_class, patch('rich.text.Text') as mock_text_class:
             mock_console = MagicMock()
@@ -457,7 +456,7 @@ class TestVisualizerCallMethod:
             mock_text_class.assert_called_once_with(sample_text)
             mock_console.print.assert_called_once_with(mock_text)
 
-    def test_call_without_full_text(self, sample_chunks: List[Chunk]) -> None:
+    def test_call_without_full_text(self, sample_chunks: list[Chunk]) -> None:
         """Test __call__ without provided full text."""
         with patch('rich.console.Console') as mock_console_class, patch('rich.text.Text') as mock_text_class:
             mock_console = MagicMock()
@@ -581,7 +580,7 @@ class TestVisualizerConstants:
 class TestVisualizerIntegration:
     """Integration tests combining multiple features."""
 
-    def test_full_workflow_light_theme(self, sample_chunks: List[Chunk], sample_text: str) -> None:
+    def test_full_workflow_light_theme(self, sample_chunks: list[Chunk], sample_text: str) -> None:
         """Test complete workflow with light theme."""
         with patch('rich.console.Console'), tempfile.TemporaryDirectory() as tmpdir:
             filepath = os.path.join(tmpdir, "integration_test.html")
@@ -596,7 +595,7 @@ class TestVisualizerIntegration:
             assert "🦛" in content or "data:image/svg+xml" in content
             assert BODY_BACKGROUND_COLOR_LIGHT in content
 
-    def test_full_workflow_dark_theme(self, sample_chunks: List[Chunk], sample_text: str) -> None:
+    def test_full_workflow_dark_theme(self, sample_chunks: list[Chunk], sample_text: str) -> None:
         """Test complete workflow with dark theme."""
         with patch('rich.console.Console'), tempfile.TemporaryDirectory() as tmpdir:
             filepath = os.path.join(tmpdir, "integration_test_dark.html")

@@ -1,7 +1,7 @@
 """Pgvector Handshake to export Chonkie's Chunks into a PostgreSQL database with pgvector using vecs."""
 
 import importlib.util as importutil
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Optional, Union
 from uuid import NAMESPACE_OID, uuid5
 
 from chonkie.embeddings import AutoEmbeddings, BaseEmbeddings
@@ -138,7 +138,7 @@ class PgvectorHandshake(BaseHandshake):
             )
         )
 
-    def _generate_metadata(self, chunk: Chunk) -> Dict[str, Any]:
+    def _generate_metadata(self, chunk: Chunk) -> dict[str, Any]:
         """Generate metadata for the chunk."""
         metadata = {
             "text": chunk.text,
@@ -160,14 +160,14 @@ class PgvectorHandshake(BaseHandshake):
             
         return metadata
 
-    def write(self, chunks: Union[Chunk, List[Chunk]]) -> List[str]:
+    def write(self, chunks: Union[Chunk, list[Chunk]]) -> list[str]:
         """Write chunks to the PostgreSQL database using vecs.
         
         Args:
             chunks: A single chunk or sequence of chunks to write.
             
         Returns:
-            List[str]: List of IDs of the inserted chunks.
+            list[str]: List of IDs of the inserted chunks.
 
         """
         if isinstance(chunks, Chunk):
@@ -199,10 +199,10 @@ class PgvectorHandshake(BaseHandshake):
         self, 
         query: str, 
         limit: int = 5, 
-        filters: Optional[Dict[str, Any]] = None,
+        filters: Optional[dict[str, Any]] = None,
         include_metadata: bool = True,
         include_value: bool = True
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Search for similar chunks using vector similarity.
         
         Args:
@@ -213,7 +213,7 @@ class PgvectorHandshake(BaseHandshake):
             include_value: Whether to include similarity scores in results.
             
         Returns:
-            List[Dict[str, Any]]: List of similar chunks with metadata and scores.
+            list[dict[str, Any]]: List of similar chunks with metadata and scores.
 
         """
         logger.debug(f"Searching PostgreSQL collection: {self.collection_name} with limit={limit}")
@@ -265,7 +265,7 @@ class PgvectorHandshake(BaseHandshake):
         self.client.delete_collection(self.collection_name)
         logger.info(f"Deleted collection: {self.collection_name}")
 
-    def get_collection_info(self) -> Dict[str, Any]:
+    def get_collection_info(self) -> dict[str, Any]:
         """Get information about the collection."""
         # vecs collections have various properties we can inspect
         return {

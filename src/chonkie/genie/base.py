@@ -1,7 +1,7 @@
 """BaseGenie is the base class for all genies."""
 
 from abc import ABC, abstractmethod
-from typing import Any, List
+from typing import Any
 
 
 class BaseGenie(ABC):
@@ -19,13 +19,13 @@ class BaseGenie(ABC):
   Methods:
       generate(prompt: str) -> str:
           Generates a text response for a single prompt. Must be implemented by subclasses.
-      generate_batch(prompts: List[str]) -> List[str]:
+      generate_batch(prompts: list[str]) -> list[str]:
           Generates text responses for a batch of prompts. Uses `generate`.
       generate_json(prompt: str, schema: Any) -> Any:
           Generates a structured JSON response conforming to the provided schema
           for a single prompt. Should be implemented by subclasses if JSON output
           is needed.
-      generate_json_batch(prompts: List[str], schema: Any) -> List[Any]:
+      generate_json_batch(prompts: list[str], schema: Any) -> list[Any]:
           Generates structured JSON responses for a batch of prompts. Uses `generate_json`.
         
   """
@@ -35,7 +35,7 @@ class BaseGenie(ABC):
     """Generate a response based on the given prompt."""
     raise NotImplementedError
 
-  def generate_batch(self, prompts: List[str]) -> List[str]:
+  def generate_batch(self, prompts: list[str]) -> list[str]:
     """Generate a batch of responses based on the given prompts."""
     return [self.generate(prompt) for prompt in prompts]
 
@@ -43,6 +43,6 @@ class BaseGenie(ABC):
     """Generate a JSON response based on the given prompt and BaseModel schema."""
     raise NotImplementedError
 
-  def generate_json_batch(self, prompts: List[str], schema: Any) -> List[Any]:
+  def generate_json_batch(self, prompts: list[str], schema: Any) -> list[Any]:
     """Generate a batch of JSON responses based on the given prompts and BaseModel schema."""
     return [self.generate_json(prompt, schema) for prompt in prompts]

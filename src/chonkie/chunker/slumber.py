@@ -2,7 +2,7 @@
 
 from bisect import bisect_left
 from itertools import accumulate
-from typing import List, Optional, Union
+from typing import Optional, Union
 
 from tqdm import tqdm
 
@@ -109,7 +109,7 @@ class SlumberChunker(BaseChunker):
         # behaviour of the Genie under multiprocessing conditions
         self._use_multiprocessing = False
 
-    def _split_text(self, text: str, recursive_level: RecursiveLevel) -> List[str]:
+    def _split_text(self, text: str, recursive_level: RecursiveLevel) -> list[str]:
         """Split the text into chunks using the delimiters."""
         if _CYTHON_AVAILABLE:
             # Use the optimized Cython split function
@@ -141,7 +141,7 @@ class SlumberChunker(BaseChunker):
             # Fallback to original implementation when Cython is not available
             return self._split_text_fallback(text, recursive_level)
 
-    def _split_text_fallback(self, text: str, recursive_level: RecursiveLevel) -> List[str]:
+    def _split_text_fallback(self, text: str, recursive_level: RecursiveLevel) -> list[str]:
         """Fallback implementation when Cython is not available."""
         # At every delimiter, replace it with the sep
         if recursive_level.whitespace:
@@ -227,7 +227,7 @@ class SlumberChunker(BaseChunker):
         # This will be handled during chunk creation.
         return splits
 
-    def _recursive_split(self, text: str, level: int = 0, offset: int=0) -> List[Chunk]:
+    def _recursive_split(self, text: str, level: int = 0, offset: int=0) -> list[Chunk]:
         """Recursively split the text into chunks."""
         if not self.rules.levels or level >= len(self.rules.levels):
             return [Chunk(text=text,
@@ -261,15 +261,15 @@ class SlumberChunker(BaseChunker):
 
         return chunks
       
-    def _prepare_splits(self, splits: List[Chunk]) -> List[str]:
+    def _prepare_splits(self, splits: list[Chunk]) -> list[str]:
         """Prepare the splits for the chunker."""
         return [f"ID {i}: " + split.text.replace('\n', '').strip() for (i, split) in enumerate(splits)]
     
-    def _get_cumulative_token_counts(self, splits: List[Chunk]) -> List[int]:
+    def _get_cumulative_token_counts(self, splits: list[Chunk]) -> list[int]:
         """Get the cumulative token counts for the splits."""
         return list(accumulate([0] + [split.token_count for split in splits]))
 
-    def chunk(self, text: str) -> List[Chunk]:
+    def chunk(self, text: str) -> list[Chunk]:
         """Chunk the text with the SlumberChunker."""
         logger.debug(f"Starting slumber chunking for text of length {len(text)}")
         

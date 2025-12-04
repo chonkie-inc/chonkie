@@ -1,7 +1,7 @@
 """Comprehensive tests for the SlumberChunker."""
 
 import json
-from typing import Any, List, Optional
+from typing import Any, Optional
 from unittest.mock import Mock, patch
 
 import pytest
@@ -14,7 +14,7 @@ from chonkie.types import Chunk, RecursiveLevel, RecursiveRules
 class MockGenie(BaseGenie):
     """Mock genie for testing SlumberChunker."""
     
-    def __init__(self, split_responses: Optional[List[int]] = None) -> None:
+    def __init__(self, split_responses: Optional[list[int]] = None) -> None:
         """Initialize mock genie with predefined responses.
         
         Args:
@@ -23,7 +23,7 @@ class MockGenie(BaseGenie):
         """
         self.split_responses = split_responses or [1]
         self.call_count = 0
-        self.prompts: List[str] = []
+        self.prompts: list[str] = []
     
     def generate(self, prompt: str) -> str:
         """Generate a text response."""

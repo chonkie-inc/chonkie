@@ -6,7 +6,7 @@ Splits text into smaller chunks recursively. Express chunking logic through Recu
 from bisect import bisect_left
 from functools import lru_cache
 from itertools import accumulate
-from typing import List, Optional, Tuple, Union
+from typing import Optional, Union
 
 from chonkie.chunker.base import BaseChunker
 from chonkie.logger import get_logger
@@ -224,7 +224,7 @@ class RecursiveChunker(BaseChunker):
         splits: list[str],
         token_counts: list[int],
         combine_whitespace: bool = False,
-    ) -> Tuple[List[str], List[int]]:
+    ) -> tuple[list[str], list[int]]:
         """Merge short splits into larger chunks.
 
         Uses optimized Cython implementation when available, with Python fallback.
@@ -246,7 +246,7 @@ class RecursiveChunker(BaseChunker):
         splits: list[str],
         token_counts: list[int],
         combine_whitespace: bool = False,
-    ) -> Tuple[List[str], List[int]]:
+    ) -> tuple[list[str], list[int]]:
         """Original Python implementation of _merge_splits (fallback)."""
         if not splits or not token_counts:
             return [], []
@@ -309,7 +309,7 @@ class RecursiveChunker(BaseChunker):
 
     def _recursive_chunk(
         self, text: str, level: int = 0, start_offset: int =0
-    ) -> List[Chunk]:
+    ) -> list[Chunk]:
         """Recursive helper for core chunking."""
         if not text:
             return []
@@ -346,7 +346,7 @@ class RecursiveChunker(BaseChunker):
             )
 
         # Chunk long merged splits
-        chunks: List[Chunk] = []
+        chunks: list[Chunk] = []
         current_offset = start_offset
         for split, token_count in zip(merged, combined_token_counts):
             if token_count > self.chunk_size:
@@ -358,7 +358,7 @@ class RecursiveChunker(BaseChunker):
             current_offset += len(split)
         return chunks
 
-    def chunk(self, text: str) -> List[Chunk]:
+    def chunk(self, text: str) -> list[Chunk]:
         """Recursively chunk text.
 
         Args:

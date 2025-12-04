@@ -4,7 +4,7 @@ This module provides an experimental CodeChunker class that uses tree-sitter
 for advanced code analysis and language-specific chunking strategies.
 """
 import warnings
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Optional
 
 from chonkie.chunker.base import BaseChunker
 from chonkie.types import Chunk
@@ -102,7 +102,7 @@ class CodeChunker(BaseChunker):
     response = self.magika.identify_bytes(bytes_text)
     return response.output.label # type: ignore
 
-  def _merge_extracted_nodes(self, extracted_nodes: List[Dict[str, Any]], text_bytes: bytes) -> Dict[str, Any]:
+  def _merge_extracted_nodes(self, extracted_nodes: list[dict[str, Any]], text_bytes: bytes) -> dict[str, Any]:
     """Merge the extracted nodes using byte positions."""
     if len(extracted_nodes) == 1:
       return extracted_nodes[0]
@@ -123,7 +123,7 @@ class CodeChunker(BaseChunker):
       "text": merged_text
     }
 
-  def _extract_node(self, node: "Node") -> Dict[str, Any]:
+  def _extract_node(self, node: "Node") -> dict[str, Any]:
     """Extract the node content."""
     text = node.text.decode() # type: ignore
     return {
@@ -135,7 +135,7 @@ class CodeChunker(BaseChunker):
       "type": node.type,
     }
 
-  def _split_target_node_once(self, target_node: "Node", text_bytes: bytes) -> List[Dict[str, Any]]:
+  def _split_target_node_once(self, target_node: "Node", text_bytes: bytes) -> list[dict[str, Any]]:
     """Split a target node once - extract each immediate child as a complete unit."""
     if hasattr(target_node, 'children') and target_node.children:
       child_chunks = []
@@ -146,7 +146,7 @@ class CodeChunker(BaseChunker):
       # Fallback: return as single node if no children
       return [self._extract_node(target_node)]
 
-  def _split_target_node_recursively(self, target_node: "Node", rule: SplitRule, text_bytes: bytes) -> List[Dict[str, Any]]:
+  def _split_target_node_recursively(self, target_node: "Node", rule: SplitRule, text_bytes: bytes) -> list[dict[str, Any]]:
     """Split a target node recursively - continue splitting results that exceed chunk_size."""
     if self.chunk_size is None:
       # No size limit, just do single split
@@ -192,7 +192,7 @@ class CodeChunker(BaseChunker):
     
     return header_text
 
-  def _apply_header_to_chunks(self, chunks: List[Dict[str, Any]], header_text: str) -> List[Dict[str, Any]]:
+  def _apply_header_to_chunks(self, chunks: list[dict[str, Any]], header_text: str) -> list[dict[str, Any]]:
     """Apply header context to chunks when add_split_context is enabled."""
     if not self.add_split_context or not header_text:
       return chunks
@@ -213,7 +213,7 @@ class CodeChunker(BaseChunker):
     
     return result_chunks
 
-  def _handle_target_node_with_recursion(self, target_node: "Node", rule: SplitRule, text_bytes: bytes) -> List[Dict[str, Any]]:
+  def _handle_target_node_with_recursion(self, target_node: "Node", rule: SplitRule, text_bytes: bytes) -> list[dict[str, Any]]:
     """Handle target node with appropriate splitting strategy based on recursive flag."""
     if rule.recursive and self.chunk_size is not None:
       target_text = str(target_node.text.decode()) if target_node.text else "" 
@@ -226,7 +226,7 @@ class CodeChunker(BaseChunker):
     # For non-recursive rules or when size is acceptable, do single-level split
     return self._split_target_node_once(target_node, text_bytes)
 
-  def _perform_sequential_splitting(self, all_children: List["Node"], target_indices: List[int], rule: SplitRule, text_bytes: bytes, parent_node: Optional["Node"] = None, header_text: str = "") -> List[Dict[str, Any]]:
+  def _perform_sequential_splitting(self, all_children: list["Node"], target_indices: list[int], rule: SplitRule, text_bytes: bytes, parent_node: Optional["Node"] = None, header_text: str = "") -> list[dict[str, Any]]:
     """Perform sequential splitting logic."""
     result_chunks = []
     target_chunk_positions = []  # Track positions of target chunks in result_chunks
@@ -283,7 +283,7 @@ class CodeChunker(BaseChunker):
     
     return result_chunks
 
-  def _split_node(self, node: "Node", rule: SplitRule, text_bytes: bytes) -> List[Dict[str, Any]]:
+  def _split_node(self, node: "Node", rule: SplitRule, text_bytes: bytes) -> list[dict[str, Any]]:
     """Extract the split node with sequential splitting support (refactored)."""
     # Extract header first
     header_text = self._extract_header_from_node(node, rule, text_bytes)
@@ -331,9 +331,9 @@ class CodeChunker(BaseChunker):
       return self._perform_sequential_splitting(all_children, target_indices, rule, text_bytes, node, header_text)
 
 
-  def _extract_split_nodes(self, nodes: List["Node"], text_bytes: bytes) -> List[Dict[str, Any]]:
+  def _extract_split_nodes(self, nodes: list["Node"], text_bytes: bytes) -> list[dict[str, Any]]:
     """Extract important information from the nodes."""
-    exnodes: List[Dict[str, Any]] = []
+    exnodes: list[dict[str, Any]] = []
     for node in nodes:
       # Check if node matches a split rule
       is_split = False
@@ -360,7 +360,7 @@ class CodeChunker(BaseChunker):
           exnodes.append(self._extract_node(node))
     return exnodes
 
-  def _should_merge_node_w_node_group(self, extracted_node: Dict[str, Any], extracted_node_group: List[Dict[str, Any]]) -> bool:
+  def _should_merge_node_w_node_group(self, extracted_node: dict[str, Any], extracted_node_group: list[dict[str, Any]]) -> bool:
     """Check if the current node should be merged with the node group."""
     if not extracted_node_group:
       return False
@@ -381,13 +381,13 @@ class CodeChunker(BaseChunker):
     # If nothing matches, return false
     return False
 
-  def _merge_extracted_nodes_by_type(self, exnodes: List[Dict[str, Any]], text_bytes: bytes) -> List[Dict[str, Any]]:
+  def _merge_extracted_nodes_by_type(self, exnodes: list[dict[str, Any]], text_bytes: bytes) -> list[dict[str, Any]]:
     """Merge the extracted nodes by type."""
     if len(exnodes) < 2:
       return exnodes
 
-    merged_exnodes: List[Dict[str, Any]] = []
-    current_group: List[Dict[str, Any]] = [exnodes[0]]
+    merged_exnodes: list[dict[str, Any]] = []
+    current_group: list[dict[str, Any]] = [exnodes[0]]
     i = 0
     while i < len(exnodes) - 1:
       current_exnode = exnodes[i+1]
@@ -406,9 +406,9 @@ class CodeChunker(BaseChunker):
 
     return merged_exnodes
 
-  def _create_chunks_from_exnodes(self, exnodes: List[Dict[str, Any]], text_bytes: bytes, root_node: Optional["Node"] = None) -> List[Chunk]:
+  def _create_chunks_from_exnodes(self, exnodes: list[dict[str, Any]], text_bytes: bytes, root_node: Optional["Node"] = None) -> list[Chunk]:
     """Create chunks from the extracted nodes, using root node boundaries for proper file coverage."""
-    chunks: List[Chunk] = []
+    chunks: list[Chunk] = []
     current_index = 0
     current_byte_pos = 0
     
@@ -545,7 +545,7 @@ class CodeChunker(BaseChunker):
     
     return chunks
 
-  def chunk(self, text: str) -> List[Chunk]:
+  def chunk(self, text: str) -> list[Chunk]:
     """Chunk the code."""
     # Encode text to bytes for consistent byte position handling
     text_bytes = text.encode('utf-8')

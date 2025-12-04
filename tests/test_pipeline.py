@@ -555,7 +555,7 @@ class TestPipelineReturnTypes:
         assert not isinstance(result, list)
 
     def test_multiple_texts_returns_list(self) -> None:
-        """Test that multiple texts return List[Document]."""
+        """Test that multiple texts return list[Document]."""
         result = (Pipeline()
             .chunk_with("recursive", chunk_size=512)
             .run(texts=["Text 1", "Text 2"]))
@@ -565,7 +565,7 @@ class TestPipelineReturnTypes:
         assert all(isinstance(doc, Document) for doc in result)
 
     def test_directory_fetch_returns_list(self) -> None:
-        """Test that directory fetch returns List[Document]."""
+        """Test that directory fetch returns list[Document]."""
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)
             (temp_path / "file.txt").write_text("Content")
