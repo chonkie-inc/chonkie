@@ -67,7 +67,7 @@ class TestGeminiGenieBasicFunctionality:
                 assert genie is not None
                 assert isinstance(genie, BaseGenie)
                 assert genie.api_key == 'test_key'
-                assert genie.model == "gemini-2.5-pro-preview-03-25"
+                assert genie.model == "gemini-3-pro-preview"
     
     @patch.dict(os.environ, {'GEMINI_API_KEY': 'test_key'})
     def test_gemini_genie_generate_text(self) -> None:
@@ -95,7 +95,7 @@ class TestGeminiGenieBasicFunctionality:
                 
                 assert result == "Generated response"
                 mock_client.models.generate_content.assert_called_once_with(
-                    model="gemini-2.5-pro-preview-03-25", 
+                    model="gemini-3-pro-preview", 
                     contents="Test prompt"
                 )
     
@@ -127,7 +127,7 @@ class TestGeminiGenieBasicFunctionality:
                 
                 assert result == {"key": "value"}
                 mock_client.models.generate_content.assert_called_once_with(
-                    model="gemini-2.5-pro-preview-03-25",
+                    model="gemini-3-pro-preview",
                     contents="Test prompt",
                     config={
                         'response_mime_type': 'application/json',

@@ -22,26 +22,6 @@ try:
 except ImportError:
     _CYTHON_AVAILABLE = False
 
-# PROMPT_W_CONTEXT_TEMPLATE = """<task> You are given a set of texts between the starting tag <passages> and ending tag </passages>. Each text is labeled as 'ID `N`' where 'N' is the passage number. Your task is to find the first passage where the content clearly separates from the previous passages in topic and/or semantics. 
-
-# The user may provide you some context on the passages which may help you in your task. This context is provided between the starting tag <context> and ending tag </context>.
-# </task>
-
-# <rules>
-# Follow the following rules while finding the splitting passage:
-# - Always return the answer as a JSON parsable object with the 'split_index' key having a value of the first passage where the topic changes.
-# - Avoid very long groups of paragraphs. Aim for a good balance between identifying content shifts and keeping groups manageable.
-# - If no clear `split_index` is found, return N + 1, where N is the index of the last passage. 
-# </rules>
-
-# <context>
-# {context}
-# </context>
-
-# <passages>
-# {passages}
-# </passages>
-# """
 
 PROMPT_TEMPLATE = """<task> You are given a set of texts between the starting tag <passages> and ending tag </passages>. Each text is labeled as 'ID `N`' where 'N' is the passage number. Your task is to find the first passage where the content clearly separates from the previous passages in topic and/or semantics. </task>
 
