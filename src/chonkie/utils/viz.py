@@ -4,7 +4,7 @@ import base64
 import html
 import os
 import warnings
-from typing import List, Optional, Union
+from typing import Optional, Union
 
 from chonkie.logger import get_logger
 from chonkie.types import Chunk
@@ -142,9 +142,9 @@ class Visualizer:
         theme (str): The theme to use for the visualizer (default is "pastel")
 
     Methods:
-        print(chunks: List[Chunk], full_text: Optional[str] = None) -> None:
+        print(chunks: list[Chunk], full_text: Optional[str] = None) -> None:
             Print the chunks to the terminal, with rich highlights!
-        save(filename: str, chunks: List[Chunk], full_text: Optional[str] = None, title: str = "Chunk Visualization") -> None:
+        save(filename: str, chunks: list[Chunk], full_text: Optional[str] = None, title: str = "Chunk Visualization") -> None:
             Save the chunks as a standalone HTML file, always embedding a hippo emoji SVG favicon.
     
     """
@@ -152,11 +152,11 @@ class Visualizer:
     # Store the hippo SVG content as a class attribute
     HIPPO_SVG_CONTENT = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100"><text x="50" y="55" font-size="90" text-anchor="middle" dominant-baseline="middle">🦛</text></svg>"""
 
-    def __init__(self, theme: Union[str, List[str]] = "pastel") -> None:
+    def __init__(self, theme: Union[str, list[str]] = "pastel") -> None:
         """Initialize the Visualizer.
         
         Args:
-            theme (Union[str, List[str]]): The theme to use for the visualizer (default is PASTEL_THEME)
+            theme (Union[str, list[str]]): The theme to use for the visualizer (default is PASTEL_THEME)
         
         """
         # Lazy import the dependencies
@@ -185,7 +185,7 @@ class Visualizer:
             raise ImportError(f"Could not import dependencies with error: {e}. Please install the dependencies with `pip install chonkie[viz]`")
 
     # NOTE: This is a helper function to manage the theme
-    def _get_theme(self, theme: str) -> tuple[List[str], str]:
+    def _get_theme(self, theme: str) -> tuple[list[str], str]:
         """Get the theme from the theme name."""
         if theme in DARK_THEMES:
             return DARK_THEMES[theme], TEXT_COLOR_DARK
@@ -198,7 +198,7 @@ class Visualizer:
         """Cycles through the appropriate color list."""
         return self.theme[index % len(self.theme)]
 
-    def _reconstruct_text_from_chunks(self, chunks: List[Chunk]) -> str:
+    def _reconstruct_text_from_chunks(self, chunks: list[Chunk]) -> str:
         """Reconstruct the full text from a list of chunks, handling overlaps."""
         # Sort chunks by start_index to handle overlaps correctly
         sorted_chunks = sorted(chunks, key=lambda x: x.start_index)
@@ -244,7 +244,7 @@ class Visualizer:
             logger.warning(f"Could not darken color {hex_color}: {e}")
             return "#808080"
 
-    def print(self, chunks: List[Chunk], full_text: Optional[str] = None) -> None:
+    def print(self, chunks: list[Chunk], full_text: Optional[str] = None) -> None:
         """Print the chunks to the terminal, with rich highlights."""
         # Check if there are any chunks to visualize
         if not chunks: 
@@ -288,7 +288,7 @@ class Visualizer:
     def save(
         self,
         filename: str,
-        chunks: List[Chunk],
+        chunks: list[Chunk],
         full_text: Optional[str] = None,
         title: str = "Chunk Visualization"
         # Removed embed_hippo_favicon parameter
@@ -297,7 +297,7 @@ class Visualizer:
 
         Args:
             filename (str): The path to save the HTML file.
-            chunks (List[Chunk]): A list of chunk objects with 'start_index'
+            chunks (list[Chunk]): A list of chunk objects with 'start_index'
                                      and 'end_index'.
             full_text (Optional[str]): The complete original text. If None, it
                                        attempts reconstruction.
@@ -454,13 +454,13 @@ class Visualizer:
             raise Exception(f"An unexpected error occurred during file saving: {e}")
             
 
-    def __call__(self, chunks: List[Chunk], full_text: Optional[str] = None) -> None:
+    def __call__(self, chunks: list[Chunk], full_text: Optional[str] = None) -> None:
         """Call the visualizer as a function.
 
         Prints the chunks to the terminal, with rich highlights.
         
         Args:
-            chunks (List[Chunk]): A list of chunk objects with 'start_index'
+            chunks (list[Chunk]): A list of chunk objects with 'start_index'
                                      and 'end_index'.
             full_text (Optional[str]): The complete original text. If None, it
                                        attempts reconstruction.

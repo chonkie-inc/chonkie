@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import List, cast
+from typing import cast
 
 import pytest
 import tiktoken
@@ -45,7 +45,7 @@ def sample_text() -> str:
 
 
 @pytest.fixture
-def sample_batch(sample_text: str) -> List[str]:
+def sample_batch(sample_text: str) -> list[str]:
     """Fixture that returns a sample batch of 10 texts (500-1000 tokens each) for testing."""
     batch = []
     base_text = sample_text + " " # Add space for separation when repeating
@@ -205,7 +205,7 @@ def test_token_chunker_single_chunk_text(tokenizer: Tokenizer) -> None:
     assert chunks[0].text == "Hello, how are you?"
 
 
-def test_token_chunker_batch_chunking(tiktokenizer: Encoding, sample_batch: List[str]) -> None:
+def test_token_chunker_batch_chunking(tiktokenizer: Encoding, sample_batch: list[str]) -> None:
     """Test that the TokenChunker can chunk a batch of texts into tokens."""
     chunker = TokenChunker(tokenizer=tiktokenizer, chunk_size=512, chunk_overlap=128)
     chunks = chunker.chunk_batch(sample_batch)
@@ -251,7 +251,7 @@ def test_token_chunker_call(tiktokenizer: Encoding, sample_text: str) -> None:
     assert all([chunk.end_index is not None for chunk in chunks])
 
 
-def verify_chunk_indices(chunks: List[Chunk], original_text: str):
+def verify_chunk_indices(chunks: list[Chunk], original_text: str):
     """Verify that chunk indices correctly map to the original text."""
     for i, chunk in enumerate(chunks):
         # Extract text using the indices

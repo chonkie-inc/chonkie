@@ -2,7 +2,7 @@
 
 import warnings
 from functools import lru_cache
-from typing import List, Literal, Union
+from typing import Literal, Union
 
 from chonkie.logger import get_logger
 from chonkie.pipeline import refinery
@@ -144,13 +144,13 @@ class OverlapRefinery(BaseRefinery):
         # This will be handled during chunk creation.
         return splits
 
-    def _get_token_counts_cached(self, splits: List[str]) -> List[int]:
+    def _get_token_counts_cached(self, splits: list[str]) -> list[int]:
         """Get token counts with LRU caching for performance optimization."""
         return [self._count_tokens_cached(split) for split in splits]
 
     def _group_splits(
-        self, splits: List[str], token_counts: List[int], effective_context_size: int
-    ) -> List[str]:
+        self, splits: list[str], token_counts: list[int], effective_context_size: int
+    ) -> list[str]:
         """Group the splits.
 
         Args:
@@ -290,8 +290,8 @@ class OverlapRefinery(BaseRefinery):
             raise ValueError("Mode must be one of: token, recursive.")
 
     def _refine_prefix(
-        self, chunks: List[Chunk], effective_context_size: int
-    ) -> List[Chunk]:
+        self, chunks: list[Chunk], effective_context_size: int
+    ) -> list[Chunk]:
         """Refine the prefix of the chunk.
 
         Args:
@@ -391,8 +391,8 @@ class OverlapRefinery(BaseRefinery):
             raise ValueError("Mode must be one of: token, recursive.")
 
     def _refine_suffix(
-        self, chunks: List[Chunk], effective_context_size: int
-    ) -> List[Chunk]:
+        self, chunks: list[Chunk], effective_context_size: int
+    ) -> list[Chunk]:
         """Refine the suffix of the chunk.
 
         Args:
@@ -430,7 +430,7 @@ class OverlapRefinery(BaseRefinery):
 
         return chunks
 
-    def _get_overlap_context_size(self, chunks: List[Chunk]) -> int:
+    def _get_overlap_context_size(self, chunks: list[Chunk]) -> int:
         """Get the overlap context size.
 
         Args:
@@ -443,7 +443,7 @@ class OverlapRefinery(BaseRefinery):
         else:
             return self.context_size
 
-    def refine(self, chunks: List[Chunk]) -> List[Chunk]:
+    def refine(self, chunks: list[Chunk]) -> list[Chunk]:
         """Refine the chunks based on the overlap.
 
         Args:

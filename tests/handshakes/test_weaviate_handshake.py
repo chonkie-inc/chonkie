@@ -1,7 +1,6 @@
 """Test the WeaviateHandshake class."""
 
 import uuid
-from typing import List
 from unittest.mock import Mock, patch
 
 import pytest
@@ -87,7 +86,7 @@ def mock_weaviate_client():
 
 
 # Sample Chunks for testing
-SAMPLE_CHUNKS: List[Chunk] = [
+SAMPLE_CHUNKS: list[Chunk] = [
     Chunk(text="This is the first chunk.", start_index=0, end_index=25, token_count=6),
     Chunk(
         text="This is the second chunk.", start_index=26, end_index=52, token_count=6

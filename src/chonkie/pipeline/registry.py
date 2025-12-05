@@ -1,6 +1,6 @@
 """Component registry for pipeline components."""
 
-from typing import Any, Callable, Dict, List, Optional, Type
+from typing import Any, Callable, Optional
 
 from .component import Component, ComponentType
 
@@ -10,10 +10,10 @@ class _ComponentRegistry:
 
     def __init__(self) -> None:
         """Initialize the component registry."""
-        self._components: Dict[str, Component] = {}
+        self._components: dict[str, Component] = {}
         # Scoped aliases: (component_type, alias) -> name mapping
-        self._aliases: Dict[tuple[ComponentType, str], str] = {}
-        self._component_types: Dict[ComponentType, List[str]] = {
+        self._aliases: dict[tuple[ComponentType, str], str] = {}
+        self._component_types: dict[ComponentType, list[str]] = {
             ct: [] for ct in ComponentType
         }
 
@@ -21,7 +21,7 @@ class _ComponentRegistry:
         self,
         name: str,
         alias: str,
-        component_class: Type[Any],
+        component_class: type[Any],
         component_type: ComponentType,
     ) -> None:
         """Register a component in the registry.
@@ -127,7 +127,7 @@ class _ComponentRegistry:
 
     def list_components(
         self, component_type: Optional[ComponentType] = None
-    ) -> List[Component]:
+    ) -> list[Component]:
         """List all registered components, optionally filtered by type.
 
         Args:
@@ -142,7 +142,7 @@ class _ComponentRegistry:
             return [self._components[name] for name in names]
         return list(self._components.values())
 
-    def get_aliases(self, component_type: Optional[ComponentType] = None) -> List[str]:
+    def get_aliases(self, component_type: Optional[ComponentType] = None) -> list[str]:
         """Get all available aliases, optionally filtered by type.
 
         Args:
@@ -302,7 +302,7 @@ class _ComponentRegistry:
 def pipeline_component(
     alias: str,
     component_type: ComponentType,
-) -> Callable[[Type[Any]], Type[Any]]:
+) -> Callable[[type[Any]], type[Any]]:
     """Register a class as a pipeline component.
 
     Args:
@@ -322,7 +322,7 @@ def pipeline_component(
 
     """
 
-    def decorator(cls: Type[Any]) -> Type[Any]:
+    def decorator(cls: type[Any]) -> type[Any]:
         # Validate that the class has ALL required methods
         required_methods = {
             ComponentType.FETCHER: ["fetch"],
@@ -363,7 +363,7 @@ def pipeline_component(
 
 
 # Specialized decorators for each component type
-def fetcher(alias: str) -> Callable[[Type[Any]], Type[Any]]:
+def fetcher(alias: str) -> Callable[[type[Any]], type[Any]]:
     """Register a fetcher component.
 
     Args:
@@ -381,7 +381,7 @@ def fetcher(alias: str) -> Callable[[Type[Any]], Type[Any]]:
     return pipeline_component(alias=alias, component_type=ComponentType.FETCHER)
 
 
-def chef(alias: str) -> Callable[[Type[Any]], Type[Any]]:
+def chef(alias: str) -> Callable[[type[Any]], type[Any]]:
     """Register a chef component.
 
     Args:
@@ -399,7 +399,7 @@ def chef(alias: str) -> Callable[[Type[Any]], Type[Any]]:
     return pipeline_component(alias=alias, component_type=ComponentType.CHEF)
 
 
-def chunker(alias: str) -> Callable[[Type[Any]], Type[Any]]:
+def chunker(alias: str) -> Callable[[type[Any]], type[Any]]:
     """Register a chunker component.
 
     Args:
@@ -417,7 +417,7 @@ def chunker(alias: str) -> Callable[[Type[Any]], Type[Any]]:
     return pipeline_component(alias=alias, component_type=ComponentType.CHUNKER)
 
 
-def refinery(alias: str) -> Callable[[Type[Any]], Type[Any]]:
+def refinery(alias: str) -> Callable[[type[Any]], type[Any]]:
     """Register a refinery component.
 
     Args:
@@ -435,7 +435,7 @@ def refinery(alias: str) -> Callable[[Type[Any]], Type[Any]]:
     return pipeline_component(alias=alias, component_type=ComponentType.REFINERY)
 
 
-def porter(alias: str) -> Callable[[Type[Any]], Type[Any]]:
+def porter(alias: str) -> Callable[[type[Any]], type[Any]]:
     """Register a porter component.
 
     Args:
@@ -453,7 +453,7 @@ def porter(alias: str) -> Callable[[Type[Any]], Type[Any]]:
     return pipeline_component(alias=alias, component_type=ComponentType.PORTER)
 
 
-def handshake(alias: str) -> Callable[[Type[Any]], Type[Any]]:
+def handshake(alias: str) -> Callable[[type[Any]], type[Any]]:
     """Register a handshake component.
 
     Args:

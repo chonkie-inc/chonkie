@@ -5,7 +5,7 @@ import inspect
 import warnings
 from abc import ABC, abstractmethod
 from collections import defaultdict
-from typing import TYPE_CHECKING, Any, Callable, Dict, Protocol, Sequence, Union
+from typing import TYPE_CHECKING, Any, Callable, Protocol, Sequence, Union
 
 if TYPE_CHECKING:
     import tiktoken
@@ -66,9 +66,9 @@ class Tokenizer(ABC):
     def __init__(self) -> None:
         """Initialize the Tokenizer."""
         self.vocab: list[str] = []
-        self.token2id: Dict[str, int] = defaultdict(self.defaulttoken2id)
+        self.token2id: dict[str, int] = defaultdict(self.defaulttoken2id)
         # Note: Using a lambda here would cause pickling issues:
-        # self.token2id: Dict[str, int] = defaultdict(lambda: len(self.vocab))
+        # self.token2id: dict[str, int] = defaultdict(lambda: len(self.vocab))
         self.token2id[" "]  # Add space to the vocabulary
         self.vocab.append(" ")  # Add space to the vocabulary
 
@@ -89,7 +89,7 @@ class Tokenizer(ABC):
         """Return the vocabulary."""
         return self.vocab
 
-    def get_token2id(self) -> Dict:
+    def get_token2id(self) -> dict:
         """Return token-to-id mapping."""
         return self.token2id
 

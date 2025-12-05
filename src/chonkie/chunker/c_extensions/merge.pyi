@@ -1,13 +1,12 @@
 """Stub file for merge C extension."""
 
-from typing import List, Tuple
 
 def _merge_splits(
-    splits: List[str], 
-    token_counts: List[int], 
+    splits: list[str], 
+    token_counts: list[int], 
     chunk_size: int, 
     combine_whitespace: bool = False
-) -> Tuple[List[str], List[int]]:
+) -> tuple[list[str], list[int]]:
     """Merge text splits into chunks based on token counts.
     
     Args:
@@ -23,10 +22,10 @@ def _merge_splits(
     ...
 
 def find_merge_indices(
-    token_counts: List[int],
+    token_counts: list[int],
     chunk_size: int,
     start_index: int = 0
-) -> List[int]:
+) -> list[int]:
     """Find optimal merge indices for token counts.
     
     Args:

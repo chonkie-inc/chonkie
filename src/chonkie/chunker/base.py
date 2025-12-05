@@ -2,7 +2,7 @@
 
 import warnings
 from abc import ABC, abstractmethod
-from typing import List, Sequence, Union
+from typing import Sequence, Union
 
 from tqdm import tqdm
 
@@ -45,7 +45,7 @@ class BaseChunker(ABC):
 
     def __call__(
         self, text: Union[str, Sequence[str]], show_progress: bool = True
-    ) -> Union[List[Chunk], List[List[Chunk]]]:
+    ) -> Union[list[Chunk], list[list[Chunk]]]:
         """Call the chunker with the given arguments.
 
         Args:
@@ -81,7 +81,7 @@ class BaseChunker(ABC):
 
     def _sequential_batch_processing(
         self, texts: Sequence[str], show_progress: bool = True
-    ) -> List[List[Chunk]]:
+    ) -> list[list[Chunk]]:
         """Process a batch of texts sequentially."""
         logger.info(f"Starting sequential batch processing of {len(texts)} texts")
         results = [
@@ -101,7 +101,7 @@ class BaseChunker(ABC):
 
     def _parallel_batch_processing(
         self, texts: Sequence[str], show_progress: bool = True
-    ) -> List[List[Chunk]]:
+    ) -> list[list[Chunk]]:
         """Process a batch of texts using multiprocessing."""
         from multiprocessing import Pool
 
@@ -134,21 +134,21 @@ class BaseChunker(ABC):
             return results
 
     @abstractmethod
-    def chunk(self, text: str) -> List[Chunk]:
+    def chunk(self, text: str) -> list[Chunk]:
         """Chunk the given text.
 
         Args:
             text (str): The text to chunk.
 
         Returns:
-            List[Chunk]: A list of Chunks.
+            list[Chunk]: A list of Chunks.
 
         """
         pass
 
     def chunk_batch(
         self, texts: Sequence[str], show_progress: bool = True
-    ) -> List[List[Chunk]]:
+    ) -> list[list[Chunk]]:
         """Chunk a batch of texts.
 
         Args:
@@ -156,7 +156,7 @@ class BaseChunker(ABC):
             show_progress (bool): Whether to show progress.
 
         Returns:
-            List[List[Chunk]]: A list of lists of Chunks.
+            list[list[Chunk]]: A list of lists of Chunks.
 
         """
         # simple handles of empty and single text cases
@@ -183,9 +183,9 @@ class BaseChunker(ABC):
         """
         # If the document has chunks already, then we need to re-chunk the content
         if document.chunks:
-            chunks: List[Chunk] = []
+            chunks: list[Chunk] = []
             for old_chunk in document.chunks:
-                new_chunks: List[Chunk] = self.chunk(old_chunk.text)
+                new_chunks: list[Chunk] = self.chunk(old_chunk.text)
                 for new_chunk in new_chunks:
                     chunks.append(
                         Chunk(

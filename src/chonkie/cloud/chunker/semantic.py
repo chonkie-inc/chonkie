@@ -1,7 +1,7 @@
 """Semantic Chunking for Chonkie API."""
 
 import os
-from typing import Any, Dict, List, Literal, Optional, Union, cast
+from typing import Any, Literal, Optional, Union, cast
 
 import requests
 
@@ -25,7 +25,7 @@ class SemanticChunker(CloudChunker):
         similarity_window: int = 1,
         min_sentences_per_chunk: int = 1,
         min_characters_per_sentence: int = 12,
-        delim: Union[str, List[str]] = [". ", "! ", "? ", "\n"],
+        delim: Union[str, list[str]] = [". ", "! ", "? ", "\n"],
         include_delim: Optional[Literal["prev", "next"]] = "prev",
         skip_window: int = 0,
         filter_window: int = 5,
@@ -117,10 +117,10 @@ class SemanticChunker(CloudChunker):
         # Initialize the file manager to upload files if needed
         self.file_manager = FileManager(api_key=self.api_key)
 
-    def chunk(self, text: Optional[Union[str, List[str]]] = None, file: Optional[str] = None) -> Union[List[Chunk], List[List[Chunk]]]:
+    def chunk(self, text: Optional[Union[str, list[str]]] = None, file: Optional[str] = None) -> Union[list[Chunk], list[list[Chunk]]]:
         """Chunk the text or file into a list of chunks."""
         # Make the payload
-        payload: Dict[str, Any]
+        payload: dict[str, Any]
         if text is not None:
             payload = {
                 "text": text,
@@ -170,8 +170,8 @@ class SemanticChunker(CloudChunker):
         # Try to parse the response
         try:
             if isinstance(text, list):
-                batch_result: List[List[Dict]] = cast(List[List[Dict]], response.json())
-                batch_chunks: List[List[Chunk]] = []
+                batch_result: list[list[dict]] = cast(list[list[dict]], response.json())
+                batch_chunks: list[list[Chunk]] = []
                 for chunk_list in batch_result:
                     curr_chunks = []
                     for chunk in chunk_list:
@@ -179,8 +179,8 @@ class SemanticChunker(CloudChunker):
                     batch_chunks.append(curr_chunks)
                 return batch_chunks
             else:
-                single_result: List[Dict] = cast(List[Dict], response.json())
-                single_chunks: List[Chunk] = [Chunk.from_dict(chunk) for chunk in single_result]
+                single_result: list[dict] = cast(list[dict], response.json())
+                single_chunks: list[Chunk] = [Chunk.from_dict(chunk) for chunk in single_result]
                 return single_chunks
         except Exception as error:
             raise ValueError(
@@ -189,6 +189,6 @@ class SemanticChunker(CloudChunker):
                 + "If the issue persists, please contact support at support@chonkie.ai."
             ) from error
 
-    def __call__(self, text: Optional[Union[str, List[str]]] = None, file: Optional[str] = None) -> Union[List[Chunk], List[List[Chunk]]]:
+    def __call__(self, text: Optional[Union[str, list[str]]] = None, file: Optional[str] = None) -> Union[list[Chunk], list[list[Chunk]]]:
         """Call the chunker."""
         return self.chunk(text=text, file=file)

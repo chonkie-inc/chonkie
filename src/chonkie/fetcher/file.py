@@ -2,7 +2,7 @@
 
 import os
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import Optional, Union
 
 from chonkie.pipeline import fetcher
 
@@ -26,8 +26,8 @@ class FileFetcher(BaseFetcher):
         self,
         path: Optional[str] = None,
         dir: Optional[str] = None,
-        ext: Optional[List[str]] = None,
-    ) -> Union[Path, List[Path]]:
+        ext: Optional[list[str]] = None,
+    ) -> Union[Path, list[Path]]:
         """Fetch a single file or files from a directory.
 
         Args:
@@ -36,7 +36,7 @@ class FileFetcher(BaseFetcher):
             ext: File extensions to filter (only used with dir parameter)
 
         Returns:
-            Union[Path, List[Path]]: Single Path for file mode, List[Path] for directory mode
+            Union[Path, list[Path]]: Single Path for file mode, list[Path] for directory mode
 
         Raises:
             ValueError: If neither or both path and dir are provided
@@ -68,7 +68,7 @@ class FileFetcher(BaseFetcher):
                 raise FileNotFoundError(f"Directory not found: {dir}")
 
             # Use os.walk for a safe recursive walk, avoiding symlink loops.
-            all_files: List[Path] = []
+            all_files: list[Path] = []
             for root, _, filenames in os.walk(dir_path, followlinks=False):
                 for filename in filenames:
                     # Check extension if a filter is provided
@@ -96,8 +96,8 @@ class FileFetcher(BaseFetcher):
         self,
         path: Optional[str] = None,
         dir: Optional[str] = None,
-        ext: Optional[List[str]] = None,
-    ) -> Union[Path, List[Path]]:  # type: ignore[override]
+        ext: Optional[list[str]] = None,
+    ) -> Union[Path, list[Path]]:  # type: ignore[override]
         """Fetch a single file or files from a directory.
 
         Args:
@@ -106,7 +106,7 @@ class FileFetcher(BaseFetcher):
             ext: File extensions to filter (only used with dir parameter)
 
         Returns:
-            Union[Path, List[Path]]: Single Path for file mode, List[Path] for directory mode
+            Union[Path, list[Path]]: Single Path for file mode, list[Path] for directory mode
 
         """
         return self.fetch(path=path, dir=dir, ext=ext)

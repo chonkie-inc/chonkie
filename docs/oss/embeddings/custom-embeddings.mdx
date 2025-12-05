@@ -24,13 +24,13 @@ class CustomEmbeddings(BaseEmbeddings):
     def embed(self, text: str) -> "np.ndarray":
         ...
 
-    def embed_batch(self, texts: List[str]) -> List["np.ndarray"]:
+    def embed_batch(self, texts: list[str]) -> list["np.ndarray"]:
         ...
 
     def count_tokens(self, text: str) -> int:
         ...
 
-    def count_tokens_batch(self, texts: List[str]) -> List[int]:
+    def count_tokens_batch(self, texts: list[str]) -> list[int]:
         ...
 
     def get_tokenizer(self):

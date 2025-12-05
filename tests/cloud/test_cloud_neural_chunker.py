@@ -1,6 +1,6 @@
 """Test the Chonkie Cloud Neural Chunker."""
 
-from typing import Any, Dict, List
+from typing import Any
 
 import pytest
 import requests  # Import requests to mock its methods
@@ -29,15 +29,15 @@ def mock_requests_get_success(monkeypatch: pytest.MonkeyPatch) -> None:
 def mock_requests_post_success(monkeypatch: pytest.MonkeyPatch) -> None:
     """Mock requests.post to return a successful response with dummy chunk data."""
     class MockResponse:
-        def __init__(self, status_code: int, json_data: List[Dict[str, Any]]):
+        def __init__(self, status_code: int, json_data: list[dict[str, Any]]):
             self.status_code = status_code
             self._json_data = json_data
 
-        def json(self) -> List[Dict[str, Any]]:
+        def json(self) -> list[dict[str, Any]]:
             return self._json_data
 
     # Default dummy response for post, can be customized per test if needed
-    dummy_chunks: List[Dict[str, Any]] = [
+    dummy_chunks: list[dict[str, Any]] = [
         {"text": "chunk1", "start_index": 0, "end_index": 6, "token_count": 1},
         {"text": "chunk2", "start_index": 7, "end_index": 13, "token_count": 1},
     ]
@@ -115,7 +115,7 @@ def test_cloud_neural_chunker_single_text(mock_requests_get_success: Any, mock_r
 
     assert isinstance(result, list)
     if result:
-        for chunk_dict in result: # API returns List[Dict] directly
+        for chunk_dict in result: # API returns list[Dict] directly
             assert isinstance(chunk_dict, Chunk)
             assert isinstance(chunk_dict.text, str)
             assert isinstance(chunk_dict.start_index, int)
@@ -127,14 +127,14 @@ def test_cloud_neural_chunker_batch_texts(mock_requests_get_success: Any, monkey
     """Test that the Neural Chunker works with a batch of texts."""
     monkeypatch.setenv("CHONKIE_API_KEY", "mock-api-key")
     class MockResponse:
-        def __init__(self, status_code: int, json_data: List[Dict[str, Any]]):
+        def __init__(self, status_code: int, json_data: list[dict[str, Any]]):
             self.status_code = status_code
             self._json_data = json_data
 
-        def json(self) -> List[Dict[str, Any]]:
+        def json(self) -> list[dict[str, Any]]:
             return self._json_data
 
-    custom_chunks: List[List[Dict[str, Any]]] = [
+    custom_chunks: list[list[dict[str, Any]]] = [
         [
             {"text": "chunk1_doc1", "start_index": 0, "end_index": 10, "token_count": 2},
             {"text": "chunk2_doc1", "start_index": 11, "end_index": 21, "token_count": 2},
@@ -172,16 +172,16 @@ def test_cloud_neural_chunker_empty_text(mock_requests_get_success: Any, monkeyp
     """Test that the Neural Chunker works with an empty text."""
     monkeypatch.setenv("CHONKIE_API_KEY", "mock-api-key")
     class MockResponse:
-        def __init__(self, status_code: int, json_data: List[Dict[str, Any]]):
+        def __init__(self, status_code: int, json_data: list[dict[str, Any]]):
             self.status_code = status_code
             self._json_data = json_data
 
-        def json(self) -> List[Dict[str, Any]]:
+        def json(self) -> list[dict[str, Any]]:
             return self._json_data
 
     # Mock post to return an empty list for empty text
     def mock_post_empty_result(*args: Any, **kwargs: Any) -> MockResponse:
-        payload: Dict[str, Any] = kwargs.get("json", {})
+        payload: dict[str, Any] = kwargs.get("json", {})
         if payload.get("text") == "": # Assuming this simplified check is intended for the mock
             return MockResponse(200, []) # API should return empty list for empty string
         # Fallback to a default non-empty response if needed for other calls in the same test scope
@@ -204,7 +204,7 @@ def test_cloud_neural_chunker_api_error_on_chunk(mock_requests_get_success: None
             self.status_code = status_code
             self.content = content # Store content for error messages
 
-        def json(self) -> List[Dict[str, Any]]: # Typehinted to what the caller expects
+        def json(self) -> list[dict[str, Any]]: # Typehinted to what the caller expects
             raise requests.exceptions.JSONDecodeError("Mock JSON decode error", "doc", 0)
 
     def mock_post_api_error(*args: Any, **kwargs: Any) -> MockResponse:

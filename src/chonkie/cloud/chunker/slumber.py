@@ -1,7 +1,7 @@
 """Slumber Chunking for Chonkie API."""
 
 import os
-from typing import Any, Dict, List, Optional, Union, cast
+from typing import Any, Optional, Union, cast
 
 import requests
 
@@ -75,18 +75,18 @@ class SlumberChunker(CloudChunker):
         self.file_manager = FileManager(api_key=self.api_key)
 
 
-    def chunk(self, text: Optional[Union[str, List[str]]] = None, file: Optional[str] = None) -> Union[List[Chunk], List[List[Chunk]]]:
+    def chunk(self, text: Optional[Union[str, list[str]]] = None, file: Optional[str] = None) -> Union[list[Chunk], list[list[Chunk]]]:
         """Chunk the text or file into a list of chunks using the Slumber strategy via API.
 
         Args:
-            text (Union[str, List[str]]): The text or list of texts to chunk.
+            text (Union[str, list[str]]): The text or list of texts to chunk.
             file (Optional[str]): The path to a file to chunk.
 
         Returns:
-            List[Dict]: A list of dictionaries representing the chunks or texts.
+            list[Dict]: A list of dictionaries representing the chunks or texts.
 
         """
-        payload: Dict[str, Any]
+        payload: dict[str, Any]
         if text is not None:
             payload = {
                 "text": text,
@@ -140,17 +140,17 @@ class SlumberChunker(CloudChunker):
         try:
             # Assuming the API always returns a list of dictionaries.
             if isinstance(text, list):
-                batch_result: List[List[Dict]] = cast(List[List[Dict]], response.json())
-                batch_chunks: List[List[Chunk]] = []
+                batch_result: list[list[dict]] = cast(list[list[dict]], response.json())
+                batch_chunks: list[list[Chunk]] = []
                 for chunk_list in batch_result:
-                    curr_chunks: List[Chunk] = []
+                    curr_chunks: list[Chunk] = []
                     for chunk in chunk_list:
                         curr_chunks.append(Chunk.from_dict(chunk))
                     batch_chunks.append(curr_chunks)
                 return batch_chunks
             else:
-                single_result: List[Dict] = cast(List[Dict], response.json())
-                single_chunks: List[Chunk] = [Chunk.from_dict(chunk) for chunk in single_result]
+                single_result: list[dict] = cast(list[dict], response.json())
+                single_chunks: list[Chunk] = [Chunk.from_dict(chunk) for chunk in single_result]
                 return single_chunks
         except ValueError as error: # JSONDecodeError inherits from ValueError
             raise ValueError(
@@ -168,7 +168,7 @@ class SlumberChunker(CloudChunker):
             ) from error
 
 
-    def __call__(self, text: Optional[Union[str, List[str]]] = None, file: Optional[str] = None) -> Union[List[Chunk], List[List[Chunk]]]:
+    def __call__(self, text: Optional[Union[str, list[str]]] = None, file: Optional[str] = None) -> Union[list[Chunk], list[list[Chunk]]]:
         """Call the SlumberChunker."""
         return self.chunk(text=text, file=file)
 

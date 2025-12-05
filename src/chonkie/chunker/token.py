@@ -4,7 +4,7 @@ This module provides a TokenChunker class for splitting text into chunks of a sp
 
 """
 
-from typing import Generator, List, Sequence, Union
+from typing import Generator, Sequence, Union
 
 from tqdm import trange
 
@@ -64,9 +64,9 @@ class TokenChunker(BaseChunker):
     def _create_chunks(
         self,
         chunk_texts: Sequence[str],
-        token_groups: List[List[int]],
-        token_counts: List[int],
-    ) -> List[Chunk]:
+        token_groups: list[list[int]],
+        token_counts: list[int],
+    ) -> list[Chunk]:
         """Create chunks from a list of texts."""
         # Find the overlap lengths for index calculation
         if self.chunk_overlap > 0:
@@ -104,7 +104,7 @@ class TokenChunker(BaseChunker):
 
     def _token_group_generator(
         self, tokens: Sequence[int]
-    ) -> Generator[List[int], None, None]:
+    ) -> Generator[list[int], None, None]:
         """Generate chunks from a list of tokens."""
         for start in range(0, len(tokens), self.chunk_size - self.chunk_overlap):
             end = min(start + self.chunk_size, len(tokens))
@@ -112,7 +112,7 @@ class TokenChunker(BaseChunker):
             if end == len(tokens):
                 break
 
-    def chunk(self, text: str) -> List[Chunk]:
+    def chunk(self, text: str) -> list[Chunk]:
         """Split text into overlapping chunks of specified token size.
 
         Args:
@@ -143,7 +143,7 @@ class TokenChunker(BaseChunker):
         logger.info(f"Created {len(chunks)} chunks from {len(text_tokens)} tokens")
         return chunks
 
-    def _process_batch(self, texts: List[str]) -> List[List[Chunk]]:
+    def _process_batch(self, texts: list[str]) -> list[list[Chunk]]:
         """Process a batch of texts."""
         # encode the texts into tokens in a batch
         tokens_list = self.tokenizer.encode_batch(texts)
@@ -171,10 +171,10 @@ class TokenChunker(BaseChunker):
 
     def chunk_batch(  # type: ignore[override]
         self,
-        texts: List[str],
+        texts: list[str],
         batch_size: int = 1,
         show_progress_bar: bool = True,
-    ) -> List[List[Chunk]]:
+    ) -> list[list[Chunk]]:
         """Split a batch of texts into their respective chunks.
 
         Args:
@@ -203,10 +203,10 @@ class TokenChunker(BaseChunker):
 
     def __call__(  # type: ignore[override]
         self,
-        text: Union[str, List[str]],
+        text: Union[str, list[str]],
         batch_size: int = 1,
         show_progress_bar: bool = True,
-    ) -> Union[List[Chunk], List[List[Chunk]]]:
+    ) -> Union[list[Chunk], list[list[Chunk]]]:
         """Make the TokenChunker callable directly.
 
         Args:

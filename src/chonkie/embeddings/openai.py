@@ -4,7 +4,7 @@ import importlib.util as importutil
 import os
 import warnings
 from functools import lru_cache
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Optional
 
 import numpy as np
 
@@ -59,7 +59,7 @@ class OpenAIEmbeddings(BaseEmbeddings):
         max_retries: int = 3,
         timeout: float = 60.0,
         batch_size: int = 128,
-        **kwargs: Dict[str, Any],
+        **kwargs: dict[str, Any],
     ):
         """Initialize OpenAI embeddings.
 
@@ -145,7 +145,7 @@ class OpenAIEmbeddings(BaseEmbeddings):
         )
         return np.array(response.data[0].embedding, dtype=np.float32)
 
-    def embed_batch(self, texts: List[str]) -> List[np.ndarray]:
+    def embed_batch(self, texts: list[str]) -> list[np.ndarray]:
         """Get embeddings for multiple texts using batched API calls."""
         if not texts:
             return []

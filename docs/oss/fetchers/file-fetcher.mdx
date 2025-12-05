@@ -75,14 +75,14 @@ docs = (Pipeline()
   Directory to fetch files from. Cannot be used with `path`.
 </ParamField>
 
-<ParamField path="ext" type="List[str]" optional>
+<ParamField path="ext" type="list[str]" optional>
   List of file extensions to filter (e.g., `[".txt", ".md"]`). Only used with `dir` parameter.
 </ParamField>
 
 ## Return Values
 
 - **Single file mode** (`path` provided): Returns a single `Path` object
-- **Directory mode** (`dir` provided): Returns `List[Path]` containing all matching files
+- **Directory mode** (`dir` provided): Returns `list[Path]` containing all matching files
 
 ## Standalone Usage
 

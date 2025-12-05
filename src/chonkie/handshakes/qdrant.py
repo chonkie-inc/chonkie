@@ -4,8 +4,6 @@ import importlib.util as importutil
 from typing import (
     TYPE_CHECKING,
     Any,
-    Dict,
-    List,
     Literal,
     Optional,
     Union,
@@ -65,7 +63,7 @@ class QdrantHandshake(BaseHandshake):
         url: Optional[str] = None,
         path: Optional[str] = None,
         api_key: Optional[str] = None,
-        **kwargs: Dict[str, Any],
+        **kwargs: dict[str, Any],
     ) -> None:
         """Initialize the Qdrant Handshake.
 
@@ -164,7 +162,7 @@ class QdrantHandshake(BaseHandshake):
             "token_count": chunk.token_count,
         }
 
-    def _get_points(self, chunks: Union[Chunk, List[Chunk]]) -> List["PointStruct"]:
+    def _get_points(self, chunks: Union[Chunk, list[Chunk]]) -> list["PointStruct"]:
         """Get the points from the chunks."""
         # Normalize input to always be a sequence
         if isinstance(chunks, Chunk):
@@ -181,7 +179,7 @@ class QdrantHandshake(BaseHandshake):
             )
         return points
 
-    def write(self, chunks: Union[Chunk, List[Chunk]]) -> None:
+    def write(self, chunks: Union[Chunk, list[Chunk]]) -> None:
         """Write the chunks to the collection."""
         if isinstance(chunks, Chunk):
             chunks = [chunks]
@@ -203,18 +201,18 @@ class QdrantHandshake(BaseHandshake):
     def search(
         self,
         query: Optional[str] = None,
-        embedding: Optional[List[float]] = None,
+        embedding: Optional[list[float]] = None,
         limit: int = 5,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Retrieve the top_k most similar chunks to the query.
 
         Args:
             query: Optional[str]: The query string to search for.
-            embedding: Optional[List[float]]: The embedding vector to search for. If provided, `query` is ignored.
+            embedding: Optional[list[float]]: The embedding vector to search for. If provided, `query` is ignored.
             limit: int: The number of top similar chunks to retrieve.
 
         Returns:
-            List[Dict[str, Any]]: The list of most similar chunks with their metadata.
+            list[dict[str, Any]]: The list of most similar chunks with their metadata.
 
         """
         logger.debug(f"Searching Qdrant collection: {self.collection_name} with limit={limit}")

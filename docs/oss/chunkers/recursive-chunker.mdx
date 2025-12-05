@@ -187,11 +187,11 @@ The RecursiveChunker uses the `RecursiveRules` class to determine the chunking r
 ```python Python
 @dataclass
 class RecursiveRules:
-    rules: List[RecursiveLevel]
+    rules: list[RecursiveLevel]
 
 @dataclass
 class RecursiveLevel:
-delimiters: Optional[Union[str, List[str]]]
+delimiters: Optional[Union[str, list[str]]]
 whitespace: bool = False
 include_delim: Optional[Literal["prev", "next"]]) # Whether to include the delimiter at all, or in the previous chunk, or the next chunk.
 

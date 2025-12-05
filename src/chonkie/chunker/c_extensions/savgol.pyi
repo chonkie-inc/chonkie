@@ -1,12 +1,12 @@
-from typing import Any, List, Optional, Tuple, Union
+from typing import Any, Optional, Union
 
 def savgol_filter(
-    data: Union[List[float], Any],
+    data: Union[list[float], Any],
     window_length: int = 5,
     polyorder: int = 3,
     deriv: int = 0,
     use_float32: bool = False
-) -> List[float]: 
+) -> list[float]: 
     """Apply Savitzky-Golay filter without NumPy.
     
     Args:
@@ -23,12 +23,12 @@ def savgol_filter(
     ...
 
 def find_local_minima_interpolated(
-    data: Union[List[float], Any],
+    data: Union[list[float], Any],
     window_size: int = 11,
     poly_order: int = 2,
     tolerance: float = 0.2,
     use_float32: bool = False
-) -> Tuple[List[int], List[float]]: 
+) -> tuple[list[int], list[float]]: 
     """Find local minima with sub-sample accuracy without NumPy.
     
     Args:
@@ -45,9 +45,9 @@ def find_local_minima_interpolated(
     ...
 
 def windowed_cross_similarity(
-    embeddings: List[List[float]],
+    embeddings: list[list[float]],
     window_size: int
-) -> List[float]: 
+) -> list[float]: 
     """Compute windowed cross-similarity without NumPy.
     
     Args:
@@ -61,11 +61,11 @@ def windowed_cross_similarity(
     ...
 
 def filter_split_indices(
-    indices: Union[List[int], Any],
-    values: Union[List[float], Any],
+    indices: Union[list[int], Any],
+    values: Union[list[float], Any],
     threshold: float,
     min_distance: int
-) -> Tuple[List[int], List[float]]: 
+) -> tuple[list[int], list[float]]: 
     """Filter split indices by percentile threshold and minimum distance without NumPy.
     
     Args:

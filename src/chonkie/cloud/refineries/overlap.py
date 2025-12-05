@@ -1,6 +1,6 @@
 """Overlap Refinery for Chonkie Cloud."""
 import os
-from typing import Any, Dict, List, Literal, Optional, Union, cast
+from typing import Any, Literal, Optional, Union, cast
 
 import requests
 
@@ -50,7 +50,7 @@ class OverlapRefinery(BaseRefinery):
                 + "or pass an API key to the OverlapRefinery constructor."
             )
 
-    def refine(self, chunks: List[Any]) -> List[Any]:
+    def refine(self, chunks: list[Any]) -> list[Any]:
         """Refine the chunks.
         
         Args:
@@ -86,10 +86,10 @@ class OverlapRefinery(BaseRefinery):
         )
 
         # Parse the response
-        result: List[Dict] = cast(List[Dict], response.json())
+        result: list[dict] = cast(list[dict], response.json())
         result_chunks = [og_type.from_dict(chunk) for chunk in result]
         return result_chunks
 
-    def __call__(self, chunks: List[Any]) -> List[Any]:
+    def __call__(self, chunks: list[Any]) -> list[Any]:
         """Call the OverlapRefinery."""
         return self.refine(chunks)

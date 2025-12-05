@@ -5,8 +5,6 @@ import os
 from typing import (
     TYPE_CHECKING,
     Any,
-    Dict,
-    List,
     Literal,
     Optional,
     Union,
@@ -108,7 +106,7 @@ class TurbopufferHandshake(BaseHandshake):
             )
         )
 
-    def write(self, chunks: Union[Chunk, List[Chunk]]) -> None:
+    def write(self, chunks: Union[Chunk, list[Chunk]]) -> None:
         """Write the chunks to the Turbopuffer database."""
         if isinstance(chunks, Chunk):
             chunks = [chunks]
@@ -146,9 +144,9 @@ class TurbopufferHandshake(BaseHandshake):
     def search(
         self,
         query: Optional[str] = None,
-        embedding: Optional[List[float]] = None,
+        embedding: Optional[list[float]] = None,
         limit: int = 5,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Search the Turbopuffer namespace for similar chunks.
 
         Args:
@@ -157,7 +155,7 @@ class TurbopufferHandshake(BaseHandshake):
             limit: The maximum number of results to return.
 
         Returns:
-            List[Dict[str, Any]]: A list of dictionaries containing the matching chunks and their metadata.
+            list[dict[str, Any]]: A list of dictionaries containing the matching chunks and their metadata.
 
         """
         if query is None and embedding is None:

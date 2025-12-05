@@ -365,18 +365,18 @@ Pipeline()
 Pipeline behavior depends on input:
 
 - **Single file/text**: Returns `Document`
-- **Multiple files/texts**: Returns `List[Document]`
+- **Multiple files/texts**: Returns `list[Document]`
 
 ```python
 # Single file → Document
 doc = Pipeline().fetch_from("file", path="doc.txt").chunk_with("recursive").run()
 assert isinstance(doc, Document)
 
-# Directory → List[Document]
+# Directory → list[Document]
 docs = Pipeline().fetch_from("file", dir="./docs").chunk_with("recursive").run()
 assert isinstance(docs, list)
 
-# Multiple texts → List[Document]
+# Multiple texts → list[Document]
 docs = Pipeline().chunk_with("recursive").run(texts=["t1", "t2"])
 assert isinstance(docs, list)
 ```

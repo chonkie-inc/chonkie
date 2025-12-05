@@ -69,7 +69,7 @@ Process multiple markdown files at once.
 
 #### Parameters
 
-<ParamField path="paths" type="List[Union[str, Path]]" required>
+<ParamField path="paths" type="list[Union[str, Path]]" required>
   List of file paths to process
 </ParamField>
 
@@ -125,9 +125,9 @@ class MarkdownImage:
 class MarkdownDocument(Document):
     id: str                         # Unique document ID
     content: str                    # Full markdown content
-    tables: List[MarkdownTable]     # Extracted tables
-    code: List[MarkdownCode]        # Extracted code blocks
-    images: List[MarkdownImage]     # Extracted images
-    chunks: List[Chunk]             # Remaining text chunks
-    metadata: Dict[str, Any]        # Additional metadata
+    tables: list[MarkdownTable]     # Extracted tables
+    code: list[MarkdownCode]        # Extracted code blocks
+    images: list[MarkdownImage]     # Extracted images
+    chunks: list[Chunk]             # Remaining text chunks
+    metadata: dict[str, Any]        # Additional metadata
 ```

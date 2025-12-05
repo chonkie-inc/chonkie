@@ -4,7 +4,6 @@ This module provides a CodeRegistry class for managing code chunks.
 """
 
 from collections.abc import KeysView
-from typing import Dict
 
 from chonkie.types.code import LanguageConfig, MergeRule, SplitRule
 
@@ -14,7 +13,7 @@ class _CodeLanguageRegistry:
   
   def __init__(self) -> None:
     """Initialize the registry."""
-    self.language_configs: Dict[str, LanguageConfig] = {}
+    self.language_configs: dict[str, LanguageConfig] = {}
 
   def register(self, language: str, config: LanguageConfig) -> None:
     """Register a language configuration."""
