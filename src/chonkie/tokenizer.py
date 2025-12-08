@@ -392,8 +392,10 @@ class AutoTokenizer:
 
     def _get_backend(self) -> str:
         """Get the tokenizer instance based on the identifier."""
+        if isinstance(self.tokenizer, Tokenizer):
+            return "chonkie"
+
         supported_backends = [
-            "chonkie",
             "transformers",
             "tokenizers",
             "tiktoken",
@@ -401,10 +403,6 @@ class AutoTokenizer:
         for backend in supported_backends:
             if backend in str(type(self.tokenizer)):
                 return backend
-
-        # If it's a custom tokenizer instance, return "chonkie"
-        if isinstance(self.tokenizer, Tokenizer):
-            return "chonkie"
 
         if (
             callable(self.tokenizer)
