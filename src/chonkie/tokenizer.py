@@ -493,7 +493,7 @@ class AutoTokenizer:
         elif self._backend == "tiktoken":
             return self.tokenizer.encode_batch(texts)  # type: ignore
         elif self._backend == "transformers":
-            encoded = self.tokenizer.batch_encode_plus(texts, add_special_tokens=False)  # type: ignore
+            encoded = self.tokenizer(texts, add_special_tokens=False)  # type: ignore
             return encoded["input_ids"]  # type: ignore
         elif self._backend == "tokenizers":
             return [encoding.ids for encoding in self.tokenizer.encode_batch(texts)]  # type: ignore
@@ -548,12 +548,8 @@ class AutoTokenizer:
                 len(token_list) for token_list in self.tokenizer.encode_batch(texts)
             ]  # type: ignore
         elif self._backend == "transformers":
-            return [
-                len(token_list)
-                for token_list in self.tokenizer.batch_encode_plus(
-                    texts, add_special_tokens=False
-                )["input_ids"]
-            ]  # type: ignore
+            encoded = self.tokenizer(texts, add_special_tokens=False)  # type: ignore
+            return [len(token_list) for token_list in encoded["input_ids"]]  # type: ignore
         elif self._backend == "tokenizers":
             return [
                 len(t.ids)
