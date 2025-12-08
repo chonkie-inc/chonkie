@@ -236,11 +236,11 @@ class PineconeHandshake(BaseHandshake):
         results = self.index.query(vector=embedding, top_k=limit, include_metadata=True)
 
         matches = []
-        for match in results.get("matches", []):
+        for match in results.get("matches", []):  # type: ignore[union-attr,call-arg,arg-type]
             matches.append({
-                "id": match.get("id"),
-                "score": match.get("score"),
-                **match.get("metadata", {}),
+                "id": match.get("id"),  # type: ignore[union-attr]
+                "score": match.get("score"),  # type: ignore[union-attr]
+                **match.get("metadata", {}),  # type: ignore[union-attr,arg-type]
             })
         logger.info(f"Search complete: found {len(matches)} matching chunks")
         return matches

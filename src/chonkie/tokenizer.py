@@ -514,15 +514,13 @@ class AutoTokenizer:
 
         """
         if self._backend == "chonkie":
-            return self.tokenizer.decode_batch(token_sequences)  # type: ignore
+            return self.tokenizer.decode_batch(token_sequences)  # type: ignore[union-attr]
         elif self._backend in "tiktoken":
-            return self.tokenizer.decode_batch(token_sequences)  # type: ignore
+            return self.tokenizer.decode_batch(token_sequences)  # type: ignore[union-attr]
         elif self._backend in "tokenizers":
-            return self.tokenizer.decode_batch(token_sequences)  # type: ignore
+            return self.tokenizer.decode_batch(token_sequences)  # type: ignore[union-attr]
         elif self._backend == "transformers":
-            return self.tokenizer.batch_decode(
-                token_sequences, skip_special_tokens=True
-            )  # type: ignore
+            return self.tokenizer.batch_decode(token_sequences, skip_special_tokens=True)  # type: ignore[union-attr]
 
         if self._backend == "callable":
             raise NotImplementedError(
@@ -542,20 +540,15 @@ class AutoTokenizer:
 
         """
         if self._backend == "chonkie":
-            return self.tokenizer.count_tokens_batch(texts)  # type: ignore
+            return self.tokenizer.count_tokens_batch(texts)  # type: ignore[union-attr]
         elif self._backend == "tiktoken":
-            return [
-                len(token_list) for token_list in self.tokenizer.encode_batch(texts)
-            ]  # type: ignore
+            return [len(token_list) for token_list in self.tokenizer.encode_batch(texts)]  # type: ignore[union-attr,arg-type]
         elif self._backend == "transformers":
-            encoded = self.tokenizer(texts, add_special_tokens=False)  # type: ignore
-            return [len(token_list) for token_list in encoded["input_ids"]]  # type: ignore
+            encoded = self.tokenizer(texts, add_special_tokens=False)  # type: ignore[operator,call-arg,index,arg-type]
+            return [len(token_list) for token_list in encoded["input_ids"]]  # type: ignore[index]
         elif self._backend == "tokenizers":
-            return [
-                len(t.ids)
-                for t in self.tokenizer.encode_batch(texts, add_special_tokens=False)
-            ]  # type: ignore
+            return [len(t.ids) for t in self.tokenizer.encode_batch(texts, add_special_tokens=False)]  # type: ignore[union-attr,call-arg,arg-type,attr-defined]
         elif self._backend == "callable":
-            return [self.tokenizer(text) for text in texts]  # type: ignore
+            return [self.tokenizer(text) for text in texts]  # type: ignore[operator,misc]
 
         raise ValueError(f"Tokenizer backend {self._backend} not supported.")
