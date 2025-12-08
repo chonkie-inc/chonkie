@@ -60,7 +60,7 @@ Our style configuration enforces:
 We follow Google-style docstrings:
 
 ```python
-def chunk_text(text: str, chunk_size: int = 512) -> List[str]:
+def chunk_text(text: str, chunk_size: int = 512) -> list[str]:
     """Split text into chunks of specified size.
     
     Args:

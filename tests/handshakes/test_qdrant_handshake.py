@@ -1,7 +1,6 @@
 """Test the QdrantHandshake class."""
 import os
 import uuid
-from typing import List
 from unittest.mock import Mock, patch
 
 import pytest
@@ -74,7 +73,7 @@ def sample_chunk() -> Chunk:
     )
 
 @pytest.fixture
-def sample_chunks() -> List[Chunk]:
+def sample_chunks() -> list[Chunk]:
     """Provide a list of sample Chunks."""
     return [
         Chunk(
@@ -208,7 +207,7 @@ def test_qdrant_handshake_write_single_chunk(sample_chunk: Chunk, real_embedding
     client.delete_collection(collection_name=collection_name)
 
 
-def test_qdrant_handshake_write_multiple_chunks(sample_chunks: List[Chunk], real_embeddings: BaseEmbeddings) -> None:
+def test_qdrant_handshake_write_multiple_chunks(sample_chunks: list[Chunk], real_embeddings: BaseEmbeddings) -> None:
     """Test writing multiple chunks."""
     collection_name = "test-write-multiple-real"
     client = qdrant_client.QdrantClient(":memory:")

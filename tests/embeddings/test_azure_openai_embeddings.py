@@ -1,7 +1,6 @@
 """Test suite for AzureOpenAIEmbeddings."""
 
 import os
-from typing import List
 
 import numpy as np
 import pytest
@@ -27,7 +26,7 @@ def sample_text() -> str:
 
 
 @pytest.fixture
-def sample_texts() -> List[str]:
+def sample_texts() -> list[str]:
     """Fixture to create a list of sample texts for testing."""
     return [
         "This is the first Azure sample.",
@@ -66,7 +65,7 @@ def test_embed_single_text(
     reason="Skipping test because AZURE_OPENAI_ENDPOINT is not defined",
 )
 def test_embed_batch_texts(
-    azure_embedding_model: AzureOpenAIEmbeddings, sample_texts: List[str]
+    azure_embedding_model: AzureOpenAIEmbeddings, sample_texts: list[str]
 ) -> None:
     """Test that AzureOpenAIEmbeddings correctly embeds a batch of texts."""
     embeddings = azure_embedding_model.embed_batch(sample_texts)
@@ -84,7 +83,7 @@ def test_embed_batch_texts(
     reason="Skipping test because AZURE_OPENAI_ENDPOINT is not defined",
 )
 def test_similarity(
-    azure_embedding_model: AzureOpenAIEmbeddings, sample_texts: List[str]
+    azure_embedding_model: AzureOpenAIEmbeddings, sample_texts: list[str]
 ) -> None:
     """Test that AzureOpenAIEmbeddings calculates similarity between embeddings."""
     embeddings = azure_embedding_model.embed_batch(sample_texts)

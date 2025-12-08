@@ -1,7 +1,6 @@
 """Test suite for GeminiEmbeddings."""
 
 import os
-from typing import List
 from unittest.mock import MagicMock, patch
 
 import numpy as np
@@ -24,7 +23,7 @@ def sample_text() -> str:
 
 
 @pytest.fixture
-def sample_texts() -> List[str]:
+def sample_texts() -> list[str]:
     """Fixture to create a list of sample texts for testing."""
     return [
         "This is the first sample text.",
@@ -187,7 +186,7 @@ def test_embed_single_text_real_mock(sample_text: str):
         assert not np.allclose(embedding, 0)
 
 
-def test_embed_batch_real_mock(sample_texts: List[str]):
+def test_embed_batch_real_mock(sample_texts: list[str]):
     """Test GeminiEmbeddings embeds multiple texts (mocked)."""
     mock_embedding_values = [0.1] * 3072
     with patch("google.genai.Client") as mock_client_class:
@@ -208,7 +207,7 @@ def test_embed_batch_real_mock(sample_texts: List[str]):
             assert not np.allclose(embedding, 0)
 
 
-def test_call_method_real_mock(sample_text: str, sample_texts: List[str]):
+def test_call_method_real_mock(sample_text: str, sample_texts: list[str]):
     """Test GeminiEmbeddings __call__ method (mocked)."""
     mock_embedding_values = [0.1] * 3072
     with patch("google.genai.Client") as mock_client_class:

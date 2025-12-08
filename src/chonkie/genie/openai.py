@@ -1,7 +1,7 @@
 """OpenAI Genie."""
 import importlib.util as importutil
 import os
-from typing import TYPE_CHECKING, Any, Dict, Optional
+from typing import TYPE_CHECKING, Any, Optional
 
 from .base import BaseGenie
 
@@ -53,7 +53,7 @@ class OpenAIGenie(BaseGenie):
             raise ValueError("OpenAI response content is None")
         return content
 
-    def generate_json(self, prompt: str, schema: "BaseModel") -> Dict[str, Any]:
+    def generate_json(self, prompt: str, schema: "BaseModel") -> dict[str, Any]:
         """Generate a JSON response based on the given prompt and schema."""
         response = self.client.beta.chat.completions.parse(
             model=self.model,

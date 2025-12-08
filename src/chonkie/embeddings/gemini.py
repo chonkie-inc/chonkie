@@ -3,7 +3,7 @@
 import importlib.util as importutil
 import os
 import warnings
-from typing import TYPE_CHECKING, Any, List, Optional
+from typing import TYPE_CHECKING, Any, Optional
 
 import numpy as np
 
@@ -122,7 +122,7 @@ class GeminiEmbeddings(BaseEmbeddings):
 
         raise RuntimeError("Failed to get embeddings")
 
-    def embed_batch(self, texts: List[str]) -> List[np.ndarray]:
+    def embed_batch(self, texts: list[str]) -> list[np.ndarray]:
         """Get embeddings for multiple texts."""
         if not texts:
             return []
@@ -200,7 +200,7 @@ class GeminiEmbeddings(BaseEmbeddings):
             # Fallback to character-based estimation if API call fails
             return int(len(text) / self._chars_per_token)
 
-    def count_tokens_batch(self, texts: List[str]) -> List[int]:
+    def count_tokens_batch(self, texts: list[str]) -> list[int]:
         """Count tokens in multiple texts using Google's token counting API."""
         return [self.count_tokens(text) for text in texts]
 

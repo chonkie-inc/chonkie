@@ -5,11 +5,8 @@ import os
 from typing import (
     TYPE_CHECKING,
     Any,
-    Dict,
-    List,
     Literal,
     Optional,
-    Tuple,
     Union,
 )
 from uuid import NAMESPACE_OID, uuid5
@@ -40,7 +37,7 @@ class PineconeHandshake(BaseHandshake):
         index_name: Union[str, Literal["random"]]: The name of the index to use.
         spec: Optional[pinecone.ServerlessSpec]: The pinecone ServerlessSpec to use for the index. If not provided, will use the default spec.
         embedding_model: Union[str, BaseEmbeddings]: The embedding model to use.
-        embed: Optional[Dict[str, str]]: The Pinecone integrated embedding model to use. If not provided, will use `embedding_model` to create a new index.
+        embed: Optional[dict[str, str]]: The Pinecone integrated embedding model to use. If not provided, will use `embedding_model` to create a new index.
         **kwargs: Additional keyword arguments to pass to the Pinecone client.
 
     """
@@ -52,7 +49,7 @@ class PineconeHandshake(BaseHandshake):
         index_name: Union[str, Literal["random"]] = "random",
         spec: Optional["pinecone.ServerlessSpec"] = None,
         embedding_model: Union[str, BaseEmbeddings] = "minishlab/potion-retrieval-32M",
-        embed: Optional[Dict[str, str]] = None,
+        embed: Optional[dict[str, str]] = None,
         **kwargs: Any,
     ) -> None:
         """Initialize the Pinecone handshake.
@@ -80,7 +77,7 @@ class PineconeHandshake(BaseHandshake):
                 )
             self.client = pinecone.Pinecone(api_key=api_key, source_tag="chonkie")
 
-        self.embed: Optional[Dict[str, str]] = embed
+        self.embed: Optional[dict[str, str]] = embed
         if embed is not None:
             self.embedding_model = None
         elif isinstance(embedding_model, str):
@@ -148,15 +145,15 @@ class PineconeHandshake(BaseHandshake):
         }
 
     def _get_vectors(
-        self, chunks: Union[Chunk, List[Chunk]]
-    ) -> List[Tuple[str, List[float], Dict[str, Any]]]:
+        self, chunks: Union[Chunk, list[Chunk]]
+    ) -> list[tuple[str, list[float], dict[str, Any]]]:
         """Generate vectors for the chunks.
 
         Args:
             chunks: A single Chunk or sequence of Chunks to generate vectors for.
 
         Returns:
-            List[Tuple[str, List[float], Dict[str, Any]]]: A list of tuples containing the vector ID, embedding, and metadata.
+            list[tuple[str, list[float], dict[str, Any]]]: A list of tuples containing the vector ID, embedding, and metadata.
 
         """
         if isinstance(chunks, Chunk):
@@ -166,7 +163,7 @@ class PineconeHandshake(BaseHandshake):
             # Handle both numpy arrays and lists
             embedding = self.embedding_model.embed(chunk.text)  # type: ignore
             if hasattr(embedding, "tolist"):
-                embedding_list: List[float] = embedding.tolist()
+                embedding_list: list[float] = embedding.tolist()
             else:
                 embedding_list = embedding  # type: ignore[assignment]
             vectors.append((
@@ -176,7 +173,7 @@ class PineconeHandshake(BaseHandshake):
             ))
         return vectors
 
-    def write(self, chunks: Union[Chunk, List[Chunk]]) -> None:
+    def write(self, chunks: Union[Chunk, list[Chunk]]) -> None:
         """Write chunks to the Pinecone index.
 
         Args:
@@ -205,9 +202,9 @@ class PineconeHandshake(BaseHandshake):
     def search(
         self,
         query: Optional[str] = None,
-        embedding: Optional[List[float]] = None,
+        embedding: Optional[list[float]] = None,
         limit: int = 5,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Search the Pinecone index for similar chunks.
 
         Args:
@@ -216,7 +213,7 @@ class PineconeHandshake(BaseHandshake):
             limit: The maximum number of results to return.
 
         Returns:
-            List[Dict[str, Any]]: A list of dictionaries containing the matching chunks and their metadata.
+            list[dict[str, Any]]: A list of dictionaries containing the matching chunks and their metadata.
 
         """
         logger.debug(f"Searching Pinecone index: {self.index_name} with limit={limit}")

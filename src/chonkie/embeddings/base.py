@@ -1,7 +1,7 @@
 """Base class for all embeddings implementations."""
 
 from abc import ABC, abstractmethod
-from typing import Any, List, Union
+from typing import Any, Union
 
 import numpy as np
 
@@ -43,7 +43,7 @@ class BaseEmbeddings(ABC):
         """
         raise NotImplementedError
 
-    def embed_batch(self, texts: List[str]) -> List[np.ndarray]:
+    def embed_batch(self, texts: list[str]) -> list[np.ndarray]:
         """Embed a list of text strings into vector representations.
 
         This method should be implemented for embeddings models that support batch processing.
@@ -51,10 +51,10 @@ class BaseEmbeddings(ABC):
         By default, it calls the embed() method for each text in the list.
 
         Args:
-            texts (List[str]): List of text strings to embed
+            texts (list[str]): List of text strings to embed
 
         Returns:
-            List[np.ndarray]: List of embedding vectors for each text in the list
+            list[np.ndarray]: List of embedding vectors for each text in the list
 
         """
         return [self.embed(text) for text in texts]
@@ -114,8 +114,8 @@ class BaseEmbeddings(ABC):
         return self.__class__.__name__ + "()"
 
     def __call__(
-        self, text: Union[str, List[str]]
-    ) -> Union[np.ndarray, List[np.ndarray]]:
+        self, text: Union[str, list[str]]
+    ) -> Union[np.ndarray, list[np.ndarray]]:
         """Embed a text string into a vector representation.
 
         This method allows the embeddings object to be called directly with a text string
@@ -123,10 +123,10 @@ class BaseEmbeddings(ABC):
         depending on the input type.
 
         Args:
-            text (Union[str, List[str]]): Input text string or list of text strings
+            text (Union[str, list[str]]): Input text string or list of text strings
 
         Returns:
-            Union[np.ndarray, List[np.ndarray]]: Single or list of embedding vectors
+            Union[np.ndarray, list[np.ndarray]]: Single or list of embedding vectors
 
         """
         if isinstance(text, str):

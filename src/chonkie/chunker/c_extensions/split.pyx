@@ -19,7 +19,7 @@ def split_text(
     
     Args:
         text: Input text to split
-        delim: Delimiter(s) to split on. Can be str, List[str], or None
+        delim: Delimiter(s) to split on. Can be str, list[str], or None
         include_delim: Where to include delimiter ("prev", "next", or None)
         min_characters_per_segment: Minimum characters per segment for merging
         whitespace_mode: If True and delim is None, split on whitespace

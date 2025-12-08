@@ -1,7 +1,7 @@
 """Recursive Chunking for Chonkie API."""
 
 import os
-from typing import Any, Dict, List, Optional, Union, cast
+from typing import Any, Optional, Union, cast
 
 import requests
 
@@ -70,10 +70,10 @@ class RecursiveChunker(CloudChunker):
         # Initialize the file manager to upload files if needed
         self.file_manager = FileManager(api_key=self.api_key)
 
-    def chunk(self, text: Optional[Union[str, List[str]]] = None, file: Optional[str] = None) -> Any:
+    def chunk(self, text: Optional[Union[str, list[str]]] = None, file: Optional[str] = None) -> Any:
         """Chunk the text or file into a list of chunks."""
         # Make the payload
-        payload: Dict[str, Any]
+        payload: dict[str, Any]
         if text is not None:
             payload = {
                 "text": text,
@@ -108,8 +108,8 @@ class RecursiveChunker(CloudChunker):
         # Try to parse the response
         try:
             if isinstance(text, list):
-                batch_result: List[List[Dict]] = cast(List[List[Dict]], response.json())
-                batch_chunks: List[List[Chunk]] = []
+                batch_result: list[list[dict]] = cast(list[list[dict]], response.json())
+                batch_chunks: list[list[Chunk]] = []
                 for chunk_list in batch_result:
                     curr_chunks = []
                     for chunk in chunk_list:
@@ -117,8 +117,8 @@ class RecursiveChunker(CloudChunker):
                     batch_chunks.append(curr_chunks)
                 return batch_chunks
             else:
-                single_result: List[Dict] = cast(List[Dict], response.json())
-                single_chunks: List[Chunk] = [Chunk.from_dict(chunk) for chunk in single_result]
+                single_result: list[dict] = cast(list[dict], response.json())
+                single_chunks: list[Chunk] = [Chunk.from_dict(chunk) for chunk in single_result]
                 return single_chunks
         except Exception as error:
             raise ValueError(
@@ -127,6 +127,6 @@ class RecursiveChunker(CloudChunker):
                 + "If the issue persists, please contact support at support@chonkie.ai."
             ) from error
 
-    def __call__(self, text: Optional[Union[str, List[str]]] = None, file: Optional[str] = None) -> Any:
+    def __call__(self, text: Optional[Union[str, list[str]]] = None, file: Optional[str] = None) -> Any:
         """Call the RecursiveChunker."""
         return self.chunk(text=text, file=file)

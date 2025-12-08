@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import List, Union
+from typing import Union
 
 from chonkie.logger import get_logger
 from chonkie.types import Document
@@ -39,7 +39,7 @@ class BaseChef(ABC):
         """
         raise NotImplementedError("Subclasses must implement parse()")
 
-    def process_batch(self, paths: Union[List[str], List[Path]]) -> List[Document]:
+    def process_batch(self, paths: Union[list[str], list[Path]]) -> list[Document]:
         """Process multiple files in a batch.
 
         Args:

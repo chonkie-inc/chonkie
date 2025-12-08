@@ -2,7 +2,7 @@
 
 import re
 from dataclasses import dataclass
-from typing import Dict, Iterator, List, Literal, Optional, Union
+from typing import Iterator, Literal, Optional, Union
 
 from chonkie.utils import Hubbie
 
@@ -13,14 +13,14 @@ class RecursiveLevel:
 
     Attributes:
         whitespace (bool): Whether to use whitespace as a delimiter.
-        delimiters (Optional[Union[str, List[str]]]): Custom delimiters for chunking.
+        delimiters (Optional[Union[str, list[str]]]): Custom delimiters for chunking.
         include_delim (Optional[Literal["prev", "next"]]): Whether to include the delimiter at all, or in the previous chunk, or the next chunk.
         pattern (Optional[str]): Regex pattern for advanced splitting/extraction.
         pattern_mode (Literal["split", "extract"]): Whether to split on pattern matches or extract pattern matches.
 
     """
 
-    delimiters: Optional[Union[str, List[str]]] = None
+    delimiters: Optional[Union[str, list[str]]] = None
     whitespace: bool = False
     include_delim: Optional[Literal["prev", "next"]] = "prev"
     pattern: Optional[str] = None
@@ -115,7 +115,7 @@ class RecursiveLevel:
 class RecursiveRules:
     """Expression rules for recursive chunking."""
 
-    levels: Optional[List[RecursiveLevel]] = None
+    levels: Optional[list[RecursiveLevel]] = None
 
     def __post_init__(self) -> None:
         """Validate attributes."""
@@ -178,7 +178,7 @@ class RecursiveRules:
     def from_dict(cls, data: dict) -> "RecursiveRules":
         """Create a RecursiveRules object from a dictionary."""
         dict_levels = data.get("levels", None)
-        object_levels: Optional[List[RecursiveLevel]] = None
+        object_levels: Optional[list[RecursiveLevel]] = None
         if dict_levels is not None:
             if isinstance(dict_levels, dict):
                 object_levels = [RecursiveLevel.from_dict(dict_levels)]
@@ -186,9 +186,9 @@ class RecursiveRules:
                 object_levels = [RecursiveLevel.from_dict(d_level) for d_level in dict_levels]
         return cls(levels=object_levels)
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """Return the RecursiveRules as a dictionary."""
-        result: Dict[str, Optional[List[Dict]]] = dict()
+        result: dict[str, Optional[list[dict]]] = dict()
         result["levels"] = [level.to_dict() for level in self.levels] if self.levels is not None else None
         return result
 

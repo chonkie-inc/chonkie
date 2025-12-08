@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import List
-
 import pytest
 from tokenizers import Tokenizer
 
@@ -180,7 +178,7 @@ def test_sentence_chunker_min_sentences(tokenizer: Tokenizer) -> None:
         )  # Last chunk might have fewer sentences
 
 
-def verify_chunk_indices(chunks: List[Chunk], original_text: str) -> None:
+def verify_chunk_indices(chunks: list[Chunk], original_text: str) -> None:
     """Verify that chunk indices correctly map to the original text."""
     for i, chunk in enumerate(chunks):
         # Extract text using the indices

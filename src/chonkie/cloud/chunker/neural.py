@@ -1,7 +1,7 @@
 """Neural Chunking for Chonkie API."""
 
 import os
-from typing import Any, Dict, List, Optional, Union, cast
+from typing import Any, Optional, Union, cast
 
 import requests
 
@@ -66,11 +66,11 @@ class NeuralChunker(CloudChunker):
         self.file_manager = FileManager(api_key=self.api_key)
 
     def chunk(
-        self, text: Optional[Union[str, List[str]]] = None, file: Optional[str] = None
-    ) -> Union[List[Chunk], List[List[Chunk]]]:
+        self, text: Optional[Union[str, list[str]]] = None, file: Optional[str] = None
+    ) -> Union[list[Chunk], list[list[Chunk]]]:
         """Chunk the text or file into a list of chunks."""
         # Create the payload
-        payload: Dict[str, Any]
+        payload: dict[str, Any]
         if text is not None:
             payload = {
                 "text": text,
@@ -100,8 +100,8 @@ class NeuralChunker(CloudChunker):
                 headers={"Authorization": f"Bearer {self.api_key}"},
             )
             if isinstance(text, list):
-                batch_result: List[List[Dict]] = cast(List[List[Dict]], response.json())
-                batch_chunks: List[List[Chunk]] = []
+                batch_result: list[list[dict]] = cast(list[list[dict]], response.json())
+                batch_chunks: list[list[Chunk]] = []
                 for chunk_list in batch_result:
                     curr_chunks = []
                     for chunk in chunk_list:
@@ -109,8 +109,8 @@ class NeuralChunker(CloudChunker):
                     batch_chunks.append(curr_chunks)
                 return batch_chunks
             else:
-                single_result: List[Dict] = cast(List[Dict], response.json())
-                single_chunks: List[Chunk] = [
+                single_result: list[dict] = cast(list[dict], response.json())
+                single_chunks: list[Chunk] = [
                     Chunk.from_dict(chunk) for chunk in single_result
                 ]
                 return single_chunks
@@ -121,7 +121,7 @@ class NeuralChunker(CloudChunker):
             ) from error
 
     def __call__(
-        self, text: Optional[Union[str, List[str]]] = None, file: Optional[str] = None
-    ) -> Union[List[Chunk], List[List[Chunk]]]:
+        self, text: Optional[Union[str, list[str]]] = None, file: Optional[str] = None
+    ) -> Union[list[Chunk], list[list[Chunk]]]:
         """Call the NeuralChunker."""
         return self.chunk(text=text, file=file)

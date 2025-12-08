@@ -1,7 +1,7 @@
 """SentenceTransformer embeddings."""
 
 import importlib.util as importutil
-from typing import TYPE_CHECKING, Any, List, Union
+from typing import TYPE_CHECKING, Any, Union
 
 import numpy as np
 
@@ -60,7 +60,7 @@ class SentenceTransformerEmbeddings(BaseEmbeddings):
         """Embed a single text using the sentence-transformers model."""
         return self.model.encode(text, convert_to_numpy=True)
 
-    def embed_batch(self, texts: List[str]) -> List[np.ndarray]:
+    def embed_batch(self, texts: list[str]) -> list[np.ndarray]:
         """Embed multiple texts using the sentence-transformers model."""
         return self.model.encode(texts, convert_to_numpy=True)  # type: ignore
 
@@ -116,7 +116,7 @@ class SentenceTransformerEmbeddings(BaseEmbeddings):
         token_embeddings_np = np.concatenate(token_embeddings, axis=0)
         return token_embeddings_np
 
-    def embed_as_tokens_batch(self, texts: List[str]) -> List[np.ndarray]:
+    def embed_as_tokens_batch(self, texts: list[str]) -> list[np.ndarray]:
         """Embed multiple texts as tokens using the sentence-transformers model."""
         return [self.embed_as_tokens(text) for text in texts]
 
@@ -124,7 +124,7 @@ class SentenceTransformerEmbeddings(BaseEmbeddings):
         """Count tokens in text using the model's tokenizer."""
         return len(self.model.tokenizer.encode(text))
 
-    def count_tokens_batch(self, texts: List[str]) -> List[int]:
+    def count_tokens_batch(self, texts: list[str]) -> list[int]:
         """Count tokens in multiple texts using the model's tokenizer."""
         encodings = self.model.tokenizer(texts)
         return [len(enc) for enc in encodings["input_ids"]]

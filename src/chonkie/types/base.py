@@ -1,7 +1,7 @@
 """Custom base types for Chonkie."""
 
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Iterator, List, Optional, Union
+from typing import TYPE_CHECKING, Iterator, Optional, Union
 from uuid import uuid4
 
 if TYPE_CHECKING:
@@ -23,7 +23,7 @@ class Chunk:
         end_index (int): The ending index of the chunk in the original text.
         token_count (int): The number of tokens in the chunk.
         context (Optional[str]): Optional context metadata for the chunk.
-        embedding (Union[List[float], np.ndarray, None]): Optional embedding vector for the chunk,
+        embedding (Union[list[float], np.ndarray, None]): Optional embedding vector for the chunk,
             either as a list of floats or a numpy array.
 
     """
@@ -34,7 +34,7 @@ class Chunk:
     end_index: int = field(default=0)
     token_count: int = field(default=0)
     context: Optional[str] = field(default=None)
-    embedding: Union[List[float], "np.ndarray", None] = field(default=None)
+    embedding: Union[list[float], "np.ndarray", None] = field(default=None)
 
     def __len__(self) -> int:
         """Return the length of the text."""

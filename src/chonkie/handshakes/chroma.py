@@ -4,8 +4,6 @@ import importlib.util as importutil
 from typing import (
     TYPE_CHECKING,
     Any,
-    Dict,
-    List,
     Literal,
     Optional,
     Union,
@@ -54,7 +52,7 @@ class ChromaEmbeddingFunction:
     def __init__(
         self,
         embedding_model: Union[str, BaseEmbeddings] = "minishlab/potion-retrieval-32M",
-        **kwargs: Dict[str, Any],
+        **kwargs: dict[str, Any],
     ) -> None:
         """Initialize the ChromaEmbeddingFunction."""
         super().__init__()
@@ -78,8 +76,8 @@ class ChromaEmbeddingFunction:
         return self._model_name
 
     def __call__(
-        self, input: Union[str, List[str]]
-    ) -> Union["np.ndarray", List["np.ndarray"]]:
+        self, input: Union[str, list[str]]
+    ) -> Union["np.ndarray", list["np.ndarray"]]:
         """Call the ChromaEmbeddingFunction."""
         if isinstance(input, str):
             return self.embedding_model.embed(input)
@@ -185,7 +183,7 @@ class ChromaHandshake(BaseHandshake):
             "token_count": chunk.token_count,
         }
 
-    def write(self, chunks: Union[Chunk, List[Chunk]]) -> None:
+    def write(self, chunks: Union[Chunk, list[Chunk]]) -> None:
         """Write the Chunks to the Chroma collection."""
         if isinstance(chunks, Chunk):
             chunks = [chunks]
@@ -213,9 +211,9 @@ class ChromaHandshake(BaseHandshake):
     def search(
         self,
         query: Optional[str] = None,
-        embedding: Optional[List[float]] = None,
+        embedding: Optional[list[float]] = None,
         limit: int = 5,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Search the Chroma collection for similar chunks.
 
         Args:
@@ -224,7 +222,7 @@ class ChromaHandshake(BaseHandshake):
             limit: The maximum number of results to return.
 
         Returns:
-            List[Dict[str, Any]]: A list of dictionaries containing the matching chunks and their metadata.
+            list[dict[str, Any]]: A list of dictionaries containing the matching chunks and their metadata.
 
         """
         logger.debug(f"Searching Chroma collection: {self.collection_name} with limit={limit}")

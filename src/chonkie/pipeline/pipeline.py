@@ -3,7 +3,7 @@
 import inspect
 import json
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Type, Union
+from typing import Any, Optional, Union
 
 from chonkie.types import Document
 from chonkie.utils import Hubbie
@@ -32,7 +32,7 @@ class Pipeline:
         for chunk in doc.chunks:
             print(chunk.text)
 
-        # Process multiple files from directory - returns List[Document]
+        # Process multiple files from directory - returns list[Document]
         docs = (Pipeline()
             .fetch_from("file", dir="./docs", ext=[".txt", ".md"])
             .process_with("text")
@@ -53,8 +53,8 @@ class Pipeline:
 
     def __init__(self) -> None:
         """Initialize a new Pipeline."""
-        self._steps: List[Dict[str, Any]] = []
-        self._component_instances: Dict[tuple[str, str], Any] = {}  # Cache: (name, json_kwargs) -> instance
+        self._steps: list[dict[str, Any]] = []
+        self._component_instances: dict[tuple[str, str], Any] = {}  # Cache: (name, json_kwargs) -> instance
 
     @classmethod
     def from_recipe(cls, name: str, path: Optional[str] = None) -> "Pipeline":
@@ -100,7 +100,7 @@ class Pipeline:
         return cls.from_config(steps)
 
     @classmethod
-    def from_config(cls, config: Union[str, List[Union[tuple[Any, ...], Dict[str, Any]]]]) -> "Pipeline":
+    def from_config(cls, config: Union[str, list[Union[tuple[Any, ...], dict[str, Any]]]]) -> "Pipeline":
         """Create pipeline from config list or JSON file path.
 
         Args:
@@ -324,7 +324,7 @@ class Pipeline:
         self._steps.append({"type": "write", "component": component, "kwargs": kwargs})
         return self
 
-    def run(self, texts: Optional[Union[str, List[str]]] = None) -> Union[Document, List[Document]]:
+    def run(self, texts: Optional[Union[str, list[str]]] = None) -> Union[Document, list[Document]]:
         """Run the pipeline and return the final result.
 
         The pipeline automatically reorders steps according to the CHOMP flow:
@@ -338,7 +338,7 @@ class Pipeline:
                    When provided, the fetcher step becomes optional.
 
         Returns:
-            Document or List[Document] with processed chunks
+            Document or list[Document] with processed chunks
 
         Raises:
             ValueError: If pipeline has no steps or invalid step configuration
@@ -354,7 +354,7 @@ class Pipeline:
             doc = pipeline.run()
             print(f"Chunked into {len(doc.chunks)} chunks")
 
-            # Directory pipeline - returns List[Document]
+            # Directory pipeline - returns list[Document]
             pipeline = (Pipeline()
                 .fetch_from("file", dir="./docs", ext=[".txt", ".md"])
                 .process_with("text")
@@ -373,7 +373,7 @@ class Pipeline:
             for chunk in doc.chunks:
                 print(chunk.text)
 
-            # Multiple texts - returns List[Document]
+            # Multiple texts - returns list[Document]
             docs = pipeline.run(texts=["Text 1", "Text 2", "Text 3"])
             all_chunks = [chunk for doc in docs for chunk in doc.chunks]
             ```
@@ -402,7 +402,7 @@ class Pipeline:
 
         return data  # type: ignore[return-value]
 
-    def _reorder_steps(self) -> List[Dict[str, Any]]:
+    def _reorder_steps(self) -> list[dict[str, Any]]:
         """Reorder pipeline steps according to CHOMP flow.
 
         Automatically adds a default TextChef if no chef is present.
@@ -412,7 +412,7 @@ class Pipeline:
 
         """
         # Group steps by type
-        steps_by_type: Dict[str, List[Dict[str, Any]]] = {}
+        steps_by_type: dict[str, list[dict[str, Any]]] = {}
         for step in self._steps:
             step_type = step["type"]
             if step_type not in steps_by_type:
@@ -441,7 +441,7 @@ class Pipeline:
 
         return ordered
 
-    def _validate_pipeline(self, ordered_steps: List[Dict[str, Any]], has_text_input: bool = False) -> None:
+    def _validate_pipeline(self, ordered_steps: list[dict[str, Any]], has_text_input: bool = False) -> None:
         """Validate that the pipeline configuration is valid.
 
         Args:
@@ -470,7 +470,7 @@ class Pipeline:
         if user_process_count > 1:
             raise ValueError(f"Multiple process steps found ({user_process_count}). Only one chef is allowed per pipeline.")
 
-    def _execute_step(self, step: Dict[str, Any], input_data: Any) -> Any:
+    def _execute_step(self, step: dict[str, Any], input_data: Any) -> Any:
         """Execute a single pipeline step.
 
         Args:
@@ -539,7 +539,7 @@ class Pipeline:
         return positional_params.get(step_type, set())
 
     @staticmethod
-    def _split_parameters(component_class: Type[Any], kwargs: Dict[str, Any], step_type: str) -> tuple[Dict[str, Any], Dict[str, Any]]:
+    def _split_parameters(component_class: type[Any], kwargs: dict[str, Any], step_type: str) -> tuple[dict[str, Any], dict[str, Any]]:
         """Split kwargs into init and call parameters based on method signatures.
 
         Args:
@@ -581,7 +581,7 @@ class Pipeline:
 
         return init_kwargs, call_kwargs
 
-    def _call_component(self, component: Any, step_type: str, input_data: Any, kwargs: Dict[str, Any]) -> Any:
+    def _call_component(self, component: Any, step_type: str, input_data: Any, kwargs: dict[str, Any]) -> Any:
         """Call the appropriate method on a component based on step type.
 
         Args:
@@ -638,7 +638,7 @@ class Pipeline:
         self._component_instances.clear()
         return self
 
-    def to_config(self, path: Optional[str] = None) -> List[Dict[str, Any]]:
+    def to_config(self, path: Optional[str] = None) -> list[dict[str, Any]]:
         """Export pipeline to config format and optionally save to file.
 
         Args:

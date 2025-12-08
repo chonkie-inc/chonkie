@@ -28,7 +28,7 @@ Example:
 import logging
 import os
 import sys
-from typing import Any, MutableMapping, Optional, Tuple
+from typing import Any, MutableMapping, Optional
 
 # Track if we've configured the logger
 _configured = False
@@ -40,7 +40,7 @@ DEFAULT_LOG_LEVEL = "WARNING"
 DEFAULT_FORMAT = "%(asctime)s | %(levelname)-8s | %(name)s:%(funcName)s:%(lineno)d - %(message)s"
 
 
-def _parse_log_setting(value: Optional[str]) -> Tuple[bool, str]:
+def _parse_log_setting(value: Optional[str]) -> tuple[bool, str]:
     """Parse CHONKIE_LOG environment variable.
 
     Args:
@@ -139,7 +139,7 @@ class LoggerAdapter(logging.LoggerAdapter):
     the 'extra' dict to preserve structured logging data.
     """
 
-    def process(self, msg: str, kwargs: MutableMapping[str, Any]) -> Tuple[str, MutableMapping[str, Any]]:
+    def process(self, msg: str, kwargs: MutableMapping[str, Any]) -> tuple[str, MutableMapping[str, Any]]:
         # Standard logging only supports: exc_info, stack_info, stacklevel, extra
         valid_keys = {'exc_info', 'stack_info', 'stacklevel', 'extra'}
 

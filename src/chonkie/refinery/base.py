@@ -1,7 +1,7 @@
 """Base class for all refinery classes."""
 
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from chonkie.types import Document
@@ -20,7 +20,7 @@ class BaseRefinery(ABC):
         raise NotImplementedError("Subclasses must implement this method.")
 
     @abstractmethod
-    def refine(self, chunks: List[Chunk]) -> List[Chunk]:
+    def refine(self, chunks: list[Chunk]) -> list[Chunk]:
         """Refine the chunks.
 
         Args:
@@ -49,7 +49,7 @@ class BaseRefinery(ABC):
         """Return the string representation of the refinery."""
         return f"{self.__class__.__name__}()"
 
-    def __call__(self, chunks: List[Chunk]) -> List[Chunk]:
+    def __call__(self, chunks: list[Chunk]) -> list[Chunk]:
         """Call the refinery.
 
         Args:
