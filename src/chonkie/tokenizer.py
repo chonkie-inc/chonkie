@@ -374,7 +374,9 @@ class AutoTokenizer:
                     "Could not load tokenizer with 'tiktoken'. Falling back to 'transformers'."
                 )
         else:
-            warnings.warn("'tiktoken' library not found. Falling back to 'transformers'.")
+            warnings.warn(
+                "'tiktoken' library not found. Falling back to 'transformers'."
+            )
 
         # Try transformers as last resort
         if importlib.util.find_spec("transformers") is not None:
@@ -399,6 +401,11 @@ class AutoTokenizer:
         for backend in supported_backends:
             if backend in str(type(self.tokenizer)):
                 return backend
+
+        # If it's a custom tokenizer instance, return "chonkie"
+        if isinstance(self.tokenizer, Tokenizer):
+            return "chonkie"
+
         if (
             callable(self.tokenizer)
             or inspect.isfunction(self.tokenizer)
@@ -429,7 +436,9 @@ class AutoTokenizer:
 
         # Not yet implemented backends
         if self._backend == "callable":
-            raise NotImplementedError("Encoding not implemented for callable tokenizers.")
+            raise NotImplementedError(
+                "Encoding not implemented for callable tokenizers."
+            )
 
         raise ValueError(f"Unsupported tokenizer backend: {self._backend}")
 
@@ -513,7 +522,9 @@ class AutoTokenizer:
         elif self._backend in "tokenizers":
             return self.tokenizer.decode_batch(token_sequences)  # type: ignore
         elif self._backend == "transformers":
-            return self.tokenizer.batch_decode(token_sequences, skip_special_tokens=True)  # type: ignore
+            return self.tokenizer.batch_decode(
+                token_sequences, skip_special_tokens=True
+            )  # type: ignore
 
         if self._backend == "callable":
             raise NotImplementedError(
@@ -535,11 +546,21 @@ class AutoTokenizer:
         if self._backend == "chonkie":
             return self.tokenizer.count_tokens_batch(texts)  # type: ignore
         elif self._backend == "tiktoken":
-            return [len(token_list) for token_list in self.tokenizer.encode_batch(texts)]  # type: ignore
+            return [
+                len(token_list) for token_list in self.tokenizer.encode_batch(texts)
+            ]  # type: ignore
         elif self._backend == "transformers":
-            return [len(token_list) for token_list in self.tokenizer.batch_encode_plus(texts, add_special_tokens=False)["input_ids"]]  # type: ignore
+            return [
+                len(token_list)
+                for token_list in self.tokenizer.batch_encode_plus(
+                    texts, add_special_tokens=False
+                )["input_ids"]
+            ]  # type: ignore
         elif self._backend == "tokenizers":
-            return [len(t.ids) for t in self.tokenizer.encode_batch(texts, add_special_tokens=False)]  # type: ignore
+            return [
+                len(t.ids)
+                for t in self.tokenizer.encode_batch(texts, add_special_tokens=False)
+            ]  # type: ignore
         elif self._backend == "callable":
             return [self.tokenizer(text) for text in texts]  # type: ignore
 
