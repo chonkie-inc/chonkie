@@ -96,6 +96,7 @@ azure-openai = [
 voyageai = ["tokenizers>=0.16.0", "voyageai>=0.3.2"]
 cohere = ["tokenizers>=0.16.0", "cohere>=5.13.0"]
 jina = ["tokenizers>=0.16.0"]
+litellm = ["litellm>=1.0.0", "tiktoken>=0.5.0", "tokenizers>=0.16.0"]
 
 # Optional dependencies for the friends
 chroma = ["chromadb>=1.0.0"]

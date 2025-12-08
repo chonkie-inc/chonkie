@@ -32,6 +32,7 @@ from .embeddings import (
     CohereEmbeddings,
     GeminiEmbeddings,
     JinaEmbeddings,
+    LiteLLMEmbeddings,
     Model2VecEmbeddings,
     OpenAIEmbeddings,
     SentenceTransformerEmbeddings,

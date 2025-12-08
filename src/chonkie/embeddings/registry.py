@@ -8,6 +8,7 @@ from .base import BaseEmbeddings
 from .cohere import CohereEmbeddings
 from .gemini import GeminiEmbeddings
 from .jina import JinaEmbeddings
+from .litellm import LiteLLMEmbeddings
 from .model2vec import Model2VecEmbeddings
 from .openai import OpenAIEmbeddings
 from .sentence_transformer import SentenceTransformerEmbeddings
@@ -238,3 +239,6 @@ EmbeddingsRegistry.register_pattern(r"^text-embedding-004|^embedding-001|^gemini
 EmbeddingsRegistry.register_model("text-embedding-004", GeminiEmbeddings)
 EmbeddingsRegistry.register_model("embedding-001", GeminiEmbeddings)
 EmbeddingsRegistry.register_model("gemini-embedding-exp-03-07", GeminiEmbeddings)
+
+# Register LiteLLM embeddings
+EmbeddingsRegistry.register_provider("litellm", LiteLLMEmbeddings)
