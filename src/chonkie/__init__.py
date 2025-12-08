@@ -72,6 +72,7 @@ from .refinery import (
 )
 from .tokenizer import (
     AutoTokenizer,
+    ByteTokenizer,
     CharacterTokenizer,
     Tokenizer,
     TokenizerProtocol,
