@@ -1220,15 +1220,36 @@ def test_tokenizer_decode_batch_chonkie_path() -> None:
     assert byte_decoded == texts
 
 
+def test_autotokenizer_wrapping() -> None:
+    """Test that AutoTokenizer correctly unwraps when passed another AutoTokenizer."""
+    # Create an AutoTokenizer
+    tokenizer1 = AutoTokenizer("byte")
+    assert tokenizer1._backend == "chonkie"
+    assert isinstance(tokenizer1.tokenizer, ByteTokenizer)
+
+    # Wrap it in another AutoTokenizer (this happens in chunkers)
+    tokenizer2 = AutoTokenizer(tokenizer1)
+    assert tokenizer2._backend == "chonkie"
+    assert isinstance(tokenizer2.tokenizer, ByteTokenizer)
+
+    # They should reference the same underlying tokenizer
+    assert tokenizer2.tokenizer is tokenizer1.tokenizer
+
+    # Test that it still works correctly
+    text = "Hello, world!"
+    assert tokenizer1.encode(text) == tokenizer2.encode(text)
+    assert tokenizer1.count_tokens(text) == tokenizer2.count_tokens(text)
+
+
 def test_tokenizer_base_repr_method() -> None:
     """Test the __repr__ method in BaseTokenizer."""
     char_tokenizer = CharacterTokenizer()
     word_tokenizer = WordTokenizer()
-    
+
     # Test that repr includes vocab size
     char_repr = repr(char_tokenizer)
     word_repr = repr(word_tokenizer)
-    
+
     assert "CharacterTokenizer" in char_repr
     assert "WordTokenizer" in word_repr
     assert "vocab_size=" in char_repr

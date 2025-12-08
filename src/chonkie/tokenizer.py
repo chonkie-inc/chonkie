@@ -387,12 +387,15 @@ class AutoTokenizer:
 
     def __init__(self, tokenizer: Union[str, Callable, Any] = "character"):
         """Initialize the AutoTokenizer with a specified tokenizer."""
-        if isinstance(tokenizer, str):
+        if isinstance(tokenizer, AutoTokenizer):
+            self.tokenizer = tokenizer.tokenizer  # type: ignore[has-type]
+            self._backend = tokenizer._backend  # type: ignore[has-type]
+        elif isinstance(tokenizer, str):
             self.tokenizer = self._load_tokenizer(tokenizer)
+            self._backend = self._get_backend()
         else:
             self.tokenizer = tokenizer
-
-        self._backend = self._get_backend()
+            self._backend = self._get_backend()
 
     def _load_tokenizer(
         self, tokenizer: str
