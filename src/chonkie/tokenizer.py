@@ -309,6 +309,67 @@ class WordTokenizer(Tokenizer):
         return len(self.tokenize(text))
 
 
+class ByteTokenizer(Tokenizer):
+    """Byte-based tokenizer that operates on UTF-8 encoded bytes."""
+
+    def __repr__(self) -> str:
+        """Return a string representation of the ByteTokenizer."""
+        return f"ByteTokenizer(vocab_size={len(self.vocab)})"
+
+    def tokenize(self, text: str) -> Sequence[int]:
+        """Tokenize text into individual bytes.
+
+        Args:
+            text (str): The text to tokenize.
+
+        Returns:
+            List of byte values
+
+        """
+        return list(text.encode("utf-8"))
+
+    def encode(self, text: str) -> Sequence[int]:
+        """Encode the given text into byte tokens.
+
+        Args:
+            text (str): The text to encode.
+
+        Returns:
+            Encoded sequence of byte values
+
+        """
+        return list(text.encode("utf-8"))
+
+    def decode(self, tokens: Sequence[int]) -> str:
+        """Decode byte tokens back into text.
+
+        Args:
+            tokens (Sequence[int]): The byte tokens to decode.
+
+        Returns:
+            Decoded text
+
+        """
+        try:
+            return bytes(tokens).decode("utf-8")
+        except Exception as e:
+            raise ValueError(
+                f"Decoding failed. Tokens: {tokens} cannot be decoded as UTF-8."
+            ) from e
+
+    def count_tokens(self, text: str) -> int:
+        """Count the number of byte tokens in the given text.
+
+        Args:
+            text (str): The text to count tokens in.
+
+        Returns:
+            Number of byte tokens
+
+        """
+        return len(text.encode("utf-8"))
+
+
 class AutoTokenizer:
     """Auto-loading tokenizer interface for Chonkie.
 
@@ -338,6 +399,7 @@ class AutoTokenizer:
     ) -> Union[
         CharacterTokenizer,
         WordTokenizer,
+        ByteTokenizer,
         "tokenizers.Tokenizer",
         "tiktoken.Encoding",
         "transformers.PreTrainedTokenizer",
@@ -349,6 +411,8 @@ class AutoTokenizer:
             return CharacterTokenizer()
         elif tokenizer == "word":
             return WordTokenizer()
+        elif tokenizer == "byte":
+            return ByteTokenizer()
 
         # Try tokenizers first
         if importlib.util.find_spec("tokenizers") is not None:

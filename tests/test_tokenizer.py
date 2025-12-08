@@ -10,6 +10,7 @@ from transformers import PreTrainedTokenizerFast
 
 from chonkie.tokenizer import (
     AutoTokenizer,
+    ByteTokenizer,
     CharacterTokenizer,
     WordTokenizer,
 )
@@ -65,6 +66,12 @@ def character_tokenizer() -> CharacterTokenizer:
 def word_tokenizer() -> WordTokenizer:
     """Word tokenizer fixture."""
     return WordTokenizer()
+
+
+@pytest.fixture
+def byte_tokenizer() -> ByteTokenizer:
+    """Byte tokenizer fixture."""
+    return ByteTokenizer()
 
 
 @pytest.fixture
@@ -510,6 +517,128 @@ def test_character_tokenizer_multiple_encodings(
     assert character_tokenizer.get_token2id()["u"] == character_tokenizer.encode("u")[0]
 
 
+### ByteTokenizer Tests ###
+def test_byte_tokenizer_init(byte_tokenizer: ByteTokenizer) -> None:
+    """Test ByteTokenizer initialization."""
+    assert byte_tokenizer.vocab == [" "]
+    assert len(byte_tokenizer.token2id) == 1
+    assert byte_tokenizer.token2id[" "] == 0
+
+
+def test_byte_tokenizer_encode_decode(
+    byte_tokenizer: ByteTokenizer, sample_text: str
+) -> None:
+    """Test encoding and decoding with ByteTokenizer."""
+    tokens = byte_tokenizer.encode(sample_text)
+    assert isinstance(tokens, list)
+    assert all(isinstance(token, int) for token in tokens)
+    assert all(0 <= token <= 255 for token in tokens)
+
+    decoded = byte_tokenizer.decode(tokens)
+    assert isinstance(decoded, str)
+    assert decoded == sample_text
+
+
+def test_byte_tokenizer_unicode_support(byte_tokenizer: ByteTokenizer) -> None:
+    """Test ByteTokenizer with unicode characters."""
+    unicode_text = "Hello, 世界! 🌍 Café"
+    tokens = byte_tokenizer.encode(unicode_text)
+    assert isinstance(tokens, list)
+    assert all(isinstance(token, int) for token in tokens)
+
+    decoded = byte_tokenizer.decode(tokens)
+    assert decoded == unicode_text
+
+
+def test_byte_tokenizer_count_tokens(
+    byte_tokenizer: ByteTokenizer,
+    sample_text: str,
+) -> None:
+    """Test token counting with ByteTokenizer."""
+    count = byte_tokenizer.count_tokens(sample_text)
+    assert count == len(sample_text.encode("utf-8"))
+    assert count == len(byte_tokenizer.encode(sample_text))
+
+
+def test_byte_tokenizer_batch_encode_decode(
+    byte_tokenizer: ByteTokenizer, sample_text_list: list[str]
+) -> None:
+    """Test batch encoding and decoding with ByteTokenizer."""
+    batch_encoded = byte_tokenizer.encode_batch(sample_text_list)
+    assert isinstance(batch_encoded, list)
+    assert all(isinstance(tokens, list) for tokens in batch_encoded)
+    assert all(
+        all(isinstance(token, int) and 0 <= token <= 255 for token in tokens)
+        for tokens in batch_encoded
+    )
+
+    batch_decoded = byte_tokenizer.decode_batch(batch_encoded)
+    assert isinstance(batch_decoded, list)
+    assert all(isinstance(text, str) for text in batch_decoded)
+    assert batch_decoded == sample_text_list
+
+
+def test_byte_tokenizer_count_tokens_batch(
+    byte_tokenizer: ByteTokenizer,
+    sample_text_list: list[str],
+) -> None:
+    """Test batch token counting with ByteTokenizer."""
+    counts = byte_tokenizer.count_tokens_batch(sample_text_list)
+    expected_counts = [len(text.encode("utf-8")) for text in sample_text_list]
+    assert counts == expected_counts
+
+
+def test_byte_tokenizer_repr() -> None:
+    """Test string representation of ByteTokenizer."""
+    byte_tokenizer = ByteTokenizer()
+    assert str(byte_tokenizer) == "ByteTokenizer(vocab_size=1)"
+
+
+def test_byte_tokenizer_empty_text(byte_tokenizer: ByteTokenizer) -> None:
+    """Test ByteTokenizer with empty text."""
+    assert byte_tokenizer.encode("") == []
+    assert byte_tokenizer.decode([]) == ""
+    assert byte_tokenizer.count_tokens("") == 0
+
+
+def test_byte_tokenizer_decode_invalid_bytes() -> None:
+    """Test ByteTokenizer error handling for invalid UTF-8 byte sequences."""
+    byte_tokenizer = ByteTokenizer()
+
+    # Invalid UTF-8 sequence
+    invalid_bytes = [0xFF, 0xFE, 0xFD]
+    with pytest.raises(ValueError, match="Decoding failed"):
+        byte_tokenizer.decode(invalid_bytes)
+
+
+def test_byte_tokenizer_ascii_vs_unicode() -> None:
+    """Test byte count difference between ASCII and unicode."""
+    byte_tokenizer = ByteTokenizer()
+
+    ascii_text = "Hello"
+    unicode_text = "世界"
+
+    ascii_count = byte_tokenizer.count_tokens(ascii_text)
+    unicode_count = byte_tokenizer.count_tokens(unicode_text)
+
+    # ASCII: 5 characters = 5 bytes
+    assert ascii_count == 5
+    # Chinese characters: 2 characters = 6 bytes in UTF-8
+    assert unicode_count == 6
+
+
+def test_byte_tokenizer_with_autotokenizer() -> None:
+    """Test ByteTokenizer initialization with AutoTokenizer."""
+    tokenizer = AutoTokenizer("byte")
+    assert isinstance(tokenizer.tokenizer, ByteTokenizer)
+    assert tokenizer._backend == "chonkie"
+
+    text = "Hello, 世界!"
+    encoded = tokenizer.encode(text)
+    decoded = tokenizer.decode(encoded)
+    assert decoded == text
+
+
 ### Edge Cases and Error Handling Tests ###
 
 def test_tokenizer_empty_text() -> None:
@@ -691,10 +820,14 @@ def test_tokenizer_backend_detection_accuracy() -> None:
     # Test character tokenizer backend detection
     char_tokenizer = AutoTokenizer(CharacterTokenizer())
     assert char_tokenizer._backend == "chonkie"
-    
+
     # Test word tokenizer backend detection
     word_tokenizer = AutoTokenizer(WordTokenizer())
     assert word_tokenizer._backend == "chonkie"
+
+    # Test byte tokenizer backend detection
+    byte_tokenizer = AutoTokenizer(ByteTokenizer())
+    assert byte_tokenizer._backend == "chonkie"
 
 
 def test_tokenizer_with_non_standard_callable() -> None:
@@ -719,10 +852,14 @@ def test_tokenizer_initialization_edge_cases() -> None:
     # Test initialization with character string
     char_tokenizer = AutoTokenizer("character")
     assert isinstance(char_tokenizer.tokenizer, CharacterTokenizer)
-    
+
     # Test initialization with word string
     word_tokenizer = AutoTokenizer("word")
     assert isinstance(word_tokenizer.tokenizer, WordTokenizer)
+
+    # Test initialization with byte string
+    byte_tokenizer = AutoTokenizer("byte")
+    assert isinstance(byte_tokenizer.tokenizer, ByteTokenizer)
 
 
 def test_tokenizer_batch_operations_consistency() -> None:
@@ -992,38 +1129,48 @@ def test_tokenizer_chonkie_backend_paths() -> None:
     """Test chonkie-specific backend paths in unified tokenizer."""
     char_tokenizer = AutoTokenizer(CharacterTokenizer())
     word_tokenizer = AutoTokenizer(WordTokenizer())
-    
+    byte_tokenizer = AutoTokenizer(ByteTokenizer())
+
     # Test that chonkie backend is detected
     assert char_tokenizer._backend == "chonkie"
     assert word_tokenizer._backend == "chonkie"
-    
+    assert byte_tokenizer._backend == "chonkie"
+
     # Test chonkie-specific paths in methods
     text = "hello world"
-    
+
     # Test encode path
     char_encoded = char_tokenizer.encode(text)
     word_encoded = word_tokenizer.encode(text)
+    byte_encoded = byte_tokenizer.encode(text)
     assert len(char_encoded) == len(text)
     assert len(word_encoded) == len(text.split())
-    
+    assert len(byte_encoded) == len(text.encode("utf-8"))
+
     # Test count_tokens path
     char_count = char_tokenizer.count_tokens(text)
     word_count = word_tokenizer.count_tokens(text)
+    byte_count = byte_tokenizer.count_tokens(text)
     assert char_count == len(text)
     assert word_count == len(text.split())
-    
+    assert byte_count == len(text.encode("utf-8"))
+
     # Test batch operations
     texts = ["hello", "world"]
     char_batch_encoded = char_tokenizer.encode_batch(texts)
     word_batch_encoded = word_tokenizer.encode_batch(texts)
+    byte_batch_encoded = byte_tokenizer.encode_batch(texts)
     assert len(char_batch_encoded) == len(texts)
     assert len(word_batch_encoded) == len(texts)
-    
+    assert len(byte_batch_encoded) == len(texts)
+
     # Test batch count
     char_batch_counts = char_tokenizer.count_tokens_batch(texts)
     word_batch_counts = word_tokenizer.count_tokens_batch(texts)
+    byte_batch_counts = byte_tokenizer.count_tokens_batch(texts)
     assert char_batch_counts == [len(text) for text in texts]
     assert word_batch_counts == [len(text.split()) for text in texts]
+    assert byte_batch_counts == [len(text.encode("utf-8")) for text in texts]
 
 
 def test_tokenizer_error_paths_comprehensive() -> None:
@@ -1052,19 +1199,25 @@ def test_tokenizer_decode_batch_chonkie_path() -> None:
     """Test decode_batch specifically for chonkie backend."""
     char_tokenizer = AutoTokenizer(CharacterTokenizer())
     word_tokenizer = AutoTokenizer(WordTokenizer())
-    
+    byte_tokenizer = AutoTokenizer(ByteTokenizer())
+
     # Test chonkie backend decode_batch
     texts = ["hello", "world"]
-    
+
     # Character tokenizer
     char_encoded = char_tokenizer.encode_batch(texts)
     char_decoded = char_tokenizer.decode_batch(char_encoded)
     assert char_decoded == texts
-    
+
     # Word tokenizer
     word_encoded = word_tokenizer.encode_batch(texts)
     word_decoded = word_tokenizer.decode_batch(word_encoded)
     assert word_decoded == texts
+
+    # Byte tokenizer
+    byte_encoded = byte_tokenizer.encode_batch(texts)
+    byte_decoded = byte_tokenizer.decode_batch(byte_encoded)
+    assert byte_decoded == texts
 
 
 def test_tokenizer_base_repr_method() -> None:
