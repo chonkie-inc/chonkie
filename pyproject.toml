@@ -53,10 +53,14 @@ Homepage = "https://github.com/chonkie-inc/chonkie"
 Documentation = "https://docs.chonkie.ai"
 "Bug Tracker" = "https://github.com/chonkie-inc/chonkie/issues"
 
+[project.scripts]
+chonkie = "chonkie.cli:main"
+
 [project.optional-dependencies]
 # Optional dependencies for the utils
 hub = ["huggingface-hub>=0.24.0", "jsonschema>=4.23.0"]
 viz = ["rich>=13.0.0"]
+cli = ["typer>=0.9.0"]
 
 # Optional dependencies for table chef
 table  = ["pandas", "tabulate", "openpyxl"]
@@ -186,7 +190,8 @@ packages = [
     "chonkie.experimental",
     "chonkie.fetcher",
     "chonkie.chef",
-    "chonkie.pipeline"
+    "chonkie.pipeline",
+    "chonkie.cli"
 ]
 
 [tool.setuptools.package-data]
