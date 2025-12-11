@@ -2,14 +2,14 @@
 
 import re
 import warnings
-from typing import Any, Callable, List, Union
+from typing import List, Union
 
 from typing_extensions import Tuple
 
 from chonkie.chunker.base import BaseChunker
 from chonkie.logger import get_logger
 from chonkie.pipeline import chunker
-from chonkie.tokenizer import RowTokenizer
+from chonkie.tokenizer import RowTokenizer, TokenizerProtocol
 from chonkie.types import Chunk, Document, MarkdownDocument
 
 logger = get_logger(__name__)
@@ -21,7 +21,7 @@ class TableChunker(BaseChunker):
 
     def __init__(
         self,
-        tokenizer: Union[str, Callable[[str], int], Any] = "row",
+        tokenizer: Union[str, TokenizerProtocol] = "row",
         chunk_size: int = 3,
     ) -> None:
         """Initialize the TableChunker with configuration parameters.
