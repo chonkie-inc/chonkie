@@ -96,7 +96,7 @@ def test_initialization_with_api_keys(mock_catsu_client) -> None:
     api_keys = {"voyageai": "test-key-123"}
 
     with patch('catsu.Client', return_value=mock_catsu_client) as mock_client_class:
-        embeddings = CatsuEmbeddings(
+        CatsuEmbeddings(
             model="voyage-3",
             provider="voyageai",
             api_keys=api_keys

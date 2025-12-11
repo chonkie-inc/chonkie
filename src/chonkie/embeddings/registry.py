@@ -12,7 +12,6 @@ from .jina import JinaEmbeddings
 from .model2vec import Model2VecEmbeddings
 from .openai import OpenAIEmbeddings
 from .sentence_transformer import SentenceTransformerEmbeddings
-from .voyageai import VoyageAIEmbeddings
 
 
 class EmbeddingsRegistry:
