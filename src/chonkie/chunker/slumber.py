@@ -22,26 +22,6 @@ try:
 except ImportError:
     _CYTHON_AVAILABLE = False
 
-# PROMPT_W_CONTEXT_TEMPLATE = """<task> You are given a set of texts between the starting tag <passages> and ending tag </passages>. Each text is labeled as 'ID `N`' where 'N' is the passage number. Your task is to find the first passage where the content clearly separates from the previous passages in topic and/or semantics. 
-
-# The user may provide you some context on the passages which may help you in your task. This context is provided between the starting tag <context> and ending tag </context>.
-# </task>
-
-# <rules>
-# Follow the following rules while finding the splitting passage:
-# - Always return the answer as a JSON parsable object with the 'split_index' key having a value of the first passage where the topic changes.
-# - Avoid very long groups of paragraphs. Aim for a good balance between identifying content shifts and keeping groups manageable.
-# - If no clear `split_index` is found, return N + 1, where N is the index of the last passage. 
-# </rules>
-
-# <context>
-# {context}
-# </context>
-
-# <passages>
-# {passages}
-# </passages>
-# """
 
 PROMPT_TEMPLATE = """<task> You are given a set of texts between the starting tag <passages> and ending tag </passages>. Each text is labeled as 'ID `N`' where 'N' is the passage number. Your task is to find the first passage where the content clearly separates from the previous passages in topic and/or semantics. </task>
 
@@ -176,14 +156,39 @@ class SlumberChunker(BaseChunker):
             ]
             splits = list(self.tokenizer.decode_batch(token_splits))
         
-        # Merge short splits
+        # Merge short splits (preserve spacing/punctuation)
+        def _safe_append(base: str, addition: str) -> str:
+            """Safely append text while preserving language-specific spacing rules."""
+            if not base:
+                return addition
+            if not addition:
+                return base
+            
+            last_char = base[-1]
+            first_char = addition[0]
+            
+            # If either has whitespace, concatenate directly
+            if last_char.isspace() or first_char.isspace():
+                return base + addition
+            
+            # Don't add space before punctuation
+            if first_char in ",.;:?!)]}'\"":
+                return base + addition
+            
+            # Don't add space after opening brackets
+            if last_char in "([{'\"":
+                return base + addition
+            
+            # Otherwise, add a space
+            return base + " " + addition
+
         current = ""
         merged = []
         for split in splits:
             if len(split) < self.min_characters_per_chunk:
-                current += split
+                current = _safe_append(current, split)
             elif current:
-                current += split
+                current = _safe_append(current, split)
                 merged.append(current)
                 current = ""
             else:
@@ -247,6 +252,10 @@ class SlumberChunker(BaseChunker):
     def chunk(self, text: str) -> List[Chunk]:
         """Chunk the text with the SlumberChunker."""
         logger.debug(f"Starting slumber chunking for text of length {len(text)}")
+        
+        # Store original text for accurate extraction
+        original_text = text
+        
         splits = self._recursive_split(text, level=0, offset=0)
         logger.debug(f"Created {len(splits)} initial splits for LLM-based semantic boundary detection")
 
@@ -288,11 +297,15 @@ class SlumberChunker(BaseChunker):
             if current_pos >= response:
                 response = current_pos + 1
 
+            # Extract text directly from original source to preserve all spacing and formatting
+            start_idx = splits[current_pos].start_index
+            end_idx = splits[response - 1].end_index
+            
             chunks.append(Chunk(
-                text="".join([split.text for split in splits[current_pos: response]]),
-                start_index=splits[current_pos].start_index,
-                end_index=splits[response - 1].end_index,
-                token_count = sum([split.token_count for split in splits[current_pos: response]])
+                text=original_text[start_idx:end_idx],
+                start_index=start_idx,
+                end_index=end_idx,
+                token_count=sum([split.token_count for split in splits[current_pos: response]])
             ))
 
             current_token_count = cumulative_token_counts[response]

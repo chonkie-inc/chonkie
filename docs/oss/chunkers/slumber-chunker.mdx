@@ -45,7 +45,7 @@ from chonkie import SlumberChunker
 from chonkie.genie import GeminiGenie
 
 # Optional: Initialize Genie
-genie = GeminiGenie("gemini-2.5-flash-preview-04-17")
+genie = GeminiGenie("gemini-3-pro-preview")
 
 # Basic initialization
 chunker = SlumberChunker(
@@ -66,7 +66,7 @@ chunker = SlumberChunker(
 <ParamField path="genie" type="Optional[BaseGenie]" default="None">
   An instance of a Genie interface (e.g., `GeminiGenie`). If `None`, tries to
   load a default Genie configuration, which is
-  `GeminiGenie("gemini-2.5-pro-preview-03-25")`
+  `GeminiGenie("gemini-3-pro-preview")`
 </ParamField>
 
 <ParamField
