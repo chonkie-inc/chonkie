@@ -2,14 +2,19 @@
 
 from bisect import bisect_left
 from itertools import accumulate
-from typing import Any, Callable, List, Optional, Union
+from typing import List, Optional, Union
 
 from tqdm import tqdm
 
 from chonkie.genie import BaseGenie, GeminiGenie
+from chonkie.logger import get_logger
+from chonkie.pipeline import chunker
+from chonkie.tokenizer import TokenizerProtocol
 from chonkie.types import Chunk, RecursiveLevel, RecursiveRules
 
 from .base import BaseChunker
+
+logger = get_logger(__name__)
 
 try:
     from .c_extensions.split import split_text
@@ -17,26 +22,6 @@ try:
 except ImportError:
     _CYTHON_AVAILABLE = False
 
-# PROMPT_W_CONTEXT_TEMPLATE = """<task> You are given a set of texts between the starting tag <passages> and ending tag </passages>. Each text is labeled as 'ID `N`' where 'N' is the passage number. Your task is to find the first passage where the content clearly separates from the previous passages in topic and/or semantics. 
-
-# The user may provide you some context on the passages which may help you in your task. This context is provided between the starting tag <context> and ending tag </context>.
-# </task>
-
-# <rules>
-# Follow the following rules while finding the splitting passage:
-# - Always return the answer as a JSON parsable object with the 'split_index' key having a value of the first passage where the topic changes.
-# - Avoid very long groups of paragraphs. Aim for a good balance between identifying content shifts and keeping groups manageable.
-# - If no clear `split_index` is found, return N + 1, where N is the index of the last passage. 
-# </rules>
-
-# <context>
-# {context}
-# </context>
-
-# <passages>
-# {passages}
-# </passages>
-# """
 
 PROMPT_TEMPLATE = """<task> You are given a set of texts between the starting tag <passages> and ending tag </passages>. Each text is labeled as 'ID `N`' where 'N' is the passage number. Your task is to find the first passage where the content clearly separates from the previous passages in topic and/or semantics. </task>
 
@@ -53,12 +38,13 @@ Follow the following rules while finding the splitting passage:
 """
 
 
+@chunker("slumber")
 class SlumberChunker(BaseChunker):
     """SlumberChunker is a chunker based on the LumberChunker — but slightly different."""
 
     def __init__(self,
-                 genie: Optional[BaseGenie] = None, 
-                 tokenizer_or_token_counter: Union[str, Callable, Any] = "character",
+                 genie: Optional[BaseGenie] = None,
+                 tokenizer: Union[str, TokenizerProtocol] = "character",
                  chunk_size: int = 2048,
                  rules: RecursiveRules = RecursiveRules(),
                  candidate_size: int = 128,
@@ -68,7 +54,7 @@ class SlumberChunker(BaseChunker):
 
         Args:
             genie (Optional[BaseGenie]): The genie to use.
-            tokenizer_or_token_counter (Union[str, Callable, Any]): The tokenizer or token counter to use.
+            tokenizer: The tokenizer to use.
             chunk_size (int): The size of the chunks to create.
             rules (RecursiveRules): The rules to use to split the candidate chunks.
             candidate_size (int): The size of the candidate splits that the chunker will consider.
@@ -77,7 +63,7 @@ class SlumberChunker(BaseChunker):
 
         """
         # Since the BaseChunker sets and defines the tokenizer for us, we don't have to worry.
-        super().__init__(tokenizer_or_token_counter)
+        super().__init__(tokenizer)
 
         # Lazily import the dependencies
         self._import_dependencies()
@@ -170,14 +156,39 @@ class SlumberChunker(BaseChunker):
             ]
             splits = list(self.tokenizer.decode_batch(token_splits))
         
-        # Merge short splits
+        # Merge short splits (preserve spacing/punctuation)
+        def _safe_append(base: str, addition: str) -> str:
+            """Safely append text while preserving language-specific spacing rules."""
+            if not base:
+                return addition
+            if not addition:
+                return base
+            
+            last_char = base[-1]
+            first_char = addition[0]
+            
+            # If either has whitespace, concatenate directly
+            if last_char.isspace() or first_char.isspace():
+                return base + addition
+            
+            # Don't add space before punctuation
+            if first_char in ",.;:?!)]}'\"":
+                return base + addition
+            
+            # Don't add space after opening brackets
+            if last_char in "([{'\"":
+                return base + addition
+            
+            # Otherwise, add a space
+            return base + " " + addition
+
         current = ""
         merged = []
         for split in splits:
             if len(split) < self.min_characters_per_chunk:
-                current += split
+                current = _safe_append(current, split)
             elif current:
-                current += split
+                current = _safe_append(current, split)
                 merged.append(current)
                 current = ""
             else:
@@ -240,7 +251,13 @@ class SlumberChunker(BaseChunker):
 
     def chunk(self, text: str) -> List[Chunk]:
         """Chunk the text with the SlumberChunker."""
+        logger.debug(f"Starting slumber chunking for text of length {len(text)}")
+        
+        # Store original text for accurate extraction
+        original_text = text
+        
         splits = self._recursive_split(text, level=0, offset=0)
+        logger.debug(f"Created {len(splits)} initial splits for LLM-based semantic boundary detection")
 
         # Add the IDS to the splits
         prepared_split_texts = self._prepare_splits(splits)
@@ -280,11 +297,15 @@ class SlumberChunker(BaseChunker):
             if current_pos >= response:
                 response = current_pos + 1
 
+            # Extract text directly from original source to preserve all spacing and formatting
+            start_idx = splits[current_pos].start_index
+            end_idx = splits[response - 1].end_index
+            
             chunks.append(Chunk(
-                text="".join([split.text for split in splits[current_pos: response]]),
-                start_index=splits[current_pos].start_index,
-                end_index=splits[response - 1].end_index,
-                token_count = sum([split.token_count for split in splits[current_pos: response]])
+                text=original_text[start_idx:end_idx],
+                start_index=start_idx,
+                end_index=end_idx,
+                token_count=sum([split.token_count for split in splits[current_pos: response]])
             ))
 
             current_token_count = cumulative_token_counts[response]
@@ -293,6 +314,7 @@ class SlumberChunker(BaseChunker):
             if self.verbose:
                 progress_bar.update(current_pos - progress_bar.n)
 
+        logger.info(f"Created {len(chunks)} chunks using LLM-guided semantic splitting")
         return chunks
 
     def _import_dependencies(self) -> None:
@@ -311,7 +333,7 @@ class SlumberChunker(BaseChunker):
     def __repr__(self) -> str:
         """Return a string representation of the SlumberChunker."""
         return (f"SlumberChunker(genie={self.genie}," +
-                f"tokenizer_or_token_counter={self.tokenizer}, " +
+                f"tokenizer={self.tokenizer}, " +
                 f"chunk_size={self.chunk_size}, " +
                 f"candidate_size={self.candidate_size}, " +
                 f"min_characters_per_chunk={self.min_characters_per_chunk})" # type: ignore

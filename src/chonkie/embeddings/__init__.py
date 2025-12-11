@@ -1,10 +1,13 @@
 """Embeddings classes for text embedding."""
 
 from .auto import AutoEmbeddings
+from .azure_openai import AzureOpenAIEmbeddings
 from .base import BaseEmbeddings
+from .catsu import CatsuEmbeddings
 from .cohere import CohereEmbeddings
 from .gemini import GeminiEmbeddings
 from .jina import JinaEmbeddings
+from .litellm import LiteLLMEmbeddings
 from .model2vec import Model2VecEmbeddings
 from .openai import OpenAIEmbeddings
 from .registry import EmbeddingsRegistry
@@ -17,10 +20,13 @@ __all__ = [
     "Model2VecEmbeddings",
     "SentenceTransformerEmbeddings",
     "OpenAIEmbeddings",
+    "AzureOpenAIEmbeddings",
     "CohereEmbeddings",
     "GeminiEmbeddings",
     "AutoEmbeddings",
     "JinaEmbeddings",
     "VoyageAIEmbeddings",
+    "CatsuEmbeddings",
+    "LiteLLMEmbeddings",
     "EmbeddingsRegistry",
 ]

@@ -10,8 +10,12 @@ from itertools import accumulate
 from typing import TYPE_CHECKING, Any, List, Literal, Tuple, Union
 
 from chonkie.chunker.base import BaseChunker
-from chonkie.tokenizer import Tokenizer
+from chonkie.logger import get_logger
+from chonkie.pipeline import chunker
+from chonkie.tokenizer import TokenizerProtocol
 from chonkie.types import Chunk
+
+logger = get_logger(__name__)
 
 if TYPE_CHECKING:
     from typing import Any
@@ -24,11 +28,12 @@ if TYPE_CHECKING:
             pass
 
 
+@chunker("code")
 class CodeChunker(BaseChunker):
     """Chunker that recursively splits the code based on code context.
-    
+
     Args:
-        tokenizer_or_token_counter: The tokenizer or token counter to use.
+        tokenizer: The tokenizer to use.
         chunk_size: The size of the chunks to create.
         language: The language of the code to parse. Accepts any of the languages supported by tree-sitter-language-pack.
         include_nodes: Whether to include the nodes in the returned chunks.
@@ -36,14 +41,14 @@ class CodeChunker(BaseChunker):
     """
 
     def __init__(self,
-                 tokenizer_or_token_counter: Union[str, List, Any] = "character",
+                 tokenizer: Union[str, TokenizerProtocol] = "character",
                  chunk_size: int = 2048,
                  language: Union[Literal["auto"], Any] = "auto",
                  include_nodes: bool = False) -> None:
         """Initialize a CodeChunker object.
-        
+
         Args:
-            tokenizer_or_token_counter: The tokenizer or token counter to use.
+            tokenizer: The tokenizer to use.
             chunk_size: The size of the chunks to create.
             language: The language of the code to parse. Accepts any of the languages supported by tree-sitter-language-pack.
             include_nodes: Whether to include the nodes in the returned chunks.
@@ -56,8 +61,10 @@ class CodeChunker(BaseChunker):
         # Lazy import dependencies to avoid importing them when not needed
         self._import_dependencies()
 
-        # Initialize all the values
-        self.tokenizer = Tokenizer(tokenizer_or_token_counter)
+        # Initialize the base chunker
+        super().__init__(tokenizer=tokenizer)
+
+        # Initialize chunker-specific values
         self.chunk_size = chunk_size
         self.include_nodes = include_nodes
 
@@ -315,15 +322,21 @@ class CodeChunker(BaseChunker):
     def chunk(self, text: str) -> List[Chunk]:
         """Recursively chunks the code based on context from tree-sitter."""
         if not text.strip(): # Handle empty or whitespace-only input
+            logger.debug("Empty or whitespace-only code provided")
             return []
 
+        logger.debug(f"Starting code chunking for text of length {len(text)}")
+
         original_text_bytes = text.encode("utf-8") # Store bytes
-        
+
         # At this point, if the language is auto, we need to detect the language
         # and initialize the parser
         if self.language == "auto":
             language = self._detect_language(original_text_bytes)
+            logger.info(f"Auto-detected code language: {language}")
             self.parser = get_parser(language) # type: ignore
+        else:
+            logger.debug(f"Using configured language: {self.language}")
 
         try:
             # Create the parsing tree for the current code
@@ -340,10 +353,11 @@ class CodeChunker(BaseChunker):
                 node_groups = []
 
         chunks = self._create_chunks(texts, token_counts, node_groups)
+        logger.info(f"Created {len(chunks)} code chunks from parsed syntax tree")
         return chunks 
         
     def __repr__(self) -> str:
         """Return the string representation of the CodeChunker."""
-        return (f"CodeChunker(tokenizer_or_token_counter={self.tokenizer},"
+        return (f"CodeChunker(tokenizer={self.tokenizer},"
                 f"chunk_size={self.chunk_size},"
                 f"language={self.language})")

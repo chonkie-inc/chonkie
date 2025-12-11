@@ -31,6 +31,13 @@ class Hubbie:
             "repo_type": "dataset",
         }
 
+        # define the path to the pipeline recipes
+        self.get_pipeline_recipe_config = {
+            "repo": "chonkie-ai/recipes",
+            "subfolder": "pipelines",
+            "repo_type": "dataset",
+        }
+
         # Fetch the current recipe schema from the hub
         self.recipe_schema = self.get_recipe_schema()
 
@@ -126,4 +133,71 @@ class Hubbie:
         assert self._validate_recipe(recipe), "Recipe is invalid. Please check the recipe and try again."
         
         # Return the recipe
+        return recipe
+
+    def get_pipeline_recipe(self, name: str, path: Optional[str] = None) -> Dict:
+        """Get a pipeline recipe from the hub.
+
+        Args:
+            name: The name of the pipeline recipe to get.
+            path: Optionally, provide the path to the recipe file.
+
+        Returns:
+            Dict: The pipeline recipe with 'steps' key.
+
+        Raises:
+            ValueError: If the recipe is not found or invalid.
+
+        """
+        # If path is not provided, download the recipe from the hub
+        if path is None:
+            try:
+                path = hfhub.hf_hub_download(  # type: ignore
+                    repo_id=self.get_pipeline_recipe_config["repo"],
+                    repo_type=self.get_pipeline_recipe_config["repo_type"],
+                    subfolder=self.get_pipeline_recipe_config["subfolder"],
+                    filename=f"{name}.json",
+                )
+            except Exception as error:
+                raise ValueError(
+                    f"Could not download pipeline recipe '{name}'. "
+                    f"Ensure name is correct or provide a valid path. Error: {error}"
+                )
+
+        # If we couldn't get the path, raise error
+        if path is None:
+            raise ValueError(
+                f"Could not determine path for pipeline recipe '{name}'. "
+                f"Ensure name is correct or provide a valid path."
+            )
+
+        # Check if file exists
+        path_obj = Path(path)
+        if not path_obj.exists():
+            raise ValueError(
+                f"Failed to get the file {path} — please check if this file exists "
+                f"and if the path is correct."
+            )
+
+        # Load the recipe
+        try:
+            with path_obj.open("r") as f:
+                recipe = dict(json.loads(f.read()))
+        except Exception as error:
+            raise ValueError(
+                f"Failed to read the file {path} — please check if the file is valid JSON. "
+                f"Error: {error}"
+            )
+
+        # Validate it has required fields
+        if "steps" not in recipe:
+            raise ValueError(f"Pipeline recipe '{name}' is missing 'steps' field.")
+
+        # Optionally validate schema version
+        if "schema" in recipe and recipe["schema"] != self.SCHEMA_VERSION:
+            raise ValueError(
+                f"Pipeline recipe '{name}' has schema version '{recipe['schema']}', "
+                f"but expected '{self.SCHEMA_VERSION}'."
+            )
+
         return recipe

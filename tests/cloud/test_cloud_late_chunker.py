@@ -70,11 +70,11 @@ def test_cloud_late_chunker_initialization(mock_requests_get) -> None:
 
     # Check default initialization
     chunker = LateChunker(api_key="test_key")
-    assert chunker.embedding_model == "sentence-transformers/all-MiniLM-L6-v2"
+    assert chunker.embedding_model == "nomic-ai/modernbert-embed-base"
     assert chunker.chunk_size == 512
     assert chunker.min_characters_per_chunk == 24  # Default for LateChunker
     # Verify attributes set for the superclass
-    assert chunker.tokenizer_or_token_counter == "gpt2" # Set by LateChunker for super
+    assert chunker.tokenizer == "gpt2" # Set by LateChunker for super
 
 def test_cloud_late_chunker_single_text(mock_requests_get, mock_requests_post, mock_api_response) -> None:
     """Test that the Late Chunker works with a single text."""

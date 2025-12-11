@@ -115,9 +115,9 @@ class TestJinaEmbeddingsProperties:
         assert embeddings.dimension == 2048
         assert isinstance(embeddings.dimension, int)
 
-    def test_get_tokenizer_or_token_counter(self, embeddings: JinaEmbeddings) -> None:
-        """Test get_tokenizer_or_token_counter returns tokenizer instance."""
-        tokenizer = embeddings.get_tokenizer_or_token_counter()
+    def test_get_tokenizer(self, embeddings: JinaEmbeddings) -> None:
+        """Test get_tokenizer returns tokenizer instance."""
+        tokenizer = embeddings.get_tokenizer()
         assert tokenizer is embeddings._tokenizer
         # Since we're using a mock, check that it has the expected methods
         assert hasattr(tokenizer, "encode")
@@ -152,7 +152,7 @@ class TestJinaEmbeddingsProperties:
     def test_import_dependencies_failure(self) -> None:
         """Test _import_dependencies when packages are not available."""
         with patch('chonkie.embeddings.jina.JinaEmbeddings._is_available', return_value=False):
-            with pytest.raises(ImportError, match="One \\(or more\\) of the following packages is not available"):
+            with pytest.raises(ImportError, match="tokenizers is not available"):
                 JinaEmbeddings(api_key="test_key")
 
 

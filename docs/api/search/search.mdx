@@ -1,0 +1,139 @@
+---
+title: "Semantic Search"
+api: "POST labs.chonkie.ai/api/v1/search"
+description: "Search knowledge bases using semantic similarity"
+---
+
+Perform semantic search over your knowledge bases to find the most relevant chunks for a given query.
+
+## Examples
+
+<CodeGroup>
+
+```python Python
+import requests
+
+url = "https://labs.chonkie.ai/api/v1/search"
+headers = {
+    "Authorization": "Bearer YOUR_API_KEY",
+    "Content-Type": "application/json"
+}
+
+data = {
+    "query": "How do I configure authentication?",
+    "knowledge": "product-documentation",
+    "limit": 5,
+    "mode": "balanced"
+}
+
+response = requests.post(url, headers=headers, json=data)
+result = response.json()
+
+print(f"Found {len(result['results'])} results in {result['took']}ms")
+for i, item in enumerate(result['results']):
+    print(f"Result {i+1} (score: {item['score']:.3f}): {item['text'][:100]}...")
+```
+
+```javascript JavaScript
+const response = await fetch("https://labs.chonkie.ai/api/v1/search", {
+  method: "POST",
+  headers: {
+    Authorization: "Bearer YOUR_API_KEY",
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    query: "How do I configure authentication?",
+    knowledge: "product-documentation",
+    limit: 5,
+    mode: "balanced",
+  }),
+});
+
+const result = await response.json();
+console.log(`Found ${result.results.length} results in ${result.took}ms`);
+result.results.forEach((item, i) => {
+  console.log(
+    `Result ${i + 1} (score: ${item.score.toFixed(3)}): ${item.text.substring(
+      0,
+      100
+    )}...`
+  );
+});
+```
+
+```bash cURL
+curl -X POST https://labs.chonkie.ai/api/v1/search \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": "How do I configure authentication?",
+    "knowledge": "product-documentation",
+    "limit": 5,
+    "mode": "balanced"
+  }'
+```
+
+</CodeGroup>
+
+## Request
+
+#### Parameters
+
+<ParamField path="query" type="string" required>
+  The search query. Can be a question, statement, or keywords.
+</ParamField>
+
+<ParamField path="knowledge" type="string" required>
+  The slug of the knowledge base to search in.
+</ParamField>
+
+<ParamField path="limit" type="integer" default="10">
+  Maximum number of results to return (1-100).
+</ParamField>
+
+<ParamField path="mode" type="string" default="balanced">
+  Search mode: 
+  - "fast": fastest, good quality 
+  - "balanced": balances speed and quality
+  - "deep":  slow with best quality.
+
+  <Info> We recommend using balanced for most operations</Info>
+</ParamField>
+
+## Response
+
+#### Returns
+
+<ResponseField name="results" type="array">
+  Array of search result objects, ranked by relevance.
+</ResponseField>
+
+<ResponseField name="query" type="string">
+  The original search query.
+</ResponseField>
+
+<ResponseField name="knowledgeBase" type="string">
+  The knowledge base slug searched.
+</ResponseField>
+
+<ResponseField name="mode" type="string">
+  The search mode used.
+</ResponseField>
+
+<ResponseField name="took" type="integer">
+  Search time in milliseconds.
+</ResponseField>
+
+Each result object contains:
+
+<ResponseField name="text" type="string">
+  The chunk text content.
+</ResponseField>
+
+<ResponseField name="score" type="float">
+  Relevance score (0-1, higher is more relevant).
+</ResponseField>
+
+<ResponseField name="metadata" type="object">
+  Additional metadata about the chunk.
+</ResponseField>

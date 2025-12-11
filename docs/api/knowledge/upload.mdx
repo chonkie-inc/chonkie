@@ -1,0 +1,149 @@
+---
+title: "Upload Files"
+api: "POST labs.chonkie.ai/api/v1/knowledge/{knowledge_base_slug}"
+description: "Upload one or more files to a knowledge base"
+---
+
+Upload files to a knowledge base. Files are automatically chunked, embedded, and indexed.
+
+## Examples
+
+<CodeGroup>
+
+```python Python
+import requests
+
+kb_slug = "product-documentation"
+url = f"https://labs.chonkie.ai/api/v1/knowledge/{kb_slug}"
+headers = {
+    "Authorization": "Bearer YOUR_API_KEY"
+}
+
+# Upload single file
+with open("api.pdf", "rb") as f:
+    files = {"files": f}
+    response = requests.post(url, headers=headers, files=files)
+
+result = response.json()
+print(f"Uploaded: {result['files'][0]['originalName']}")
+
+# Upload multiple files
+with open("doc1.pdf", "rb") as f1, \
+     open("doc2.txt", "rb") as f2:
+    files = [
+        ("files", f1),
+        ("files", f2)
+    ]
+    response = requests.post(url, headers=headers, files=files)
+
+result = response.json()
+print(f"Uploaded {len(result['files'])} files")
+```
+
+```javascript JavaScript
+const kbSlug = "product-documentation";
+
+// Upload single file
+const formData = new FormData();
+const fileInput = document.querySelector('input[type="file"]');
+formData.append("files", fileInput.files[0]);
+
+const response = await fetch(
+  `https://labs.chonkie.ai/api/v1/knowledge/${kbSlug}`,
+  {
+    method: "POST",
+    headers: {
+      Authorization: "Bearer YOUR_API_KEY",
+    },
+    body: formData,
+  }
+);
+
+const result = await response.json();
+console.log(`Uploaded: ${result.files[0].originalName}`);
+
+// Upload multiple files
+const multiFormData = new FormData();
+const fileList = document.querySelector('input[type="file"]').files;
+for (const file of fileList) {
+  multiFormData.append("files", file);
+}
+
+const multiResponse = await fetch(
+  `https://labs.chonkie.ai/api/v1/knowledge/${kbSlug}`,
+  {
+    method: "POST",
+    headers: {
+      Authorization: "Bearer YOUR_API_KEY",
+    },
+    body: multiFormData,
+  }
+);
+
+const multiResult = await multiResponse.json();
+console.log(`Uploaded ${multiResult.files.length} files`);
+```
+
+```bash cURL
+# Upload single file
+curl -X POST https://labs.chonkie.ai/api/v1/knowledge/product-documentation \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -F "files=@api.pdf"
+
+# Upload multiple files
+curl -X POST https://labs.chonkie.ai/api/v1/knowledge/product-documentation \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -F "files=@doc1.pdf" \
+  -F "files=@doc2.txt"
+```
+
+</CodeGroup>
+
+## Request
+
+#### Path Parameters
+
+<ParamField path="knowledge_base_slug" type="string" required>
+  The slug of the knowledge base to upload to.
+</ParamField>
+
+#### Body Parameters
+
+<ParamField path="files" type="file | file[]" required>
+  Single file or multiple files to upload. Use multipart/form-data encoding with
+  field name "files".
+</ParamField>
+
+## Response
+
+#### Returns
+
+<ResponseField name="message" type="string">
+  Success message.
+</ResponseField>
+
+<ResponseField name="files" type="array">
+  Array of uploaded file information.
+</ResponseField>
+
+<ResponseField name="knowledgeBaseId" type="string">
+  ID of the knowledge base.
+</ResponseField>
+
+Each file object contains:
+
+<ResponseField name="key" type="string">
+  Unique file identifier (timestamp-filename).
+</ResponseField>
+
+<ResponseField name="originalName" type="string">
+  Original filename.
+</ResponseField>
+
+<ResponseField name="size" type="integer">
+  File size in bytes.
+</ResponseField>
+
+<ResponseField name="type" type="string">
+  MIME type of the file.
+</ResponseField>
