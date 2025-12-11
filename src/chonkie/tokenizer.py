@@ -370,6 +370,82 @@ class ByteTokenizer(Tokenizer):
         return len(text.encode("utf-8"))
 
 
+class RowTokenizer(Tokenizer):
+    """Row-based tokenizer that counts lines/rows in text.
+
+    This tokenizer treats each line (separated by newlines) as a token.
+    It is primarily useful for table chunking where you want to chunk
+    by number of rows rather than by character or subword tokens.
+    """
+
+    def __repr__(self) -> str:
+        """Return a string representation of the RowTokenizer."""
+        return f"RowTokenizer(vocab_size={len(self.vocab)})"
+
+    def tokenize(self, text: str) -> Sequence[str]:
+        """Tokenize text into individual lines/rows.
+
+        Args:
+            text (str): The text to tokenize.
+
+        Returns:
+            List of lines/rows
+
+        """
+        if not text:
+            return []
+        return text.split("\n")
+
+    def encode(self, text: str) -> Sequence[int]:
+        """Encode the given text into tokens.
+
+        Args:
+            text (str): The text to encode.
+
+        Returns:
+            Encoded sequence
+
+        """
+        encoded = []
+        for token in self.tokenize(text):
+            id = self.token2id[token]
+            if id >= len(self.vocab):
+                self.vocab.append(token)
+            encoded.append(id)
+        return encoded
+
+    def decode(self, tokens: Sequence[int]) -> str:
+        """Decode the given tokens back into text.
+
+        Args:
+            tokens (Sequence[int]): The tokens to decode.
+
+        Returns:
+            Decoded text
+
+        """
+        try:
+            return "\n".join([self.vocab[token] for token in tokens])
+        except Exception as e:
+            raise ValueError(
+                f"Decoding failed. Tokens: {tokens} not found in vocab."
+            ) from e
+
+    def count_tokens(self, text: str) -> int:
+        """Count the number of rows/lines in the given text.
+
+        Args:
+            text (str): The text to count tokens in.
+
+        Returns:
+            Number of rows/lines
+
+        """
+        if not text:
+            return 0
+        return len(text.split("\n"))
+
+
 class AutoTokenizer:
     """Auto-loading tokenizer interface for Chonkie.
 
@@ -403,6 +479,7 @@ class AutoTokenizer:
         CharacterTokenizer,
         WordTokenizer,
         ByteTokenizer,
+        RowTokenizer,
         "tokenizers.Tokenizer",
         "tiktoken.Encoding",
         "transformers.PreTrainedTokenizer",
@@ -416,6 +493,8 @@ class AutoTokenizer:
             return WordTokenizer()
         elif tokenizer == "byte":
             return ByteTokenizer()
+        elif tokenizer == "row":
+            return RowTokenizer()
 
         # Try tokenizers first
         if importlib.util.find_spec("tokenizers") is not None:
@@ -587,7 +666,9 @@ class AutoTokenizer:
         elif self._backend in "tokenizers":
             return self.tokenizer.decode_batch(token_sequences)  # type: ignore[union-attr]
         elif self._backend == "transformers":
-            return self.tokenizer.batch_decode(token_sequences, skip_special_tokens=True)  # type: ignore[union-attr]
+            return self.tokenizer.batch_decode(
+                token_sequences, skip_special_tokens=True
+            )  # type: ignore[union-attr]
 
         if self._backend == "callable":
             raise NotImplementedError(
@@ -609,12 +690,17 @@ class AutoTokenizer:
         if self._backend == "chonkie":
             return self.tokenizer.count_tokens_batch(texts)  # type: ignore[union-attr]
         elif self._backend == "tiktoken":
-            return [len(token_list) for token_list in self.tokenizer.encode_batch(texts)]  # type: ignore[union-attr,arg-type]
+            return [
+                len(token_list) for token_list in self.tokenizer.encode_batch(texts)
+            ]  # type: ignore[union-attr,arg-type]
         elif self._backend == "transformers":
             encoded = self.tokenizer(texts, add_special_tokens=False)  # type: ignore[operator,call-arg,index,arg-type]
             return [len(token_list) for token_list in encoded["input_ids"]]  # type: ignore[index]
         elif self._backend == "tokenizers":
-            return [len(t.ids) for t in self.tokenizer.encode_batch(texts, add_special_tokens=False)]  # type: ignore[union-attr,call-arg,arg-type,attr-defined]
+            return [
+                len(t.ids)
+                for t in self.tokenizer.encode_batch(texts, add_special_tokens=False)
+            ]  # type: ignore[union-attr,call-arg,arg-type,attr-defined]
         elif self._backend == "callable":
             return [self.tokenizer(text) for text in texts]  # type: ignore[operator,misc]
 
