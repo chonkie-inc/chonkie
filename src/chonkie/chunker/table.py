@@ -89,7 +89,7 @@ class TableChunker(BaseChunker):
                 return [
                     Chunk(
                         text=text,
-                        token_count=len(rows),
+                        token_count=len(data_rows),
                         start_index=0,
                         end_index=len(text),
                     )
