@@ -95,17 +95,24 @@ class TableChunker(BaseChunker):
                     )
                 ]
             else:
+                # Track character position for data rows (after header)
+                header_len = len(header)
+                current_char_index = header_len
+
                 for i in range(0, len(data_rows), self.chunk_size):
                     chunk_rows = data_rows[i : i + self.chunk_size]
                     chunk_text = header + "".join(chunk_rows)
+                    data_rows_len = len("".join(chunk_rows))
+
                     chunks.append(
                         Chunk(
                             text=chunk_text,
                             token_count=len(chunk_rows),
-                            start_index=i,
-                            end_index=i + len(chunk_text),
+                            start_index=current_char_index,
+                            end_index=current_char_index + data_rows_len,
                         )
                     )
+                    current_char_index += data_rows_len
 
             return chunks
 
