@@ -2,13 +2,14 @@
 
 import re
 import warnings
-from typing import Any, Callable, List, Literal, Union
+from typing import Any, Callable, List, Union
 
 from typing_extensions import Tuple
 
 from chonkie.chunker.base import BaseChunker
 from chonkie.logger import get_logger
 from chonkie.pipeline import chunker
+from chonkie.tokenizer import RowTokenizer
 from chonkie.types import Chunk, Document, MarkdownDocument
 
 logger = get_logger(__name__)
@@ -20,33 +21,34 @@ class TableChunker(BaseChunker):
 
     def __init__(
         self,
-        tokenizer: Union[
-            Literal["row", "character"], str, Callable[[str], int], Any
-        ] = "row",
+        tokenizer: Union[str, Callable[[str], int], Any] = "row",
         chunk_size: int = 3,
     ) -> None:
         """Initialize the TableChunker with configuration parameters.
 
         Args:
-            tokenizer: The tokenizer to use for chunking.
-            chunk_size: The maximum size of each chunk.
+            tokenizer: The tokenizer to use for chunking. Use "row" for row-based
+                chunking (default), or any other tokenizer string/instance for
+                token-based chunking.
+            chunk_size: The maximum size of each chunk. When using "row" tokenizer,
+                this is the maximum number of data rows per chunk. For other
+                tokenizers, this is the maximum number of tokens.
 
         """
-        if tokenizer == "row":
-            self._tokenizer = tokenizer # type: ignore
-        elif isinstance(tokenizer, str):
-            super().__init__(tokenizer)
+        super().__init__(tokenizer)
 
         if chunk_size <= 0:
             raise ValueError("Chunk size must be greater than 0.")
         if chunk_size == 3 and tokenizer != "row":
             warnings.warn(
-                "Using default chunk size of 3 with 'row' tokenizer may not be optimal."
+                "Using default chunk size of 3 with a token-based tokenizer may not be optimal. "
+                "Consider using a larger chunk_size for token-based chunking."
             )
 
         self.chunk_size = chunk_size
         self.newline_pattern = re.compile(r"\n(?=\|)")
         self.sep = "✄"
+        self._is_row_tokenizer = isinstance(self.tokenizer.tokenizer, RowTokenizer)
 
     def _split_table(self, table: str) -> Tuple[str, List[str]]:
         table = table.strip()
@@ -81,7 +83,7 @@ class TableChunker(BaseChunker):
             )
             return []
         # row based table chunking
-        if self._tokenizer == "row":
+        if self._is_row_tokenizer:
             header, data_rows = self._split_table(text)
             if len(data_rows) <= self.chunk_size:
                 return [
