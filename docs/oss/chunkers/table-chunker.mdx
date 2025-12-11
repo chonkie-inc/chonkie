@@ -26,34 +26,46 @@ TableChunker is included in the base installation of Chonkie. No additional depe
 
 ## Initialization
 
-```python
+<CodeGroup>
+```python row chunker
 from chonkie import TableChunker
 
-# Basic initialization with default parameters
+# Basic initialization custom parameters
 chunker = TableChunker(
-	tokenizer="character",  # Default tokenizer (or use "gpt2", etc.)
-	chunk_size=2048         # Maximum tokens or characters per chunk
+	tokenizer="row", # Chunk by rows, valid only for TableChunker
+	chunk_size=3 # Maximum number of rows per chunk (not including header)
 )
 ```
+
+```python token chunker
+from chonkie import TableChunker
+
+# Basic initialization
+chunker = TableChunker(
+  tokenizer="character",  # using Character chunker (or you can use "gpt2", ...)
+  chunk_size=16 # Maximum number of tokens/characters per chunk
+)
+```
+</CodeGroup>
 
 ## Parameters
 
 <ParamField
   path="tokenizer"
-  type="Union[str, Callable, Any]"
-  default="character"
+  type='Union[ Literal["row", "character"], str, Callable[[str], int], Any]'
+  default="row"
 >
-  Tokenizer to use. Can be a string identifier ("character", "word", "byte", "gpt2",
+  Tokenizer to use. Default is "row". Can be a string identifier ("row", "character", "word", "gpt2", "byte",
   etc.) or a tokenizer instance.
 </ParamField>
 
-<ParamField path="chunk_size" type="int" default="2048">
-  Maximum number of tokens or characters per chunk.
+<ParamField path="chunk_size" type="int" default="3">
+  Maximum number of rows (if tokenizer="row") or tokens/characters per chunk.
 </ParamField>
 
 ## Usage
-
-```python
+<CodeGroup>
+```python row chunker
 from chonkie import TableChunker
 
 table = """
@@ -65,34 +77,58 @@ table = """
 | Dave   | 35  | Berlin   |
 """
 
-chunker = TableChunker(chunk_size=16)
+chunker = TableChunker(tokenizer="row", chunk_size=3)
 chunks = chunker.chunk(table)
 for chunk in chunks:
 	print(chunk.text)
+
+# Each chunk is a valid markdown table segment, always including the header. For the example above and `chunk_size=3`, you might get:
+# >>>
+# | Name   | Age | City     |
+# |--------|-----|----------|
+# | Alice  | 30  | New York |
+# | Bob    | 25  | London   |
+# | Carol  | 28  | Paris    |
+
+# | Name   | Age | City     |
+# |--------|-----|----------|
+# | Dave   | 35  | Berlin   |
 ```
 
-## Example Output
+```python token chunker
+from chonkie import TableChunker
 
-Each chunk is a valid markdown table segment, always including the header. For the example above and `chunk_size=16`, you might get:
+table = """
+| Name   | Age | City     |
+|--------|-----|----------|
+| Alice  | 30  | New York |
+| Bob    | 25  | London   |
+| Carol  | 28  | Paris    |
+| Dave   | 35  | Berlin   |
+"""
 
-```markdown
-| Name  | Age | City     |
-| ----- | --- | -------- |
-| Alice | 30  | New York |
-| Bob   | 25  | London   |
+chunker = TableChunker(tokenizer="character",chunk_size=16)
+chunks = chunker.chunk(table)
+for chunk in chunks:
+	print(chunk.text)
+
+# Each chunk is a valid markdown table segment, always including the header. For the example above and `chunk_size=16`, you might get:
+# >>>
+# | Name  | Age | City     |
+# | ----- | --- | -------- |
+# | Alice | 30  | New York |
+# | Bob   | 25  | London   |
+
+# | Name  | Age | City   |
+# | ----- | --- | ------ |
+# | Carol | 28  | Paris  |
+# | Dave  | 35  | Berlin |
 ```
-
-```markdown
-| Name  | Age | City   |
-| ----- | --- | ------ |
-| Carol | 28  | Paris  |
-| Dave  | 35  | Berlin |
-```
-
+</CodeGroup>
 ## Methods
 
 - `chunk(table: str) -> List[Chunk]`: Chunk a markdown table string.
-- `chunk_document(document: Document) -> Document`: Chunk all tables in a `MarkdownDocument`.
+- `chunk_document(document: Document) -> Document`: Chunk all tables in a `MarkdownDocument`
 
 ## Notes
 
