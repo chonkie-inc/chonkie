@@ -5,10 +5,8 @@ import os
 import typer
 
 from chonkie import SemanticChunker
-from chonkie.utils import load_token
 from chonkie.utils import login as login_function
 
-# Create the main Typer app
 app = typer.Typer(
     name="chonkie",
     help=">🦛 CHONK your texts with Chonkie",
@@ -34,7 +32,7 @@ def chunk(
         help="Chunking method to use",
     ),
 ) -> None:
-    """chunk - A simple chunking command."""
+    """Chunk - A simple chunking command."""
     typer.echo("Chunking text...")
     if chunker == "semantic":
         chunking_maker = SemanticChunker()
@@ -56,17 +54,7 @@ def login(
     ),
 ) -> None:
     """Login to Chonkie CLI with your API key."""
-    
     login_function(api_key)
-
-
-# @app.command()
-# def help_cmd(
-#     ctx: typer.Context,
-# ) -> None:
-#     """Show help information about Chonkie CLI."""
-#     if ctx.parent:
-#         typer.echo(ctx.parent.get_help())
 
 
 if __name__ == "__main__":
