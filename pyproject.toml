@@ -8,7 +8,7 @@ name = "chonkie"
 version = "1.4.2"
 description = "🦛 CHONK your texts with Chonkie ✨ - The no-nonsense chunking library"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 license = { file = "LICENSE" }
 keywords = [
     "chunking",
@@ -34,7 +34,6 @@ maintainers = [
 classifiers = [
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -78,7 +77,9 @@ code = [
 neural = ["transformers>=4.0.0", "torch>=2.0.0, <3.0"]
 
 # Optional dependencies for the embeddings
-model2vec = ["tokenizers>=0.16.0", "model2vec>=0.3.0"]
+
+model2vec = ["tokenizers>=0.16.0", "model2vec>=0.7.0", "numpy>=2.0.0, <3.0"]
+
 st = [
     "tokenizers>=0.16.0",
     "sentence-transformers>=3.0.0",
@@ -89,7 +90,9 @@ openai = [
     "openai>=1.0.0",
     "pydantic>=2.0.0",
 ]
+
 semantic = ["tokenizers>=0.16.0", "model2vec>=0.3.0"]
+
 gemini = ["pydantic>=2.0.0", "google-genai>=1.0.0"]
 azure-openai = [
     "azure-identity>=1.23.0",
@@ -100,6 +103,8 @@ azure-openai = [
 voyageai = ["tokenizers>=0.16.0", "voyageai>=0.3.2"]
 cohere = ["tokenizers>=0.16.0", "cohere>=5.13.0"]
 jina = ["tokenizers>=0.16.0"]
+catsu = ["catsu>=0.0.1"]
+litellm = ["litellm>=1.0.0", "tiktoken>=0.5.0", "tokenizers>=0.16.0"]
 
 # Optional dependencies for the friends
 chroma = ["chromadb>=1.0.0"]
@@ -126,7 +131,7 @@ all = [
     "magika>=0.6.0, <1.1.0",
     "sentence-transformers>=3.0.0",
     "openai>=1.0.0",
-    "model2vec>=0.3.0",
+    "model2vec>=0.7.0",
     "cohere>=5.13.0",
     "voyageai>=0.3.2",
     "accelerate>=1.6.0",
@@ -149,7 +154,8 @@ all = [
     "tabulate",
     "openpyxl",
     "elasticsearch>=8.0.0",
-    "pymilvus>=2.1.0"
+    "pymilvus>=2.1.0",
+    "catsu>=0.0.1"
 ]
 dev = [
     "datasets>=1.14.0",
