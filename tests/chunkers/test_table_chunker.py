@@ -41,7 +41,7 @@ def large_table() -> str:
 
 def test_table_chunker_initialization() -> None:
     """Test that the TableChunker can be initialized with default parameters."""
-    chunker = TableChunker()
+    chunker = TableChunker(tokenizer="character",chunk_size=2048)
 
     assert chunker is not None
     assert chunker.chunk_size == 2048
@@ -682,3 +682,24 @@ def test_table_chunker_very_small_chunk_size() -> None:
     # Every chunk should have the header even if it exceeds chunk_size
     for chunk in chunks:
         assert "| Name | Value |" in chunk.text
+
+# Test TableChunker with row tokenizer
+def test_table_chunker_row_tokenizer(sample_table: str) -> None:
+    """Test TableChunker with tokenizer='row' chunks by rows, preserving header."""
+    chunker = TableChunker(tokenizer="row", chunk_size=3)
+    chunks = chunker.chunk(sample_table)
+
+    # Should split into chunks with max 3 data rows each, header always present
+    assert len(chunks) > 1
+    for chunk in chunks:
+        lines = chunk.text.strip().split('\n')
+        # Header and separator always present
+        assert lines[0].startswith('| Name')
+        assert lines[1].startswith('|------')
+        # Data rows count per chunk should be <= chunk_size
+        data_rows = lines[2:]
+        assert len(data_rows) <= 3
+        # All original data rows should be present across chunks
+    all_chunked_rows = [line for chunk in chunks for line in chunk.text.strip().split('\n')[2:]]
+    original_rows = sample_table.strip().split('\n')[2:]
+    assert set(all_chunked_rows) == set(original_rows)
