@@ -3,6 +3,7 @@
 from .auto import AutoEmbeddings
 from .azure_openai import AzureOpenAIEmbeddings
 from .base import BaseEmbeddings
+from .catsu import CatsuEmbeddings
 from .cohere import CohereEmbeddings
 from .gemini import GeminiEmbeddings
 from .jina import JinaEmbeddings
@@ -24,5 +25,6 @@ __all__ = [
     "AutoEmbeddings",
     "JinaEmbeddings",
     "VoyageAIEmbeddings",
+    "CatsuEmbeddings",
     "EmbeddingsRegistry",
 ]
