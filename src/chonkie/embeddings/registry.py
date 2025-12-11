@@ -9,6 +9,7 @@ from .catsu import CatsuEmbeddings
 from .cohere import CohereEmbeddings
 from .gemini import GeminiEmbeddings
 from .jina import JinaEmbeddings
+from .litellm import LiteLLMEmbeddings
 from .model2vec import Model2VecEmbeddings
 from .openai import OpenAIEmbeddings
 from .sentence_transformer import SentenceTransformerEmbeddings
@@ -250,3 +251,6 @@ EmbeddingsRegistry.register_pattern(r"^mxbai-embed", CatsuEmbeddings)
 EmbeddingsRegistry.register_model("mistral-embed", CatsuEmbeddings)
 EmbeddingsRegistry.register_model("nomic-embed-text-v1.5", CatsuEmbeddings)
 EmbeddingsRegistry.register_model("mxbai-embed-large-v1", CatsuEmbeddings)
+
+# Register LiteLLM embeddings
+EmbeddingsRegistry.register_provider("litellm", LiteLLMEmbeddings)
