@@ -46,7 +46,7 @@ def chunk(
         "semantic",
         help="Chunking method to use",
     ),
-    store_in: str = typer.Option(
+    handshaker: str = typer.Option(
         None,
         help="Where to store the chunks",
     ),
@@ -59,11 +59,11 @@ def chunk(
         with open(text, "r", encoding="utf-8") as f:
             text = f.read()
     chunks = chunking_maker.chunk(text)
-    if store_in is None:
+    if handshaker is None:
         for i, chunk in enumerate(chunks, 1):
             typer.echo(f"Chunk {i}:\n{chunk}\n")
     else:
-        typer.echo(f"Storing chunks in {store_in}...")
+        typer.echo(f"Storing chunks in {handshaker}...")
         typer.echo("Chunks stored successfully.")
 
 
