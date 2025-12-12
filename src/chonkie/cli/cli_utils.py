@@ -104,6 +104,8 @@ def pipeline(
     if handshaker is not None:
         pipeline.store_in(handshaker)
     doc = pipeline.run()
+    if doc == [] or doc is None:
+        return
     if isinstance(doc, list):
         for d in doc:
             for i, chunk in enumerate(d.chunks): # type: ignore
