@@ -17,10 +17,13 @@ def login(api_key: str) -> None:
     config_path = get_config_path()
     config = {}
     if os.path.exists(config_path):
-        with open(config_path, "r", encoding="utf-8") as f:
-            config = json.load(f)
-    else:
-        config = {}
+        try:
+            with open(config_path, "r", encoding="utf-8") as f:
+                config = json.load(f)
+        except (json.JSONDecodeError, FileNotFoundError):
+            # Config file is empty, malformed, or was deleted after check.
+            # It will be overwritten.
+            pass
     config["api_key"] = api_key
     with open(config_path, "w", encoding="utf-8") as f:
         json.dump(config, f)
