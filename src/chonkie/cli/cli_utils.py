@@ -27,7 +27,6 @@ from chonkie import (
     Visualizer,
     WeaviateHandshake,
 )
-from chonkie.types import Document
 
 # from chonkie.utils import login as login_function
 
