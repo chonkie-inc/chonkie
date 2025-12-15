@@ -1,7 +1,7 @@
 """CLI utilities for Chonkie using Typer."""
 
 import os
-from typing import Optional, List
+from typing import Optional
 
 import typer
 
@@ -24,8 +24,10 @@ from chonkie import (
     TableChunker,
     TokenChunker,
     TurbopufferHandshake,
+    Visualizer,
     WeaviateHandshake,
 )
+from chonkie.types import Document
 
 # from chonkie.utils import login as login_function
 
@@ -97,7 +99,7 @@ def chunk(
 
     chunker_class = CHUNKER_MAPPING[chunker]
     chunking_maker = chunker_class()
-
+    viz = Visualizer()
     # Get text content
     content = text
     if os.path.isfile(text):
@@ -113,8 +115,10 @@ def chunk(
 
     # Handle output
     if handshaker is None:
-        for i, chunk in enumerate(chunks):
-            typer.echo(f"Chunk {i}:\n{chunk}\n")
+        # for i, chunk in enumerate(chunks):
+        #     typer.echo(f"Chunk {i}:\n{viz(chunk)}\n")
+        out = viz(chunks)
+        typer.echo(out)
     else:
         if handshaker not in HANDSHAKE_MAPPING:
             typer.echo(
@@ -144,7 +148,7 @@ def pipeline(
         None,
         help="directory to process, if text is not a file",
     ),
-    ext: Optional[List[str]] = typer.Option(
+    ext: Optional[list[str]] = typer.Option(
         None,
         help="file extensions to process, if d is specified, example ['.md', '.txt']",
     ),
@@ -168,7 +172,7 @@ def pipeline(
     """Run a processing pipeline on text or files."""
     try:
         pipe = Pipeline()
-
+        viz = Visualizer()
         # Configure pipeline steps
         
         # 1. Input Handling
@@ -238,9 +242,10 @@ def pipeline(
             if d_obj.metadata and 'filename' in d_obj.metadata:
                  typer.echo(f"--- {d_obj.metadata['filename']} ---")
             
-            for i, chunk in enumerate(d_obj.chunks):
-                typer.echo(f"Chunk {i}:\n{chunk.text}\n")
-
+            # for i, chunk in enumerate(d_obj.chunks):
+            #     typer.echo(f"Chunk {i}:\n{chunk.text}\n")
+            out = viz(d_obj.chunks)
+            typer.echo(out)
     except Exception as e:
         typer.echo(f"Pipeline error: {e}")
         raise typer.Exit(code=1)
