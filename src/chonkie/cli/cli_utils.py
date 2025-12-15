@@ -1,7 +1,7 @@
 """CLI utilities for Chonkie using Typer."""
 
 import os
-from typing import Optional
+from typing import Optional, List
 
 import typer
 
@@ -135,10 +135,18 @@ def chunk(
 
 @app.command()
 def pipeline(
-    text: str = typer.Argument(..., help="Text to process or path to file/directory"),
+    text: Optional[str] = typer.Argument(None, help="Text to process or path to file"),
     fetcher: str = typer.Option(
         "file",
         help="Fetcher method to use (e.g., file)",
+    ),
+    d: Optional[str] = typer.Option(
+        None,
+        help="directory to process, if text is not a file",
+    ),
+    ext: Optional[List[str]] = typer.Option(
+        None,
+        help="file extensions to process, if d is specified, example ['.md', '.txt']",
     ),
     chef: Optional[str] = typer.Option(
         None,
@@ -162,12 +170,32 @@ def pipeline(
         pipe = Pipeline()
 
         # Configure pipeline steps
-        # 1. Fetcher / Input
-        if os.path.exists(text):
-            pipe.fetch_from(fetcher, path=text)
+        
+        # 1. Input Handling
+        # We need to determine if we are running on:
+        # - A single file (text points to file) -> use 'fetch'
+        # - A directory (-d is set) -> use 'fetch'
+        # - Raw text (text is string) -> pass to run()
+        
+        run_input = None
+        
+        if text is not None:
+            # Check if text is a file path
+            if os.path.isfile(text):
+                pipe.fetch_from(fetcher, path=text)
+            else:
+                # Treated as direct text input
+                run_input = text
+        elif d is not None:
+             # Check if directory exists
+            if not os.path.isdir(d):
+                 typer.echo(f"Error: Directory '{d}' not found.")
+                 raise typer.Exit(code=1)
+            # Pass ext only if it's not None/Empty
+            pipe.fetch_from(fetcher, dir=d, ext=ext)
         else:
-            # If text is not a file, we treat it as direct input
-            pass
+             typer.echo("Error: Must provide either text, a file path, or a directory via --d")
+             raise typer.Exit(code=1)
 
         # 2. Chef
         if chef is not None:
@@ -186,10 +214,13 @@ def pipeline(
 
         # Run pipeline
         typer.echo("Running pipeline...")
-        if os.path.exists(text):
-            doc = pipe.run()
-        else:
-            doc = pipe.run(texts=text)
+        try: 
+            # If run_input is set, we pass it. If None, run() uses the fetcher step.
+            doc = pipe.run(texts=run_input)
+            # typer.echo(doc) # This prints the repr, which might be too verbose or ugly
+        except Exception as e:
+            typer.echo(f"Error running pipeline: {e}")
+            raise typer.Exit(code=1)
 
         # Output results
         if handshaker:
@@ -199,12 +230,15 @@ def pipeline(
         if not doc:
             typer.echo("No output generated.")
             return
-        
-        # i need to review this later
+
         docs = doc if isinstance(doc, list) else [doc]
 
-        for d in docs:
-            for i, chunk in enumerate(d.chunks):
+        for d_obj in docs:
+            # Optional: print filename if available in metadata
+            if d_obj.metadata and 'filename' in d_obj.metadata:
+                 typer.echo(f"--- {d_obj.metadata['filename']} ---")
+            
+            for i, chunk in enumerate(d_obj.chunks):
                 typer.echo(f"Chunk {i}:\n{chunk.text}\n")
 
     except Exception as e:

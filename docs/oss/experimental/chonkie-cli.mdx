@@ -1,0 +1,99 @@
+---
+title: "CLI"
+description: "Chonkie Command Line Interface"
+---
+
+# Chonkie CLI
+
+Chonkie provides a powerful Command Line Interface (CLI) to perform chunking and run pipelines directly from your terminal.
+
+## Installation
+
+The CLI is included with the default `chonkie` installation:
+
+```bash
+pip install chonkie
+```
+
+## Basic Usage
+
+The CLI creates a `chonkie` command that has two main subcommands:
+
+1. `chunk`: For simple text or file chunking.
+2. `pipeline`: For running full Chonkie pipelines (fetch -> chef -> chunk -> refine -> handbook).
+
+### Chunking Texts or Files
+
+Use the `chunk` command to quickly chunk text or a single file.
+
+**Syntax**:
+```bash
+chonkie chunk [TEXT_OR_PATH] [OPTIONS]
+```
+
+**Options**:
+- `--chunker`: The chunking method to use (default: `semantic`). Options: `semantic`, `token`, `sentence`, `recursive`, etc.
+- `--handshaker`: Optional storage backend to export chunks.
+
+**Examples**:
+
+```bash
+# Chunk raw text
+chonkie chunk "This is a long text that needs chunking..." --chunker token
+
+# Chunk a file
+chonkie chunk README.md --chunker sentence
+
+# Chunk and store in a vector DB (e.g., Chroma)
+chonkie chunk document.txt --handshaker chroma
+```
+
+---
+
+### Running Pipelines
+
+The `pipeline` command is more powerful and supports processing directories, applying chefs/refiners, and exporting data.
+
+**Syntax**:
+```bash
+chonkie pipeline [TEXT_OR_PATH] [OPTIONS]
+```
+
+**Core Options**:
+- `--d`: Directory to process (mutually exclusive with text/file argument).
+- `--ext`: File extensions to include when processing a directory (e.g., `.md`, `.txt`). Can be used multiple times.
+- `--chunker`: Chunking method (default: `semantic`).
+- `--chef`: Preprocessor to use (e.g., `text`, `markdown`).
+- `--refiner`: Optional refinement strategy (e.g., `overlap`).
+- `--handshaker`: Optional destination storage.
+
+**Examples**:
+
+#### 1. Process a Directory
+Process all markdown and text files in the `docs` directory:
+```bash
+chonkie pipeline --d docs --ext .md --ext .txt --chunker recursive
+```
+
+#### 2. Process a Single File
+Run a pipeline on a single file:
+```bash
+chonkie pipeline README.md --chunker token --chef text
+```
+
+#### 3. Full RAG Pipeline
+Run a full RAG pipeline: fetch from directory -> process markdown -> chunk recursively -> export to ChromaDB.
+
+```bash
+chonkie pipeline \
+  --d ./knowledge_base \
+  --ext .md \
+  --chef markdown \
+  --chunker recursive \
+  --handshaker chroma
+```
+
+## Tips
+- Use `--help` on any command to see full options: `chonkie pipeline --help`.
+- Directory processing recursively walks subdirectories.
+- Output is printed to stdout by default unless a handshaker is specified.
