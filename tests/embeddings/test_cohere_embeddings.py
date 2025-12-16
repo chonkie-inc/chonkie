@@ -2,7 +2,6 @@
 
 import os
 from importlib.util import find_spec
-from typing import List
 from unittest.mock import MagicMock, patch
 
 import numpy as np
@@ -59,7 +58,7 @@ def sample_text() -> str:
 
 
 @pytest.fixture
-def sample_texts() -> List[str]:
+def sample_texts() -> list[str]:
     """Fixture to create a list of sample texts."""
     return [
         "This is the first sample text.",
@@ -83,7 +82,7 @@ def test_embed_single_text(embedding_model: CohereEmbeddings, sample_text: str) 
 
 
 def test_embed_batch_texts(
-    embedding_model: CohereEmbeddings, sample_texts: List[str]
+    embedding_model: CohereEmbeddings, sample_texts: list[str]
 ) -> None:
     """Test embedding a batch of texts."""
     embeddings = embedding_model.embed_batch(sample_texts)
@@ -105,7 +104,7 @@ def test_count_tokens_single_text(
 
 
 def test_count_tokens_batch_texts(
-    embedding_model: CohereEmbeddings, sample_texts: List[str]
+    embedding_model: CohereEmbeddings, sample_texts: list[str]
 ) -> None:
     """Test counting tokens for a batch of texts."""
     token_counts = embedding_model.count_tokens_batch(sample_texts)
@@ -115,7 +114,7 @@ def test_count_tokens_batch_texts(
     assert all(count > 0 for count in token_counts)
 
 
-def test_similarity(embedding_model: CohereEmbeddings, sample_texts: List[str]) -> None:
+def test_similarity(embedding_model: CohereEmbeddings, sample_texts: list[str]) -> None:
     """Test similarity between two embeddings."""
     embeddings = embedding_model.embed_batch(sample_texts)
     similarity_score = embedding_model.similarity(embeddings[0], embeddings[1])

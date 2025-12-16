@@ -118,7 +118,7 @@ def test_cloud_late_chunker_batch_texts(mock_requests_get, mock_requests_post, m
     result = late_chunker(texts)
 
     assert isinstance(result, list)
-    # Based on the error, the API for batch input returns a List[List[Dict]]
+    # Based on the error, the API for batch input returns a list[list[Dict]]
     # where the outer list contains a single element: the list of all chunks.
     if result:
         assert len(result) > 0 # Ensure we got something back

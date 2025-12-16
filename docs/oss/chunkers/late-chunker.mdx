@@ -124,7 +124,7 @@ class Chunk:
     end_index: int      # Ending position in original text
     token_count: int    # Number of tokens in chunk
     context: Optional[Context] = None    # Optional context metadata
-    embedding: Union[List[float], "np.ndarray", None] = None  # Optional embedding vector
+    embedding: Union[list[float], "np.ndarray", None] = None  # Optional embedding vector
 ```
 
 <Note>
@@ -141,11 +141,11 @@ The rules are a list of `RecursiveLevel` objects, which define the delimiters an
 ```python
 @dataclass
 class RecursiveRules:
-    rules: List[RecursiveLevel]
+    rules: list[RecursiveLevel]
 
 @dataclass
 class RecursiveLevel:
-    delimiters: Union[None, str, List[str]]
+    delimiters: Union[None, str, list[str]]
     whitespace: bool = False
     include_delim: Optional[Literal["prev", "next"]]  # Whether to include the delimiter at all, or in the previous chunk, or the next chunk.
 ```

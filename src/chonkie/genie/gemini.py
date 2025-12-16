@@ -2,7 +2,7 @@
 import importlib.util as importutil
 import json
 import os
-from typing import TYPE_CHECKING, Any, Dict, Optional
+from typing import TYPE_CHECKING, Any, Optional
 
 from .base import BaseGenie
 
@@ -41,7 +41,7 @@ class GeminiGenie(BaseGenie):
         response = self.client.models.generate_content(model=self.model, contents=prompt)
         return str(response.text)
     
-    def generate_json(self, prompt: str, schema: "BaseModel") -> Dict[str, Any]:
+    def generate_json(self, prompt: str, schema: "BaseModel") -> dict[str, Any]:
         """Generate a JSON response based on the given prompt and schema."""
         response = self.client.models.generate_content(
             model=self.model,

@@ -1,6 +1,6 @@
 """Tests for BaseGenie class."""
 
-from typing import Any, List, Optional
+from typing import Any, Optional
 from unittest.mock import Mock
 
 import pytest
@@ -11,7 +11,7 @@ from chonkie import BaseGenie
 class ConcreteGenie(BaseGenie):
     """Concrete implementation of BaseGenie for testing."""
     
-    def __init__(self, responses: Optional[List[str]] = None, json_responses: Optional[List[Any]] = None) -> None:
+    def __init__(self, responses: Optional[list[str]] = None, json_responses: Optional[list[Any]] = None) -> None:
         """Initialize with predefined responses.
         
         Args:
@@ -24,8 +24,8 @@ class ConcreteGenie(BaseGenie):
         self.json_responses = json_responses or [{"key": "value"}]
         self.call_count = 0
         self.json_call_count = 0
-        self.prompts: List[str] = []
-        self.json_prompts: List[str] = []
+        self.prompts: list[str] = []
+        self.json_prompts: list[str] = []
     
     def generate(self, prompt: str) -> str:
         """Generate a text response."""
@@ -312,7 +312,7 @@ class TestBaseGenieInheritance:
     
     def test_polymorphism(self) -> None:
         """Test that concrete implementations work polymorphically."""
-        genies: List[BaseGenie] = [
+        genies: list[BaseGenie] = [
             ConcreteGenie(["response1"]),
             ConcreteGenie(["response2"]),
             IncompleteGenie()

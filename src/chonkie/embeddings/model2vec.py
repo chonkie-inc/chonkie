@@ -1,7 +1,7 @@
 """Model2Vec embeddings."""
 
 import importlib.util as importutil
-from typing import TYPE_CHECKING, List, Union
+from typing import TYPE_CHECKING, Union
 
 import numpy as np
 
@@ -55,7 +55,7 @@ class Model2VecEmbeddings(BaseEmbeddings):
         """Embed a single text using the model2vec model."""
         return self.model.encode(text, convert_to_numpy=True)  # type: ignore
 
-    def embed_batch(self, texts: List[str]) -> List[np.ndarray]:
+    def embed_batch(self, texts: list[str]) -> list[np.ndarray]:
         """Embed multiple texts using the model2vec model."""
         return self.model.encode(texts, convert_to_numpy=True)  # type: ignore
 

@@ -4,7 +4,7 @@ import importlib
 import importlib.util
 import os
 import warnings
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING, Optional
 
 import numpy as np
 import requests
@@ -155,7 +155,7 @@ class CohereEmbeddings(BaseEmbeddings):
 
         raise RuntimeError("Unable to generate embeddings through Cohere.")
 
-    def embed_batch(self, texts: List[str]) -> List[np.ndarray]:
+    def embed_batch(self, texts: list[str]) -> list[np.ndarray]:
         """Get embeddings for multiple texts using batched API calls."""
         if not texts:
             return []
@@ -215,7 +215,7 @@ class CohereEmbeddings(BaseEmbeddings):
         """Count tokens in text using the model's tokenizer."""
         return len(self._tokenizer.encode(text, add_special_tokens=False))
 
-    def count_tokens_batch(self, texts: List[str]) -> List[int]:
+    def count_tokens_batch(self, texts: list[str]) -> list[int]:
         """Count tokens in multiple texts."""
         tokens = self._tokenizer.encode_batch(texts, add_special_tokens=False)
         return [len(t) for t in tokens]

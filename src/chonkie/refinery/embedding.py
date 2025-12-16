@@ -1,6 +1,6 @@
 """Embedding Refinery."""
 
-from typing import Any, Dict, List, Union
+from typing import Any, Union
 
 from chonkie.embeddings import AutoEmbeddings, BaseEmbeddings
 from chonkie.logger import get_logger
@@ -31,7 +31,7 @@ class EmbeddingsRefinery(BaseRefinery):
         embedding_model: Union[
             str, BaseEmbeddings, AutoEmbeddings
         ] = "minishlab/potion-retrieval-32M",
-        **kwargs: Dict[str, Any],
+        **kwargs: dict[str, Any],
     ) -> None:
         """Initialize the EmbeddingRefinery."""
         super().__init__()
@@ -46,7 +46,7 @@ class EmbeddingsRefinery(BaseRefinery):
         else:
             raise ValueError("Model must be a string or a BaseEmbeddings instance.")
 
-    def refine(self, chunks: List[Chunk]) -> List[Chunk]:
+    def refine(self, chunks: list[Chunk]) -> list[Chunk]:
         """Refine the chunks."""
         logger.debug(f"Starting embedding refinery for {len(chunks)} chunks")
         texts = [chunk.text for chunk in chunks]

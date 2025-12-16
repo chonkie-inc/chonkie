@@ -2,9 +2,7 @@
 
 import re
 import warnings
-from typing import List, Union
-
-from typing_extensions import Tuple
+from typing import Union
 
 from chonkie.chunker.base import BaseChunker
 from chonkie.logger import get_logger
@@ -50,7 +48,7 @@ class TableChunker(BaseChunker):
         self.sep = "✄"
         self._is_row_tokenizer = isinstance(self.tokenizer.tokenizer, RowTokenizer)
 
-    def _split_table(self, table: str) -> Tuple[str, List[str]]:
+    def _split_table(self, table: str) -> tuple[str, list[str]]:
         table = table.strip()
         # insert separator right after the newline that precedes a pipe
         raw = self.newline_pattern.sub(rf"\n{self.sep}", table)
@@ -59,18 +57,18 @@ class TableChunker(BaseChunker):
         rows = chunks[2:]  # data rows still contain their trailing \n
         return header, rows
 
-    def chunk(self, text: str) -> List[Chunk]:
+    def chunk(self, text: str) -> list[Chunk]:
         """Chunk the table into smaller tables based on the chunk size.
 
         Args:
             text: The input markdown table as a string.
 
         Returns:
-            List[MarkdownTable]: A list of MarkdownTable chunks.
+            list[MarkdownTable]: A list of MarkdownTable chunks.
 
         """
         logger.debug(f"Starting table chunking for table of length {len(text)}")
-        chunks: List[Chunk] = []
+        chunks: list[Chunk] = []
         # Basic validation
         if not text.strip():
             warnings.warn("No table content found. Skipping chunking.")

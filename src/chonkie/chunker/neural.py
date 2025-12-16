@@ -6,7 +6,7 @@ It trains an encoder style model on the task of token-classification (think: NER
 """
 
 import importlib.util as importutil
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Optional, Union
 
 from chonkie.logger import get_logger
 from chonkie.pipeline import chunker
@@ -159,8 +159,8 @@ class NeuralChunker(BaseChunker):
 
 
   def _get_splits(self, 
-                  response: List[Dict[str, Any]],
-                  text: str) -> List[str]:
+                  response: list[dict[str, Any]],
+                  text: str) -> list[str]:
     """Get the text splits from the model."""
     splits = []
     current_index = 0
@@ -172,7 +172,7 @@ class NeuralChunker(BaseChunker):
     return splits
   
   def _merge_close_spans(self, 
-                        response: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+                        response: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Replace the split points that are too close to each other with the last span."""
     if not response:
         return []
@@ -192,7 +192,7 @@ class NeuralChunker(BaseChunker):
             
     return merged_response
   
-  def _get_chunks_from_splits(self, splits: List[str]) -> List[Chunk]:
+  def _get_chunks_from_splits(self, splits: list[str]) -> list[Chunk]:
     """Create a list of Chunks from the splits."""
     chunks = []
     current_index = 0
@@ -205,7 +205,7 @@ class NeuralChunker(BaseChunker):
       current_index += len(split)
     return chunks
 
-  def chunk(self, text: str) -> List[Chunk]:
+  def chunk(self, text: str) -> list[Chunk]:
     """Chunk the text into a list of chunks.
 
     Args:

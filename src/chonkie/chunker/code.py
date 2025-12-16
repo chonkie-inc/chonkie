@@ -7,7 +7,7 @@ This module provides a CodeChunker class for splitting code into chunks of a spe
 import warnings
 from bisect import bisect_left
 from itertools import accumulate
-from typing import TYPE_CHECKING, Any, List, Literal, Tuple, Union
+from typing import TYPE_CHECKING, Any, Literal, Union
 
 from chonkie.chunker.base import BaseChunker
 from chonkie.logger import get_logger
@@ -113,14 +113,14 @@ class CodeChunker(BaseChunker):
         response = self.magika.identify_bytes(bytes_text)
         return response.output.label # type: ignore
 
-    def _merge_node_groups(self, node_groups: List[List["Node"]]) -> List["Node"]:
+    def _merge_node_groups(self, node_groups: list[list["Node"]]) -> list["Node"]:
         """Merge the node groups together."""
         merged_node_group = []
         for group in node_groups: 
             merged_node_group.extend(group)
         return merged_node_group
         
-    def _group_child_nodes(self, node: "Node") -> Tuple[List[List["Node"]], List[int]]:
+    def _group_child_nodes(self, node: "Node") -> tuple[list[list["Node"]], list[int]]:
         """Group the nodes together based on their token_counts."""
         # Some edge cases to break the recursion
         if len(node.children) == 0:
@@ -132,7 +132,7 @@ class CodeChunker(BaseChunker):
 
         # Have a current group and a current token count to keep track
         current_token_count = 0
-        current_node_group: List["Node"] = []
+        current_node_group: list["Node"] = []
         for child in node.children:
             child_text = child.text.decode() if child.text else ""
             token_count: int = self.tokenizer.count_tokens(child_text)
@@ -182,8 +182,8 @@ class CodeChunker(BaseChunker):
 
         cumulative_group_token_counts = list(accumulate([0] + group_token_counts))
         
-        merged_node_groups: List[List["Node"]] = [] # Explicit type hint
-        merged_token_counts: List[int] = []      # Explicit type hint
+        merged_node_groups: list[list["Node"]] = [] # Explicit type hint
+        merged_token_counts: list[int] = []      # Explicit type hint
         pos = 0
         while pos < len(node_groups):
             # Calculate the target cumulative count based on the start of the current position
@@ -233,8 +233,8 @@ class CodeChunker(BaseChunker):
         return (merged_node_groups, merged_token_counts)
 
     def _get_texts_from_node_groups(self,
-                                    node_groups: List[List["Node"]],
-                                    original_text_bytes: bytes) -> List[str]:
+                                    node_groups: list[list["Node"]],
+                                    original_text_bytes: bytes) -> list[str]:
         """Reconstructs the text for each node group using original byte offsets.
 
         This method ensures that whitespace and formatting between nodes
@@ -250,7 +250,7 @@ class CodeChunker(BaseChunker):
             of the corresponding node group.
 
         """
-        chunk_texts: List[str] = []
+        chunk_texts: list[str] = []
         if not original_text_bytes:
             return [] # Return empty list if original text was empty
 
@@ -302,9 +302,9 @@ class CodeChunker(BaseChunker):
         return chunk_texts
 
     def _create_chunks(self,
-                       texts: List[str],
-                       token_counts: List[int],
-                       node_groups: List[List["Node"]]) -> List[Chunk]:
+                       texts: list[str],
+                       token_counts: list[int],
+                       node_groups: list[list["Node"]]) -> list[Chunk]:
         """Create Code Chunks."""
         chunks = []
         current_index = 0
@@ -319,7 +319,7 @@ class CodeChunker(BaseChunker):
             current_index += len(text)
         return chunks
         
-    def chunk(self, text: str) -> List[Chunk]:
+    def chunk(self, text: str) -> list[Chunk]:
         """Recursively chunks the code based on context from tree-sitter."""
         if not text.strip(): # Handle empty or whitespace-only input
             logger.debug("Empty or whitespace-only code provided")
@@ -345,7 +345,7 @@ class CodeChunker(BaseChunker):
 
             # Get the node_groups 
             node_groups, token_counts = self._group_child_nodes(root_node)
-            texts: List[str] = self._get_texts_from_node_groups(node_groups, original_text_bytes)
+            texts: list[str] = self._get_texts_from_node_groups(node_groups, original_text_bytes)
         finally: 
             # Clean up the tree and root_node if they are not needed
             if not self.include_nodes:

@@ -43,7 +43,7 @@ Process a file or markdown string to extract tables.
 
 #### Returns
 
-<ResponseField name="" type="List[MarkdownTable] | None">
+<ResponseField name="" type="list[MarkdownTable] | None">
   A list of `MarkdownTable` objects. `None` if no tables are found
 </ResponseField>
 
@@ -53,13 +53,13 @@ Process multiple files or markdown strings at once.
 
 #### Parameters
 
-<ParamField path="paths" type="Union[List[str], List[Path]]" required>
+<ParamField path="paths" type="Union[list[str], list[Path]]" required>
   List of file paths or markdown strings to process
 </ParamField>
 
 #### Returns
 
-<ResponseField name="" type="List[MarkdownTable] | None">
+<ResponseField name="" type="list[MarkdownTable] | None">
   A list of `MarkdownTable` objects. `None` if no tables are found
 </ResponseField>
 
