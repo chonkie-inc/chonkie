@@ -202,6 +202,7 @@ Choose from supported tokenizers or provide your own custom token counting funct
 | -------------- | -------------------------------------------------------------- | --------------------- |
 | `character`    | Basic character-level tokenizer. **Default tokenizer.**        | `default`             |
 | `word`         | Basic word-level tokenizer.                                    | `default`             |
+| `byte`         | Byte-level tokenizer operating on UTF-8 encoded bytes.         | `default`             |
 | `tokenizers`   | Load any tokenizer from the Hugging Face `tokenizers` library. | `chonkie[tokenizers]` |
 | `tiktoken`     | Use OpenAI's `tiktoken` library (e.g., for `gpt-4`).           | `chonkie[tiktoken]`   |
 | `transformers` | Load tokenizers via `AutoTokenizer` from HF `transformers`.    | `chonkie[neural]`     |
@@ -222,7 +223,7 @@ You can use this to extend Chonkie to support any tokenization scheme you want!
 </details>
 
 <details>
-<summary><strong>🧠 Embed like a boss! Chonkie links up with 8+ embedding pals!</strong></summary>
+<summary><strong>🧠 Embed like a boss! Chonkie links up with 9+ embedding pals!</strong></summary>
 
 Seamlessly works with various embedding model providers. Bring your favorite embeddings to the CHONK party! Use `AutoEmbeddings` to load models easily.
 
@@ -236,6 +237,7 @@ Seamlessly works with various embedding model providers. Bring your favorite emb
 | `gemini`                | `GeminiEmbeddings`              | Use Google's Gemini embedding API.     | `chonkie[gemini]`       |
 | `jina`                  | `JinaEmbeddings`                | Use Jina AI's embedding API.           | `chonkie[jina]`         |
 | `voyageai`              | `VoyageAIEmbeddings`            | Use Voyage AI's embedding API.         | `chonkie[voyageai]`     |
+| `litellm`               | `LiteLLMEmbeddings`             | Use LiteLLM for 100+ embedding models. | `chonkie[litellm]`      |
 
 </details>
 

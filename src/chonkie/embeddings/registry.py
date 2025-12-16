@@ -5,13 +5,14 @@ from typing import Any, Optional, Pattern, Union
 
 from .azure_openai import AzureOpenAIEmbeddings
 from .base import BaseEmbeddings
+from .catsu import CatsuEmbeddings
 from .cohere import CohereEmbeddings
 from .gemini import GeminiEmbeddings
 from .jina import JinaEmbeddings
+from .litellm import LiteLLMEmbeddings
 from .model2vec import Model2VecEmbeddings
 from .openai import OpenAIEmbeddings
 from .sentence_transformer import SentenceTransformerEmbeddings
-from .voyageai import VoyageAIEmbeddings
 
 
 class EmbeddingsRegistry:
@@ -221,16 +222,16 @@ EmbeddingsRegistry.register_model("jina-embeddings-v2-base-zh", JinaEmbeddings)
 EmbeddingsRegistry.register_model("jina-embeddings-v2-base-code", JinaEmbeddings)
 EmbeddingsRegistry.register_model("jina-embeddings-v4", JinaEmbeddings)
 
-# Register Voyage embeddings
-EmbeddingsRegistry.register_provider("voyageai", VoyageAIEmbeddings)
-EmbeddingsRegistry.register_pattern(r"^voyage|^voyageai", VoyageAIEmbeddings)
-EmbeddingsRegistry.register_model("voyage-3-large", VoyageAIEmbeddings)
-EmbeddingsRegistry.register_model("voyage-3", VoyageAIEmbeddings)
-EmbeddingsRegistry.register_model("voyage-3-lite", VoyageAIEmbeddings)
-EmbeddingsRegistry.register_model("voyage-code-3", VoyageAIEmbeddings)
-EmbeddingsRegistry.register_model("voyage-finance-2", VoyageAIEmbeddings)
-EmbeddingsRegistry.register_model("voyage-law-2", VoyageAIEmbeddings)
-EmbeddingsRegistry.register_model("voyage-code-2", VoyageAIEmbeddings)
+# Register Voyage embeddings (via Catsu for better reliability and features)
+EmbeddingsRegistry.register_provider("voyageai", CatsuEmbeddings)
+EmbeddingsRegistry.register_pattern(r"^voyage|^voyageai", CatsuEmbeddings)
+EmbeddingsRegistry.register_model("voyage-3-large", CatsuEmbeddings)
+EmbeddingsRegistry.register_model("voyage-3", CatsuEmbeddings)
+EmbeddingsRegistry.register_model("voyage-3-lite", CatsuEmbeddings)
+EmbeddingsRegistry.register_model("voyage-code-3", CatsuEmbeddings)
+EmbeddingsRegistry.register_model("voyage-finance-2", CatsuEmbeddings)
+EmbeddingsRegistry.register_model("voyage-law-2", CatsuEmbeddings)
+EmbeddingsRegistry.register_model("voyage-code-2", CatsuEmbeddings)
 
 # Register Gemini embeddings
 EmbeddingsRegistry.register_provider("gemini", GeminiEmbeddings)
@@ -238,3 +239,18 @@ EmbeddingsRegistry.register_pattern(r"^text-embedding-004|^embedding-001|^gemini
 EmbeddingsRegistry.register_model("text-embedding-004", GeminiEmbeddings)
 EmbeddingsRegistry.register_model("embedding-001", GeminiEmbeddings)
 EmbeddingsRegistry.register_model("gemini-embedding-exp-03-07", GeminiEmbeddings)
+
+# Register Catsu embeddings (unified provider for 11+ APIs)
+EmbeddingsRegistry.register_provider("catsu", CatsuEmbeddings)
+# Catsu supports patterns from multiple providers (Mistral, Nomic, Cloudflare, etc.)
+EmbeddingsRegistry.register_pattern(r"^mistral-embed", CatsuEmbeddings)
+EmbeddingsRegistry.register_pattern(r"^nomic-embed", CatsuEmbeddings)
+EmbeddingsRegistry.register_pattern(r"^@cf/", CatsuEmbeddings)
+EmbeddingsRegistry.register_pattern(r"^mxbai-embed", CatsuEmbeddings)
+# Register specific Catsu-supported models
+EmbeddingsRegistry.register_model("mistral-embed", CatsuEmbeddings)
+EmbeddingsRegistry.register_model("nomic-embed-text-v1.5", CatsuEmbeddings)
+EmbeddingsRegistry.register_model("mxbai-embed-large-v1", CatsuEmbeddings)
+
+# Register LiteLLM embeddings
+EmbeddingsRegistry.register_provider("litellm", LiteLLMEmbeddings)

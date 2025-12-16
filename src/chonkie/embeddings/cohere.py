@@ -1,6 +1,7 @@
 """Embeddings implementation using Cohere's API."""
 
 import importlib
+import importlib.util
 import os
 import warnings
 from typing import TYPE_CHECKING, Optional

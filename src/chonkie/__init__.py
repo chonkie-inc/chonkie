@@ -32,6 +32,7 @@ from .embeddings import (
     CohereEmbeddings,
     GeminiEmbeddings,
     JinaEmbeddings,
+    LiteLLMEmbeddings,
     Model2VecEmbeddings,
     OpenAIEmbeddings,
     SentenceTransformerEmbeddings,
@@ -72,6 +73,7 @@ from .refinery import (
 )
 from .tokenizer import (
     AutoTokenizer,
+    ByteTokenizer,
     CharacterTokenizer,
     Tokenizer,
     TokenizerProtocol,
@@ -96,6 +98,6 @@ from .utils import (
 )
 
 # This hippo grows with every release 🦛✨~
-__version__ = "1.4.2"
+__version__ = "1.5.0"
 __name__ = "chonkie"
 __author__ = "🦛 Chonkie Inc"

@@ -13,7 +13,7 @@ class GeminiGenie(BaseGenie):
     """Gemini's Genie."""
 
     def __init__(self,
-                model: str = "gemini-2.5-pro-preview-03-25",
+                model: str = "gemini-3-pro-preview",
                 api_key: Optional[str] = None):
         """Initialize the GeminiGenie class.
 
