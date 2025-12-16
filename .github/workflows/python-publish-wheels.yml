@@ -16,8 +16,17 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        # Linux, macOS, and Windows wheels
-        os: [ubuntu-latest, macos-13, windows-latest]
+        include:
+          # Linux wheels (x86_64 and aarch64)
+          - os: ubuntu-latest
+          # macOS ARM64 wheels (Apple Silicon)
+          - os: macos-latest
+            macos_arch: arm64
+          # macOS x86_64 wheels (Intel)
+          - os: macos-15-intel
+            macos_arch: x86_64
+          # Windows wheels
+          - os: windows-latest
 
     steps:
       - uses: actions/checkout@v4
@@ -43,7 +52,7 @@ jobs:
           CIBW_BUILD: cp39-* cp310-* cp311-* cp312-* cp313-*
           CIBW_SKIP: "*-win32 *-manylinux_i686 *-musllinux*"
           CIBW_ARCHS_LINUX: x86_64 aarch64
-          CIBW_ARCHS_MACOS: x86_64 arm64
+          CIBW_ARCHS_MACOS: ${{ matrix.macos_arch || 'x86_64 arm64' }}
           CIBW_ARCHS_WINDOWS: AMD64
           CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_28
           CIBW_MANYLINUX_AARCH64_IMAGE: manylinux_2_28
