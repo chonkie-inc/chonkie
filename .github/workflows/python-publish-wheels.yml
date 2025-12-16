@@ -49,7 +49,7 @@ jobs:
       - name: Build wheels
         run: uv tool run cibuildwheel --output-dir wheelhouse
         env:
-          CIBW_BUILD: cp39-* cp310-* cp311-* cp312-* cp313-*
+          CIBW_BUILD: cp39-* cp310-* cp311-* cp312-* cp313-* cp314-*
           CIBW_SKIP: "*-win32 *-manylinux_i686 *-musllinux*"
           CIBW_ARCHS_LINUX: x86_64 aarch64
           CIBW_ARCHS_MACOS: ${{ matrix.macos_arch || 'x86_64 arm64' }}
