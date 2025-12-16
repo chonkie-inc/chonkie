@@ -116,8 +116,7 @@ def chunk(
     if handshaker is None:
         # for i, chunk in enumerate(chunks):
         #     typer.echo(f"Chunk {i}:\n{viz(chunk)}\n")
-        out = viz(chunks)
-        typer.echo(out)
+        viz(chunks)
     else:
         if handshaker not in HANDSHAKE_MAPPING:
             typer.echo(
@@ -243,8 +242,7 @@ def pipeline(
             
             # for i, chunk in enumerate(d_obj.chunks):
             #     typer.echo(f"Chunk {i}:\n{chunk.text}\n")
-            out = viz(d_obj.chunks)
-            typer.echo(out)
+            viz(d_obj.chunks)
     except Exception as e:
         typer.echo(f"Pipeline error: {e}")
         raise typer.Exit(code=1)
