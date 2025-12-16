@@ -1,6 +1,6 @@
 import json
 import os
-from typing import Optional, Union
+from typing import Union
 
 
 def get_config_path() -> str:

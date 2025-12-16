@@ -27,6 +27,7 @@ from chonkie import (
     Visualizer,
     WeaviateHandshake,
 )
+from chonkie.types.document import Document
 
 # from chonkie.utils import login as login_function
 
@@ -114,8 +115,6 @@ def chunk(
 
     # Handle output
     if handshaker is None:
-        # for i, chunk in enumerate(chunks):
-        #     typer.echo(f"Chunk {i}:\n{viz(chunk)}\n")
         viz(chunks)
     else:
         if handshaker not in HANDSHAKE_MAPPING:
@@ -172,15 +171,15 @@ def pipeline(
         pipe = Pipeline()
         viz = Visualizer()
         # Configure pipeline steps
-        
+
         # 1. Input Handling
         # We need to determine if we are running on:
         # - A single file (text points to file) -> use 'fetch'
         # - A directory (-d is set) -> use 'fetch'
         # - Raw text (text is string) -> pass to run()
-        
+
         run_input = None
-        
+
         if text is not None:
             # Check if text is a file path
             if os.path.isfile(text):
@@ -189,15 +188,17 @@ def pipeline(
                 # Treated as direct text input
                 run_input = text
         elif d is not None:
-             # Check if directory exists
+            # Check if directory exists
             if not os.path.isdir(d):
-                 typer.echo(f"Error: Directory '{d}' not found.")
-                 raise typer.Exit(code=1)
+                typer.echo(f"Error: Directory '{d}' not found.")
+                raise typer.Exit(code=1)
             # Pass ext only if it's not None/Empty
             pipe.fetch_from(fetcher, dir=d, ext=ext)
         else:
-             typer.echo("Error: Must provide either text, a file path, or a directory via --d")
-             raise typer.Exit(code=1)
+            typer.echo(
+                "Error: Must provide either text, a file path, or a directory via --d"
+            )
+            raise typer.Exit(code=1)
 
         # 2. Chef
         if chef is not None:
@@ -216,7 +217,7 @@ def pipeline(
 
         # Run pipeline
         typer.echo("Running pipeline...")
-        try: 
+        try:
             # If run_input is set, we pass it. If None, run() uses the fetcher step.
             doc = pipe.run(texts=run_input)
             # typer.echo(doc) # This prints the repr, which might be too verbose or ugly
@@ -233,15 +234,13 @@ def pipeline(
             typer.echo("No output generated.")
             return
 
-        docs = doc if isinstance(doc, list) else [doc]
+        docs: list[Document] = doc if isinstance(doc, list) else [doc]  # type: ignore
 
         for d_obj in docs:
             # Optional: print filename if available in metadata
-            if d_obj.metadata and 'filename' in d_obj.metadata:
-                 typer.echo(f"--- {d_obj.metadata['filename']} ---")
-            
-            # for i, chunk in enumerate(d_obj.chunks):
-            #     typer.echo(f"Chunk {i}:\n{chunk.text}\n")
+            if d_obj.metadata and "filename" in d_obj.metadata:
+                typer.echo(f"--- {d_obj.metadata['filename']} ---")
+
             viz(d_obj.chunks)
     except Exception as e:
         typer.echo(f"Pipeline error: {e}")
