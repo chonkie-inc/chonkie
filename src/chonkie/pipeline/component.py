@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Type
+from typing import Any
 
 
 class ComponentType(Enum):
@@ -42,7 +42,7 @@ class Component:
 
     name: str
     alias: str
-    component_class: Type[Any]
+    component_class: type[Any]
     component_type: ComponentType
 
     def __post_init__(self) -> None:

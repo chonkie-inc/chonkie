@@ -5,7 +5,7 @@ and calculates window embeddings directly rather than approximating them from se
 It uses Savitzky-Golay filtering for smoother boundary detection.
 """
 
-from typing import Any, Dict, List, Literal, Optional, Union
+from typing import Any, Literal, Optional, Union
 
 import numpy as np
 
@@ -52,13 +52,13 @@ class SemanticChunker(BaseChunker):
         similarity_window: int = 3,
         min_sentences_per_chunk: int = 1,
         min_characters_per_sentence: int = 24,
-        delim: Union[str, List[str]] = [". ", "! ", "? ", "\n"],
+        delim: Union[str, list[str]] = [". ", "! ", "? ", "\n"],
         include_delim: Optional[Literal["prev", "next"]] = "prev",
         skip_window: int = 0,
         filter_window: int = 5,
         filter_polyorder: int = 3,
         filter_tolerance: float = 0.2,
-        **kwargs: Dict[str, Any],
+        **kwargs: dict[str, Any],
     ) -> None:
         """Initialize the SemanticChunker.
 
@@ -141,13 +141,13 @@ class SemanticChunker(BaseChunker):
         similarity_window: int = 3,
         min_sentences_per_chunk: int = 1,
         min_characters_per_sentence: int = 24,
-        delim: Union[str, List[str]] = [". ", "! ", "? ", "\n"],
+        delim: Union[str, list[str]] = [". ", "! ", "? ", "\n"],
         include_delim: Optional[Literal["prev", "next"]] = "prev",
         skip_window: int = 0,
         filter_window: int = 5,
         filter_polyorder: int = 3,
         filter_tolerance: float = 0.2,
-        **kwargs: Dict[str, Any],
+        **kwargs: dict[str, Any],
     ) -> "SemanticChunker":
         """Create a SemanticChunker from a recipe.
 
@@ -188,7 +188,7 @@ class SemanticChunker(BaseChunker):
             **kwargs,
         )
 
-    def _split_sentences(self, text: str) -> List[str]:
+    def _split_sentences(self, text: str) -> list[str]:
         """Fast sentence splitting using unified split function when available.
 
         This method is faster than using regex for sentence splitting and is more accurate than using the spaCy sentence tokenizer.
@@ -252,7 +252,7 @@ class SemanticChunker(BaseChunker):
 
             return sentences
 
-    def _prepare_sentences(self, text: str) -> List[Sentence]:
+    def _prepare_sentences(self, text: str) -> list[Sentence]:
         """Prepare the sentences for chunking."""
         # Handle empty or whitespace-only text
         if not text or text.isspace():
@@ -268,13 +268,13 @@ class SemanticChunker(BaseChunker):
             for (i, (s, tc)) in enumerate(zip(sentences, token_counts))
         ]
 
-    def _get_sentence_embeddings(self, sentences: List[Sentence]) -> List[np.ndarray]:
+    def _get_sentence_embeddings(self, sentences: list[Sentence]) -> list[np.ndarray]:
         """Get the embeddings for the sentences."""
         return self.embedding_model.embed_batch([
             s.text for s in sentences[self.similarity_window :]
         ])
 
-    def _get_window_embeddings(self, sentences: List[Sentence]) -> List[np.ndarray]:
+    def _get_window_embeddings(self, sentences: list[Sentence]) -> list[np.ndarray]:
         """Get the embeddings for the window."""
         paragraphs = []
         for i in range(len(sentences) - self.similarity_window):
@@ -283,7 +283,7 @@ class SemanticChunker(BaseChunker):
             )
         return self.embedding_model.embed_batch(paragraphs)
 
-    def _get_similarity(self, sentences: List[Sentence]) -> List[float]:
+    def _get_similarity(self, sentences: list[Sentence]) -> list[float]:
         """Get the similarity between the window and the sentence embeddings."""
         window_embeddings = self._get_window_embeddings(sentences)
         sentence_embeddings = self._get_sentence_embeddings(sentences)
@@ -294,8 +294,8 @@ class SemanticChunker(BaseChunker):
         return similarities
 
     def _get_split_indices(
-        self, similarities: Union[List[float], np.ndarray]
-    ) -> List[int]:
+        self, similarities: Union[list[float], np.ndarray]
+    ) -> list[int]:
         """Get split indices using optimized Savitzky-Golay filter with interpolation."""
         # Convert to numpy array if needed
         if not isinstance(similarities, np.ndarray):
@@ -337,8 +337,8 @@ class SemanticChunker(BaseChunker):
         )
 
     def _compute_group_embeddings_batch(
-        self, groups: List[List[Sentence]]
-    ) -> List[np.ndarray]:
+        self, groups: list[list[Sentence]]
+    ) -> list[np.ndarray]:
         """Compute embeddings for all groups in batch.
 
         Args:
@@ -362,8 +362,8 @@ class SemanticChunker(BaseChunker):
         return embeddings
 
     def _get_windowed_similarity(
-        self, sentences: List[Sentence]
-    ) -> Union[List[float], np.ndarray]:
+        self, sentences: list[Sentence]
+    ) -> Union[list[float], np.ndarray]:
         """Alternative similarity computation using windowed cross-similarity.
 
         This can be more robust than pairwise window-sentence comparison.
@@ -379,7 +379,7 @@ class SemanticChunker(BaseChunker):
         )
         return np.asarray(result)
 
-    def _skip_and_merge(self, groups: List[List[Sentence]]) -> List[List[Sentence]]:
+    def _skip_and_merge(self, groups: list[list[Sentence]]) -> list[list[Sentence]]:
         """Merge similar groups considering skip window.
 
         Args:
@@ -436,8 +436,8 @@ class SemanticChunker(BaseChunker):
         return merged_groups
 
     def _group_sentences(
-        self, sentences: List[Sentence], split_indices: List[int]
-    ) -> List[List[Sentence]]:
+        self, sentences: list[Sentence], split_indices: list[int]
+    ) -> list[list[Sentence]]:
         """Group the sentences based on the split indices.
 
         Simply groups sentences between split points without any size checking.
@@ -466,7 +466,7 @@ class SemanticChunker(BaseChunker):
 
         return groups
 
-    def _split_groups(self, groups: List[List[Sentence]]) -> List[List[Sentence]]:
+    def _split_groups(self, groups: list[list[Sentence]]) -> list[list[Sentence]]:
         """Split groups that exceed chunk_size into smaller groups.
 
         Args:
@@ -503,7 +503,7 @@ class SemanticChunker(BaseChunker):
 
         return final_groups
 
-    def _create_chunks(self, sentence_groups: List[List[Sentence]]) -> List[Chunk]:
+    def _create_chunks(self, sentence_groups: list[list[Sentence]]) -> list[Chunk]:
         """Create a chunk from the sentence groups."""
         chunks = []
         current_index = 0
@@ -521,7 +521,7 @@ class SemanticChunker(BaseChunker):
             current_index += len(text)
         return chunks
 
-    def chunk(self, text: str) -> List[Chunk]:
+    def chunk(self, text: str) -> list[Chunk]:
         """Chunk the text into semantic chunks."""
         # Handle empty text
         if not text or text.isspace():

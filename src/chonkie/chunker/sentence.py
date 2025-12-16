@@ -9,7 +9,7 @@ allows customization of sentence boundary delimiters and minimum sentence length
 import warnings
 from bisect import bisect_left
 from itertools import accumulate
-from typing import List, Literal, Optional, Sequence, Union
+from typing import Literal, Optional, Sequence, Union
 
 from chonkie.logger import get_logger
 from chonkie.pipeline import chunker
@@ -63,7 +63,7 @@ class SentenceChunker(BaseChunker):
         min_sentences_per_chunk: int = 1,
         min_characters_per_sentence: int = 12,
         approximate: bool = False,
-        delim: Union[str, List[str]] = [". ", "! ", "? ", "\n"],
+        delim: Union[str, list[str]] = [". ", "! ", "? ", "\n"],
         include_delim: Optional[Literal["prev", "next"]] = "prev",
     ):
         """Initialize the SentenceChunker with configuration parameters.
@@ -163,7 +163,7 @@ class SentenceChunker(BaseChunker):
         )
 
 
-    def _split_text(self, text: str) -> List[str]:
+    def _split_text(self, text: str) -> list[str]:
         """Fast sentence splitting using unified split function when available.
 
         This method is faster than using regex for sentence splitting and is more accurate than using the spaCy sentence tokenizer.
@@ -225,7 +225,7 @@ class SentenceChunker(BaseChunker):
 
             return sentences
 
-    def _prepare_sentences(self, text: str) -> List[Sentence]:
+    def _prepare_sentences(self, text: str) -> list[Sentence]:
         """Split text into sentences and calculate token counts for each sentence.
 
         Args:
@@ -263,7 +263,7 @@ class SentenceChunker(BaseChunker):
             for sent, pos, count in zip(sentence_texts, positions, token_counts)
         ]
 
-    def _create_chunk(self, sentences: List[Sentence]) -> Chunk:
+    def _create_chunk(self, sentences: list[Sentence]) -> Chunk:
         """Create a chunk from a list of sentences.
 
         Args:
@@ -287,7 +287,7 @@ class SentenceChunker(BaseChunker):
             token_count=token_count,
         )
 
-    def chunk(self, text: str) -> List[Chunk]:
+    def chunk(self, text: str) -> list[Chunk]:
         """Split text into overlapping chunks based on sentences while respecting token limits.
 
         Args:

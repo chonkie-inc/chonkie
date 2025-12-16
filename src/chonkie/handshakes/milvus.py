@@ -4,8 +4,6 @@ import importlib.util
 from typing import (
     TYPE_CHECKING,
     Any,
-    Dict,
-    List,
     Literal,
     Optional,
     Union,
@@ -164,7 +162,7 @@ class MilvusHandshake(BaseHandshake):
         collection.create_index(field_name="embedding", index_params=index_params)
         logger.info("Created default HNSW index on 'embedding' field.")
 
-    def write(self, chunks: Union[Chunk, List[Chunk]]) -> None:
+    def write(self, chunks: Union[Chunk, list[Chunk]]) -> None:
         """Write the chunks to the Milvus collection."""
         if isinstance(chunks, Chunk):
             chunks = [chunks]
@@ -190,9 +188,9 @@ class MilvusHandshake(BaseHandshake):
     def search(
         self,
         query: Optional[str] = None,
-        embedding: Optional[Union[List[float], "np.ndarray"]] = None,
+        embedding: Optional[Union[list[float], "np.ndarray"]] = None,
         limit: int = 5,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Retrieve the top_k most similar chunks to the query."""
         if embedding is None and query is None:
             raise ValueError("Either 'query' or 'embedding' must be provided.")

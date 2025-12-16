@@ -1,6 +1,5 @@
 """Test the Model2VecEmbeddings class."""
 
-from typing import List
 
 import numpy as np
 import pytest
@@ -22,7 +21,7 @@ def sample_text() -> str:
 
 
 @pytest.fixture
-def sample_texts() -> List[str]:
+def sample_texts() -> list[str]:
     """Return a list of sample texts for testing."""
     return [
         "This is the first sample text.",
@@ -57,7 +56,7 @@ def test_embed_single_text(
 
 
 def test_similarity(
-    embedding_model: Model2VecEmbeddings, sample_texts: List[str]
+    embedding_model: Model2VecEmbeddings, sample_texts: list[str]
 ) -> None:
     """Test that the similarity method returns a float between 0 and 1."""
     embeddings = embedding_model.embed_batch(sample_texts)

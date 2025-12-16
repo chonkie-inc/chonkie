@@ -1,6 +1,5 @@
 """Test the SemanticChunker class - cleaned version with only working tests."""
 
-from typing import List
 
 import pytest
 
@@ -139,7 +138,7 @@ def test_semantic_chunker_reconstruction(embedding_model: BaseEmbeddings, sample
     assert sample_text == "".join([chunk.text for chunk in chunks])
 
 
-def verify_chunk_indices(chunks: List[Chunk], original_text: str) -> None:
+def verify_chunk_indices(chunks: list[Chunk], original_text: str) -> None:
     """Verify that chunk indices correctly map to the original text."""
     for i, chunk in enumerate(chunks):
         # Extract text using the indices

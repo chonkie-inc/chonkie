@@ -2,9 +2,7 @@
 
 import re
 from pathlib import Path
-from typing import Tuple, Union
-
-from typing_extensions import List
+from typing import Union
 
 from chonkie.logger import get_logger
 from chonkie.pipeline import chef
@@ -42,17 +40,17 @@ class MarkdownChef(BaseChef):
     self.table_pattern = re.compile(r"(\|.*?\n\|[-: ]+\|.*?\n(?:\|.*?\n)*)")
     self.image_pattern = re.compile(r"(\[)?!\[([^\]]*)\]\(([^)]+)\)(?(1)\]\(([^)]+)\)|)")
 
-  def prepare_tables(self, markdown: str) -> List[MarkdownTable]:
+  def prepare_tables(self, markdown: str) -> list[MarkdownTable]:
     """Prepare the tables for the MarkdownDocument.
 
     Args:
         markdown (str): The markdown text containing tables.
 
     Returns:
-        List[MarkdownTable]: The list of tables with their start and end indices.
+        list[MarkdownTable]: The list of tables with their start and end indices.
 
     """
-    markdown_tables: List[MarkdownTable] = []
+    markdown_tables: list[MarkdownTable] = []
     for match in self.table_pattern.finditer(markdown):
         table_content = match.group(0)
         start_index = match.start()
@@ -60,19 +58,19 @@ class MarkdownChef(BaseChef):
         markdown_tables.append(MarkdownTable(content=table_content, start_index=start_index, end_index=end_index))
     return markdown_tables
 
-  def prepare_code(self, markdown: str) -> List[MarkdownCode]:
+  def prepare_code(self, markdown: str) -> list[MarkdownCode]:
     """Extract markdown code snippets from a markdown string.
 
     Args:
         markdown (str): The markdown text containing code snippets.
 
     Returns:
-        List[MarkdownCode]: A list of MarkdownCode objects, each containing
+        list[MarkdownCode]: A list of MarkdownCode objects, each containing
         the code content, language (if specified), and position indices.
 
     """
     # Pattern to capture language and content separately
-    code_snippets: List[MarkdownCode] = []
+    code_snippets: list[MarkdownCode] = []
     for match in self.code_pattern.finditer(markdown):
         language = match.group(1) if match.group(1) else None
         content = match.group(2)
@@ -88,18 +86,18 @@ class MarkdownChef(BaseChef):
         ))
     return code_snippets
 
-  def extract_images(self, markdown: str) -> List[MarkdownImage]:
+  def extract_images(self, markdown: str) -> list[MarkdownImage]:
     """Extract images from a markdown string.
 
     Args:
         markdown (str): The markdown text containing images.
 
     Returns:
-        Dict[str, str]: A dictionary where keys are image names (alt text or filename)
+        dict[str, str]: A dictionary where keys are image names (alt text or filename)
         and values are image paths or base64 data URLs.
 
     """
-    images: List[MarkdownImage] = []
+    images: list[MarkdownImage] = []
 
     for match in self.image_pattern.finditer(markdown):
         # Extract the match groups
@@ -137,25 +135,25 @@ class MarkdownChef(BaseChef):
   def extract_chunks(
     self,
     markdown: str,
-    tables: List[MarkdownTable],
-    code: List[MarkdownCode],
-    images: List[MarkdownImage]) -> List[Chunk]:
+    tables: list[MarkdownTable],
+    code: list[MarkdownCode],
+    images: list[MarkdownImage]) -> list[Chunk]:
     """Parse out the remaining markdown content into chunks.
 
     Args:
         markdown (str): The markdown text containing the remaining content.
-        tables (List[MarkdownTable]): The list of tables.
-        code (List[MarkdownCode]): The list of code snippets.
-        images (List[MarkdownImage]): The list of images.
+        tables (list[MarkdownTable]): The list of tables.
+        code (list[MarkdownCode]): The list of code snippets.
+        images (list[MarkdownImage]): The list of images.
 
     Returns:
-        List[Chunk]: The list of chunks.
+        list[Chunk]: The list of chunks.
 
     """
-    chunks: List[Chunk] = []
+    chunks: list[Chunk] = []
 
     # Get all the occupied
-    occupied_indices: List[Tuple[int, int]] = []
+    occupied_indices: list[tuple[int, int]] = []
     occupied_indices.extend([(table.start_index, table.end_index) for table in tables])
     occupied_indices.extend([(code.start_index, code.end_index) for code in code])
     occupied_indices.extend([(image.start_index, image.end_index) for image in images])
@@ -165,7 +163,7 @@ class MarkdownChef(BaseChef):
 
     # Get the remaining indices
     current_index = 0
-    remaining_indices: List[Tuple[int, int]] = []
+    remaining_indices: list[tuple[int, int]] = []
     for index in occupied_indices:
       if index[0] > current_index:
         remaining_indices.append((current_index, index[0]))
@@ -205,7 +203,7 @@ class MarkdownChef(BaseChef):
     images = self.extract_images(text)
 
     # Extract the chunks
-    chunks: List[Chunk] = self.extract_chunks(text, tables, code, images)
+    chunks: list[Chunk] = self.extract_chunks(text, tables, code, images)
 
     logger.info(f"Markdown processing complete: extracted {len(tables)} tables, {len(code)} code blocks, {len(images)} images, {len(chunks)} chunks")
     return MarkdownDocument(

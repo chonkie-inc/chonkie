@@ -1,6 +1,6 @@
 """Embeddings Refinery for Chonkie Cloud."""
 import os
-from typing import Any, Dict, List, Optional, cast
+from typing import Any, Optional, cast
 
 import numpy as np
 import requests
@@ -30,7 +30,7 @@ class EmbeddingsRefinery(BaseRefinery):
                 + "or pass an API key to the EmbeddingsRefinery constructor."
             )
 
-    def refine(self, chunks: List[Any]) -> List[Any]:
+    def refine(self, chunks: list[Any]) -> list[Any]:
         """Refine the chunks.
         
         Args:
@@ -60,7 +60,7 @@ class EmbeddingsRefinery(BaseRefinery):
         )
 
         # Parse the response
-        result: List[Dict] = cast(List[Dict], response.json())
+        result: list[dict] = cast(list[dict], response.json())
         # Take out the embeddings from each chunk
         embeddings = [chunk.pop("embedding") for chunk in result]
         # Convert the chunks back to their original type
@@ -70,6 +70,6 @@ class EmbeddingsRefinery(BaseRefinery):
             chunk.embedding = np.array(embedding)
         return result_chunks
 
-    def __call__(self, chunks: List[Any]) -> List[Any]:
+    def __call__(self, chunks: list[Any]) -> list[Any]:
         """Call the EmbeddingsRefinery."""
         return self.refine(chunks)

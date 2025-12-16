@@ -1,7 +1,7 @@
 """Azure OpenAI Genie."""
 
 import importlib.util as importutil
-from typing import TYPE_CHECKING, Any, Dict, Optional
+from typing import TYPE_CHECKING, Any, Optional
 
 from .base import BaseGenie
 
@@ -71,7 +71,7 @@ class AzureOpenAIGenie(BaseGenie):
             raise ValueError("Azure OpenAI response content is None")
         return content
 
-    def generate_json(self, prompt: str, schema: "BaseModel") -> Dict[str, Any]:
+    def generate_json(self, prompt: str, schema: "BaseModel") -> dict[str, Any]:
         """Generate a structured JSON response based on a Pydantic schema."""
         response = self.client.beta.chat.completions.parse(
             model=self._deployment,

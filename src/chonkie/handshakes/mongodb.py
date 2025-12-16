@@ -4,8 +4,6 @@ import importlib.util as importutil
 from typing import (
     TYPE_CHECKING,
     Any,
-    Dict,
-    List,
     Literal,
     Optional,
     Union,
@@ -143,7 +141,7 @@ class MongoDBHandshake(BaseHandshake):
         )
 
     def _generate_document(
-        self, index: int, chunk: Chunk, embedding: List[float]
+        self, index: int, chunk: Chunk, embedding: list[float]
     ) -> dict:
         return {
             "_id": self._generate_id(index, chunk),
@@ -154,7 +152,7 @@ class MongoDBHandshake(BaseHandshake):
             "embedding": embedding,
         }
 
-    def write(self, chunks: Union[Chunk, List[Chunk]]) -> None:
+    def write(self, chunks: Union[Chunk, list[Chunk]]) -> None:
         """Write chunks to the MongoDB collection."""
         if isinstance(chunks, Chunk):
             chunks = [chunks]
@@ -165,7 +163,7 @@ class MongoDBHandshake(BaseHandshake):
         for index, chunk in enumerate(chunks):
             embedding = embeddings[index]
             if hasattr(embedding, "tolist"):
-                embedding_list: List[float] = embedding.tolist()
+                embedding_list: list[float] = embedding.tolist()
             else:
                 embedding_list = embedding  # type: ignore[assignment]
             documents.append(self._generate_document(index, chunk, embedding_list))
@@ -180,9 +178,9 @@ class MongoDBHandshake(BaseHandshake):
     def search(
         self,
         query: Optional[str] = None,
-        embedding: Optional[List[float]] = None,
+        embedding: Optional[list[float]] = None,
         limit: int = 5,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Search for similar chunks in the MongoDB collection.
 
         Args:
@@ -213,7 +211,7 @@ class MongoDBHandshake(BaseHandshake):
             )
         )
 
-        def cosine_similarity(a: List[float], b: List[float]) -> float:
+        def cosine_similarity(a: list[float], b: list[float]) -> float:
             """Compute cosine similarity between two vectors."""
             import math
 

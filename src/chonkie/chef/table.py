@@ -2,7 +2,7 @@
 
 import re
 from pathlib import Path
-from typing import TYPE_CHECKING, List, Union
+from typing import TYPE_CHECKING, Union
 
 from chonkie.chef.base import BaseChef
 from chonkie.logger import get_logger
@@ -76,7 +76,7 @@ class TableChef(BaseChef):
             elif str_path.endswith(".xls") or str_path.endswith(".xlsx"):
                 logger.debug("Processing Excel file")
                 all_df = pd.read_excel(str_path, sheet_name=None)
-                tables: List[MarkdownTable] = []
+                tables: list[MarkdownTable] = []
                 all_content = []
                 for df in all_df.values():
                     text = df.to_markdown(index=False)
@@ -95,15 +95,15 @@ class TableChef(BaseChef):
         return self.parse(str(path))
 
     def process_batch(
-        self, paths: Union[List[str], List[Path]]
-    ) -> List[Document]:
+        self, paths: Union[list[str], list[Path]]
+    ) -> list[Document]:
         """Process multiple CSV/Excel files or markdown texts.
 
         Args:
-            paths (Union[List[str], List[Path]]): Paths to files or markdown text strings.
+            paths (Union[list[str], list[Path]]): Paths to files or markdown text strings.
 
         Returns:
-            List[Document]: List of MarkdownDocuments with extracted tables.
+            list[Document]: List of MarkdownDocuments with extracted tables.
 
         """
         logger.debug(f"Processing batch of {len(paths)} files/strings")
@@ -112,15 +112,15 @@ class TableChef(BaseChef):
         return results
 
     def __call__(  # type: ignore[override]
-        self, path: Union[str, Path, List[str], List[Path]]
-    ) -> Union[Document, List[Document]]:
+        self, path: Union[str, Path, list[str], list[Path]]
+    ) -> Union[Document, list[Document]]:
         """Process a single file/text or a batch of files/texts.
 
         Args:
             path: Single file path, markdown text string, or list of paths/texts.
 
         Returns:
-            Union[Document, List[Document]]: MarkdownDocument or list of MarkdownDocuments.
+            Union[Document, list[Document]]: MarkdownDocument or list of MarkdownDocuments.
 
         """
         if isinstance(path, (list, tuple)):
@@ -130,17 +130,17 @@ class TableChef(BaseChef):
         else:
             raise TypeError(f"Unsupported type: {type(path)}")
 
-    def extract_tables_from_markdown(self, markdown: str) -> List[MarkdownTable]:
+    def extract_tables_from_markdown(self, markdown: str) -> list[MarkdownTable]:
         """Extract markdown tables from a markdown string.
 
         Args:
             markdown (str): The markdown text containing tables.
 
         Returns:
-            List[MarkdownTable]: A list of MarkdownTable objects, each representing a markdown table found in the input.
+            list[MarkdownTable]: A list of MarkdownTable objects, each representing a markdown table found in the input.
 
         """
-        tables: List[MarkdownTable] = []
+        tables: list[MarkdownTable] = []
         for match in self.table_pattern.finditer(markdown):
             table_content = match.group(0)
             start_index = match.start()

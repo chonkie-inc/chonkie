@@ -1,6 +1,6 @@
 """Module containing the LateChunker class."""
 
-from typing import Any, List, Optional, Union
+from typing import Any, Optional, Union
 
 import numpy as np
 
@@ -113,8 +113,8 @@ class LateChunker(RecursiveChunker):
         )   
     
     def _get_late_embeddings(
-        self, token_embeddings: np.ndarray, token_counts: List[int]
-    ) -> List[np.ndarray]:
+        self, token_embeddings: np.ndarray, token_counts: list[int]
+    ) -> list[np.ndarray]:
         # Split the token embeddings into chunks based on the token counts
         embs = []
         cum_token_counts = np.cumsum([0] + token_counts)
@@ -127,7 +127,7 @@ class LateChunker(RecursiveChunker):
             )
         return embs
 
-    def chunk(self, text: str) -> List[Chunk]:
+    def chunk(self, text: str) -> list[Chunk]:
         """Chunk the text via LateChunking."""
         logger.debug(f"Starting late chunking for text of length {len(text)}")
         # This would first call upon the _recursive_chunk method

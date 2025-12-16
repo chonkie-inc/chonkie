@@ -1,9 +1,10 @@
 """Cloud Pipeline for Chonkie API."""
 
+import builtins
 import os
 import re
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Optional, Union
 
 import requests
 
@@ -21,9 +22,9 @@ class PipelineStep:
 
     type: str
     component: str
-    params: Dict[str, Any] = field(default_factory=dict)
+    params: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for API payload."""
         return {
             "type": self.type,
@@ -32,7 +33,7 @@ class PipelineStep:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "PipelineStep":
+    def from_dict(cls, data: dict[str, Any]) -> "PipelineStep":
         """Create from dictionary."""
         step_type = data.get("type", "")
         component = data.get("component", "")
@@ -108,7 +109,7 @@ class Pipeline:
 
         self._slug = slug
         self._description = description
-        self._steps: List[PipelineStep] = []
+        self._steps: list[PipelineStep] = []
         self._is_saved = False
         self._id: Optional[str] = None
         self._created_at: Optional[str] = None
@@ -133,11 +134,11 @@ class Pipeline:
         return self._is_saved
 
     @property
-    def steps(self) -> List[PipelineStep]:
+    def steps(self) -> list[PipelineStep]:
         """Return the pipeline steps."""
         return self._steps.copy()
 
-    def _get_headers(self) -> Dict[str, str]:
+    def _get_headers(self) -> dict[str, str]:
         """Get headers for API requests."""
         return {
             "Authorization": f"Bearer {self._api_key}",
@@ -198,7 +199,7 @@ class Pipeline:
         return pipeline
 
     @classmethod
-    def list(cls, api_key: Optional[str] = None) -> List["Pipeline"]:
+    def list(cls, api_key: Optional[str] = None) -> list["Pipeline"]:
         """List all pipelines from the cloud.
 
         Args:
@@ -250,9 +251,9 @@ class Pipeline:
     @classmethod
     def validate(
         cls,
-        steps: List[Dict[str, Any]],
+        steps: builtins.list[dict[str, Any]],
         api_key: Optional[str] = None,
-    ) -> Tuple[bool, Optional[List[str]]]:
+    ) -> tuple[bool, Optional[builtins.list[str]]]:
         """Validate a pipeline configuration via the cloud API.
 
         Args:
@@ -406,7 +407,7 @@ class Pipeline:
             ValueError: If pipeline doesn't exist or API error occurs.
 
         """
-        payload: Dict[str, Any] = {}
+        payload: dict[str, Any] = {}
 
         if description is not None:
             payload["description"] = description
@@ -457,9 +458,9 @@ class Pipeline:
 
     def run(
         self,
-        text: Optional[Union[str, List[str]]] = None,
+        text: Optional[Union[str, builtins.list[str]]] = None,
         file: Optional[str] = None,
-    ) -> List[Chunk]:
+    ) -> builtins.list[Chunk]:
         """Execute the pipeline via the cloud API.
 
         Args:
@@ -483,7 +484,7 @@ class Pipeline:
             self._save()
 
         # Build payload
-        payload: Dict[str, Any] = {}
+        payload: dict[str, Any] = {}
 
         if file is not None:
             # Upload file first
@@ -509,7 +510,7 @@ class Pipeline:
 
         return chunks
 
-    def to_config(self) -> List[Dict[str, Any]]:
+    def to_config(self) -> builtins.list[dict[str, Any]]:
         """Export pipeline configuration as a list of step dictionaries.
 
         Returns:

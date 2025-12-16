@@ -4,8 +4,6 @@ import importlib.util
 from typing import (
     TYPE_CHECKING,
     Any,
-    Dict,
-    List,
     Literal,
     Optional,
     Union,
@@ -38,7 +36,7 @@ class ElasticHandshake(BaseHandshake):
         client: Optional[Elasticsearch]: An existing Elasticsearch client instance. If not provided, one will be created.
         index_name: Union[str, Literal["random"]]: The name of the index to use. If "random", a unique name is generated.
         embedding_model: Union[str, BaseEmbeddings]: The embedding model to use for vectorizing chunks.
-        hosts: Optional[Union[str, List[str]]]: URL(s) of the Elasticsearch instance(s).
+        hosts: Optional[Union[str, list[str]]]: URL(s) of the Elasticsearch instance(s).
         cloud_id: Optional[str]: The Cloud ID for connecting to an Elastic Cloud deployment.
         api_key: Optional[str]: The API key for authenticating with an Elastic Cloud deployment.
         **kwargs: Additional keyword arguments to pass to the Elasticsearch client constructor.
@@ -50,10 +48,10 @@ class ElasticHandshake(BaseHandshake):
         client: Optional["Elasticsearch"] = None,
         index_name: Union[str, Literal["random"]] = "random",
         embedding_model: Union[str, BaseEmbeddings] = "minishlab/potion-retrieval-32M",
-        hosts: Optional[Union[str, List[str]]] = None,
+        hosts: Optional[Union[str, list[str]]] = None,
         cloud_id: Optional[str] = None,
         api_key: Optional[str] = None,
-        **kwargs: Dict[str, Any],
+        **kwargs: dict[str, Any],
     ) -> None:
         """Initialize the Elasticsearch Handshake."""
         super().__init__()
@@ -121,7 +119,7 @@ class ElasticHandshake(BaseHandshake):
         """Generate a unique id for the chunk."""
         return str(uuid5(NAMESPACE_OID, f"{self.index_name}::chunk-{index}:{chunk.text}"))
 
-    def _create_bulk_actions(self, chunks: List[Chunk]) -> List[Dict[str, Any]]:
+    def _create_bulk_actions(self, chunks: list[Chunk]) -> list[dict[str, Any]]:
         """Generate a list of actions for the Elasticsearch bulk API."""
         actions = []
         # Get all embeddings in a single batch call for efficiency
@@ -141,7 +139,7 @@ class ElasticHandshake(BaseHandshake):
             })
         return actions
 
-    def write(self, chunks: Union[Chunk, List[Chunk]]) -> None:
+    def write(self, chunks: Union[Chunk, list[Chunk]]) -> None:
         """Write the chunks to the Elasticsearch index using the bulk API."""
         if isinstance(chunks, Chunk):
             chunks = [chunks]
@@ -166,9 +164,9 @@ class ElasticHandshake(BaseHandshake):
     def search(
         self,
         query: Optional[str] = None,
-        embedding: Optional[List[float]] = None,
+        embedding: Optional[list[float]] = None,
         limit: int = 5,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Retrieve the top_k most similar chunks to the query using KNN search.
 
         Args:

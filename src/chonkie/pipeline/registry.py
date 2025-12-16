@@ -1,6 +1,6 @@
 """Component registry for pipeline components."""
 
-from typing import Any, Callable, Dict, List, Optional, Type, TypeVar
+from typing import Any, Callable, Optional, Type, TypeVar
 
 from .component import Component, ComponentType
 
@@ -12,10 +12,10 @@ class _ComponentRegistry:
 
     def __init__(self) -> None:
         """Initialize the component registry."""
-        self._components: Dict[str, Component] = {}
+        self._components: dict[str, Component] = {}
         # Scoped aliases: (component_type, alias) -> name mapping
-        self._aliases: Dict[tuple[ComponentType, str], str] = {}
-        self._component_types: Dict[ComponentType, List[str]] = {
+        self._aliases: dict[tuple[ComponentType, str], str] = {}
+        self._component_types: dict[ComponentType, list[str]] = {
             ct: [] for ct in ComponentType
         }
 
@@ -129,7 +129,7 @@ class _ComponentRegistry:
 
     def list_components(
         self, component_type: Optional[ComponentType] = None
-    ) -> List[Component]:
+    ) -> list[Component]:
         """List all registered components, optionally filtered by type.
 
         Args:
@@ -144,7 +144,7 @@ class _ComponentRegistry:
             return [self._components[name] for name in names]
         return list(self._components.values())
 
-    def get_aliases(self, component_type: Optional[ComponentType] = None) -> List[str]:
+    def get_aliases(self, component_type: Optional[ComponentType] = None) -> list[str]:
         """Get all available aliases, optionally filtered by type.
 
         Args:

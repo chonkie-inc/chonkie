@@ -3,7 +3,7 @@
 import importlib.util as importutil
 import os
 import warnings
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING, Optional
 
 import numpy as np
 import requests
@@ -144,14 +144,14 @@ class JinaEmbeddings(BaseEmbeddings):
         # Adding a fallback raise to satisfy linters and catch unexpected scenarios.
         raise RuntimeError(f"Embedding failed for text '{text[:50]}...' after multiple retries, but no exception was raised.")
 
-    def embed_batch(self, texts: List[str]) -> List[np.ndarray]:
+    def embed_batch(self, texts: list[str]) -> list[np.ndarray]:
         """Embed multiple texts using the Jina embeddings API.
 
         Args:
-            texts (List[str]): List of texts to embed.
+            texts (list[str]): List of texts to embed.
 
         Returns:
-            List["np.ndarray"]: List of numpy arrays with embeddings for each text.
+            list["np.ndarray"]: List of numpy arrays with embeddings for each text.
 
         Raises:
             requests.exceptions.HTTPError: If the initial API request for a batch fails
