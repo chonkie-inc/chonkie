@@ -1,4 +1,5 @@
 """Overlap Refinery for Chonkie Cloud."""
+
 import os
 from typing import Any, Literal, Optional, Union, cast
 
@@ -10,7 +11,8 @@ from .base import BaseRefinery
 class OverlapRefinery(BaseRefinery):
     """Overlap Refinery for Chonkie Cloud."""
 
-    def __init__(self,
+    def __init__(
+        self,
         tokenizer: str = "gpt2",
         context_size: Union[int, float] = 0.25,
         mode: Literal["token", "recursive"] = "token",
@@ -47,12 +49,12 @@ class OverlapRefinery(BaseRefinery):
         if not self.api_key:
             raise ValueError(
                 "No API key provided. Please set the CHONKIE_API_KEY environment variable"
-                + "or pass an API key to the OverlapRefinery constructor."
+                + "or pass an API key to the OverlapRefinery constructor.",
             )
 
     def refine(self, chunks: list[Any]) -> list[Any]:
         """Refine the chunks.
-        
+
         Args:
             chunks: The chunks to refine.
 

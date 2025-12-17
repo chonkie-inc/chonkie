@@ -27,9 +27,7 @@ class MockEmbeddings(BaseEmbeddings):
         import numpy as np
 
         # Simple mock: return array of floats based on text length
-        return np.array(
-            [float(i % 10) for i in range(self._dimension)], dtype=np.float32
-        )
+        return np.array([float(i % 10) for i in range(self._dimension)], dtype=np.float32)
 
     def embed_batch(self, texts: list[str]) -> list["np.ndarray"]:
         """Mock batch embed method."""
@@ -54,18 +52,14 @@ class MockEmbeddings(BaseEmbeddings):
 def sample_chunks() -> list[Chunk]:
     """Fixture to create sample chunks."""
     return [
-        Chunk(
-            text="This is the first chunk.", start_index=0, end_index=24, token_count=5
-        ),
+        Chunk(text="This is the first chunk.", start_index=0, end_index=24, token_count=5),
         Chunk(
             text="This is the second chunk.",
             start_index=25,
             end_index=49,
             token_count=5,
         ),
-        Chunk(
-            text="This is the third chunk.", start_index=50, end_index=74, token_count=5
-        ),
+        Chunk(text="This is the third chunk.", start_index=50, end_index=74, token_count=5),
     ]
 
 
@@ -109,19 +103,16 @@ def test_embeddings_refinery_initialization_with_embeddings_instance(
 
 def test_embeddings_refinery_initialization_with_invalid_type() -> None:
     """Test EmbeddingsRefinery initialization with invalid model type."""
-    with pytest.raises(
-        ValueError, match="Model must be a string or a BaseEmbeddings instance"
-    ):
+    with pytest.raises(ValueError, match="Model must be a string or a BaseEmbeddings instance"):
         EmbeddingsRefinery(123)  # Invalid type
 
-    with pytest.raises(
-        ValueError, match="Model must be a string or a BaseEmbeddings instance"
-    ):
+    with pytest.raises(ValueError, match="Model must be a string or a BaseEmbeddings instance"):
         EmbeddingsRefinery(["not", "valid"])  # Invalid type
 
 
 def test_embeddings_refinery_refine_basic(
-    mock_embeddings: MockEmbeddings, sample_chunks: list[Chunk]
+    mock_embeddings: MockEmbeddings,
+    sample_chunks: list[Chunk],
 ) -> None:
     """Test basic refine functionality."""
     refinery = EmbeddingsRefinery(mock_embeddings)
@@ -162,9 +153,7 @@ def test_embeddings_refinery_refine_single_chunk(
     """Test refine with single chunk."""
     refinery = EmbeddingsRefinery(mock_embeddings)
 
-    single_chunk = [
-        Chunk(text="Single chunk", start_index=0, end_index=11, token_count=2)
-    ]
+    single_chunk = [Chunk(text="Single chunk", start_index=0, end_index=11, token_count=2)]
     refined_chunks = refinery.refine(single_chunk)
 
     assert len(refined_chunks) == 1
@@ -225,12 +214,15 @@ def test_embeddings_refinery_repr(mock_embeddings: MockEmbeddings) -> None:
 
 
 def test_embeddings_refinery_embed_batch_called_correctly(
-    mock_embeddings: MockEmbeddings, sample_chunks: list[Chunk]
+    mock_embeddings: MockEmbeddings,
+    sample_chunks: list[Chunk],
 ) -> None:
     """Test that embed_batch is called with correct texts."""
     # Spy on the embed_batch method using patch.object
     with patch.object(
-        mock_embeddings, "embed_batch", wraps=mock_embeddings.embed_batch
+        mock_embeddings,
+        "embed_batch",
+        wraps=mock_embeddings.embed_batch,
     ) as mock_embed_batch:
         refinery = EmbeddingsRefinery(mock_embeddings)
         refinery.refine(sample_chunks)

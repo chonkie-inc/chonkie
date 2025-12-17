@@ -31,7 +31,11 @@ class AutoEmbeddings:
     """
 
     @classmethod
-    def get_embeddings(cls, model: Union[str, BaseEmbeddings, Any], **kwargs: Any) -> BaseEmbeddings:
+    def get_embeddings(
+        cls,
+        model: Union[str, BaseEmbeddings, Any],
+        **kwargs: Any,
+    ) -> BaseEmbeddings:
         """Get embeddings instance based on identifier.
 
         Args:
@@ -73,29 +77,33 @@ class AutoEmbeddings:
                     try:
                         return embeddings_cls(model_name, **kwargs)  # type: ignore
                     except Exception as error:
-                        raise ValueError(f"Failed to load {model} with {embeddings_cls.__name__}, with error: {error}")
+                        raise ValueError(
+                            f"Failed to load {model} with {embeddings_cls.__name__}, with error: {error}",
+                        )
                 else:
-                    raise ValueError(f"No provider found for {provider}. Please check the provider name and try again.")
+                    raise ValueError(
+                        f"No provider found for {provider}. Please check the provider name and try again.",
+                    )
             else:
                 # Try to find matching implementation via registry
                 embeddings_cls = EmbeddingsRegistry.match(model)
                 if embeddings_cls:
+                    try:
+                        # Try instantiating with the model identifier
+                        embeddings_instance = embeddings_cls(model, **kwargs)  # type: ignore
+                    except Exception as error:
+                        warnings.warn(
+                            f"Failed to load {model} with {embeddings_cls.__name__}: {error}\n"
+                            f"Falling back to loading default provider model.",
+                        )
                         try:
-                            # Try instantiating with the model identifier
-                            embeddings_instance = embeddings_cls(model, **kwargs)  # type: ignore
+                            # Try instantiating with the default provider model without the model identifier
+                            embeddings_instance = embeddings_cls(**kwargs)
                         except Exception as error:
                             warnings.warn(
-                                f"Failed to load {model} with {embeddings_cls.__name__}: {error}\n"
-                                f"Falling back to loading default provider model."
+                                f"Failed to load the default model for {embeddings_cls.__name__}: {error}\n"
+                                f"Falling back to SentenceTransformerEmbeddings.",
                             )
-                            try:
-                                # Try instantiating with the default provider model without the model identifier
-                                embeddings_instance = embeddings_cls(**kwargs)
-                            except Exception as error:
-                                warnings.warn(
-                                    f"Failed to load the default model for {embeddings_cls.__name__}: {error}\n"
-                                    f"Falling back to SentenceTransformerEmbeddings."
-                                )
 
             # If registry lookup and instantiation succeeded, return the instance
             if embeddings_instance:
@@ -103,10 +111,13 @@ class AutoEmbeddings:
 
             # If registry lookup and instantiation failed, return the default SentenceTransformerEmbeddings
             from .sentence_transformer import SentenceTransformerEmbeddings
+
             try:
                 return SentenceTransformerEmbeddings(model, **kwargs)
             except Exception as e:
-                raise ValueError(f"Failed to load embeddings via SentenceTransformerEmbeddings after registry/fallback failure: {e}")
+                raise ValueError(
+                    f"Failed to load embeddings via SentenceTransformerEmbeddings after registry/fallback failure: {e}",
+                )
         else:
             # get the wrapped embeddings instance
             try:

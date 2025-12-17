@@ -75,7 +75,9 @@ class BaseEmbeddings(ABC):
             np.float32: Similarity score between the two embeddings
 
         """
-        return np.float32(np.dot(u, v.T) / (np.linalg.norm(u) * np.linalg.norm(v)))  # cosine similarity
+        return np.float32(
+            np.dot(u, v.T) / (np.linalg.norm(u) * np.linalg.norm(v)),
+        )  # cosine similarity
 
     @property
     @abstractmethod
@@ -90,7 +92,6 @@ class BaseEmbeddings(ABC):
 
         """
         raise NotImplementedError
-
 
     @abstractmethod
     def get_tokenizer(self) -> Any:
@@ -113,9 +114,7 @@ class BaseEmbeddings(ABC):
         """Representation of the BaseEmbeddings instance."""
         return self.__class__.__name__ + "()"
 
-    def __call__(
-        self, text: Union[str, list[str]]
-    ) -> Union[np.ndarray, list[np.ndarray]]:
+    def __call__(self, text: Union[str, list[str]]) -> Union[np.ndarray, list[np.ndarray]]:
         """Embed a text string into a vector representation.
 
         This method allows the embeddings object to be called directly with a text string

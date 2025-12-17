@@ -53,7 +53,8 @@ class AzureOpenAIGenie(BaseGenie):
             from azure.identity import DefaultAzureCredential, get_bearer_token_provider
 
             token_provider = get_bearer_token_provider(
-                DefaultAzureCredential(), "https://cognitiveservices.azure.com/.default"
+                DefaultAzureCredential(),
+                "https://cognitiveservices.azure.com/.default",
             )
             self.client = AzureOpenAI(
                 azure_endpoint=azure_endpoint,
@@ -64,7 +65,8 @@ class AzureOpenAIGenie(BaseGenie):
     def generate(self, prompt: str) -> str:
         """Generate a plain-text response."""
         response = self.client.chat.completions.create(
-            model=self._deployment, messages=[{"role": "user", "content": prompt}]
+            model=self._deployment,
+            messages=[{"role": "user", "content": prompt}],
         )
         content = response.choices[0].message.content
         if content is None:
@@ -98,7 +100,7 @@ class AzureOpenAIGenie(BaseGenie):
         else:
             raise ImportError(
                 "Missing required modules: [openai, azure-identity, pydantic]. "
-                "Install via `pip install chonkie[azure-openai]`."
+                "Install via `pip install chonkie[azure-openai]`.",
             )
 
     def __repr__(self) -> str:

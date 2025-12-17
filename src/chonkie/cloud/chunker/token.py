@@ -30,7 +30,7 @@ class TokenChunker(CloudChunker):
         if not self.api_key:
             raise ValueError(
                 "No API key provided. Please set the CHONKIE_API_KEY environment variable"
-                + "or pass an API key to the TokenChunker constructor."
+                + "or pass an API key to the TokenChunker constructor.",
             )
 
         # Check if chunk_size and chunk_overlap are valid
@@ -50,13 +50,17 @@ class TokenChunker(CloudChunker):
             raise ValueError(
                 "Oh no! You caught Chonkie at a bad time. It seems to be down right now."
                 + "Please try again in a short while."
-                + "If the issue persists, please contact support at support@chonkie.ai or raise an issue on GitHub."
+                + "If the issue persists, please contact support at support@chonkie.ai or raise an issue on GitHub.",
             )
 
         # Initialize the file manager to upload files if needed
         self.file_manager = FileManager(api_key=self.api_key)
 
-    def chunk(self, text: Optional[Union[str, list[str]]] = None, file: Optional[str] = None) -> Union[list[Chunk], list[list[Chunk]]]:
+    def chunk(
+        self,
+        text: Optional[Union[str, list[str]]] = None,
+        file: Optional[str] = None,
+    ) -> Union[list[Chunk], list[list[Chunk]]]:
         """Chunk the text into a list of chunks."""
         # Define the payload for the request
         payload: dict[str, Any]
@@ -80,7 +84,9 @@ class TokenChunker(CloudChunker):
                 "chunk_overlap": self.chunk_overlap,
             }
         else:
-            raise ValueError("No text or file provided. Please provide either text or a file path.")
+            raise ValueError(
+                "No text or file provided. Please provide either text or a file path.",
+            )
 
         # Make the request to the Chonkie API
         response = requests.post(
@@ -90,9 +96,7 @@ class TokenChunker(CloudChunker):
         )
         # Check if the response is successful
         if response.status_code != 200:
-            raise ValueError(
-                f"Error from the Chonkie API: {response.status_code} {response.text}"
-            )
+            raise ValueError(f"Error from the Chonkie API: {response.status_code} {response.text}")
 
         # Parse the response
         try:
@@ -112,6 +116,10 @@ class TokenChunker(CloudChunker):
         except Exception as error:
             raise ValueError(f"Error parsing the response: {error}") from error
 
-    def __call__(self, text: Optional[Union[str, list[str]]] = None, file: Optional[str] = None) -> Union[list[Chunk], list[list[Chunk]]]:
+    def __call__(
+        self,
+        text: Optional[Union[str, list[str]]] = None,
+        file: Optional[str] = None,
+    ) -> Union[list[Chunk], list[list[Chunk]]]:
         """Call the chunker."""
         return self.chunk(text=text, file=file)

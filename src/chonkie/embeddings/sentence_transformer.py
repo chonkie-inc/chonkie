@@ -25,9 +25,9 @@ class SentenceTransformerEmbeddings(BaseEmbeddings):
     """
 
     def __init__(
-        self, 
+        self,
         model: Union[str, "SentenceTransformer"] = "all-MiniLM-L6-v2",
-        **kwargs: Any
+        **kwargs: Any,
     ) -> None:
         """Initialize SentenceTransformerEmbeddings with a sentence-transformers model.
 
@@ -50,7 +50,9 @@ class SentenceTransformerEmbeddings(BaseEmbeddings):
             self.model = SentenceTransformer(self.model_name_or_path, **kwargs)
         elif isinstance(model, SentenceTransformer):
             self.model = model
-            self.model_name_or_path = getattr(self.model.model_card_data, 'base_model', None) or "unknown"
+            self.model_name_or_path = (
+                getattr(self.model.model_card_data, "base_model", None) or "unknown"
+            )
         else:
             raise ValueError("model must be a string or SentenceTransformer instance")
 
@@ -91,14 +93,14 @@ class SentenceTransformerEmbeddings(BaseEmbeddings):
         split_texts = [self.model.tokenizer.decode(split) for split in token_splits]
         # Get the token embeddings
         try:
-            token_embeddings_raw = self.model.encode(
-                split_texts, output_value="token_embeddings"
-            )
+            token_embeddings_raw = self.model.encode(split_texts, output_value="token_embeddings")
         except KeyError:
             # Fallback: use sentence embeddings for each split if token_embeddings not available
             token_embeddings_raw = self.model.encode(split_texts, convert_to_numpy=True)
             # Ensure all fallback embeddings are np.ndarray before expanding dims
-            token_embeddings_raw = [np.expand_dims(np.array(emb), axis=0) for emb in token_embeddings_raw]  # type: ignore
+            token_embeddings_raw = [
+                np.expand_dims(np.array(emb), axis=0) for emb in token_embeddings_raw
+            ]  # type: ignore
 
         # Ensure all embeddings are numpy arrays
         token_embeddings: list[np.ndarray] = []
@@ -173,7 +175,7 @@ class SentenceTransformerEmbeddings(BaseEmbeddings):
             from sentence_transformers import SentenceTransformer
         else:
             raise ImportError(
-                "sentence_transformers is not available. Please install it via `pip install chonkie[st]`"
+                "sentence_transformers is not available. Please install it via `pip install chonkie[st]`",
             )
 
     def __repr__(self) -> str:

@@ -132,17 +132,13 @@ class MongoDBHandshake(BaseHandshake):
             import pymongo
         else:
             raise ImportError(
-                "pymongo is not installed. Please install it with `pip install chonkie[mongodb]`."
+                "pymongo is not installed. Please install it with `pip install chonkie[mongodb]`.",
             )
 
     def _generate_id(self, index: int, chunk: Chunk) -> str:
-        return str(
-            uuid5(NAMESPACE_OID, f"{self.collection_name}::chunk-{index}:{chunk.text}")
-        )
+        return str(uuid5(NAMESPACE_OID, f"{self.collection_name}::chunk-{index}:{chunk.text}"))
 
-    def _generate_document(
-        self, index: int, chunk: Chunk, embedding: list[float]
-    ) -> dict:
+    def _generate_document(self, index: int, chunk: Chunk, embedding: list[float]) -> dict:
         return {
             "_id": self._generate_id(index, chunk),
             "text": chunk.text,
@@ -169,7 +165,9 @@ class MongoDBHandshake(BaseHandshake):
             documents.append(self._generate_document(index, chunk, embedding_list))
         if documents:
             self.collection.insert_many(documents)
-            logger.info(f"Chonkie wrote {len(documents)} chunks to MongoDB collection: {self.collection_name}")
+            logger.info(
+                f"Chonkie wrote {len(documents)} chunks to MongoDB collection: {self.collection_name}",
+            )
 
     def __repr__(self) -> str:
         """Return a string representation of the MongoDBHandshake instance."""
@@ -193,7 +191,9 @@ class MongoDBHandshake(BaseHandshake):
 
         """
         logger.debug(f"Searching MongoDB collection: {self.collection_name} with limit={limit}")
-        assert (query is not None or embedding is not None), "Either query or embedding must be provided."
+        assert query is not None or embedding is not None, (
+            "Either query or embedding must be provided."
+        )
         if query is not None:
             embedding = self.embedding_model.embed(query).tolist()
         # Get all documents with embeddings
@@ -208,7 +208,7 @@ class MongoDBHandshake(BaseHandshake):
                     "end_index": 1,
                     "token_count": 1,
                 },
-            )
+            ),
         )
 
         def cosine_similarity(a: list[float], b: list[float]) -> float:
@@ -227,7 +227,7 @@ class MongoDBHandshake(BaseHandshake):
         for doc in docs:
             emb = doc.get("embedding")
             if emb is not None:
-                score = cosine_similarity(embedding, emb) # type: ignore[arg-type]
+                score = cosine_similarity(embedding, emb)  # type: ignore[arg-type]
                 result = {
                     "id": doc["_id"],
                     "score": score,

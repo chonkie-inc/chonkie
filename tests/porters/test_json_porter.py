@@ -87,19 +87,19 @@ def test_json_porter_export_jsonl(sample_chunks: list[Chunk], temp_dir: str) -> 
     """Test exporting chunks as JSONL format."""
     porter = JSONPorter(lines=True)
     output_file = os.path.join(temp_dir, "test_chunks.jsonl")
-    
+
     # Export chunks
     porter.export(sample_chunks, output_file)
-    
+
     # Verify file exists
     assert os.path.exists(output_file)
-    
+
     # Read and verify content
     with open(output_file, "r") as f:
         lines = f.readlines()
-    
+
     assert len(lines) == len(sample_chunks)
-    
+
     # Verify each line is valid JSON and contains expected data
     for i, line in enumerate(lines):
         chunk_data = json.loads(line.strip())
@@ -113,20 +113,20 @@ def test_json_porter_export_json(sample_chunks: list[Chunk], temp_dir: str) -> N
     """Test exporting chunks as JSON format."""
     porter = JSONPorter(lines=False)
     output_file = os.path.join(temp_dir, "test_chunks.json")
-    
+
     # Export chunks
     porter.export(sample_chunks, output_file)
-    
+
     # Verify file exists
     assert os.path.exists(output_file)
-    
+
     # Read and verify content
     with open(output_file, "r") as f:
         data = json.load(f)
-    
+
     assert isinstance(data, list)
     assert len(data) == len(sample_chunks)
-    
+
     # Verify each chunk data
     for i, chunk_data in enumerate(data):
         assert chunk_data["text"] == sample_chunks[i].text
@@ -139,16 +139,16 @@ def test_json_porter_with_context(chunks_with_context: list[Chunk], temp_dir: st
     """Test exporting chunks with context."""
     porter = JSONPorter(lines=False)
     output_file = os.path.join(temp_dir, "chunks_with_context.json")
-    
+
     # Export chunks
     porter.export(chunks_with_context, output_file)
-    
+
     # Read and verify content
     with open(output_file, "r") as f:
         data = json.load(f)
-    
+
     assert len(data) == len(chunks_with_context)
-    
+
     # Verify context is included
     for i, chunk_data in enumerate(data):
         assert "context" in chunk_data
@@ -158,23 +158,23 @@ def test_json_porter_with_context(chunks_with_context: list[Chunk], temp_dir: st
 def test_json_porter_call_method(sample_chunks: list[Chunk], temp_dir: str) -> None:
     """Test JSONPorter __call__ method uses default filename."""
     porter = JSONPorter(lines=True)
-    
+
     # Change to temp directory to use default filename
     original_cwd = os.getcwd()
     os.chdir(temp_dir)
-    
+
     try:
         # Use __call__ method (base class only passes chunks, uses default filename)
         porter(sample_chunks)
-        
+
         # Verify default file exists and has correct content
         assert os.path.exists("chunks.jsonl")
-        
+
         with open("chunks.jsonl", "r") as f:
             lines = f.readlines()
-        
+
         assert len(lines) == len(sample_chunks)
-        
+
     finally:
         os.chdir(original_cwd)
 
@@ -184,25 +184,25 @@ def test_json_porter_default_filenames(sample_chunks: list[Chunk], temp_dir: str
     # Change to temp directory to avoid polluting the project
     original_cwd = os.getcwd()
     os.chdir(temp_dir)
-    
+
     try:
         # Test JSONL default filename
         porter_lines = JSONPorter(lines=True)
         porter_lines.export(sample_chunks)
         assert os.path.exists("chunks.jsonl")
-        
-        # Test JSON format - note: default filename is still "chunks.jsonl" 
+
+        # Test JSON format - note: default filename is still "chunks.jsonl"
         # but content will be JSON format, not JSONL
         porter_json = JSONPorter(lines=False)
         porter_json.export(sample_chunks)
         assert os.path.exists("chunks.jsonl")  # Default filename is always chunks.jsonl
-        
+
         # Verify the content is JSON format (not JSONL)
         with open("chunks.jsonl", "r") as f:
             data = json.load(f)  # Should be valid JSON, not JSONL
         assert isinstance(data, list)
         assert len(data) == len(sample_chunks)
-        
+
     finally:
         os.chdir(original_cwd)
 
@@ -211,16 +211,16 @@ def test_json_porter_empty_chunks_list(temp_dir: str) -> None:
     """Test JSONPorter with empty chunks list."""
     porter = JSONPorter(lines=False)
     output_file = os.path.join(temp_dir, "empty_chunks.json")
-    
+
     # Export empty list
     porter.export([], output_file)
-    
+
     # Verify file exists and contains empty array
     assert os.path.exists(output_file)
-    
+
     with open(output_file, "r") as f:
         data = json.load(f)
-    
+
     assert data == []
 
 
@@ -228,16 +228,16 @@ def test_json_porter_empty_chunks_jsonl(temp_dir: str) -> None:
     """Test JSONPorter with empty chunks list in JSONL format."""
     porter = JSONPorter(lines=True)
     output_file = os.path.join(temp_dir, "empty_chunks.jsonl")
-    
+
     # Export empty list
     porter.export([], output_file)
-    
+
     # Verify file exists and is empty
     assert os.path.exists(output_file)
-    
+
     with open(output_file, "r") as f:
         content = f.read()
-    
+
     assert content == ""
 
 
@@ -245,17 +245,17 @@ def test_json_porter_indentation(sample_chunks: list[Chunk], temp_dir: str) -> N
     """Test JSON indentation is applied correctly."""
     porter = JSONPorter(lines=False)
     output_file = os.path.join(temp_dir, "indented_chunks.json")
-    
+
     # Export chunks
     porter.export(sample_chunks, output_file)
-    
+
     # Read raw content and verify indentation
     with open(output_file, "r") as f:
         content = f.read()
-    
+
     # Should contain indentation (4 spaces)
     assert "    " in content
-    
+
     # Should be properly formatted JSON
     data = json.loads(content)
     assert len(data) == len(sample_chunks)
@@ -264,10 +264,10 @@ def test_json_porter_indentation(sample_chunks: list[Chunk], temp_dir: str) -> N
 def test_json_porter_file_permissions_error(sample_chunks: list[Chunk], temp_dir: str) -> None:
     """Test JSONPorter handles file permission errors."""
     porter = JSONPorter(lines=False)
-    
+
     # Try to write to a directory that doesn't exist
     invalid_path = os.path.join(temp_dir, "nonexistent", "chunks.json")
-    
+
     with pytest.raises(FileNotFoundError):
         porter.export(sample_chunks, invalid_path)
 
@@ -284,19 +284,19 @@ def test_json_porter_large_chunks_list(temp_dir: str) -> None:
             token_count=7,
         )
         large_chunks.append(chunk)
-    
+
     porter = JSONPorter(lines=True)
     output_file = os.path.join(temp_dir, "large_chunks.jsonl")
-    
+
     # Export large list
     porter.export(large_chunks, output_file)
-    
+
     # Verify file exists and has correct number of lines
     assert os.path.exists(output_file)
-    
+
     with open(output_file, "r") as f:
         lines = f.readlines()
-    
+
     assert len(lines) == 1000
 
 
@@ -316,41 +316,44 @@ def test_json_porter_unicode_content(temp_dir: str) -> None:
             token_count=6,
         ),
     ]
-    
+
     porter = JSONPorter(lines=False)
     output_file = os.path.join(temp_dir, "unicode_chunks.json")
-    
+
     # Export chunks with unicode
     porter.export(unicode_chunks, output_file)
-    
+
     # Read and verify content
     with open(output_file, "r", encoding="utf-8") as f:
         data = json.load(f)
-    
+
     assert len(data) == 2
     assert data[0]["text"] == "Hello 世界! 🌍 This contains unicode."
     assert data[1]["text"] == "Café, naïve, résumé, 北京"
 
 
-def test_json_porter_chunk_serialization_completeness(sample_chunks: list[Chunk], temp_dir: str) -> None:
+def test_json_porter_chunk_serialization_completeness(
+    sample_chunks: list[Chunk],
+    temp_dir: str,
+) -> None:
     """Test that all chunk attributes are properly serialized."""
     porter = JSONPorter(lines=False)
     output_file = os.path.join(temp_dir, "complete_chunks.json")
-    
+
     # Export chunks
     porter.export(sample_chunks, output_file)
-    
+
     # Read back and verify all expected fields are present
     with open(output_file, "r") as f:
         data = json.load(f)
-    
+
     for i, chunk_data in enumerate(data):
         # Check all basic fields are present
         required_fields = ["text", "start_index", "end_index", "token_count"]
         for field in required_fields:
             assert field in chunk_data
             assert chunk_data[field] == getattr(sample_chunks[i], field)
-        
+
         # Context should be None for these chunks
         assert chunk_data.get("context") is None
 
@@ -359,15 +362,15 @@ def test_json_porter_path_object_support(sample_chunks: list[Chunk], temp_dir: s
     """Test JSONPorter works with Path objects."""
     porter = JSONPorter(lines=False)
     output_file = Path(temp_dir) / "path_chunks.json"
-    
+
     # Export using Path object
     porter.export(sample_chunks, str(output_file))
-    
+
     # Verify file exists
     assert output_file.exists()
-    
+
     # Verify content
     with open(output_file, "r") as f:
         data = json.load(f)
-    
+
     assert len(data) == len(sample_chunks)

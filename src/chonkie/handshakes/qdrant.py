@@ -125,9 +125,7 @@ class QdrantHandshake(BaseHandshake):
         if not self.client.collection_exists(self.collection_name):
             self.client.create_collection(
                 collection_name=self.collection_name,
-                vectors_config=VectorParams(
-                    size=self.dimension, distance=Distance.COSINE
-                ),
+                vectors_config=VectorParams(size=self.dimension, distance=Distance.COSINE),
             )
 
     def _is_available(self) -> bool:
@@ -144,14 +142,12 @@ class QdrantHandshake(BaseHandshake):
         else:
             raise ImportError(
                 "Qdrant is not installed. "
-                + "Please install it with `pip install chonkie[qdrant]`."
+                + "Please install it with `pip install chonkie[qdrant]`.",
             )
 
     def _generate_id(self, index: int, chunk: Chunk) -> str:
         """Generate a unique id for the chunk."""
-        return str(
-            uuid5(NAMESPACE_OID, f"{self.collection_name}::chunk-{index}:{chunk.text}")
-        )
+        return str(uuid5(NAMESPACE_OID, f"{self.collection_name}::chunk-{index}:{chunk.text}"))
 
     def _generate_payload(self, chunk: Chunk) -> dict:
         """Generate the payload for the chunk."""
@@ -175,7 +171,7 @@ class QdrantHandshake(BaseHandshake):
                     id=self._generate_id(index, chunk),
                     vector=self.embedding_model.embed(chunk.text).tolist(),  # type: ignore[arg-type] # Since this passes a numpy array, we need to convert it to a list
                     payload=self._generate_payload(chunk),
-                )
+                ),
             )
         return points
 
@@ -188,11 +184,11 @@ class QdrantHandshake(BaseHandshake):
         points = self._get_points(chunks)
 
         # Write the points to the collection
-        self.client.upsert(
-            collection_name=self.collection_name, points=points, wait=True
-        )
+        self.client.upsert(collection_name=self.collection_name, points=points, wait=True)
 
-        logger.info(f"Chonkie wrote {len(chunks)} chunks to Qdrant collection: {self.collection_name}")
+        logger.info(
+            f"Chonkie wrote {len(chunks)} chunks to Qdrant collection: {self.collection_name}",
+        )
 
     def __repr__(self) -> str:
         """Return the string representation of the QdrantHandshake."""

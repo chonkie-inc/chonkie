@@ -1,4 +1,5 @@
 """Embeddings Refinery for Chonkie Cloud."""
+
 import os
 from typing import Any, Optional, cast
 
@@ -11,7 +12,11 @@ from .base import BaseRefinery
 class EmbeddingsRefinery(BaseRefinery):
     """Embeddings Refinery for Chonkie Cloud."""
 
-    def __init__(self, embedding_model: str = "minishlab/potion-retrieval-32M", api_key: Optional[str] = None):
+    def __init__(
+        self,
+        embedding_model: str = "minishlab/potion-retrieval-32M",
+        api_key: Optional[str] = None,
+    ):
         """Initialize the EmbeddingsRefinery.
 
         Args:
@@ -27,12 +32,12 @@ class EmbeddingsRefinery(BaseRefinery):
         if not self.api_key:
             raise ValueError(
                 "No API key provided. Please set the CHONKIE_API_KEY environment variable "
-                + "or pass an API key to the EmbeddingsRefinery constructor."
+                + "or pass an API key to the EmbeddingsRefinery constructor.",
             )
 
     def refine(self, chunks: list[Any]) -> list[Any]:
         """Refine the chunks.
-        
+
         Args:
             chunks: The chunks to refine.
 
