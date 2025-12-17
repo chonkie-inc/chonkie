@@ -29,7 +29,7 @@ class TableChef(BaseChef):
             import pandas as pd
         except ImportError as e:
             raise ImportError(
-                "Pandas is required to use TableChef. Please install it with `pip install chonkie[table]`."
+                "Pandas is required to use TableChef. Please install it with `pip install chonkie[table]`.",
             ) from e
 
     def parse(self, text: str) -> Document:
@@ -69,9 +69,7 @@ class TableChef(BaseChef):
                 markdown = df.to_markdown(index=False)
                 logger.info(f"CSV processing complete: converted {len(df)} rows to markdown")
                 # CSV always produces a single table
-                table = MarkdownTable(
-                    content=markdown, start_index=0, end_index=len(markdown)
-                )
+                table = MarkdownTable(content=markdown, start_index=0, end_index=len(markdown))
                 return MarkdownDocument(content=markdown, tables=[table])
             elif str_path.endswith(".xls") or str_path.endswith(".xlsx"):
                 logger.debug("Processing Excel file")
@@ -81,22 +79,18 @@ class TableChef(BaseChef):
                 for df in all_df.values():
                     text = df.to_markdown(index=False)
                     all_content.append(text)
-                    tables.append(
-                        MarkdownTable(
-                            content=text, start_index=0, end_index=len(text)
-                        )
-                    )
+                    tables.append(MarkdownTable(content=text, start_index=0, end_index=len(text)))
                 # Join all sheets with double newline
                 content = "\n\n".join(all_content)
-                logger.info(f"Excel processing complete: converted {len(all_df)} sheets to markdown")
+                logger.info(
+                    f"Excel processing complete: converted {len(all_df)} sheets to markdown",
+                )
                 return MarkdownDocument(content=content, tables=tables)
         # Not a file, treat as markdown string and extract tables
         logger.debug("Extracting tables from markdown string")
         return self.parse(str(path))
 
-    def process_batch(
-        self, paths: Union[list[str], list[Path]]
-    ) -> list[Document]:
+    def process_batch(self, paths: Union[list[str], list[Path]]) -> list[Document]:
         """Process multiple CSV/Excel files or markdown texts.
 
         Args:
@@ -112,7 +106,8 @@ class TableChef(BaseChef):
         return results
 
     def __call__(  # type: ignore[override]
-        self, path: Union[str, Path, list[str], list[Path]]
+        self,
+        path: Union[str, Path, list[str], list[Path]],
     ) -> Union[Document, list[Document]]:
         """Process a single file/text or a batch of files/texts.
 
@@ -146,9 +141,7 @@ class TableChef(BaseChef):
             start_index = match.start()
             end_index = match.end()
             tables.append(
-                MarkdownTable(
-                    content=table_content, start_index=start_index, end_index=end_index
-                )
+                MarkdownTable(content=table_content, start_index=start_index, end_index=end_index),
             )
         return tables
 

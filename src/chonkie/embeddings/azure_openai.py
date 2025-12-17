@@ -77,7 +77,7 @@ class AzureOpenAIEmbeddings(BaseEmbeddings):
         if not azure_endpoint:
             raise ValueError(
                 "`azure_endpoint` is required for Azure OpenAI. "
-                "Provide it as a parameter or set the AZURE_OPENAI_ENDPOINT environment variable."
+                "Provide it as a parameter or set the AZURE_OPENAI_ENDPOINT environment variable.",
             )
 
         # Get azure_api_key from env var if not provided
@@ -105,7 +105,8 @@ class AzureOpenAIEmbeddings(BaseEmbeddings):
             from azure.identity import DefaultAzureCredential, get_bearer_token_provider
 
             token_provider = get_bearer_token_provider(
-                DefaultAzureCredential(), "https://cognitiveservices.azure.com/.default"
+                DefaultAzureCredential(),
+                "https://cognitiveservices.azure.com/.default",
             )
             self.client = AzureOpenAI(  # type: ignore
                 azure_endpoint=azure_endpoint,
@@ -155,15 +156,11 @@ class AzureOpenAIEmbeddings(BaseEmbeddings):
                     input=batch,
                 )
                 sorted_embeddings = sorted(response.data, key=lambda x: x.index)
-                embeddings = [
-                    np.array(e.embedding, dtype=np.float32) for e in sorted_embeddings
-                ]
+                embeddings = [np.array(e.embedding, dtype=np.float32) for e in sorted_embeddings]
                 all_embeddings.extend(embeddings)
             except Exception as e:
                 if len(batch) > 1:
-                    warnings.warn(
-                        f"Batch failed: {e}. Falling back to single embedding calls."
-                    )
+                    warnings.warn(f"Batch failed: {e}. Falling back to single embedding calls.")
                     all_embeddings.extend(self.embed(t) for t in batch)
                 else:
                     raise
@@ -202,7 +199,7 @@ class AzureOpenAIEmbeddings(BaseEmbeddings):
             from openai import AzureOpenAI
         else:
             raise ImportError(
-                "Required packages not found. Install with `pip install chonkie[azure-openai]`."
+                "Required packages not found. Install with `pip install chonkie[azure-openai]`.",
             )
 
     def __repr__(self) -> str:

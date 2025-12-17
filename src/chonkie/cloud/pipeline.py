@@ -97,14 +97,14 @@ class Pipeline:
         if not self._api_key:
             raise ValueError(
                 "No API key provided. Please set the CHONKIE_API_KEY environment "
-                "variable or pass an api_key to the Pipeline constructor."
+                "variable or pass an api_key to the Pipeline constructor.",
             )
 
         # Validate slug format
         if not SLUG_PATTERN.match(slug):
             raise ValueError(
                 f"Invalid slug '{slug}'. Slug must contain only lowercase letters, "
-                "numbers, dashes, and underscores."
+                "numbers, dashes, and underscores.",
             )
 
         self._slug = slug
@@ -164,7 +164,7 @@ class Pipeline:
         if not api_key:
             raise ValueError(
                 "No API key provided. Please set the CHONKIE_API_KEY environment "
-                "variable or pass an api_key."
+                "variable or pass an api_key.",
             )
 
         response = requests.get(
@@ -216,7 +216,7 @@ class Pipeline:
         if not api_key:
             raise ValueError(
                 "No API key provided. Please set the CHONKIE_API_KEY environment "
-                "variable or pass an api_key."
+                "variable or pass an api_key.",
             )
 
         response = requests.get(
@@ -271,7 +271,7 @@ class Pipeline:
         if not api_key:
             raise ValueError(
                 "No API key provided. Please set the CHONKIE_API_KEY environment "
-                "variable or pass an api_key."
+                "variable or pass an api_key.",
             )
 
         # Convert to API format

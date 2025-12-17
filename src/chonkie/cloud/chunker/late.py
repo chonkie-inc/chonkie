@@ -44,7 +44,11 @@ class LateChunker(RecursiveChunker):
             lang=lang,
         )
 
-    def chunk(self, text: Optional[Union[str, list[str]]] = None, file: Optional[str] = None) -> Union[list[Chunk], list[list[Chunk]]]:
+    def chunk(
+        self,
+        text: Optional[Union[str, list[str]]] = None,
+        file: Optional[str] = None,
+    ) -> Union[list[Chunk], list[list[Chunk]]]:
         """Chunk the text or file into a list of late-interaction chunks via the Chonkie API.
 
         Args:
@@ -84,7 +88,9 @@ class LateChunker(RecursiveChunker):
                 "lang": self.lang,
             }
         else:
-            raise ValueError("No text or file provided. Please provide either text or a file path.")
+            raise ValueError(
+                "No text or file provided. Please provide either text or a file path.",
+            )
 
         # Make the request to the Chonkie API's late chunking endpoint
         response = requests.post(
@@ -119,21 +125,25 @@ class LateChunker(RecursiveChunker):
             raise ValueError(
                 f"Oh no! Chonkie API returned an error for late chunking: {http_error}. "
                 f"Details: {error_detail}"
-                + "If the issue persists, please contact support at support@chonkie.ai."
+                + "If the issue persists, please contact support at support@chonkie.ai.",
             ) from http_error
         except requests.exceptions.JSONDecodeError as error:
             raise ValueError(
                 "Oh no! The Chonkie API returned an invalid JSON response for late chunking."
                 + "Please try again in a short while."
-                + "If the issue persists, please contact support at support@chonkie.ai."
+                + "If the issue persists, please contact support at support@chonkie.ai.",
             ) from error
-        except Exception as error: # Catch any other unexpected errors
+        except Exception as error:  # Catch any other unexpected errors
             raise ValueError(
                 "An unexpected error occurred while processing the response from Chonkie API for late chunking."
                 + "Please try again in a short while."
-                + "If the issue persists, please contact support at support@chonkie.ai."
+                + "If the issue persists, please contact support at support@chonkie.ai.",
             ) from error
-    
-    def __call__(self, text: Optional[Union[str, list[str]]] = None, file: Optional[str] = None) -> Union[list[Chunk], list[list[Chunk]]]:
+
+    def __call__(
+        self,
+        text: Optional[Union[str, list[str]]] = None,
+        file: Optional[str] = None,
+    ) -> Union[list[Chunk], list[list[Chunk]]]:
         """Call the LateChunker to chunk text."""
         return self.chunk(text=text, file=file)

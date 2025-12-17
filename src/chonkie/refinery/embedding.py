@@ -29,7 +29,9 @@ class EmbeddingsRefinery(BaseRefinery):
     def __init__(
         self,
         embedding_model: Union[
-            str, BaseEmbeddings, AutoEmbeddings
+            str,
+            BaseEmbeddings,
+            AutoEmbeddings,
         ] = "minishlab/potion-retrieval-32M",
         **kwargs: dict[str, Any],
     ) -> None:
@@ -38,9 +40,7 @@ class EmbeddingsRefinery(BaseRefinery):
 
         # Check if the model is a string
         if isinstance(embedding_model, str):
-            self.embedding_model = AutoEmbeddings.get_embeddings(
-                embedding_model, **kwargs
-            )
+            self.embedding_model = AutoEmbeddings.get_embeddings(embedding_model, **kwargs)
         elif isinstance(embedding_model, BaseEmbeddings):
             self.embedding_model = embedding_model
         else:

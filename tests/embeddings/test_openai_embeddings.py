@@ -47,7 +47,11 @@ def test_initialization_with_model_name(embedding_model: OpenAIEmbeddings) -> No
     reason="Skipping test because OPENAI_API_KEY is not defined",
 )
 @patch("chonkie.embeddings.openai.OpenAIEmbeddings.embed")
-def test_embed_single_text(mock_embed, embedding_model: OpenAIEmbeddings, sample_text: str) -> None:
+def test_embed_single_text(
+    mock_embed,
+    embedding_model: OpenAIEmbeddings,
+    sample_text: str,
+) -> None:
     """Test that OpenAIEmbeddings correctly embeds a single text."""
     mock_embed.return_value = np.zeros(embedding_model.dimension)
     embedding = embedding_model.embed(sample_text)
@@ -60,18 +64,18 @@ def test_embed_single_text(mock_embed, embedding_model: OpenAIEmbeddings, sample
     reason="Skipping test because OPENAI_API_KEY is not defined",
 )
 @patch("chonkie.embeddings.openai.OpenAIEmbeddings.embed_batch")
-def test_embed_batch_texts(mock_embed_batch, embedding_model: OpenAIEmbeddings, sample_texts: list[str]) -> None:
+def test_embed_batch_texts(
+    mock_embed_batch,
+    embedding_model: OpenAIEmbeddings,
+    sample_texts: list[str],
+) -> None:
     """Test that OpenAIEmbeddings correctly embeds a batch of texts."""
     mock_embed_batch.return_value = [np.zeros(embedding_model.dimension) for _ in sample_texts]
     embeddings = embedding_model.embed_batch(sample_texts)
     assert isinstance(embeddings, list)
     assert len(embeddings) == len(sample_texts)
     assert all(isinstance(embedding, np.ndarray) for embedding in embeddings)
-    assert all(
-        embedding.shape == (embedding_model.dimension,) for embedding in embeddings
-    )
-
-
+    assert all(embedding.shape == (embedding_model.dimension,) for embedding in embeddings)
 
 
 @pytest.mark.skipif(
@@ -80,7 +84,12 @@ def test_embed_batch_texts(mock_embed_batch, embedding_model: OpenAIEmbeddings, 
 )
 @patch("chonkie.embeddings.openai.OpenAIEmbeddings.embed_batch")
 @patch("chonkie.embeddings.openai.OpenAIEmbeddings.similarity")
-def test_similarity(mock_similarity, mock_embed_batch, embedding_model: OpenAIEmbeddings, sample_texts: list[str]) -> None:
+def test_similarity(
+    mock_similarity,
+    mock_embed_batch,
+    embedding_model: OpenAIEmbeddings,
+    sample_texts: list[str],
+) -> None:
     """Test that OpenAIEmbeddings correctly calculates similarity between two embeddings."""
     mock_embed_batch.return_value = [np.zeros(embedding_model.dimension) for _ in sample_texts]
     mock_similarity.return_value = np.float32(0.5)

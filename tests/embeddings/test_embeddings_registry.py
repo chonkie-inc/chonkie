@@ -20,7 +20,7 @@ class MockEmbeddings(BaseEmbeddings):
     def embed(self, text: str) -> Any:
         """Mock embed method."""
         return [1.0, 2.0, 3.0]
-    
+
     @property
     def dimension(self) -> int:
         """Return embedding dimension."""
@@ -81,7 +81,7 @@ class TestEmbeddingsRegistryRegistration:
         """Test registering a valid pattern."""
         pattern_str = r"^test-.*"
         EmbeddingsRegistry.register_pattern(pattern_str, MockEmbeddings)
-        
+
         # Check that pattern was compiled and registered
         pattern_found = False
         for pattern, cls in EmbeddingsRegistry.pattern_registry.items():
@@ -105,7 +105,7 @@ class TestEmbeddingsRegistryRegistration:
         """Test registering types with a list of strings."""
         types_list = ["Type1", "Type2", "Type3"]
         EmbeddingsRegistry.register_types(types_list, MockEmbeddings)
-        
+
         for type_name in types_list:
             assert type_name in EmbeddingsRegistry.type_registry
             assert EmbeddingsRegistry.type_registry[type_name] == MockEmbeddings
@@ -131,7 +131,7 @@ class TestEmbeddingsRegistryLookup:
         EmbeddingsRegistry.provider_registry.clear()
         EmbeddingsRegistry.pattern_registry.clear()
         EmbeddingsRegistry.type_registry.clear()
-        
+
         # Register test entries
         EmbeddingsRegistry.register_model("test-model", MockEmbeddings)
         EmbeddingsRegistry.register_provider("test", MockEmbeddings)
@@ -182,7 +182,7 @@ class TestEmbeddingsRegistryWrap:
         # Save original registries
         self.original_type_registry = EmbeddingsRegistry.type_registry.copy()
         self.original_model_registry = EmbeddingsRegistry.model_registry.copy()
-        
+
         # Clear and set up test data
         EmbeddingsRegistry.type_registry.clear()
         EmbeddingsRegistry.model_registry.clear()
@@ -207,13 +207,14 @@ class TestEmbeddingsRegistryWrap:
 
     def test_wrap_custom_object_type_match(self) -> None:
         """Test wrapping a custom object with type registry match."""
+
         class MockTypeClass:
             pass
-        
+
         mock_obj = MockTypeClass()
         # Register the exact type string that would appear in str(type(mock_obj))
         EmbeddingsRegistry.register_types("MockTypeClass", MockEmbeddings)
-        
+
         result = EmbeddingsRegistry.wrap(mock_obj)
         assert isinstance(result, MockEmbeddings)
 
@@ -222,7 +223,7 @@ class TestEmbeddingsRegistryWrap:
         unsupported_obj = {"not": "supported"}
         with pytest.raises(ValueError, match="Unsupported object type for embeddings"):
             EmbeddingsRegistry.wrap(unsupported_obj)
-            
+
     def test_wrap_string_no_match(self) -> None:
         """Test wrapping string with no registry match raises error."""
         with pytest.raises((ValueError, AttributeError, TypeError)):
@@ -231,7 +232,7 @@ class TestEmbeddingsRegistryWrap:
 
 class TestEmbeddingsRegistryIntegration:
     """Test EmbeddingsRegistry integration functionality."""
-    
+
     def test_registries_have_content(self) -> None:
         """Test that registries are populated with default content."""
         # At module load time, registries should be populated
@@ -239,7 +240,7 @@ class TestEmbeddingsRegistryIntegration:
         assert len(EmbeddingsRegistry.model_registry) > 0
         assert len(EmbeddingsRegistry.pattern_registry) > 0
         assert len(EmbeddingsRegistry.type_registry) > 0
-        
+
     def test_provider_registration_functionality(self) -> None:
         """Test that provider registration mechanism works."""
         # Test registration functionality rather than assuming global state
@@ -247,15 +248,15 @@ class TestEmbeddingsRegistryIntegration:
         EmbeddingsRegistry.register_provider("test_provider", SentenceTransformerEmbeddings)
         result = EmbeddingsRegistry.get_provider("test_provider")
         assert result == SentenceTransformerEmbeddings
-        
+
         # Test that the registration persists
         assert "test_provider" in EmbeddingsRegistry.provider_registry
-            
+
     def test_integration_with_autoembeddings(self) -> None:
         """Test that registry integrates properly with AutoEmbeddings patterns."""
         # These should work through the registry system
         from chonkie.embeddings.auto import AutoEmbeddings
-        
+
         # Test provider prefix syntax
         try:
             result = AutoEmbeddings.get_embeddings("st://all-MiniLM-L6-v2")
@@ -267,7 +268,7 @@ class TestEmbeddingsRegistryIntegration:
 
 class TestEmbeddingsRegistryEdgeCases:
     """Test edge cases and complex scenarios."""
-    
+
     def setup_method(self) -> None:
         """Set up test registries."""
         # Save original registries
@@ -295,7 +296,7 @@ class TestEmbeddingsRegistryEdgeCases:
         """Test pattern registration with complex regex."""
         complex_pattern = r"^(?:test|demo)-\w+-(?:v\d+|\d+\.\d+)$"
         EmbeddingsRegistry.register_pattern(complex_pattern, MockEmbeddings)
-        
+
         # Test that pattern works
         assert EmbeddingsRegistry.match("test-model-v1") == MockEmbeddings
         assert EmbeddingsRegistry.match("demo-embedding-2.1") == MockEmbeddings
@@ -303,11 +304,12 @@ class TestEmbeddingsRegistryEdgeCases:
 
     def test_type_registry_partial_match(self) -> None:
         """Test type registry with partial string matching."""
+
         class CustomModelType:
             pass
-        
+
         EmbeddingsRegistry.register_types("CustomModel", MockEmbeddings)
-        
+
         # This should match because "CustomModel" is in the type string
         custom_obj = CustomModelType()
         result = EmbeddingsRegistry.wrap(custom_obj)
@@ -320,20 +322,20 @@ class TestEmbeddingsRegistryEdgeCases:
         EmbeddingsRegistry.register_model("temp-model", MockEmbeddings)
         assert "temp-model" in EmbeddingsRegistry.model_registry
         assert len(EmbeddingsRegistry.model_registry) == original_size + 1
-        
+
         # This should persist within the test but not leak to other tests
         # (teardown_method handles cleanup)
-        
+
     def test_pattern_priority_over_exact_match(self) -> None:
         """Test that pattern matching works even when exact matches exist."""
         # Register both exact model and pattern
         EmbeddingsRegistry.register_model("exact-match-model", SentenceTransformerEmbeddings)
         EmbeddingsRegistry.register_pattern(r"^exact-match-.*", MockEmbeddings)
-        
+
         # Exact match should take priority
         result = EmbeddingsRegistry.match("exact-match-model")
         assert result == SentenceTransformerEmbeddings
-        
+
         # Pattern should match for non-exact
         result = EmbeddingsRegistry.match("exact-match-other")
         assert result == MockEmbeddings

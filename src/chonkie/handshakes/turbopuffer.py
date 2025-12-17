@@ -56,7 +56,7 @@ class TurbopufferHandshake(BaseHandshake):
         api_key = api_key or os.getenv("TURBOPUFFER_API_KEY")
         if not api_key:
             raise ValueError(
-                "Turbopuffer API key not found. Please provide an API key or set the TURBOPUFFER_API_KEY environment variable."
+                "Turbopuffer API key not found. Please provide an API key or set the TURBOPUFFER_API_KEY environment variable.",
             )
 
         # Setting the tpuf api key
@@ -94,7 +94,7 @@ class TurbopufferHandshake(BaseHandshake):
             return tpuf
         else:
             raise ImportError(
-                "Turbopuffer is not available. Please install it with `pip install turbopuffer`."
+                "Turbopuffer is not available. Please install it with `pip install turbopuffer`.",
             )
 
     def _generate_id(self, index: int, chunk: Chunk) -> str:
@@ -103,7 +103,7 @@ class TurbopufferHandshake(BaseHandshake):
             uuid5(
                 NAMESPACE_OID,
                 f"{self.namespace.id}::chunk-{index}:{chunk.text}",  # type: ignore[attr-defined]
-            )
+            ),
         )
 
     def write(self, chunks: Union[Chunk, list[Chunk]]) -> None:
@@ -111,13 +111,13 @@ class TurbopufferHandshake(BaseHandshake):
         if isinstance(chunks, Chunk):
             chunks = [chunks]
 
-        logger.debug(f"Writing {len(chunks)} chunks to Turbopuffer namespace: {self.namespace.name}")  # type: ignore[attr-defined]
+        logger.debug(
+            f"Writing {len(chunks)} chunks to Turbopuffer namespace: {self.namespace.name}",
+        )  # type: ignore[attr-defined]
         # Embed the chunks
         ids = [self._generate_id(index, chunk) for (index, chunk) in enumerate(chunks)]
         texts = [chunk.text for chunk in chunks]
-        embeddings = [
-            embedding.tolist() for embedding in self.embedding_model.embed_batch(texts)
-        ]
+        embeddings = [embedding.tolist() for embedding in self.embedding_model.embed_batch(texts)]
         start_indices = [chunk.start_index for chunk in chunks]
         end_indices = [chunk.end_index for chunk in chunks]
         token_counts = [chunk.token_count for chunk in chunks]
@@ -135,7 +135,9 @@ class TurbopufferHandshake(BaseHandshake):
             distance_metric="cosine_distance",
         )
 
-        logger.info(f"Chonkie has written {len(chunks)} chunks to the namespace: {self.namespace.name}")  # type: ignore[attr-defined]
+        logger.info(
+            f"Chonkie has written {len(chunks)} chunks to the namespace: {self.namespace.name}",
+        )  # type: ignore[attr-defined]
 
     def __repr__(self) -> str:
         """Return the representation of the Turbopuffer Handshake."""

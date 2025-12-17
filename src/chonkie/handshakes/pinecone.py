@@ -73,7 +73,7 @@ class PineconeHandshake(BaseHandshake):
             api_key = api_key or os.getenv("PINECONE_API_KEY")
             if api_key is None:
                 raise ValueError(
-                    "Pinecone API key is not set. Please provide it as an argument or set the PINECONE_API_KEY environment variable."
+                    "Pinecone API key is not set. Please provide it as an argument or set the PINECONE_API_KEY environment variable.",
                 )
             self.client = pinecone.Pinecone(api_key=api_key, source_tag="chonkie")
 
@@ -107,7 +107,10 @@ class PineconeHandshake(BaseHandshake):
         if not self.client.has_index(self.index_name):
             if self.embed is not None:
                 self.client.create_index(  # type: ignore[call-arg]
-                    name=self.index_name, spec=self.spec, embed=self.embed, **kwargs
+                    name=self.index_name,
+                    spec=self.spec,
+                    embed=self.embed,
+                    **kwargs,
                 )
             else:
                 self.client.create_index(
@@ -128,13 +131,11 @@ class PineconeHandshake(BaseHandshake):
             import pinecone
         else:
             raise ImportError(
-                "Pinecone is not installed. Please install it with `pip install chonkie[pinecone]`."
+                "Pinecone is not installed. Please install it with `pip install chonkie[pinecone]`.",
             )
 
     def _generate_id(self, index: int, chunk: Chunk) -> str:
-        return str(
-            uuid5(NAMESPACE_OID, f"{self.index_name}::chunk-{index}:{chunk.text}")
-        )
+        return str(uuid5(NAMESPACE_OID, f"{self.index_name}::chunk-{index}:{chunk.text}"))
 
     def _generate_metadata(self, chunk: Chunk) -> dict:
         return {
@@ -145,7 +146,8 @@ class PineconeHandshake(BaseHandshake):
         }
 
     def _get_vectors(
-        self, chunks: Union[Chunk, list[Chunk]]
+        self,
+        chunks: Union[Chunk, list[Chunk]],
     ) -> list[tuple[str, list[float], dict[str, Any]]]:
         """Generate vectors for the chunks.
 
@@ -222,7 +224,7 @@ class PineconeHandshake(BaseHandshake):
             results = self.index.query(query=query, top_k=limit, include_metadata=True)
         elif query is None and embedding is None:
             raise ValueError(
-                "Query string or embedding must be provided when using a custom embedding model."
+                "Query string or embedding must be provided when using a custom embedding model.",
             )
         elif query is not None:
             # warning if both query and embedding are provided, query is used

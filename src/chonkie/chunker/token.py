@@ -54,9 +54,7 @@ class TokenChunker(BaseChunker):
         # Assign the values if they make sense
         self.chunk_size = chunk_size
         self.chunk_overlap = (
-            chunk_overlap
-            if isinstance(chunk_overlap, int)
-            else int(chunk_overlap * chunk_size)
+            chunk_overlap if isinstance(chunk_overlap, int) else int(chunk_overlap * chunk_size)
         )
 
         self._use_multiprocessing = False
@@ -86,7 +84,9 @@ class TokenChunker(BaseChunker):
         chunks = []
         current_index = 0
         for chunk_text, overlap_length, token_count in zip(
-            chunk_texts, overlap_lengths, token_counts
+            chunk_texts,
+            overlap_lengths,
+            token_counts,
         ):
             start_index = current_index
             end_index = start_index + len(chunk_text)
@@ -96,15 +96,13 @@ class TokenChunker(BaseChunker):
                     start_index=start_index,
                     end_index=end_index,
                     token_count=token_count,
-                )
+                ),
             )
             current_index = end_index - overlap_length
 
         return chunks
 
-    def _token_group_generator(
-        self, tokens: Sequence[int]
-    ) -> Generator[list[int], None, None]:
+    def _token_group_generator(self, tokens: Sequence[int]) -> Generator[list[int], None, None]:
         """Generate chunks from a list of tokens."""
         for start in range(0, len(tokens), self.chunk_size - self.chunk_overlap):
             end = min(start + self.chunk_size, len(tokens))
@@ -223,9 +221,7 @@ class TokenChunker(BaseChunker):
         elif isinstance(text, list) and isinstance(text[0], str):
             return self.chunk_batch(text, batch_size, show_progress_bar)
         else:
-            raise ValueError(
-                "Invalid input type. Expected a string or a list of strings."
-            )
+            raise ValueError("Invalid input type. Expected a string or a list of strings.")
 
     def __repr__(self) -> str:
         """Return a string representation of the TokenChunker."""
