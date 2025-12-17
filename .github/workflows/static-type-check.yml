@@ -23,13 +23,13 @@ jobs:
       - name: Install the project
         run: uv sync --all-extras --dev
 
-      - name: Run mypy type checking
+      - name: Run ty type checking
         run: |
           source .venv/bin/activate
-          mypy src/chonkie
+          ty check src/chonkie
 
-      - name: Run mypy on tests (optional)
+      - name: Run ty on tests (optional)
         run: |
           source .venv/bin/activate
-          mypy tests/ || echo "Type checking tests is optional and may have errors"
+          ty check tests/ || echo "Type checking tests is optional and may have errors"
         continue-on-error: true

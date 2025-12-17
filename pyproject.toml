@@ -162,7 +162,7 @@ dev = [
     "pytest-asyncio>=0.26.0",
     "coverage",
     "ruff>=0.0.265",
-    "mypy>=1.11.0",
+    "ty",
     "cython>=3.0.0",
     "pandas",
     "tabulate",
@@ -218,10 +218,3 @@ lint.ignore = ["D211", "D213", "D203"]
 [tool.ruff.format]
 preview = true
 indent-style = "space"
-
-[tool.mypy]
-disallow_untyped_defs = true
-ignore_missing_imports = true
-no_implicit_optional = true
-check_untyped_defs = true
-show_error_codes = true
