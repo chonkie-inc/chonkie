@@ -27,7 +27,7 @@ from chonkie import QdrantHandshake
 handshake = QdrantHandshake(url="http://localhost:6333")
 ```
 
-```python intialize using the client
+```python initialize using the client
 from qdrant_client import QdrantClient
 client = QdrantClient(":memory:")
 handshake = QdrantHandshake(client=client, collection_name="my_collection")

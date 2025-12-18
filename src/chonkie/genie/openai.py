@@ -76,7 +76,7 @@ class OpenAIGenie(BaseGenie):
 
     @classmethod
     def _is_available(cls) -> bool:
-        """Check if all the dependencies are available in the environement."""
+        """Check if all the dependencies are available in the environment."""
         if (
             importutil.find_spec("pydantic") is not None
             and importutil.find_spec("openai") is not None
