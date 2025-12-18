@@ -93,9 +93,7 @@ class SemanticChunker(BaseChunker):
         if filter_window <= 0:
             raise ValueError("filter_window must be positive")
         if filter_polyorder < 0 or filter_polyorder >= filter_window:
-            raise ValueError(
-                "filter_polyorder must be non-negative and less than filter_window"
-            )
+            raise ValueError("filter_polyorder must be non-negative and less than filter_window")
         if filter_tolerance <= 0 or filter_tolerance >= 1:
             raise ValueError("filter_tolerance must be between 0 and 1")
 
@@ -104,9 +102,7 @@ class SemanticChunker(BaseChunker):
         elif isinstance(embedding_model, BaseEmbeddings):
             self.embedding_model = embedding_model
         else:
-            raise ValueError(
-                "embedding_model must be a string or a BaseEmbeddings object"
-            )
+            raise ValueError("embedding_model must be a string or a BaseEmbeddings object")
 
         # Initialize the tokenizer and chunker
         tokenizer = self.embedding_model.get_tokenizer()
@@ -210,7 +206,7 @@ class SemanticChunker(BaseChunker):
                     min_characters_per_segment=self.min_characters_per_sentence,
                     whitespace_mode=False,
                     character_fallback=True,
-                )
+                ),
             )
         else:
             # Fallback to original Python implementation
@@ -278,9 +274,7 @@ class SemanticChunker(BaseChunker):
         """Get the embeddings for the window."""
         paragraphs = []
         for i in range(len(sentences) - self.similarity_window):
-            paragraphs.append(
-                "".join([s.text for s in sentences[i : i + self.similarity_window]])
-            )
+            paragraphs.append("".join([s.text for s in sentences[i : i + self.similarity_window]]))
         return self.embedding_model.embed_batch(paragraphs)
 
     def _get_similarity(self, sentences: list[Sentence]) -> list[float]:
@@ -293,9 +287,7 @@ class SemanticChunker(BaseChunker):
         ]
         return similarities
 
-    def _get_split_indices(
-        self, similarities: Union[list[float], np.ndarray]
-    ) -> list[int]:
+    def _get_split_indices(self, similarities: Union[list[float], np.ndarray]) -> list[int]:
         """Get split indices using optimized Savitzky-Golay filter with interpolation."""
         # Convert to numpy array if needed
         if not isinstance(similarities, np.ndarray):
@@ -323,11 +315,12 @@ class SemanticChunker(BaseChunker):
 
         # Filter by percentile and minimum distance
         filtered_indices, _ = filter_split_indices(
-            minima_indices, minima_values, self.threshold, self.min_sentences_per_chunk
+            minima_indices,
+            minima_values,
+            self.threshold,
+            self.min_sentences_per_chunk,
         )
-        split_indices_list = (
-            filtered_indices  # Already a list from filter_split_indices
-        )
+        split_indices_list = filtered_indices  # Already a list from filter_split_indices
 
         # Add boundaries with window offset
         return (
@@ -336,9 +329,7 @@ class SemanticChunker(BaseChunker):
             + [len(similarities) + self.similarity_window]
         )
 
-    def _compute_group_embeddings_batch(
-        self, groups: list[list[Sentence]]
-    ) -> list[np.ndarray]:
+    def _compute_group_embeddings_batch(self, groups: list[list[Sentence]]) -> list[np.ndarray]:
         """Compute embeddings for all groups in batch.
 
         Args:
@@ -362,7 +353,8 @@ class SemanticChunker(BaseChunker):
         return embeddings
 
     def _get_windowed_similarity(
-        self, sentences: list[Sentence]
+        self,
+        sentences: list[Sentence],
     ) -> Union[list[float], np.ndarray]:
         """Alternative similarity computation using windowed cross-similarity.
 
@@ -374,9 +366,7 @@ class SemanticChunker(BaseChunker):
         embeddings_list = [
             emb.tolist() if hasattr(emb, "tolist") else list(emb) for emb in embeddings
         ]
-        result = windowed_cross_similarity(
-            embeddings_list, self.similarity_window * 2 + 1
-        )
+        result = windowed_cross_similarity(embeddings_list, self.similarity_window * 2 + 1)
         return np.asarray(result)
 
     def _skip_and_merge(self, groups: list[list[Sentence]]) -> list[list[Sentence]]:
@@ -414,9 +404,7 @@ class SemanticChunker(BaseChunker):
 
             # Check similarity with all groups within skip window
             for j in range(i + 1, min(skip_index + 1, len(groups))):
-                similarity = float(
-                    self.embedding_model.similarity(embeddings[i], embeddings[j])
-                )
+                similarity = float(self.embedding_model.similarity(embeddings[i], embeddings[j]))
                 if similarity >= self.threshold and similarity > best_similarity:
                     best_similarity = similarity
                     best_idx = j
@@ -436,7 +424,9 @@ class SemanticChunker(BaseChunker):
         return merged_groups
 
     def _group_sentences(
-        self, sentences: list[Sentence], split_indices: list[int]
+        self,
+        sentences: list[Sentence],
+        split_indices: list[int],
     ) -> list[list[Sentence]]:
         """Group the sentences based on the split indices.
 
@@ -516,7 +506,7 @@ class SemanticChunker(BaseChunker):
                     start_index=current_index,
                     end_index=current_index + len(text),
                     token_count=token_count,
-                )
+                ),
             )
             current_index += len(text)
         return chunks
@@ -546,7 +536,7 @@ class SemanticChunker(BaseChunker):
                         start_index=0,
                         end_index=len(text),
                         token_count=token_count,
-                    )
+                    ),
                 ]
             else:
                 return []

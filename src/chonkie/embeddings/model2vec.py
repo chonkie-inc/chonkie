@@ -23,9 +23,7 @@ class Model2VecEmbeddings(BaseEmbeddings):
 
     """
 
-    def __init__(
-        self, model: Union[str, "StaticModel"] = "minishlab/potion-base-32M"
-    ) -> None:
+    def __init__(self, model: Union[str, "StaticModel"] = "minishlab/potion-base-32M") -> None:
         """Initialize Model2VecEmbeddings with a str or StaticModel instance."""
         super().__init__()
 
@@ -41,7 +39,7 @@ class Model2VecEmbeddings(BaseEmbeddings):
             # TODO: `base_model_name` is mentioned in here -
             # https://github.com/MinishLab/model2vec/blob/b1358a9c2e777800e8f89c7a5f830fa2176c15b5/model2vec/model.py#L165`
             # but its `None` for potion models
-            self.model_name_or_path = self.model.base_model_name # type: ignore
+            self.model_name_or_path = self.model.base_model_name  # type: ignore
         else:
             raise ValueError("model must be a string or model2vec.StaticModel instance")
         self._dimension = self.model.dim
@@ -61,9 +59,7 @@ class Model2VecEmbeddings(BaseEmbeddings):
 
     def similarity(self, u: np.ndarray, v: np.ndarray) -> np.float32:  # type: ignore
         """Compute cosine similarity of two embeddings."""
-        return np.divide(
-            np.dot(u, v), np.linalg.norm(u) * np.linalg.norm(v), dtype=np.float32
-        )
+        return np.divide(np.dot(u, v), np.linalg.norm(u) * np.linalg.norm(v), dtype=np.float32)
 
     def get_tokenizer(self) -> "Tokenizer":
         """Get the tokenizer or token counter for the model."""
@@ -86,7 +82,7 @@ class Model2VecEmbeddings(BaseEmbeddings):
             from model2vec import StaticModel
         else:
             raise ImportError(
-                "model2vec is not available. Please install it via `pip install chonkie[model2vec]`"
+                "model2vec is not available. Please install it via `pip install chonkie[model2vec]`",
             )
 
     def __repr__(self) -> str:

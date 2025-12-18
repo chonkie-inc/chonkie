@@ -76,7 +76,11 @@ def test_get_provider() -> None:
     reason="Skipping test because OPENAI_API_KEY is not defined",
 )
 @patch("chonkie.embeddings.litellm.LiteLLMEmbeddings.embed")
-def test_embed_single_text(mock_embed, embedding_model: LiteLLMEmbeddings, sample_text: str) -> None:
+def test_embed_single_text(
+    mock_embed,
+    embedding_model: LiteLLMEmbeddings,
+    sample_text: str,
+) -> None:
     """Test that LiteLLMEmbeddings correctly embeds a single text."""
     mock_embed.return_value = np.zeros(embedding_model.dimension)
     embedding = embedding_model.embed(sample_text)
@@ -90,19 +94,17 @@ def test_embed_single_text(mock_embed, embedding_model: LiteLLMEmbeddings, sampl
 )
 @patch("chonkie.embeddings.litellm.LiteLLMEmbeddings.embed_batch")
 def test_embed_batch_texts(
-    mock_embed_batch, embedding_model: LiteLLMEmbeddings, sample_texts: List[str]
+    mock_embed_batch,
+    embedding_model: LiteLLMEmbeddings,
+    sample_texts: List[str],
 ) -> None:
     """Test that LiteLLMEmbeddings correctly embeds a batch of texts."""
-    mock_embed_batch.return_value = [
-        np.zeros(embedding_model.dimension) for _ in sample_texts
-    ]
+    mock_embed_batch.return_value = [np.zeros(embedding_model.dimension) for _ in sample_texts]
     embeddings = embedding_model.embed_batch(sample_texts)
     assert isinstance(embeddings, list)
     assert len(embeddings) == len(sample_texts)
     assert all(isinstance(embedding, np.ndarray) for embedding in embeddings)
-    assert all(
-        embedding.shape == (embedding_model.dimension,) for embedding in embeddings
-    )
+    assert all(embedding.shape == (embedding_model.dimension,) for embedding in embeddings)
 
 
 @pytest.mark.skipif(
@@ -129,9 +131,7 @@ def test_similarity(
     sample_texts: List[str],
 ) -> None:
     """Test that LiteLLMEmbeddings correctly calculates similarity between embeddings."""
-    mock_embed_batch.return_value = [
-        np.zeros(embedding_model.dimension) for _ in sample_texts
-    ]
+    mock_embed_batch.return_value = [np.zeros(embedding_model.dimension) for _ in sample_texts]
     mock_similarity.return_value = np.float32(0.5)
     embeddings = embedding_model.embed_batch(sample_texts)
     similarity_score = embedding_model.similarity(embeddings[0], embeddings[1])

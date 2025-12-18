@@ -115,8 +115,7 @@ class CatsuEmbeddings(BaseEmbeddings):
             self._load_model_info()
         except Exception as e:
             warnings.warn(
-                f"Could not load model info for {model}: {e}. "
-                "Will attempt to use model anyway."
+                f"Could not load model info for {model}: {e}. Will attempt to use model anyway.",
             )
 
     def _load_model_info(self) -> None:
@@ -132,7 +131,7 @@ class CatsuEmbeddings(BaseEmbeddings):
             if self._model_info is None and self._verbose:
                 warnings.warn(
                     f"Model '{self.model}' not found in Catsu catalog. "
-                    "Embedding may fail if model name is incorrect."
+                    "Embedding may fail if model name is incorrect.",
                 )
         except Exception as e:
             if self._verbose:
@@ -201,9 +200,7 @@ class CatsuEmbeddings(BaseEmbeddings):
             except Exception as e:
                 # If batch fails, try one by one (with Catsu's built-in retries)
                 if len(batch) > 1:
-                    warnings.warn(
-                        f"Batch embedding failed: {str(e)}. Trying one by one."
-                    )
+                    warnings.warn(f"Batch embedding failed: {str(e)}. Trying one by one.")
                     for text in batch:
                         individual_embedding = self.embed(text)
                         all_embeddings.append(individual_embedding)
@@ -235,7 +232,7 @@ class CatsuEmbeddings(BaseEmbeddings):
                     self._dimension = len(test_embedding)
                 except Exception as e:
                     raise RuntimeError(
-                        f"Could not determine embedding dimension for model {self.model}: {e}"
+                        f"Could not determine embedding dimension for model {self.model}: {e}",
                     )
 
         return self._dimension
@@ -279,9 +276,9 @@ class CatsuEmbeddings(BaseEmbeddings):
         """
         if not self._is_available():
             raise ImportError(
-                'The catsu package is not available. '
+                "The catsu package is not available. "
                 'Please install it via `pip install "chonkie[catsu]"` '
-                'or `pip install catsu`'
+                "or `pip install catsu`",
             )
 
     def __repr__(self) -> str:
@@ -357,8 +354,7 @@ class CatsuTokenizerWrapper:
         # Catsu doesn't expose token IDs for all providers
         # Return empty list as fallback
         warnings.warn(
-            "Token encoding not supported via Catsu. "
-            "Use count() for token counting instead."
+            "Token encoding not supported via Catsu. Use count() for token counting instead.",
         )
         return []
 

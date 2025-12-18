@@ -1,6 +1,5 @@
 """Test the SentenceTransformerEmbeddings class."""
 
-
 import numpy as np
 import pytest
 from sentence_transformers import SentenceTransformer
@@ -51,7 +50,8 @@ def test_initialization_with_model_instance(
 
 
 def test_embed_single_text(
-    embedding_model: SentenceTransformerEmbeddings, sample_text: str
+    embedding_model: SentenceTransformerEmbeddings,
+    sample_text: str,
 ) -> None:
     """Test the embed method with a single text."""
     embedding = embedding_model.embed(sample_text)
@@ -60,20 +60,20 @@ def test_embed_single_text(
 
 
 def test_embed_batch_texts(
-    embedding_model: SentenceTransformerEmbeddings, sample_texts: list[str]
+    embedding_model: SentenceTransformerEmbeddings,
+    sample_texts: list[str],
 ) -> None:
     """Test the embed_batch method with a list of texts."""
     embeddings = embedding_model.embed_batch(sample_texts)
     assert isinstance(embeddings, np.ndarray)
     assert len(embeddings) == len(sample_texts)
     assert all(isinstance(embedding, np.ndarray) for embedding in embeddings)
-    assert all(
-        embedding.shape == (embedding_model.dimension,) for embedding in embeddings
-    )
+    assert all(embedding.shape == (embedding_model.dimension,) for embedding in embeddings)
 
 
 def test_count_tokens_single_text(
-    embedding_model: SentenceTransformerEmbeddings, sample_text: str
+    embedding_model: SentenceTransformerEmbeddings,
+    sample_text: str,
 ) -> None:
     """Test the count_tokens method with a single text."""
     token_count = embedding_model.count_tokens(sample_text)
@@ -82,7 +82,8 @@ def test_count_tokens_single_text(
 
 
 def test_count_tokens_batch_texts(
-    embedding_model: SentenceTransformerEmbeddings, sample_texts: list[str]
+    embedding_model: SentenceTransformerEmbeddings,
+    sample_texts: list[str],
 ) -> None:
     """Test the count_tokens_batch method with a list of texts."""
     token_counts = embedding_model.count_tokens_batch(sample_texts)
@@ -93,7 +94,8 @@ def test_count_tokens_batch_texts(
 
 
 def test_similarity(
-    embedding_model: SentenceTransformerEmbeddings, sample_texts: list[str]
+    embedding_model: SentenceTransformerEmbeddings,
+    sample_texts: list[str],
 ) -> None:
     """Test the similarity method."""
     embeddings = embedding_model.embed_batch(sample_texts)

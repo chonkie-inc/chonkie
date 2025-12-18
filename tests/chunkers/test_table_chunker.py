@@ -34,18 +34,20 @@ def large_table() -> str:
 
     rows = []
     for i in range(20):
-        rows.append(f"| {i+1:03d} | Person{i+1} | Lastname{i+1} | person{i+1}@email.com | 555-{i+1:04d} | {i+1} Main St | City{i+1} | ST | {10000+i} | Country{i+1} | Dept{i+1} | Position{i+1} | ${50000+i*1000} | 2023-01-{(i%28)+1:02d} |")
+        rows.append(
+            f"| {i + 1:03d} | Person{i + 1} | Lastname{i + 1} | person{i + 1}@email.com | 555-{i + 1:04d} | {i + 1} Main St | City{i + 1} | ST | {10000 + i} | Country{i + 1} | Dept{i + 1} | Position{i + 1} | ${50000 + i * 1000} | 2023-01-{(i % 28) + 1:02d} |",
+        )
 
     return header + "\n" + "\n".join(rows)
 
 
 def test_table_chunker_initialization() -> None:
     """Test that the TableChunker can be initialized with default parameters."""
-    chunker = TableChunker(tokenizer="character",chunk_size=2048)
+    chunker = TableChunker(tokenizer="character", chunk_size=2048)
 
     assert chunker is not None
     assert chunker.chunk_size == 2048
-    assert hasattr(chunker, 'tokenizer')
+    assert hasattr(chunker, "tokenizer")
 
 
 def test_table_chunker_initialization_with_params() -> None:
@@ -87,13 +89,15 @@ def test_table_chunker_large_table(large_table: str) -> None:
     assert all(chunk.token_count <= 500 for chunk in chunks)
 
     # Verify all chunks have the header
-    header_lines = large_table.split('\n')[:2]
-    expected_header = '\n'.join(header_lines)
+    header_lines = large_table.split("\n")[:2]
+    expected_header = "\n".join(header_lines)
 
     for chunk in chunks:
-        chunk_lines = chunk.text.split('\n')
-        actual_header = '\n'.join(chunk_lines[:2])
-        assert actual_header == expected_header, f"Chunk missing proper header: {chunk.text[:100]}..."
+        chunk_lines = chunk.text.split("\n")
+        actual_header = "\n".join(chunk_lines[:2])
+        assert actual_header == expected_header, (
+            f"Chunk missing proper header: {chunk.text[:100]}..."
+        )
 
 
 def test_table_chunker_index_calculation(large_table: str) -> None:
@@ -136,14 +140,14 @@ def test_table_chunker_preserves_content() -> None:
     # Extract all data rows from chunks (skip header rows)
     all_data_rows = []
     for chunk in chunks:
-        lines = chunk.text.split('\n')
+        lines = chunk.text.split("\n")
         data_lines = lines[2:]  # Skip header and separator
         # Filter out empty strings that come from trailing newlines
         data_lines = [line for line in data_lines if line.strip()]
         all_data_rows.extend(data_lines)
 
     # Get original data rows
-    original_lines = table.split('\n')
+    original_lines = table.split("\n")
     original_data = original_lines[2:]
 
     # Should have same data rows (accounting for duplicates from multiple chunks)
@@ -159,12 +163,18 @@ def test_table_chunker_invalid_table() -> None:
     invalid_table = """| Name | Value |
 |------|-------|"""
 
-    with pytest.warns(UserWarning, match="Table must have at least a header, separator, and one data row"):
+    with pytest.warns(
+        UserWarning,
+        match="Table must have at least a header, separator, and one data row",
+    ):
         chunks = chunker.chunk(invalid_table)
         assert len(chunks) == 0
 
     # Single line (no table structure)
-    with pytest.warns(UserWarning, match="Table must have at least a header, separator, and one data row"):
+    with pytest.warns(
+        UserWarning,
+        match="Table must have at least a header, separator, and one data row",
+    ):
         chunks = chunker.chunk("Just a single line")
         assert len(chunks) == 0
 
@@ -371,10 +381,10 @@ def test_table_chunker_empty_cells() -> None:
     assert len(chunks) >= 1
     # Verify structure is maintained
     for chunk in chunks:
-        lines = chunk.text.strip().split('\n')
+        lines = chunk.text.strip().split("\n")
         # Each line should have the same number of pipe characters
         if len(lines) > 2:  # If there are data rows
-            pipe_counts = [line.count('|') for line in lines]
+            pipe_counts = [line.count("|") for line in lines]
             assert len(set(pipe_counts)) == 1  # All should be the same
 
 
@@ -482,9 +492,12 @@ def test_table_chunker_markdown_document_multiple_tables() -> None:
         content=content,
         tables=[
             MarkdownTable(content=table1, start_index=9, end_index=9 + len(table1)),
-            MarkdownTable(content=table2, start_index=9 + len(table1) + 12,
-                         end_index=9 + len(table1) + 12 + len(table2))
-        ]
+            MarkdownTable(
+                content=table2,
+                start_index=9 + len(table1) + 12,
+                end_index=9 + len(table1) + 12 + len(table2),
+            ),
+        ],
     )
 
     chunker = TableChunker(tokenizer="character", chunk_size=100)
@@ -561,12 +574,18 @@ Thank you for shopping with us!"""
     doc = MarkdownDocument(
         content=content,
         tables=[
-            MarkdownTable(content=table1, start_index=table1_start,
-                         end_index=table1_start + len(table1)),
-            MarkdownTable(content=table2, start_index=table2_start,
-                         end_index=table2_start + len(table2))
+            MarkdownTable(
+                content=table1,
+                start_index=table1_start,
+                end_index=table1_start + len(table1),
+            ),
+            MarkdownTable(
+                content=table2,
+                start_index=table2_start,
+                end_index=table2_start + len(table2),
+            ),
         ],
-        chunks=recursive_chunks
+        chunks=recursive_chunks,
     )
 
     # Apply TableChunker
@@ -626,10 +645,13 @@ For questions about this directory, contact HR at hr@corp.com."""
     markdown_doc = MarkdownDocument(
         content=content,
         tables=[
-            MarkdownTable(content=large_table, start_index=table_start,
-                         end_index=table_start + len(large_table))
+            MarkdownTable(
+                content=large_table,
+                start_index=table_start,
+                end_index=table_start + len(large_table),
+            ),
         ],
-        chunks=recursive_result.chunks.copy()
+        chunks=recursive_result.chunks.copy(),
     )
 
     table_chunker = TableChunker(tokenizer="character", chunk_size=200)
@@ -683,6 +705,7 @@ def test_table_chunker_very_small_chunk_size() -> None:
     for chunk in chunks:
         assert "| Name | Value |" in chunk.text
 
+
 # Test TableChunker with row tokenizer
 def test_table_chunker_row_tokenizer(sample_table: str) -> None:
     """Test TableChunker with tokenizer='row' chunks by rows, preserving header."""
@@ -692,14 +715,14 @@ def test_table_chunker_row_tokenizer(sample_table: str) -> None:
     # Should split into chunks with max 3 data rows each, header always present
     assert len(chunks) > 1
     for chunk in chunks:
-        lines = chunk.text.strip().split('\n')
+        lines = chunk.text.strip().split("\n")
         # Header and separator always present
-        assert lines[0].startswith('| Name')
-        assert lines[1].startswith('|------')
+        assert lines[0].startswith("| Name")
+        assert lines[1].startswith("|------")
         # Data rows count per chunk should be <= chunk_size
         data_rows = lines[2:]
         assert len(data_rows) <= 3
         # All original data rows should be present across chunks
-    all_chunked_rows = [line for chunk in chunks for line in chunk.text.strip().split('\n')[2:]]
-    original_rows = sample_table.strip().split('\n')[2:]
+    all_chunked_rows = [line for chunk in chunks for line in chunk.text.strip().split("\n")[2:]]
+    original_rows = sample_table.strip().split("\n")[2:]
     assert set(all_chunked_rows) == set(original_rows)

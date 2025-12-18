@@ -54,7 +54,10 @@ class Pipeline:
     def __init__(self) -> None:
         """Initialize a new Pipeline."""
         self._steps: list[dict[str, Any]] = []
-        self._component_instances: dict[tuple[str, str], Any] = {}  # Cache: (name, json_kwargs) -> instance
+        self._component_instances: dict[
+            tuple[str, str],
+            Any,
+        ] = {}  # Cache: (name, json_kwargs) -> instance
 
     @classmethod
     def from_recipe(cls, name: str, path: Optional[str] = None) -> "Pipeline":
@@ -100,7 +103,10 @@ class Pipeline:
         return cls.from_config(steps)
 
     @classmethod
-    def from_config(cls, config: Union[str, list[Union[tuple[Any, ...], dict[str, Any]]]]) -> "Pipeline":
+    def from_config(
+        cls,
+        config: Union[str, list[Union[tuple[Any, ...], dict[str, Any]]]],
+    ) -> "Pipeline":
         """Create pipeline from config list or JSON file path.
 
         Args:
@@ -129,7 +135,8 @@ class Pipeline:
         # If string, load from file
         if isinstance(config, str):
             import json
-            with open(config, 'r') as f:
+
+            with open(config, "r") as f:
                 config_data = json.load(f)
         else:
             config_data = config
@@ -149,26 +156,26 @@ class Pipeline:
                     else:
                         raise ValueError(f"Tuple must have 2 or 3 elements, got {len(step)}")
                 elif isinstance(step, dict):
-                    step_type = step.get('type')
-                    component_name = step.get('component')
+                    step_type = step.get("type")
+                    component_name = step.get("component")
                     if not step_type or not component_name:
                         raise ValueError("Dict must have 'type' and 'component' keys")
-                    kwargs = {k: v for k, v in step.items() if k not in ['type', 'component']}
+                    kwargs = {k: v for k, v in step.items() if k not in ["type", "component"]}
                 else:
                     raise ValueError(f"Step must be tuple or dict, got {type(step)}")
 
                 # Map to appropriate method
-                if step_type == 'fetch':
+                if step_type == "fetch":
                     pipeline.fetch_from(component_name, **kwargs)
-                elif step_type == 'process':
+                elif step_type == "process":
                     pipeline.process_with(component_name, **kwargs)
-                elif step_type == 'chunk':
+                elif step_type == "chunk":
                     pipeline.chunk_with(component_name, **kwargs)
-                elif step_type == 'refine':
+                elif step_type == "refine":
                     pipeline.refine_with(component_name, **kwargs)
-                elif step_type == 'export':
+                elif step_type == "export":
                     pipeline.export_with(component_name, **kwargs)
-                elif step_type == 'write':
+                elif step_type == "write":
                     pipeline.store_in(component_name, **kwargs)
                 else:
                     raise ValueError(f"Unknown step type: '{step_type}'")
@@ -324,7 +331,10 @@ class Pipeline:
         self._steps.append({"type": "write", "component": component, "kwargs": kwargs})
         return self
 
-    def run(self, texts: Optional[Union[str, list[str]]] = None) -> Union[Document, list[Document]]:
+    def run(
+        self,
+        texts: Optional[Union[str, list[str]]] = None,
+    ) -> Union[Document, list[Document]]:
         """Run the pipeline and return the final result.
 
         The pipeline automatically reorders steps according to the CHOMP flow:
@@ -422,11 +432,7 @@ class Pipeline:
         # Add default TextChef if no chef is present
         if "process" not in steps_by_type:
             text_chef = ComponentRegistry.get_chef("text")
-            steps_by_type["process"] = [{
-                "type": "process",
-                "component": text_chef,
-                "kwargs": {}
-            }]
+            steps_by_type["process"] = [{"type": "process", "component": text_chef, "kwargs": {}}]
 
         # Build ordered list following CHOMP: Fetch -> Process -> Chunk -> Refine -> Export/Write
         ordered = []
@@ -441,7 +447,11 @@ class Pipeline:
 
         return ordered
 
-    def _validate_pipeline(self, ordered_steps: list[dict[str, Any]], has_text_input: bool = False) -> None:
+    def _validate_pipeline(
+        self,
+        ordered_steps: list[dict[str, Any]],
+        has_text_input: bool = False,
+    ) -> None:
         """Validate that the pipeline configuration is valid.
 
         Args:
@@ -462,13 +472,15 @@ class Pipeline:
         if not has_text_input and "fetch" not in step_types:
             raise ValueError(
                 "Pipeline must include a fetcher component (use fetch_from()) "
-                "or provide text input to run(texts=...)"
+                "or provide text input to run(texts=...)",
             )
 
         # Only one chef allowed (enforced during reordering, but double-check user's input)
         user_process_count = sum(1 for step in self._steps if step["type"] == "process")
         if user_process_count > 1:
-            raise ValueError(f"Multiple process steps found ({user_process_count}). Only one chef is allowed per pipeline.")
+            raise ValueError(
+                f"Multiple process steps found ({user_process_count}). Only one chef is allowed per pipeline.",
+            )
 
     def _execute_step(self, step: dict[str, Any], input_data: Any) -> Any:
         """Execute a single pipeline step.
@@ -486,12 +498,14 @@ class Pipeline:
         step_type = step["type"]
 
         # Extract recipe parameters before splitting (they're meta-parameters, not component params)
-        recipe_name = kwargs.pop('recipe', None)
-        recipe_lang = kwargs.pop('lang', 'en')
+        recipe_name = kwargs.pop("recipe", None)
+        recipe_lang = kwargs.pop("lang", "en")
 
         # Split parameters into init vs call kwargs
         init_kwargs, call_kwargs = Pipeline._split_parameters(
-            component_info.component_class, kwargs, step_type
+            component_info.component_class,
+            kwargs,
+            step_type,
         )
 
         # Create cache key for component instance
@@ -504,15 +518,26 @@ class Pipeline:
 
         # Get or create component instance
         if component_key not in self._component_instances:
-            if recipe_name and hasattr(component_info.component_class, 'from_recipe'):
-                self._component_instances[component_key] = component_info.component_class.from_recipe(
-                    name=recipe_name, lang=recipe_lang, **init_kwargs
+            if recipe_name and hasattr(component_info.component_class, "from_recipe"):
+                self._component_instances[component_key] = (
+                    component_info.component_class.from_recipe(
+                        name=recipe_name,
+                        lang=recipe_lang,
+                        **init_kwargs,
+                    )
                 )
             else:
-                self._component_instances[component_key] = component_info.component_class(**init_kwargs)
+                self._component_instances[component_key] = component_info.component_class(
+                    **init_kwargs,
+                )
 
         # Execute the component
-        return self._call_component(self._component_instances[component_key], step_type, input_data, call_kwargs)
+        return self._call_component(
+            self._component_instances[component_key],
+            step_type,
+            input_data,
+            call_kwargs,
+        )
 
     @staticmethod
     def _get_positional_params(step_type: str) -> set[str]:
@@ -539,7 +564,11 @@ class Pipeline:
         return positional_params.get(step_type, set())
 
     @staticmethod
-    def _split_parameters(component_class: type[Any], kwargs: dict[str, Any], step_type: str) -> tuple[dict[str, Any], dict[str, Any]]:
+    def _split_parameters(
+        component_class: type[Any],
+        kwargs: dict[str, Any],
+        step_type: str,
+    ) -> tuple[dict[str, Any], dict[str, Any]]:
         """Split kwargs into init and call parameters based on method signatures.
 
         Args:
@@ -569,19 +598,29 @@ class Pipeline:
         # Split parameters
         init_kwargs = {k: v for k, v in kwargs.items() if k in init_param_names}
         call_kwargs = {k: v for k, v in kwargs.items() if k in method_param_names}
-        unknown = {k: v for k, v in kwargs.items() if k not in init_param_names and k not in method_param_names}
+        unknown = {
+            k: v
+            for k, v in kwargs.items()
+            if k not in init_param_names and k not in method_param_names
+        }
 
         # Validate - no unknown parameters
         if unknown:
             raise ValueError(
                 f"Unknown parameters for {component_class.__name__}: {list(unknown.keys())}.\n"
                 f"  Available __init__ parameters: {sorted(init_param_names)}\n"
-                f"  Available {step_type}() parameters: {sorted(method_param_names) or 'none'}"
+                f"  Available {step_type}() parameters: {sorted(method_param_names) or 'none'}",
             )
 
         return init_kwargs, call_kwargs
 
-    def _call_component(self, component: Any, step_type: str, input_data: Any, kwargs: dict[str, Any]) -> Any:
+    def _call_component(
+        self,
+        component: Any,
+        step_type: str,
+        input_data: Any,
+        kwargs: dict[str, Any],
+    ) -> Any:
         """Call the appropriate method on a component based on step type.
 
         Args:
@@ -600,29 +639,47 @@ class Pipeline:
         if step_type == "process":
             # Path objects → process(path), strings → parse(text)
             if isinstance(input_data, list):
-                return [component.process(item) if isinstance(item, Path) else component.parse(item)
-                        for item in input_data]
-            return component.process(input_data) if isinstance(input_data, Path) else component.parse(input_data)
+                return [
+                    component.process(item) if isinstance(item, Path) else component.parse(item)
+                    for item in input_data
+                ]
+            return (
+                component.process(input_data)
+                if isinstance(input_data, Path)
+                else component.parse(input_data)
+            )
 
         if step_type == "chunk":
-            return [component.chunk_document(doc) for doc in input_data] if isinstance(input_data, list) \
-                   else component.chunk_document(input_data)
+            return (
+                [component.chunk_document(doc) for doc in input_data]
+                if isinstance(input_data, list)
+                else component.chunk_document(input_data)
+            )
 
         if step_type == "refine":
-            return [component.refine_document(doc) for doc in input_data] if isinstance(input_data, list) \
-                   else component.refine_document(input_data)
+            return (
+                [component.refine_document(doc) for doc in input_data]
+                if isinstance(input_data, list)
+                else component.refine_document(input_data)
+            )
 
         if step_type == "export":
             # Extract chunks and export
-            chunks = [c for doc in input_data for c in doc.chunks] if isinstance(input_data, list) \
-                     else input_data.chunks
+            chunks = (
+                [c for doc in input_data for c in doc.chunks]
+                if isinstance(input_data, list)
+                else input_data.chunks
+            )
             component.export(chunks, **kwargs)
             return input_data  # Return Documents for chaining
 
         if step_type == "write":
             # Extract chunks and write to vector DB
-            chunks = [c for doc in input_data for c in doc.chunks] if isinstance(input_data, list) \
-                     else input_data.chunks
+            chunks = (
+                [c for doc in input_data for c in doc.chunks]
+                if isinstance(input_data, list)
+                else input_data.chunks
+            )
             return component.write(chunks, **kwargs)
 
         raise ValueError(f"Unknown step type: {step_type}")
@@ -660,16 +717,17 @@ class Pipeline:
         config = []
         for step in self._steps:
             step_config = {
-                'type': step['type'],
-                'component': step['component'].alias,
-                **step['kwargs']
+                "type": step["type"],
+                "component": step["component"].alias,
+                **step["kwargs"],
             }
             config.append(step_config)
 
         # Save to file if path provided
         if path:
             import json
-            with open(path, 'w') as f:
+
+            with open(path, "w") as f:
                 json.dump(config, f, indent=2)
 
         return config

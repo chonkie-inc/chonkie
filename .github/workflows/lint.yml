@@ -27,3 +27,4 @@ jobs:
         run: |
           source .venv/bin/activate
           ruff check src/chonkie tests/
+          ruff format --check src/chonkie tests/

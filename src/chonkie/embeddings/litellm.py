@@ -161,6 +161,7 @@ class LiteLLMEmbeddings(BaseEmbeddings):
             elif provider == "voyage":
                 try:
                     from tokenizers import Tokenizer
+
                     model_name = self.model.split("/")[-1]
                     return Tokenizer.from_pretrained(f"voyageai/{model_name}")
                 except Exception:
@@ -270,23 +271,18 @@ class LiteLLMEmbeddings(BaseEmbeddings):
                 # Extract embeddings and sort by index
                 sorted_data = sorted(response.data, key=lambda x: x["index"])
                 embeddings = [
-                    np.array(item["embedding"], dtype=np.float32)
-                    for item in sorted_data
+                    np.array(item["embedding"], dtype=np.float32) for item in sorted_data
                 ]
                 all_embeddings.extend(embeddings)
 
             except Exception as e:
                 # If the batch fails, try one by one
                 if len(batch) > 1:
-                    warnings.warn(
-                        f"Batch embedding failed: {str(e)}. Trying one by one."
-                    )
+                    warnings.warn(f"Batch embedding failed: {str(e)}. Trying one by one.")
                     individual_embeddings = [self.embed(text) for text in batch]
                     all_embeddings.extend(individual_embeddings)
                 else:
-                    raise RuntimeError(
-                        f"LiteLLM API error during embedding: {e}"
-                    ) from e
+                    raise RuntimeError(f"LiteLLM API error during embedding: {e}") from e
 
         return all_embeddings
 
@@ -301,9 +297,7 @@ class LiteLLMEmbeddings(BaseEmbeddings):
             np.float32: Cosine similarity score
 
         """
-        return np.float32(
-            np.divide(np.dot(u, v), np.linalg.norm(u) * np.linalg.norm(v))
-        )
+        return np.float32(np.divide(np.dot(u, v), np.linalg.norm(u) * np.linalg.norm(v)))
 
     @property
     def dimension(self) -> int:
@@ -354,7 +348,7 @@ class LiteLLMEmbeddings(BaseEmbeddings):
                 )
         else:
             raise ImportError(
-                'litellm package is not available. Please install it via `pip install "chonkie[litellm]"`'
+                'litellm package is not available. Please install it via `pip install "chonkie[litellm]"`',
             )
 
     def __repr__(self) -> str:

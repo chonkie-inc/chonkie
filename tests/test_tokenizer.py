@@ -98,6 +98,7 @@ def callable_tokenizer() -> Callable[[str], int]:
     """Create a callable tokenizer fixture."""
     return lambda text: len(text.split())
 
+
 @pytest.mark.parametrize(
     "backend_str",
     [
@@ -122,9 +123,7 @@ def test_backend_selection(request: pytest.FixtureRequest, backend_str: str) -> 
     ]
 
 
-@pytest.mark.parametrize(
-    "model_name", ["gpt2", "cl100k_base", "p50k_base"]
-)
+@pytest.mark.parametrize("model_name", ["gpt2", "cl100k_base", "p50k_base"])
 def test_string_init(model_name: str) -> None:
     """Test initialization of tokenizer with different model strings."""
     try:
@@ -148,9 +147,7 @@ def test_string_init(model_name: str) -> None:
     "backend_str",
     ["hf_tokenizer", "tiktoken_tokenizer", "transformers_tokenizer"],
 )
-def test_encode_decode(
-    request: pytest.FixtureRequest, backend_str: str, sample_text: str
-) -> None:
+def test_encode_decode(request: pytest.FixtureRequest, backend_str: str, sample_text: str) -> None:
     """Test encoding and decoding with different backends."""
     try:
         tokenizer = request.getfixturevalue(backend_str)
@@ -170,9 +167,7 @@ def test_encode_decode(
         assert decoded == sample_text
 
 
-@pytest.mark.parametrize(
-    "model_name", ["gpt2", "cl100k_base", "p50k_base"]
-)
+@pytest.mark.parametrize("model_name", ["gpt2", "cl100k_base", "p50k_base"])
 def test_string_init_encode_decode(model_name: str) -> None:
     """Test basic functionality of string initialized models."""
     try:
@@ -199,9 +194,7 @@ def test_string_init_encode_decode(model_name: str) -> None:
         ]:
             assert word.lower() in decoded.lower()
     except ImportError as e:
-        pytest.skip(
-            f"Skipping test. Could not import tokenizer for {model_name}: {str(e)}"
-        )
+        pytest.skip(f"Skipping test. Could not import tokenizer for {model_name}: {str(e)}")
     except Exception as e:
         if "not found in model".casefold() in str(e).casefold():
             pytest.skip(f"Skipping test with {model_name}. Backend not available")
@@ -260,9 +253,7 @@ def test_batch_encode_decode(
     assert len(batch_encoded) == len(sample_text_list)
     assert all(isinstance(tokens, list) for tokens in batch_encoded)
     assert all(len(tokens) > 0 for tokens in batch_encoded)
-    assert all(
-        all(isinstance(token, int) for token in tokens) for tokens in batch_encoded
-    )
+    assert all(all(isinstance(token, int) for token in tokens) for tokens in batch_encoded)
 
     if tokenizer._backend != "callable":
         batch_decoded = tokenizer.decode_batch(batch_encoded)
@@ -297,9 +288,7 @@ def test_batch_counting(
 
     # Verify counts match encoded lengths
     if tokenizer._backend != "callable":
-        encoded_lengths = [
-            len(tokens) for tokens in tokenizer.encode_batch(sample_text_list)
-        ]
+        encoded_lengths = [len(tokens) for tokens in tokenizer.encode_batch(sample_text_list)]
         assert counts == encoded_lengths
 
 
@@ -317,7 +306,7 @@ def test_raises_correct_error() -> None:
 
     with pytest.raises(NotImplementedError):
         tokenizer.encode(
-            "Ratatouille or Wall-E? Tell us which is the best Pixar movie on Discord."
+            "Ratatouille or Wall-E? Tell us which is the best Pixar movie on Discord.",
         )
 
     with pytest.raises(NotImplementedError):
@@ -335,9 +324,7 @@ def test_word_tokenizer_init(word_tokenizer: WordTokenizer) -> None:
     assert word_tokenizer.token2id[" "] == 0
 
 
-def test_word_tokenizer_encode_decode(
-    word_tokenizer: WordTokenizer, sample_text: str
-) -> None:
+def test_word_tokenizer_encode_decode(word_tokenizer: WordTokenizer, sample_text: str) -> None:
     """Test WordTokenizer encoding and decoding."""
     tokens = word_tokenizer.encode(sample_text)
     assert isinstance(tokens, list)
@@ -349,7 +336,8 @@ def test_word_tokenizer_encode_decode(
 
 
 def test_word_tokenizer_batch_encode_decode(
-    word_tokenizer: WordTokenizer, sample_text_list: list[str]
+    word_tokenizer: WordTokenizer,
+    sample_text_list: list[str],
 ) -> None:
     """Test batch encode and decode with WordTokenizer."""
     encoded_batch = word_tokenizer.encode_batch(sample_text_list)
@@ -411,7 +399,8 @@ def test_character_tokenizer_init(
 
 
 def test_character_tokenizer_encode_decode(
-    character_tokenizer: CharacterTokenizer, sample_text: str
+    character_tokenizer: CharacterTokenizer,
+    sample_text: str,
 ) -> None:
     """Test encoding and decoding with CharacterTokenizer."""
     tokens = character_tokenizer.encode(sample_text)
@@ -435,16 +424,14 @@ def test_character_tokenizer_count_tokens(
 
 
 def test_character_tokenizer_batch_encode_decode(
-    character_tokenizer: CharacterTokenizer, sample_text_list: list[str]
+    character_tokenizer: CharacterTokenizer,
+    sample_text_list: list[str],
 ) -> None:
     """Test batch encoding and decoding with CharacterTokenizer."""
     batch_encoded = character_tokenizer.encode_batch(sample_text_list)
     assert isinstance(batch_encoded, list)
     assert all(isinstance(tokens, list) for tokens in batch_encoded)
-    assert all(
-        len(tokens) == len(text)
-        for tokens, text in zip(batch_encoded, sample_text_list)
-    )
+    assert all(len(tokens) == len(text) for tokens, text in zip(batch_encoded, sample_text_list))
 
     batch_decoded = character_tokenizer.decode_batch(batch_encoded)
     assert isinstance(batch_decoded, list)
@@ -468,7 +455,8 @@ def test_character_tokenizer_repr() -> None:
 
 
 def test_character_tokenizer_vocab_and_mapping(
-    character_tokenizer: CharacterTokenizer, sample_text: str
+    character_tokenizer: CharacterTokenizer,
+    sample_text: str,
 ) -> None:
     """Test vocabulary evolution in CharacterTokenizer."""
     # Initial state
@@ -525,9 +513,7 @@ def test_byte_tokenizer_init(byte_tokenizer: ByteTokenizer) -> None:
     assert byte_tokenizer.token2id[" "] == 0
 
 
-def test_byte_tokenizer_encode_decode(
-    byte_tokenizer: ByteTokenizer, sample_text: str
-) -> None:
+def test_byte_tokenizer_encode_decode(byte_tokenizer: ByteTokenizer, sample_text: str) -> None:
     """Test encoding and decoding with ByteTokenizer."""
     tokens = byte_tokenizer.encode(sample_text)
     assert isinstance(tokens, list)
@@ -561,7 +547,8 @@ def test_byte_tokenizer_count_tokens(
 
 
 def test_byte_tokenizer_batch_encode_decode(
-    byte_tokenizer: ByteTokenizer, sample_text_list: list[str]
+    byte_tokenizer: ByteTokenizer,
+    sample_text_list: list[str],
 ) -> None:
     """Test batch encoding and decoding with ByteTokenizer."""
     batch_encoded = byte_tokenizer.encode_batch(sample_text_list)
@@ -641,21 +628,22 @@ def test_byte_tokenizer_with_autotokenizer() -> None:
 
 ### Edge Cases and Error Handling Tests ###
 
+
 def test_tokenizer_empty_text() -> None:
     """Test tokenizer behavior with empty text."""
     char_tokenizer = CharacterTokenizer()
     word_tokenizer = WordTokenizer()
-    
+
     # Test empty string encoding
     assert char_tokenizer.encode("") == []
     # Word tokenizer returns [1] for empty string due to split behavior creating [""]
     word_encoded = word_tokenizer.encode("")
     assert len(word_encoded) == 1  # Contains one empty token
-    
+
     # Test empty string token counting
     assert char_tokenizer.count_tokens("") == 0
     assert word_tokenizer.count_tokens("") == 1  # Empty string splits to one empty token
-    
+
     # Test empty string decoding
     assert char_tokenizer.decode([]) == ""
     assert word_tokenizer.decode(word_encoded) == ""  # Should decode back to empty string
@@ -665,14 +653,14 @@ def test_tokenizer_special_characters() -> None:
     """Test tokenizer behavior with special characters and unicode."""
     char_tokenizer = CharacterTokenizer()
     word_tokenizer = WordTokenizer()
-    
+
     special_text = "Hello! 😀 你好 🌍 Café naïve résumé"
-    
+
     # Test encoding and decoding with special characters
     char_tokens = char_tokenizer.encode(special_text)
     char_decoded = char_tokenizer.decode(char_tokens)
     assert char_decoded == special_text
-    
+
     word_tokens = word_tokenizer.encode(special_text)
     word_decoded = word_tokenizer.decode(word_tokens)
     assert word_decoded == special_text
@@ -682,18 +670,18 @@ def test_tokenizer_whitespace_handling() -> None:
     """Test tokenizer behavior with various whitespace scenarios."""
     char_tokenizer = CharacterTokenizer()
     word_tokenizer = WordTokenizer()
-    
+
     # Test multiple spaces
     text_with_spaces = "hello    world"
     char_tokens = char_tokenizer.encode(text_with_spaces)
     assert len(char_tokens) == len(text_with_spaces)
     assert char_tokenizer.decode(char_tokens) == text_with_spaces
-    
+
     # Test tabs and newlines
     text_with_whitespace = "hello\tworld\ntest"
     char_tokens = char_tokenizer.encode(text_with_whitespace)
     assert char_tokenizer.decode(char_tokens) == text_with_whitespace
-    
+
     # Test leading/trailing spaces
     text_padded = "  hello world  "
     word_tokens = word_tokenizer.encode(text_padded)
@@ -704,7 +692,7 @@ def test_character_tokenizer_decode_invalid_tokens() -> None:
     """Test character tokenizer error handling for invalid tokens."""
     char_tokenizer = CharacterTokenizer()
     char_tokenizer.encode("hello")  # Build some vocab
-    
+
     # Test decoding with invalid token IDs
     with pytest.raises(ValueError, match="Decoding failed"):
         char_tokenizer.decode([999, 1000])  # Non-existent token IDs
@@ -714,7 +702,7 @@ def test_word_tokenizer_decode_invalid_tokens() -> None:
     """Test word tokenizer error handling for invalid tokens."""
     word_tokenizer = WordTokenizer()
     word_tokenizer.encode("hello world")  # Build some vocab
-    
+
     # Test decoding with invalid token IDs
     with pytest.raises(ValueError, match="Decoding failed"):
         word_tokenizer.decode([999, 1000])  # Non-existent token IDs
@@ -724,15 +712,15 @@ def test_tokenizer_consistency_across_operations() -> None:
     """Test that encode/decode operations are consistent."""
     char_tokenizer = CharacterTokenizer()
     word_tokenizer = WordTokenizer()
-    
+
     test_text = "The quick brown fox jumps over the lazy dog."
-    
+
     # Test character tokenizer consistency
     char_tokens = char_tokenizer.encode(test_text)
     char_count_direct = char_tokenizer.count_tokens(test_text)
     char_count_from_encode = len(char_tokens)
     assert char_count_direct == char_count_from_encode
-    
+
     # Test word tokenizer consistency
     word_tokens = word_tokenizer.encode(test_text)
     word_count_direct = word_tokenizer.count_tokens(test_text)
@@ -743,17 +731,17 @@ def test_tokenizer_consistency_across_operations() -> None:
 def test_tokenizer_vocab_persistence() -> None:
     """Test that vocabulary persists across multiple operations."""
     char_tokenizer = CharacterTokenizer()
-    
+
     # Encode first text
     text1 = "hello"
     char_tokenizer.encode(text1)
     vocab_after_first = len(char_tokenizer.get_vocab())
-    
+
     # Encode same text again - vocab should not grow
     char_tokenizer.encode(text1)
     vocab_after_repeat = len(char_tokenizer.get_vocab())
     assert vocab_after_first == vocab_after_repeat
-    
+
     # Encode new text - vocab should grow
     text2 = "xyz"  # New characters
     char_tokenizer.encode(text2)
@@ -764,12 +752,12 @@ def test_tokenizer_vocab_persistence() -> None:
 def test_word_tokenizer_single_character_words() -> None:
     """Test word tokenizer with single character words."""
     word_tokenizer = WordTokenizer()
-    
+
     text = "I a m t e s t i n g"
     tokens = word_tokenizer.encode(text)
     decoded = word_tokenizer.decode(tokens)
     assert decoded == text
-    
+
     # Check that single characters are treated as separate words
     assert word_tokenizer.count_tokens(text) == len(text.split(" "))
 
@@ -778,17 +766,17 @@ def test_tokenizer_large_text() -> None:
     """Test tokenizer performance with larger text."""
     char_tokenizer = CharacterTokenizer()
     word_tokenizer = WordTokenizer()
-    
+
     # Create a larger text by repeating
     base_text = "The quick brown fox jumps over the lazy dog. "
     large_text = base_text * 100  # 4300+ characters
-    
+
     # Test character tokenizer
     char_tokens = char_tokenizer.encode(large_text)
     assert len(char_tokens) == len(large_text)
     char_decoded = char_tokenizer.decode(char_tokens)
     assert char_decoded == large_text
-    
+
     # Test word tokenizer
     word_tokens = word_tokenizer.encode(large_text)
     word_decoded = word_tokenizer.decode(word_tokens)
@@ -799,14 +787,14 @@ def test_tokenizer_numeric_content() -> None:
     """Test tokenizer behavior with numeric content."""
     char_tokenizer = CharacterTokenizer()
     word_tokenizer = WordTokenizer()
-    
+
     numeric_text = "123 456.789 -10 +20 1.23e-4"
-    
+
     # Test character tokenizer with numbers
     char_tokens = char_tokenizer.encode(numeric_text)
     char_decoded = char_tokenizer.decode(char_tokens)
     assert char_decoded == numeric_text
-    
+
     # Test word tokenizer with numbers
     word_tokens = word_tokenizer.encode(numeric_text)
     word_decoded = word_tokenizer.decode(word_tokens)
@@ -814,6 +802,7 @@ def test_tokenizer_numeric_content() -> None:
 
 
 ### Additional Unified Tokenizer Tests ###
+
 
 def test_tokenizer_backend_detection_accuracy() -> None:
     """Test that backend detection is accurate for different tokenizer types."""
@@ -836,12 +825,12 @@ def test_tokenizer_with_non_standard_callable() -> None:
     lambda_tokenizer = AutoTokenizer(lambda x: len(x.split()))
     assert lambda_tokenizer._backend == "callable"
     assert lambda_tokenizer.count_tokens("hello world") == 2
-    
+
     # Test with class method
     class CustomTokenizer:
         def __call__(self, text: str) -> int:
             return len(text.split(","))
-    
+
     custom_tokenizer = AutoTokenizer(CustomTokenizer())
     assert custom_tokenizer._backend == "callable"
     assert custom_tokenizer.count_tokens("a,b,c") == 3
@@ -868,20 +857,20 @@ def test_tokenizer_batch_operations_consistency() -> None:
         tokenizer = AutoTokenizer("gpt2")
     except Exception:
         pytest.skip("GPT-2 tokenizer not available")
-    
+
     texts = ["hello", "world", "test"]
-    
+
     # Test encode batch consistency
     batch_encoded = tokenizer.encode_batch(texts)
     single_encoded = [tokenizer.encode(text) for text in texts]
     assert batch_encoded == single_encoded
-    
-    # Test decode batch consistency  
+
+    # Test decode batch consistency
     if tokenizer._backend != "callable":
         batch_decoded = tokenizer.decode_batch(batch_encoded)
         single_decoded = [tokenizer.decode(tokens) for tokens in batch_encoded]
         assert batch_decoded == single_decoded
-    
+
     # Test count batch consistency
     batch_counts = tokenizer.count_tokens_batch(texts)
     single_counts = [tokenizer.count_tokens(text) for text in texts]
@@ -891,7 +880,7 @@ def test_tokenizer_batch_operations_consistency() -> None:
 def test_tokenizer_error_propagation() -> None:
     """Test that errors are properly propagated from underlying tokenizers."""
     char_tokenizer = AutoTokenizer(CharacterTokenizer())
-    
+
     # Test that decoding invalid tokens raises appropriate error
     with pytest.raises(ValueError):
         char_tokenizer.decode([999, 1000])
@@ -906,6 +895,7 @@ def test_tokenizer_invalid_initialization(invalid_input: Any) -> None:
 
 ### Additional Coverage Tests ###
 
+
 def test_tokenizer_fallback_warnings() -> None:
     """Test that appropriate warnings are issued during tokenizer fallbacks."""
     import warnings
@@ -919,7 +909,7 @@ def test_tokenizer_fallback_warnings() -> None:
         except ValueError:
             # Expected to fail eventually, but should generate warnings
             pass
-        
+
         # Check that some warnings were generated during fallback attempts
         warning_messages = [str(warning.message) for warning in w]
         fallback_warnings = [msg for msg in warning_messages if "Falling back" in msg]
@@ -930,7 +920,7 @@ def test_tokenizer_fallback_warnings() -> None:
 def test_tokenizer_decode_batch_callable_error() -> None:
     """Test that decode_batch raises NotImplementedError for callable tokenizers."""
     callable_tokenizer = AutoTokenizer(lambda x: len(x.split()))
-    
+
     with pytest.raises(NotImplementedError, match="Batch decoding not implemented"):
         callable_tokenizer.decode_batch([[1, 2], [3, 4]])
 
@@ -938,7 +928,7 @@ def test_tokenizer_decode_batch_callable_error() -> None:
 def test_tokenizer_encode_batch_callable_error() -> None:
     """Test that encode_batch raises NotImplementedError for callable tokenizers."""
     callable_tokenizer = AutoTokenizer(lambda x: len(x.split()))
-    
+
     with pytest.raises(NotImplementedError, match="Batch encoding not implemented"):
         callable_tokenizer.encode_batch(["hello world", "test"])
 
@@ -946,13 +936,14 @@ def test_tokenizer_encode_batch_callable_error() -> None:
 def test_base_tokenizer_abstract_methods() -> None:
     """Test that BaseTokenizer cannot be instantiated with missing abstract methods."""
     from chonkie.tokenizer import Tokenizer as BaseTokenizer
-    
+
     # Create a class that doesn't implement abstract methods
     class IncompleteTokenizer(BaseTokenizer):
         def __repr__(self) -> str:
             return "IncompleteTokenizer"
+
         # Missing: encode, decode, count_tokens implementations
-    
+
     # This should raise TypeError because abstract methods aren't implemented
     with pytest.raises(TypeError):
         IncompleteTokenizer()
@@ -961,22 +952,22 @@ def test_base_tokenizer_abstract_methods() -> None:
 def test_base_tokenizer_not_implemented_errors() -> None:
     """Test BaseTokenizer raises NotImplementedError for abstract methods."""
     from chonkie.tokenizer import Tokenizer as BaseTokenizer
-    
+
     # Create a partial implementation that only implements __repr__
     class PartialTokenizer(BaseTokenizer):
         def __repr__(self) -> str:
             return "PartialTokenizer"
-        
+
         # Override abstract methods to call super() to trigger NotImplementedError
         def encode(self, text: str):
             return super().encode(text)
-        
+
         def decode(self, tokens):
             return super().decode(tokens)
-        
+
         def count_tokens(self, text: str):
             return super().count_tokens(text)
-    
+
     # We can't instantiate this because it's still abstract, but we can test the error paths
     # by creating a fully concrete version that calls super()
     class TestTokenizer(BaseTokenizer):
@@ -1010,17 +1001,17 @@ def test_tokenizer_unsupported_backend_errors() -> None:
     # Create a tokenizer and manually set an unsupported backend
     tokenizer = AutoTokenizer(CharacterTokenizer())
     tokenizer._backend = "unsupported_backend"
-    
+
     # Test that all methods raise ValueError for unsupported backend
     with pytest.raises(ValueError, match="Unsupported tokenizer backend"):
         tokenizer.encode("test")
-    
+
     with pytest.raises(ValueError, match="Unsupported tokenizer backend"):
         tokenizer.count_tokens("test")
-    
+
     with pytest.raises(ValueError, match="Unsupported tokenizer backend"):
         tokenizer.encode_batch(["test"])
-    
+
     with pytest.raises(ValueError, match="Tokenizer backend .* not supported"):
         tokenizer.count_tokens_batch(["test"])
 
@@ -1028,12 +1019,12 @@ def test_tokenizer_unsupported_backend_errors() -> None:
 def test_character_tokenizer_default_token2id() -> None:
     """Test the defaulttoken2id method of CharacterTokenizer."""
     char_tokenizer = CharacterTokenizer()
-    
+
     # Test that the default token ID function works correctly
     initial_vocab_size = len(char_tokenizer.vocab)
     default_id = char_tokenizer.defaulttoken2id()
     assert default_id == initial_vocab_size
-    
+
     # Add some characters and test again
     char_tokenizer.encode("abc")
     new_default_id = char_tokenizer.defaulttoken2id()
@@ -1043,13 +1034,13 @@ def test_character_tokenizer_default_token2id() -> None:
 def test_word_tokenizer_tokenize_method() -> None:
     """Test the tokenize method of WordTokenizer directly."""
     word_tokenizer = WordTokenizer()
-    
+
     # Test direct tokenize method
     text = "hello world test"
     tokens = word_tokenizer.tokenize(text)
     expected_tokens = text.split(" ")
     assert tokens == expected_tokens
-    
+
     # Test with multiple spaces
     text_spaces = "hello  world   test"
     tokens_spaces = word_tokenizer.tokenize(text_spaces)
@@ -1078,18 +1069,19 @@ def test_tokenizer_tiktoken_batch_operations() -> None:
     """Test tiktoken-specific batch operations."""
     try:
         import tiktoken
+
         tokenizer = AutoTokenizer(tiktoken.get_encoding("gpt2"))
         if tokenizer._backend == "tiktoken":
             texts = ["hello", "world"]
-            
+
             # Test batch encode
             encoded = tokenizer.encode_batch(texts)
             assert len(encoded) == len(texts)
-            
+
             # Test batch decode
             decoded = tokenizer.decode_batch(encoded)
             assert decoded == texts
-            
+
             # Test batch count
             counts = tokenizer.count_tokens_batch(texts)
             assert len(counts) == len(texts)
@@ -1103,19 +1095,20 @@ def test_tokenizer_tokenizers_batch_operations() -> None:
     """Test tokenizers-specific batch operations."""
     try:
         from tokenizers import Tokenizer as HFTokenizer
+
         hf_tokenizer = HFTokenizer.from_pretrained("gpt2")
         tokenizer = AutoTokenizer(hf_tokenizer)
         if tokenizer._backend == "tokenizers":
             texts = ["hello", "world"]
-            
+
             # Test batch encode
             encoded = tokenizer.encode_batch(texts)
             assert len(encoded) == len(texts)
-            
+
             # Test batch decode
             decoded = tokenizer.decode_batch(encoded)
             assert decoded == texts
-            
+
             # Test batch count
             counts = tokenizer.count_tokens_batch(texts)
             assert len(counts) == len(texts)
@@ -1187,10 +1180,10 @@ def test_decode_batch_fallthrough_error() -> None:
     # Manually set an invalid backend to trigger the fallthrough error
     original_backend = tokenizer._backend
     tokenizer._backend = "unknown_backend"
-    
+
     with pytest.raises(ValueError, match="Unsupported tokenizer backend"):
         tokenizer.decode_batch([[1, 2], [3, 4]])
-    
+
     # Restore original backend
     tokenizer._backend = original_backend
 

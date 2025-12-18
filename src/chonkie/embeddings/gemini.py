@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 
 class GeminiEmbeddings(BaseEmbeddings):
     """Google Gemini embeddings implementation using the GenAI API.
-    
+
     Args:
         model: The model to use.
         api_key: The API key to use.
@@ -76,14 +76,14 @@ class GeminiEmbeddings(BaseEmbeddings):
             self._dimension, self._max_tokens = self.AVAILABLE_MODELS[self.DEFAULT_MODEL]
             if show_warnings:
                 warnings.warn(
-                    f"Model {self.model} not in known models list. Using default model '{self.DEFAULT_MODEL}' with dimension {self._dimension} and max tokens {self._max_tokens}."
+                    f"Model {self.model} not in known models list. Using default model '{self.DEFAULT_MODEL}' with dimension {self._dimension} and max tokens {self._max_tokens}.",
                 )
 
         # Setup Gemini client
         self._api_key = api_key or os.getenv("GEMINI_API_KEY")
         if self._api_key is None:
             raise ValueError(
-                "Gemini API key not found. Either pass it as api_key or set GEMINI_API_KEY environment variable."
+                "Gemini API key not found. Either pass it as api_key or set GEMINI_API_KEY environment variable.",
             )
 
         self.client = genai.Client(api_key=self._api_key)  # type: ignore
@@ -96,7 +96,7 @@ class GeminiEmbeddings(BaseEmbeddings):
             if token_count > self._max_tokens:
                 warnings.warn(
                     f"Text has {token_count} tokens which exceeds the model's limit of {self._max_tokens}. "
-                    "Consider chunking the text."
+                    "Consider chunking the text.",
                 )
 
         for attempt in range(self._max_retries):
@@ -106,9 +106,9 @@ class GeminiEmbeddings(BaseEmbeddings):
                     contents=text,
                     config=types.EmbedContentConfig(task_type=self.task_type),  # type: ignore
                 )
-                
+
                 # Extract embedding from result
-                if hasattr(result, 'embeddings') and result.embeddings:
+                if hasattr(result, "embeddings") and result.embeddings:
                     embedding = result.embeddings[0].values
                     return np.array(embedding, dtype=np.float32)
                 else:
@@ -116,7 +116,9 @@ class GeminiEmbeddings(BaseEmbeddings):
 
             except Exception as e:
                 if attempt == self._max_retries - 1:
-                    raise RuntimeError(f"Failed to get embeddings after {self._max_retries} attempts: {str(e)}")
+                    raise RuntimeError(
+                        f"Failed to get embeddings after {self._max_retries} attempts: {str(e)}",
+                    )
                 if self._show_warnings:
                     warnings.warn(f"Embedding attempt {attempt + 1} failed: {str(e)}. Retrying...")
 
@@ -139,7 +141,7 @@ class GeminiEmbeddings(BaseEmbeddings):
                     token_count = self.count_tokens(text)
                     if token_count > self._max_tokens:
                         warnings.warn(
-                            f"Text has {token_count} tokens which exceeds the model's limit of {self._max_tokens}."
+                            f"Text has {token_count} tokens which exceeds the model's limit of {self._max_tokens}.",
                         )
 
             try:
@@ -154,12 +156,12 @@ class GeminiEmbeddings(BaseEmbeddings):
                                 contents=text,
                                 config=types.EmbedContentConfig(task_type=self.task_type),  # type: ignore
                             )
-                            if hasattr(result, 'embeddings') and result.embeddings:
+                            if hasattr(result, "embeddings") and result.embeddings:
                                 embedding = result.embeddings[0].values
                                 batch_embeddings.append(np.array(embedding, dtype=np.float32))
                             else:
                                 raise ValueError("No embeddings returned from API")
-                        
+
                         all_embeddings.extend(batch_embeddings)
                         break
 
@@ -168,7 +170,7 @@ class GeminiEmbeddings(BaseEmbeddings):
                             # If the batch fails, try one by one
                             if len(batch) > 1:
                                 warnings.warn(
-                                    f"Batch embedding failed: {str(e)}. Trying one by one."
+                                    f"Batch embedding failed: {str(e)}. Trying one by one.",
                                 )
                                 individual_embeddings = [self.embed(text) for text in batch]
                                 all_embeddings.extend(individual_embeddings)
@@ -176,7 +178,9 @@ class GeminiEmbeddings(BaseEmbeddings):
                             else:
                                 raise e
                         if self._show_warnings:
-                            warnings.warn(f"Batch attempt {attempt + 1} failed: {str(e)}. Retrying...")
+                            warnings.warn(
+                                f"Batch attempt {attempt + 1} failed: {str(e)}. Retrying...",
+                            )
 
             except Exception as e:
                 raise RuntimeError(f"Failed to process batch: {str(e)}")
@@ -186,10 +190,7 @@ class GeminiEmbeddings(BaseEmbeddings):
     def count_tokens(self, text: str) -> int:
         """Count tokens in text using Google's token counting API."""
         try:
-            response = self.client.models.count_tokens(
-                model=self.model,
-                contents=text
-            )
+            response = self.client.models.count_tokens(model=self.model, contents=text)
             # CountTokensResponse has a total_tokens attribute
             if response.total_tokens is not None:
                 return int(response.total_tokens)
@@ -215,7 +216,7 @@ class GeminiEmbeddings(BaseEmbeddings):
 
     def get_tokenizer(self) -> Any:
         """Return the token counter function.
-        
+
         Since Gemini doesn't provide a public tokenizer, we return the count_tokens method.
         """
         return self.count_tokens
@@ -232,7 +233,7 @@ class GeminiEmbeddings(BaseEmbeddings):
             from google.genai import types
         else:
             raise ImportError(
-                'google-genai is not available. Please install it via `pip install "chonkie[gemini]"`'
+                'google-genai is not available. Please install it via `pip install "chonkie[gemini]"`',
             )
 
     def __repr__(self) -> str:

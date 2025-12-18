@@ -32,7 +32,7 @@ class DatasetsPorter(BasePorter):
         if importutil.find_spec("datasets") is None:
             raise ImportError(
                 "The 'datasets' library is not installed. "
-                "Please install it with 'pip install chonkie[datasets]' or 'pip install datasets'."
+                "Please install it with 'pip install chonkie[datasets]' or 'pip install datasets'.",
             )
         datasets_module = importlib.import_module("datasets")
         self.Dataset = datasets_module.Dataset
@@ -63,9 +63,13 @@ class DatasetsPorter(BasePorter):
         if save_to_disk:
             logger.debug(f"Saving dataset to disk: {path}")
             dataset.save_to_disk(path, **kwargs)
-            logger.info(f"Successfully exported {len(chunks)} chunks to Dataset and saved to: {path}")
+            logger.info(
+                f"Successfully exported {len(chunks)} chunks to Dataset and saved to: {path}",
+            )
         else:
-            logger.info(f"Successfully exported {len(chunks)} chunks to Dataset (not saved to disk)")
+            logger.info(
+                f"Successfully exported {len(chunks)} chunks to Dataset (not saved to disk)",
+            )
         return dataset
 
     def __call__(  # type: ignore[override]
@@ -91,6 +95,4 @@ class DatasetsPorter(BasePorter):
             Dataset: The Dataset object.
 
         """
-        return self.export(
-            chunks, save_to_disk=save_to_disk, path=path, **kwargs
-        )
+        return self.export(chunks, save_to_disk=save_to_disk, path=path, **kwargs)

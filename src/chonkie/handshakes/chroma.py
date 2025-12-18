@@ -59,15 +59,11 @@ class ChromaEmbeddingFunction:
 
         # Check if the model is a string
         if isinstance(embedding_model, str):
-            self.embedding_model = AutoEmbeddings.get_embeddings(
-                embedding_model, **kwargs
-            )
+            self.embedding_model = AutoEmbeddings.get_embeddings(embedding_model, **kwargs)
             self._model_name = embedding_model  # Store name for ChromaDB compatibility
         elif isinstance(embedding_model, BaseEmbeddings):
             self.embedding_model = embedding_model
-            self._model_name = str(
-                embedding_model
-            )  # Store name for ChromaDB compatibility
+            self._model_name = str(embedding_model)  # Store name for ChromaDB compatibility
         else:
             raise ValueError("Model must be a string or a BaseEmbeddings instance.")
 
@@ -75,9 +71,7 @@ class ChromaEmbeddingFunction:
         """Return the name of the embedding model for ChromaDB compatibility."""
         return self._model_name
 
-    def __call__(
-        self, input: Union[str, list[str]]
-    ) -> Union["np.ndarray", list["np.ndarray"]]:
+    def __call__(self, input: Union[str, list[str]]) -> Union["np.ndarray", list["np.ndarray"]]:
         """Call the ChromaEmbeddingFunction."""
         if isinstance(input, str):
             return self.embedding_model.embed(input)
@@ -137,7 +131,8 @@ class ChromaHandshake(BaseHandshake):
         if collection_name != "random":
             self.collection_name = collection_name
             self.collection = self.client.get_or_create_collection(
-                self.collection_name, embedding_function=self.embedding_function # type: ignore[arg-type]
+                self.collection_name,
+                embedding_function=self.embedding_function,  # type: ignore[arg-type]
             )  # type: ignore[arg-type]
         else:
             # Keep generating random collection names until we find one that doesn't exist
@@ -145,7 +140,8 @@ class ChromaHandshake(BaseHandshake):
                 self.collection_name = generate_random_collection_name()
                 try:
                     self.collection = self.client.create_collection(
-                        self.collection_name, embedding_function=self.embedding_function # type: ignore[arg-type]
+                        self.collection_name,
+                        embedding_function=self.embedding_function,  # type: ignore[arg-type]
                     )  # type: ignore[arg-type]
                     break
                 except Exception:
@@ -166,14 +162,12 @@ class ChromaHandshake(BaseHandshake):
         else:
             raise ImportError(
                 "ChromaDB is not installed. "
-                + "Please install it with `pip install chonkie[chroma]`."
+                + "Please install it with `pip install chonkie[chroma]`.",
             )
 
     def _generate_id(self, index: int, chunk: Chunk) -> str:
         """Generate a unique index name for the Chunk."""
-        return str(
-            uuid5(NAMESPACE_OID, f"{self.collection_name}::chunk-{index}:{chunk.text}")
-        )
+        return str(uuid5(NAMESPACE_OID, f"{self.collection_name}::chunk-{index}:{chunk.text}"))
 
     def _generate_metadata(self, chunk: Chunk) -> dict:
         """Generate the metadata for the Chunk."""
@@ -202,7 +196,9 @@ class ChromaHandshake(BaseHandshake):
             metadatas=metadata,  # type: ignore
         )
 
-        logger.info(f"Chonkie wrote {len(chunks)} chunks to the Chroma collection: {self.collection_name}")
+        logger.info(
+            f"Chonkie wrote {len(chunks)} chunks to the Chroma collection: {self.collection_name}",
+        )
 
     def __repr__(self) -> str:
         """Return the string representation of the ChromaHandshake."""
@@ -269,14 +265,10 @@ class ChromaHandshake(BaseHandshake):
         # Process and format the results
         matches = []
         distance_metric = (
-            self.collection.metadata.get("hnsw:space", "l2")
-            if self.collection.metadata
-            else "l2"
+            self.collection.metadata.get("hnsw:space", "l2") if self.collection.metadata else "l2"
         )
 
-        for id_val, distance, metadata, document in zip(
-            ids, distances, metadatas, documents
-        ):
+        for id_val, distance, metadata, document in zip(ids, distances, metadatas, documents):
             similarity = None
             if distance is not None:
                 if distance_metric == "cosine":

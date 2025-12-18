@@ -55,7 +55,10 @@ class TextChef(BaseChef):
         """
         return [self.process(path) for path in paths]
 
-    def __call__(self, path: Union[str, Path, list[str], list[Path]]) -> Union[Document, list[Document]]:  # type: ignore[override]
+    def __call__(
+        self,
+        path: Union[str, Path, list[str], list[Path]],
+    ) -> Union[Document, list[Document]]:  # type: ignore[override]
         """Process the text data from given file(s).
 
         Args:

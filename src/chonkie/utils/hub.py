@@ -6,15 +6,15 @@ from pathlib import Path
 from typing import Optional
 
 
-class Hubbie: 
+class Hubbie:
     """Hubbie is a Huggingface hub manager for Chonkie.
-    
+
     Methods:
         get_recipe(recipe_name: str, lang: Optional[str] = 'en') -> Optional[Dict]:
             Get a recipe from the hub.
         get_recipe_schema() -> Dict:
             Get the current recipe schema from the hub.
-    
+
     """
 
     SCHEMA_VERSION = "v1"
@@ -56,12 +56,14 @@ class Hubbie:
         dependencies = ["huggingface_hub", "jsonschema"]
         for dependency in dependencies:
             if importutil.find_spec(dependency) is None:
-                raise ImportError(f"Tried importing {dependency} but it is not installed. Please install it via `pip install chonkie[hub]`")
+                raise ImportError(
+                    f"Tried importing {dependency} but it is not installed. Please install it via `pip install chonkie[hub]`",
+                )
         return True
 
     def get_recipe_schema(self) -> dict:
         """Get the current recipe schema from the hub."""
-        path = hfhub.hf_hub_download( # type: ignore
+        path = hfhub.hf_hub_download(  # type: ignore
             repo_id="chonkie-ai/recipes",
             repo_type="dataset",
             filename=f"{self.SCHEMA_VERSION}.schema.json",
@@ -72,17 +74,21 @@ class Hubbie:
     def _validate_recipe(self, recipe: dict) -> Optional[bool]:
         """Validate a recipe against the current schema."""
         try:
-            jsonschema.validate(recipe, self.recipe_schema) # type: ignore
+            jsonschema.validate(recipe, self.recipe_schema)  # type: ignore
             return True
-        except jsonschema.ValidationError as error: # type: ignore
-            raise ValueError(f"Recipe is invalid. Please check the recipe and try again. Error: {error}")
+        except jsonschema.ValidationError as error:  # type: ignore
+            raise ValueError(
+                f"Recipe is invalid. Please check the recipe and try again. Error: {error}",
+            )
 
-    def get_recipe(self,
-                  name: Optional[str] = 'default',
-                  lang: Optional[str] = 'en',
-                  path: Optional[str] = None) -> dict:
+    def get_recipe(
+        self,
+        name: Optional[str] = "default",
+        lang: Optional[str] = "en",
+        path: Optional[str] = None,
+    ) -> dict:
         """Get a recipe from the hub.
-        
+
         Args:
             name (Optional[str]): The name of the recipe to get.
             lang (Optional[str]): The language of the recipe to get.
@@ -95,43 +101,53 @@ class Hubbie:
             ValueError: If the recipe is not found.
             ValueError: If neither (name, lang) nor path are provided.
             ValueError: If the recipe is invalid.
-            
+
         """
         # Check if either (name & lang) or path is provided
         if (name is None or lang is None) and path is None:
             raise ValueError("Either (name & lang) or path must be provided.")
-        
+
         # If path is not provided, download the recipe from the hub
         if path is None and (name is not None and lang is not None):
             try:
-                path = hfhub.hf_hub_download( # type: ignore
+                path = hfhub.hf_hub_download(  # type: ignore
                     repo_id=self.get_recipe_config["repo"],
                     repo_type=self.get_recipe_config["repo_type"],
                     subfolder=self.get_recipe_config["subfolder"],
                     filename=f"{name}_{lang}.json",
                 )
             except Exception as error:
-                raise ValueError(f"Could not download recipe '{name}_{lang}'. Ensure name and lang are correct or provide a valid path. Error: {error}")
+                raise ValueError(
+                    f"Could not download recipe '{name}_{lang}'. Ensure name and lang are correct or provide a valid path. Error: {error}",
+                )
 
         # If we couldn't get the path or download the recipe, raise error
         if path is None:
-            raise ValueError(f"Could not determine path for recipe '{name}_{lang}'. Ensure name and lang are correct or provide a valid path.")
+            raise ValueError(
+                f"Could not determine path for recipe '{name}_{lang}'. Ensure name and lang are correct or provide a valid path.",
+            )
 
-        # using Pathlib to check if the file exists 
+        # using Pathlib to check if the file exists
         path_obj = Path(path)
         if not path_obj.exists():
-            raise ValueError(f"Failed to get the file {path} —— please check if this file exists and if the path is correct.")
-        
+            raise ValueError(
+                f"Failed to get the file {path} —— please check if this file exists and if the path is correct.",
+            )
+
         # Path exists, now open it and load the recipe
         try:
             with path_obj.open("r") as f:
                 recipe = dict(json.loads(f.read()))
         except Exception as error:
-            raise ValueError(f"Failed to read the file {path} —— please check if the file is valid JSON and if the path is correct. Error: {error}")
-        
+            raise ValueError(
+                f"Failed to read the file {path} —— please check if the file is valid JSON and if the path is correct. Error: {error}",
+            )
+
         # Validate the recipe with jsonschema
-        assert self._validate_recipe(recipe), "Recipe is invalid. Please check the recipe and try again."
-        
+        assert self._validate_recipe(recipe), (
+            "Recipe is invalid. Please check the recipe and try again."
+        )
+
         # Return the recipe
         return recipe
 
@@ -161,14 +177,14 @@ class Hubbie:
             except Exception as error:
                 raise ValueError(
                     f"Could not download pipeline recipe '{name}'. "
-                    f"Ensure name is correct or provide a valid path. Error: {error}"
+                    f"Ensure name is correct or provide a valid path. Error: {error}",
                 )
 
         # If we couldn't get the path, raise error
         if path is None:
             raise ValueError(
                 f"Could not determine path for pipeline recipe '{name}'. "
-                f"Ensure name is correct or provide a valid path."
+                f"Ensure name is correct or provide a valid path.",
             )
 
         # Check if file exists
@@ -176,7 +192,7 @@ class Hubbie:
         if not path_obj.exists():
             raise ValueError(
                 f"Failed to get the file {path} — please check if this file exists "
-                f"and if the path is correct."
+                f"and if the path is correct.",
             )
 
         # Load the recipe
@@ -186,7 +202,7 @@ class Hubbie:
         except Exception as error:
             raise ValueError(
                 f"Failed to read the file {path} — please check if the file is valid JSON. "
-                f"Error: {error}"
+                f"Error: {error}",
             )
 
         # Validate it has required fields
@@ -197,7 +213,7 @@ class Hubbie:
         if "schema" in recipe and recipe["schema"] != self.SCHEMA_VERSION:
             raise ValueError(
                 f"Pipeline recipe '{name}' has schema version '{recipe['schema']}', "
-                f"but expected '{self.SCHEMA_VERSION}'."
+                f"but expected '{self.SCHEMA_VERSION}'.",
             )
 
         return recipe

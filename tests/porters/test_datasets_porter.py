@@ -59,7 +59,15 @@ def test_dataset_structure_and_content(sample_chunks):  # noqa
     porter = DatasetsPorter()
     ds = porter.export(sample_chunks, save_to_disk=False)
     # Check column names - now includes embedding field
-    expected_columns = {"id", "text", "start_index", "end_index", "token_count", "context", "embedding"}
+    expected_columns = {
+        "id",
+        "text",
+        "start_index",
+        "end_index",
+        "token_count",
+        "context",
+        "embedding",
+    }
     assert set(ds.column_names) == expected_columns
     # Check content
     for i, chunk in enumerate(sample_chunks):
@@ -101,6 +109,4 @@ def test_save_to_disk_kwargs(mock_save_to_disk, sample_chunks):  # noqa
         num_shards=2,
         num_proc=4,
     )
-    mock_save_to_disk.assert_called_once_with(
-        "dummy_path", num_shards=2, num_proc=4
-    )
+    mock_save_to_disk.assert_called_once_with("dummy_path", num_shards=2, num_proc=4)

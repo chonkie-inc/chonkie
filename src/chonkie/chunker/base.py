@@ -16,9 +16,7 @@ logger = get_logger(__name__)
 class BaseChunker(ABC):
     """Base class for all chunkers."""
 
-    def __init__(
-        self, tokenizer: Union[str, TokenizerProtocol] = "gpt2"
-    ):
+    def __init__(self, tokenizer: Union[str, TokenizerProtocol] = "gpt2"):
         """Initialize the chunker with any necessary parameters.
 
         Args:
@@ -44,7 +42,9 @@ class BaseChunker(ABC):
         return f"{self.__class__.__name__}()"
 
     def __call__(
-        self, text: Union[str, Sequence[str]], show_progress: bool = True
+        self,
+        text: Union[str, Sequence[str]],
+        show_progress: bool = True,
     ) -> Union[list[Chunk], list[list[Chunk]]]:
         """Call the chunker with the given arguments.
 
@@ -68,19 +68,26 @@ class BaseChunker(ABC):
         """Get the optimal number of workers for parallel processing."""
         try:
             from multiprocessing import cpu_count
+
             cpu_cores = cpu_count()
             worker_count = min(8, max(1, cpu_cores * 3 // 4))
-            logger.debug(f"Using {worker_count} workers for parallel processing", cpu_cores=cpu_cores)
+            logger.debug(
+                f"Using {worker_count} workers for parallel processing",
+                cpu_cores=cpu_cores,
+            )
             return worker_count
         except Exception as e:
-            warnings.warn(
-                f"Proceeding with 1 worker. Error calculating optimal worker count: {e}"
+            warnings.warn(f"Proceeding with 1 worker. Error calculating optimal worker count: {e}")
+            logger.warning(
+                "Failed to calculate optimal worker count, using 1 worker",
+                error=str(e),
             )
-            logger.warning("Failed to calculate optimal worker count, using 1 worker", error=str(e))
             return 1
 
     def _sequential_batch_processing(
-        self, texts: Sequence[str], show_progress: bool = True
+        self,
+        texts: Sequence[str],
+        show_progress: bool = True,
     ) -> list[list[Chunk]]:
         """Process a batch of texts sequentially."""
         logger.info(f"Starting sequential batch processing of {len(texts)} texts")
@@ -96,11 +103,15 @@ class BaseChunker(ABC):
             )
         ]
         total_chunks = sum(len(r) for r in results)
-        logger.info(f"Completed sequential processing: {total_chunks} total chunks from {len(texts)} texts")
+        logger.info(
+            f"Completed sequential processing: {total_chunks} total chunks from {len(texts)} texts",
+        )
         return results
 
     def _parallel_batch_processing(
-        self, texts: Sequence[str], show_progress: bool = True
+        self,
+        texts: Sequence[str],
+        show_progress: bool = True,
     ) -> list[list[Chunk]]:
         """Process a batch of texts using multiprocessing."""
         from multiprocessing import Pool
@@ -112,7 +123,7 @@ class BaseChunker(ABC):
         logger.info(
             f"Starting parallel batch processing of {total} texts",
             workers=num_workers,
-            chunk_size=chunk_size
+            chunk_size=chunk_size,
         )
 
         with Pool(processes=num_workers) as pool:
@@ -130,7 +141,9 @@ class BaseChunker(ABC):
                     progress_bar.update()
 
             total_chunks = sum(len(r) for r in results)
-            logger.info(f"Completed parallel processing: {total_chunks} total chunks from {total} texts")
+            logger.info(
+                f"Completed parallel processing: {total_chunks} total chunks from {total} texts",
+            )
             return results
 
     @abstractmethod
@@ -146,9 +159,7 @@ class BaseChunker(ABC):
         """
         pass
 
-    def chunk_batch(
-        self, texts: Sequence[str], show_progress: bool = True
-    ) -> list[list[Chunk]]:
+    def chunk_batch(self, texts: Sequence[str], show_progress: bool = True) -> list[list[Chunk]]:
         """Chunk a batch of texts.
 
         Args:
@@ -163,14 +174,14 @@ class BaseChunker(ABC):
         if len(texts) == 0:
             return []
         if len(texts) == 1:
-            return [ self.chunk(texts[0]) ] # type: ignore
+            return [self.chunk(texts[0])]  # type: ignore
 
         # Now for the remaining, check the self._multiprocessing bool flag
         if self._use_multiprocessing:
             return self._parallel_batch_processing(texts, show_progress)
         else:
             return self._sequential_batch_processing(texts, show_progress)
-    
+
     def chunk_document(self, document: Document) -> Document:
         """Chunk a document.
 
@@ -189,11 +200,11 @@ class BaseChunker(ABC):
                 for new_chunk in new_chunks:
                     chunks.append(
                         Chunk(
-                            text=new_chunk.text, 
+                            text=new_chunk.text,
                             start_index=new_chunk.start_index + old_chunk.start_index,
                             end_index=new_chunk.end_index + old_chunk.start_index,
                             token_count=new_chunk.token_count,
-                        )
+                        ),
                     )
             document.chunks = chunks
         else:
