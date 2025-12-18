@@ -26,6 +26,7 @@ class Model2VecEmbeddings(BaseEmbeddings):
     def __init__(self, model: Union[str, "StaticModel"] = "minishlab/potion-base-32M") -> None:
         """Initialize Model2VecEmbeddings with a str or StaticModel instance."""
         super().__init__()
+        self.model_name_or_path: str | None
 
         try:
             from model2vec import StaticModel
@@ -43,7 +44,7 @@ class Model2VecEmbeddings(BaseEmbeddings):
             # TODO: `base_model_name` is mentioned in here -
             # https://github.com/MinishLab/model2vec/blob/b1358a9c2e777800e8f89c7a5f830fa2176c15b5/model2vec/model.py#L165`
             # but its `None` for potion models
-            self.model_name_or_path = self.model.base_model_name  # type: ignore
+            self.model_name_or_path = self.model.base_model_name
         else:
             raise ValueError("model must be a string or model2vec.StaticModel instance")
         self._dimension = self.model.dim
@@ -55,13 +56,13 @@ class Model2VecEmbeddings(BaseEmbeddings):
 
     def embed(self, text: str) -> np.ndarray:
         """Embed a single text using the model2vec model."""
-        return self.model.encode(text, convert_to_numpy=True)  # type: ignore
+        return self.model.encode(text, convert_to_numpy=True)
 
     def embed_batch(self, texts: list[str]) -> list[np.ndarray]:
         """Embed multiple texts using the model2vec model."""
-        return self.model.encode(texts, convert_to_numpy=True)  # type: ignore
+        return self.model.encode(texts, convert_to_numpy=True)  # type: ignore[return-value]
 
-    def similarity(self, u: np.ndarray, v: np.ndarray) -> np.float32:  # type: ignore
+    def similarity(self, u: np.ndarray, v: np.ndarray) -> np.float32:
         """Compute cosine similarity of two embeddings."""
         return np.divide(np.dot(u, v), np.linalg.norm(u) * np.linalg.norm(v), dtype=np.float32)
 

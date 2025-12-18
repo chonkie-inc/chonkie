@@ -117,12 +117,12 @@ class OpenAIEmbeddings(BaseEmbeddings):
             )
 
         # Setup OpenAI client
-        self.client = OpenAI(  # type: ignore
+        self.client = OpenAI(
             api_key=api_key or os.getenv("OPENAI_API_KEY"),
             base_url=base_url,
             timeout=timeout,
             max_retries=max_retries,
-            **kwargs,  # type: ignore
+            **kwargs,  # type: ignore[arg-type]
         )
 
         if self.client.api_key is None:

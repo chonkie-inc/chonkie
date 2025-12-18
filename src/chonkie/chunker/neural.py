@@ -89,9 +89,9 @@ class NeuralChunker(BaseChunker):
         # Initialize the tokenizer to pass in to the parent class
         try:
             if isinstance(tokenizer, str):
-                tokenizer = AutoTokenizer.from_pretrained(tokenizer)  # type: ignore
+                tokenizer = AutoTokenizer.from_pretrained(tokenizer)
             elif tokenizer is None and isinstance(model, str):
-                tokenizer = AutoTokenizer.from_pretrained(model)  # type: ignore
+                tokenizer = AutoTokenizer.from_pretrained(model)
             elif isinstance(tokenizer, PreTrainedTokenizerFast):
                 tokenizer = tokenizer
             else:
@@ -142,7 +142,7 @@ class NeuralChunker(BaseChunker):
                 device_map=device_map,
                 aggregation_strategy="simple",
                 stride=stride,
-            )  # type: ignore
+            )
         except Exception as e:
             raise ValueError(f"Error initializing pipeline: {e}")
 

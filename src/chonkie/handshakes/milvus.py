@@ -89,7 +89,7 @@ class MilvusHandshake(BaseHandshake):
                 password=api_key,
                 alias=alias,
                 **kwargs,
-            )  # type: ignore
+            )
         # Always connect using ORM before any collection operations
         try:
             pymilvus.connections.connect(
@@ -100,7 +100,7 @@ class MilvusHandshake(BaseHandshake):
                 password=api_key,
                 alias=alias,
                 **kwargs,
-            )  # type: ignore
+            )
         except Exception as e:
             logger.warning(f"Could not connect with ORM connections: {e}")
         # 3. Initialize the embedding model
@@ -116,7 +116,7 @@ class MilvusHandshake(BaseHandshake):
             while True:
                 self.collection_name = generate_random_collection_name(sep="_")
                 # Pass alias explicitly to utility.has_collection
-                if not self.client.has_collection(self.collection_name):  # type: ignore
+                if not self.client.has_collection(self.collection_name):
                     break
         else:
             self.collection_name = collection_name
@@ -125,7 +125,7 @@ class MilvusHandshake(BaseHandshake):
         if not self.client.has_collection(self.collection_name):
             self._create_collection_with_schema()
 
-        self.collection = pymilvus.Collection(self.collection_name)  # type: ignore
+        self.collection = pymilvus.Collection(self.collection_name)
         self.collection.load()
 
     @classmethod

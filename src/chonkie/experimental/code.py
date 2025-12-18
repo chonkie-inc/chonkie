@@ -128,7 +128,8 @@ class CodeChunker(BaseChunker):
 
     def _extract_node(self, node: "Node") -> dict[str, Any]:
         """Extract the node content."""
-        text = node.text.decode()  # type: ignore
+        assert node.text
+        text = node.text.decode()
         return {
             "text": text,
             "start_line": node.start_point[0],
@@ -434,7 +435,9 @@ class CodeChunker(BaseChunker):
         except KeyError as error:
             raise KeyError(f"KeyError: {error}") from error
 
-        for rule in self.language_config.merge_rules:  # type: ignore
+        assert self.language_config, "Language config must be initialized for merging nodes."
+
+        for rule in self.language_config.merge_rules:
             # First check if this is the bidirectional or not
             if (
                 rule.bidirectional
@@ -667,10 +670,12 @@ class CodeChunker(BaseChunker):
             self.parser = get_parser(detected_language)  # type: ignore[arg-type]
             self.language_config = CodeLanguageRegistry[detected_language]
 
+        assert self.parser, "Should have initialized the parser by now."
+
         # Create the tree-sitter tree
-        tree = self.parser.parse(text_bytes)  # type: ignore
-        root = tree.root_node  # type: ignore
-        nodes = root.children  # type: ignore
+        tree = self.parser.parse(text_bytes)
+        root = tree.root_node
+        nodes = root.children
 
         # Extract and split the nodes
         exnodes = self._extract_split_nodes(nodes, text_bytes)

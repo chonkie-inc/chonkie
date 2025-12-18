@@ -151,7 +151,7 @@ class MongoDBHandshake(BaseHandshake):
             chunks = [chunks]
         logger.debug(f"Writing {len(chunks)} chunks to MongoDB collection: {self.collection_name}")
         texts = [chunk.text for chunk in chunks]
-        embeddings = self.embedding_model.embed_batch(texts)  # type: ignore
+        embeddings = self.embedding_model.embed_batch(texts)
         documents = []
         for index, chunk in enumerate(chunks):
             embedding = embeddings[index]

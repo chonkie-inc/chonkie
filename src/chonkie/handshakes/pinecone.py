@@ -108,7 +108,7 @@ class PineconeHandshake(BaseHandshake):
             self.index_name = index_name
 
         # set default value for specs field if not present
-        self.spec = spec or pinecone.ServerlessSpec(cloud="aws", region="us-east-1")  # type: ignore
+        self.spec = spec or pinecone.ServerlessSpec(cloud="aws", region="us-east-1")
 
         # Create the index if it doesn't exist
         if not self.client.has_index(self.index_name):
@@ -160,9 +160,10 @@ class PineconeHandshake(BaseHandshake):
         if isinstance(chunks, Chunk):
             chunks = [chunks]
         vectors = []
+        assert self.embedding_model, "Embedding model is not set."
         for index, chunk in enumerate(chunks):
             # Handle both numpy arrays and lists
-            embedding = self.embedding_model.embed(chunk.text)  # type: ignore
+            embedding = self.embedding_model.embed(chunk.text)
             if hasattr(embedding, "tolist"):
                 embedding_list: list[float] = embedding.tolist()
             else:
@@ -229,8 +230,9 @@ class PineconeHandshake(BaseHandshake):
             # warning if both query and embedding are provided, query is used
             if embedding is not None:
                 logger.warning("Both query and embedding provided. Using query.")
+            assert self.embedding_model, "Embedding model is not set."
             # Use custom embedding model to embed the query
-            embedding = self.embedding_model.embed(query).tolist()  # type: ignore
+            embedding = self.embedding_model.embed(query).tolist()
         results = self.index.query(vector=embedding, top_k=limit, include_metadata=True)
 
         matches = []

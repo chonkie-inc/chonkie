@@ -59,7 +59,7 @@ class GeminiGenie(BaseGenie):
             },
         )
         try:
-            return dict(json.loads(response.text))
+            return dict(json.loads(response.text or ""))
         except Exception as e:
             raise ValueError(f"Failed to parse JSON response: {e}")
 

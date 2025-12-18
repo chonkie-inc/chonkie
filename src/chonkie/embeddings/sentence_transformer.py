@@ -63,11 +63,11 @@ class SentenceTransformerEmbeddings(BaseEmbeddings):
 
     def embed(self, text: str) -> np.ndarray:
         """Embed a single text using the sentence-transformers model."""
-        return self.model.encode(text, convert_to_numpy=True)
+        return self.model.encode(text, convert_to_numpy=True)  # type: ignore[return-value]
 
     def embed_batch(self, texts: list[str]) -> list[np.ndarray]:
         """Embed multiple texts using the sentence-transformers model."""
-        return self.model.encode(texts, convert_to_numpy=True)  # type: ignore
+        return self.model.encode(texts, convert_to_numpy=True)  # type: ignore[return-value]
 
     def embed_as_tokens(self, text: str) -> np.ndarray:
         """Embed the text as tokens using the sentence-transformers model.
