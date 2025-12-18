@@ -87,9 +87,6 @@ class CatsuEmbeddings(BaseEmbeddings):
         """
         super().__init__()
 
-        # Lazy import Catsu
-        self._import_dependencies()
-
         # Store configuration
         self.model = model
         self.provider = provider
@@ -97,9 +94,15 @@ class CatsuEmbeddings(BaseEmbeddings):
         self._verbose = verbose
 
         # Initialize Catsu client
-        from catsu import Client
+        try:
+            import catsu
+        except ImportError as e:
+            raise ImportError(
+                "The catsu package is not available. "
+                'Please install it via `pip install "chonkie[catsu]"` or `pip install catsu`',
+            ) from e
 
-        self.client = Client(
+        self.client = catsu.Client(
             verbose=verbose,
             max_retries=max_retries,
             timeout=timeout,
@@ -267,20 +270,6 @@ class CatsuEmbeddings(BaseEmbeddings):
 
         """
         return importutil.find_spec("catsu") is not None
-
-    def _import_dependencies(self) -> None:
-        """Lazy import Catsu dependencies.
-
-        Raises:
-            ImportError: If catsu package is not installed
-
-        """
-        if not self._is_available():
-            raise ImportError(
-                "The catsu package is not available. "
-                'Please install it via `pip install "chonkie[catsu]"` '
-                "or `pip install catsu`",
-            )
 
     def __repr__(self) -> str:
         """Return a string representation of the CatsuEmbeddings instance."""

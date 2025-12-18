@@ -11,8 +11,7 @@ import numpy as np
 from .base import BaseEmbeddings
 
 if TYPE_CHECKING:
-    import tiktoken
-    from openai import OpenAI
+    from tiktoken import Encoding
 
 
 class OpenAIEmbeddings(BaseEmbeddings):
@@ -78,8 +77,13 @@ class OpenAIEmbeddings(BaseEmbeddings):
         """
         super().__init__()
 
-        # Lazy import dependencies if they are not already imported
-        self._import_dependencies()
+        try:
+            import tiktoken
+            from openai import OpenAI
+        except ImportError as ie:
+            raise ImportError(
+                'One (or more) of the following packages is not available: openai, tiktoken. Please install it via `pip install "chonkie[openai]"`',
+            ) from ie
 
         # Initialize the model
         self.model = model
@@ -192,7 +196,7 @@ class OpenAIEmbeddings(BaseEmbeddings):
         """Return the embedding dimension."""
         return self._dimension
 
-    def get_tokenizer(self) -> "tiktoken.Encoding":
+    def get_tokenizer(self) -> "Encoding":
         """Return a tiktoken tokenizer object."""
         return self._tokenizer  # type: ignore[return-value]
 
@@ -204,21 +208,6 @@ class OpenAIEmbeddings(BaseEmbeddings):
             importutil.find_spec("openai") is not None
             and importutil.find_spec("tiktoken") is not None
         )
-
-    def _import_dependencies(self) -> None:
-        """Lazy import dependencies for the embeddings implementation.
-
-        This method should be implemented by all embeddings implementations that require
-        additional dependencies. It lazily imports the dependencies only when they are needed.
-        """
-        if self._is_available():
-            global tiktoken, OpenAI
-            import tiktoken
-            from openai import OpenAI
-        else:
-            raise ImportError(
-                'One (or more) of the following packages is not available: openai, tiktoken. Please install it via `pip install "chonkie[openai]"`',
-            )
 
     def __repr__(self) -> str:
         """Representation of the OpenAIEmbeddings instance."""

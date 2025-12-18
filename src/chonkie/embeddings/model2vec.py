@@ -27,8 +27,12 @@ class Model2VecEmbeddings(BaseEmbeddings):
         """Initialize Model2VecEmbeddings with a str or StaticModel instance."""
         super().__init__()
 
-        # Lazy import dependencies if they are not already imported
-        self._import_dependencies()
+        try:
+            from model2vec import StaticModel
+        except ImportError as ie:
+            raise ImportError(
+                "model2vec is not available. Please install it via `pip install chonkie[model2vec]`",
+            ) from ie
 
         if isinstance(model, str):
             self.model_name_or_path = model
@@ -69,21 +73,6 @@ class Model2VecEmbeddings(BaseEmbeddings):
     def _is_available(cls) -> bool:
         """Check if model2vec is available."""
         return importutil.find_spec("model2vec") is not None
-
-    @classmethod
-    def _import_dependencies(cls) -> None:
-        """Lazy import dependencies for the embeddings implementation.
-
-        This method should be implemented by all embeddings implementations that require
-        additional dependencies. It lazily imports the dependencies only when they are needed.
-        """
-        if cls._is_available():
-            global StaticModel
-            from model2vec import StaticModel
-        else:
-            raise ImportError(
-                "model2vec is not available. Please install it via `pip install chonkie[model2vec]`",
-            )
 
     def __repr__(self) -> str:
         """Representation of the Model2VecEmbeddings instance."""

@@ -2,13 +2,7 @@
 
 import importlib.util as importutil
 import os
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Literal,
-    Optional,
-    Union,
-)
+from typing import Any, Literal, Optional, Union
 from uuid import NAMESPACE_OID, uuid5
 
 from chonkie.embeddings import AutoEmbeddings, BaseEmbeddings
@@ -20,9 +14,6 @@ from .base import BaseHandshake
 from .utils import generate_random_collection_name
 
 logger = get_logger(__name__)
-
-if TYPE_CHECKING:
-    pass
 
 
 @handshake("turbopuffer")
@@ -49,9 +40,6 @@ class TurbopufferHandshake(BaseHandshake):
         """
         super().__init__()
 
-        # Lazy import the dependencies
-        self.tpuf = self._import_dependencies()
-
         # Check for the API Key
         api_key = api_key or os.getenv("TURBOPUFFER_API_KEY")
         if not api_key:
@@ -59,9 +47,16 @@ class TurbopufferHandshake(BaseHandshake):
                 "Turbopuffer API key not found. Please provide an API key or set the TURBOPUFFER_API_KEY environment variable.",
             )
 
+        try:
+            import turbopuffer
+        except ImportError as ie:
+            raise ImportError(
+                "Turbopuffer is not available. Please install it with `pip install turbopuffer`.",
+            ) from ie
+
         # Setting the tpuf api key
         # self.tpuf.api_key = api_key  # type: ignore[attr-defined]
-        self.tpuf = self.tpuf.Turbopuffer(api_key=api_key, region=region)  # type: ignore[attr-defined]
+        self.tpuf = turbopuffer.Turbopuffer(api_key=api_key, region=region)
 
         # Get a list of namespaces
         namespaces = [ns.id for ns in self.tpuf.namespaces()]  # type: ignore[attr-defined]

@@ -159,11 +159,15 @@ class Visualizer:
             theme (Union[str, list[str]]): The theme to use for the visualizer (default is PASTEL_THEME)
 
         """
-        # Lazy import the dependencies
-        self._import_dependencies()
+        try:
+            from rich.console import Console
+        except ImportError as e:
+            raise ImportError(
+                f"Could not import dependencies with error: {e}. Please install the dependencies with `pip install chonkie[viz]`",
+            ) from e
 
         # Initialize the console
-        self.console = Console()  # type: ignore
+        self.console = Console()
 
         # We want the editor's text color to apply by default for custom themes
         # If the theme is a string, get the theme
@@ -174,17 +178,6 @@ class Visualizer:
             self.text_color = ""
             self.theme = theme
             self.theme_name = "custom"
-
-    def _import_dependencies(self) -> None:
-        """Import the dependencies."""
-        try:
-            global Console, Text
-            from rich.console import Console
-            from rich.text import Text
-        except ImportError as e:
-            raise ImportError(
-                f"Could not import dependencies with error: {e}. Please install the dependencies with `pip install chonkie[viz]`",
-            )
 
     # NOTE: This is a helper function to manage the theme
     def _get_theme(self, theme: str) -> tuple[list[str], str]:
@@ -271,8 +264,10 @@ class Visualizer:
             except Exception as e:
                 raise ValueError(f"Error reconstructing full text: {e}")
 
+        from rich.text import Text
+
         # Create a Text object to manage the text and its styles
-        text = Text(full_text)  # type: ignore
+        text = Text(full_text)
         text_length = len(full_text)
         spans = []
         for i, chunk in enumerate(chunks):

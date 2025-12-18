@@ -2,7 +2,6 @@
 
 import importlib.util
 from typing import (
-    TYPE_CHECKING,
     Any,
     Literal,
     Optional,
@@ -19,14 +18,6 @@ from .base import BaseHandshake
 from .utils import generate_random_collection_name
 
 logger = get_logger(__name__)
-
-if TYPE_CHECKING:
-    from pymilvus import (
-        Collection,
-        CollectionSchema,
-        DataType,
-        FieldSchema,
-    )
 
 
 class MilvusHandshake(BaseHandshake):
@@ -76,15 +67,21 @@ class MilvusHandshake(BaseHandshake):
             **kwargs: Additional keyword arguments for future use.
 
         """
-        self._import_dependencies()
         super().__init__()
         self.alias = alias
+
+        try:
+            import pymilvus
+        except ImportError as e:
+            raise ImportError(
+                "Milvus is not installed. Please install it with `pip install chonkie[milvus]`.",
+            ) from e
 
         # 1. Establish connection using the ORM's global connection manager
         if client is not None:
             self.client = client
         else:
-            self.client = MilvusClient(
+            self.client = pymilvus.MilvusClient(
                 uri=uri,
                 host=host,
                 port=port,
@@ -95,7 +92,7 @@ class MilvusHandshake(BaseHandshake):
             )  # type: ignore
         # Always connect using ORM before any collection operations
         try:
-            connections.connect(
+            pymilvus.connections.connect(
                 uri=uri,
                 host=host,
                 port=port,
@@ -128,36 +125,8 @@ class MilvusHandshake(BaseHandshake):
         if not self.client.has_collection(self.collection_name):
             self._create_collection_with_schema()
 
-        self.collection = Collection(self.collection_name)  # type: ignore
+        self.collection = pymilvus.Collection(self.collection_name)  # type: ignore
         self.collection.load()
-
-    def _import_dependencies(self) -> None:
-        """Lazy import the dependencies."""
-        if self._is_available():
-            global \
-                Collection, \
-                CollectionSchema, \
-                DataType, \
-                FieldSchema, \
-                connections, \
-                utility, \
-                ConnectionNotExistException, \
-                MilvusClient
-            from pymilvus import (
-                Collection,
-                CollectionSchema,
-                DataType,
-                FieldSchema,
-                MilvusClient,
-                connections,
-                utility,
-            )
-            from pymilvus.exceptions import ConnectionNotExistException
-        else:
-            raise ImportError(
-                "Milvus is not installed. "
-                + "Please install it with `pip install chonkie[milvus]`.",
-            )
 
     @classmethod
     def _is_available(cls) -> bool:
@@ -167,16 +136,18 @@ class MilvusHandshake(BaseHandshake):
     def _create_collection_with_schema(self) -> None:
         """Create a new collection with a predefined schema and index."""
         # Define fields: pk, text, metadata, and the vector embedding
+        from pymilvus import Collection, CollectionSchema, DataType, FieldSchema
+
         fields = [
-            FieldSchema(name="pk", dtype=DataType.INT64, is_primary=True, auto_id=True),  # type: ignore
-            FieldSchema(name="text", dtype=DataType.VARCHAR, max_length=65_535),  # type: ignore
-            FieldSchema(name="start_index", dtype=DataType.INT64),  # type: ignore
-            FieldSchema(name="end_index", dtype=DataType.INT64),  # type: ignore
-            FieldSchema(name="token_count", dtype=DataType.INT64),  # type: ignore
-            FieldSchema(name="embedding", dtype=DataType.FLOAT_VECTOR, dim=self.dimension),  # type: ignore
+            FieldSchema(name="pk", dtype=DataType.INT64, is_primary=True, auto_id=True),
+            FieldSchema(name="text", dtype=DataType.VARCHAR, max_length=65_535),
+            FieldSchema(name="start_index", dtype=DataType.INT64),
+            FieldSchema(name="end_index", dtype=DataType.INT64),
+            FieldSchema(name="token_count", dtype=DataType.INT64),
+            FieldSchema(name="embedding", dtype=DataType.FLOAT_VECTOR, dim=self.dimension),
         ]
-        schema = CollectionSchema(fields, description="Chonkie Handshake Collection")  # type: ignore
-        collection = Collection(self.collection_name, schema)  # type: ignore
+        schema = CollectionSchema(fields, description="Chonkie Handshake Collection")
+        collection = Collection(self.collection_name, schema)
         logger.info(f"Chonkie created a new collection in Milvus: {self.collection_name}")
 
         # Create a default index for the vector field

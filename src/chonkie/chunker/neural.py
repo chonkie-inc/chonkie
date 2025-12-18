@@ -6,7 +6,7 @@ It trains an encoder style model on the task of token-classification (think: NER
 """
 
 import importlib.util as importutil
-from typing import TYPE_CHECKING, Any, Optional, Union
+from typing import Any, Optional, Union
 
 from chonkie.logger import get_logger
 from chonkie.pipeline import chunker
@@ -15,20 +15,6 @@ from chonkie.types import Chunk
 from .base import BaseChunker
 
 logger = get_logger(__name__)
-
-if TYPE_CHECKING:
-    try:
-        from transformers import PreTrainedTokenizerFast, pipeline
-    except ImportError:
-
-        class PreTrainedTokenizerFast:  # type: ignore
-            """Stub class for transformers PreTrainedTokenizerFast when not available."""
-
-            pass
-
-        def pipeline(*args, **kwargs):  # type: ignore
-            """Stub function for transformers pipeline when not available."""
-            pass
 
 # TODO: Add a check to see if the model is supported
 
@@ -89,9 +75,17 @@ class NeuralChunker(BaseChunker):
           stride: The stride to use for the chunker.
 
         """
-        # Lazily load the dependencies
-        self._import_dependencies()
-
+        try:
+            from transformers import (
+                AutoModelForTokenClassification,
+                AutoTokenizer,
+                PreTrainedTokenizerFast,
+                pipeline,
+            )
+        except ImportError as e:
+            raise ImportError(
+                "transformers is not installed. Please install it with `pip install chonkie[neural]`.",
+            ) from e
         # Initialize the tokenizer to pass in to the parent class
         try:
             if isinstance(tokenizer, str):
@@ -120,9 +114,8 @@ class NeuralChunker(BaseChunker):
                     )
                 # Initialize the model
                 self.model = AutoModelForTokenClassification.from_pretrained(
-                    model,
-                    device_map=device_map,
-                )  # type: ignore
+                    model, device_map=device_map
+                )
                 # Set the stride
                 stride = self.SUPPORTED_MODEL_STRIDES[model] if stride is None else stride
             elif model is not None and "transformers" in str(type(model)):
@@ -160,25 +153,6 @@ class NeuralChunker(BaseChunker):
     def _is_available(cls) -> bool:
         """Check if the dependencies are installed."""
         return importutil.find_spec("transformers") is not None
-
-    def _import_dependencies(self) -> None:
-        """Import the dependencies."""
-        if self._is_available():
-            global \
-                AutoTokenizer, \
-                AutoModelForTokenClassification, \
-                pipeline, \
-                PreTrainedTokenizerFast
-            from transformers import (
-                AutoModelForTokenClassification,
-                AutoTokenizer,
-                PreTrainedTokenizerFast,
-                pipeline,
-            )
-        else:
-            raise ImportError(
-                "transformers is not installed. Please install it with `pip install chonkie[neural]`.",
-            )
 
     def _get_splits(self, response: list[dict[str, Any]], text: str) -> list[str]:
         """Get the text splits from the model."""

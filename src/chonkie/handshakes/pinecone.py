@@ -22,7 +22,7 @@ from .utils import generate_random_collection_name
 logger = get_logger(__name__)
 
 if TYPE_CHECKING:
-    import pinecone
+    from pinecone import Pinecone, ServerlessSpec
 
 
 @handshake("pinecone")
@@ -44,10 +44,10 @@ class PineconeHandshake(BaseHandshake):
 
     def __init__(
         self,
-        client: Optional["pinecone.Pinecone"] = None,
+        client: Optional["Pinecone"] = None,
         api_key: Optional[str] = None,
         index_name: Union[str, Literal["random"]] = "random",
-        spec: Optional["pinecone.ServerlessSpec"] = None,
+        spec: Optional["ServerlessSpec"] = None,
         embedding_model: Union[str, BaseEmbeddings] = "minishlab/potion-retrieval-32M",
         embed: Optional[dict[str, str]] = None,
         **kwargs: Any,
@@ -65,7 +65,13 @@ class PineconeHandshake(BaseHandshake):
 
         """
         super().__init__()
-        self._import_dependencies()
+
+        try:
+            import pinecone
+        except ImportError as ie:
+            raise ImportError(
+                "Pinecone is not installed. Please install it with `pip install chonkie[pinecone]`.",
+            ) from ie
 
         if client is not None:
             self.client = client
@@ -75,6 +81,7 @@ class PineconeHandshake(BaseHandshake):
                 raise ValueError(
                     "Pinecone API key is not set. Please provide it as an argument or set the PINECONE_API_KEY environment variable.",
                 )
+
             self.client = pinecone.Pinecone(api_key=api_key, source_tag="chonkie")
 
         self.embed: Optional[dict[str, str]] = embed
@@ -125,15 +132,6 @@ class PineconeHandshake(BaseHandshake):
     @classmethod
     def _is_available(cls) -> bool:
         return importutil.find_spec("pinecone") is not None
-
-    def _import_dependencies(self) -> None:
-        if self._is_available():
-            global pinecone
-            import pinecone
-        else:
-            raise ImportError(
-                "Pinecone is not installed. Please install it with `pip install chonkie[pinecone]`.",
-            )
 
     def _generate_id(self, index: int, chunk: Chunk) -> str:
         return str(uuid5(NAMESPACE_OID, f"{self.index_name}::chunk-{index}:{chunk.text}"))

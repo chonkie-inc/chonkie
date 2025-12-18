@@ -1,5 +1,6 @@
 """Tests for AzureOpenAIGenie class."""
 
+import sys
 from unittest.mock import Mock, patch
 
 import pytest
@@ -28,18 +29,17 @@ class TestAzureAIGenieErrorHandling:
 
     def test_missing_endpoint(self):
         """Test AzureOpenAIGenie raises error when endpoint is None or empty."""
-        with patch.object(AzureOpenAIGenie, "_is_available", return_value=True):
-            with pytest.raises(ValueError, match="`azure_endpoint` is required"):
-                AzureOpenAIGenie(
-                    azure_endpoint=None,
-                    deployment="x",
-                    api_version="2024-02-15-preview",
-                )
+        with pytest.raises(ValueError, match="`azure_endpoint` is required"):
+            AzureOpenAIGenie(
+                azure_endpoint="",
+                deployment="x",
+                api_version="2024-02-15-preview",
+            )
 
     def test_missing_dependencies(self):
         """Test AzureOpenAIGenie raises error without dependencies."""
-        with patch.object(AzureOpenAIGenie, "_is_available", return_value=False):
-            with pytest.raises(ImportError, match="Missing required modules"):
+        with patch.dict(sys.modules, openai=None):
+            with pytest.raises(ImportError, match="is not available"):
                 AzureOpenAIGenie(
                     azure_endpoint="https://test.openai.azure.com",
                     deployment="deployment",
@@ -51,18 +51,11 @@ class TestAzureAIGenieMocked:
 
     def test_initialization_with_key(self):
         """Test AzureOpenAIGenie initialization with mocked dependencies."""
-        mock_client = Mock()
-        mock_class = Mock(return_value=mock_client)
-
-        def mock_import(self):
-            import chonkie.genie.azure_openai as m
-
-            m.AzureOpenAI = mock_class
-            m.BaseModel = Mock()
+        mock_openai = Mock()
 
         with (
             patch.object(AzureOpenAIGenie, "_is_available", return_value=True),
-            patch.object(AzureOpenAIGenie, "_import_dependencies", mock_import),
+            patch.dict(sys.modules, openai=mock_openai),
         ):
             genie = AzureOpenAIGenie(
                 azure_api_key="test",
@@ -71,7 +64,7 @@ class TestAzureAIGenieMocked:
             )
 
             assert isinstance(genie, BaseGenie)
-            mock_class.assert_called_once()
+            mock_openai.AzureOpenAI.assert_called_once()
 
     def test_generate_returns_text(self):
         """Test AzureOpenAIGenie generate method returns text."""
@@ -86,15 +79,11 @@ class TestAzureAIGenieMocked:
         mock_client.chat.completions.create.return_value = mock_response
         mock_class = Mock(return_value=mock_client)
 
-        def mock_import(self):
-            import chonkie.genie.azure_openai as m
-
-            m.AzureOpenAI = mock_class
-            m.BaseModel = Mock()
+        mock_openai = Mock(AzureOpenAI=mock_class)
 
         with (
             patch.object(AzureOpenAIGenie, "_is_available", return_value=True),
-            patch.object(AzureOpenAIGenie, "_import_dependencies", mock_import),
+            patch.dict(sys.modules, openai=mock_openai),
         ):
             genie = AzureOpenAIGenie(
                 azure_api_key="test",
@@ -106,18 +95,11 @@ class TestAzureAIGenieMocked:
 
     def test_repr(self):
         """Test AzureOpenAIGenie string representation."""
-        mock_client = Mock()
-        mock_class = Mock(return_value=mock_client)
-
-        def mock_import(self):
-            import chonkie.genie.azure_openai as m
-
-            m.AzureOpenAI = mock_class
-            m.BaseModel = Mock()
+        mock_openai = Mock()
 
         with (
             patch.object(AzureOpenAIGenie, "_is_available", return_value=True),
-            patch.object(AzureOpenAIGenie, "_import_dependencies", mock_import),
+            patch.dict(sys.modules, openai=mock_openai),
         ):
             genie = AzureOpenAIGenie(
                 azure_api_key="test",
@@ -136,73 +118,39 @@ class TestAzureOpenAIGenieUtilities:
 
     def test_azure_genie_is_available_true(self) -> None:
         """Test _is_available returns True when dependencies are installed."""
-        with patch("chonkie.genie.azure_openai.importutil.find_spec") as mock_find_spec:
-            mock_find_spec.side_effect = lambda x: (
-                Mock() if x in ["openai", "pydantic", "azure.identity"] else None
+        with patch("chonkie.genie.openai.importutil.find_spec") as mock_find_spec:
+            mock_find_spec.side_effect = (
+                lambda x: Mock() if x in ["openai", "pydantic", "azure.identity"] else None
             )
-
-            def mock_import_dependencies(self):
-                import chonkie.genie.azure_openai as azure_module
-
-                azure_module.AzureOpenAI = Mock()
-                azure_module.BaseModel = Mock()
-
-            with patch.object(AzureOpenAIGenie, "_import_dependencies", mock_import_dependencies):
-                assert AzureOpenAIGenie._is_available()
+            assert AzureOpenAIGenie._is_available()
 
     def test_azure_genie_is_available_false(self) -> None:
         """Test _is_available returns False when dependencies are missing."""
         with patch("chonkie.genie.azure_openai.importutil.find_spec", return_value=None):
-
-            def mock_import_dependencies(self):
-                import chonkie.genie.azure_openai as azure_module
-
-                azure_module.AzureOpenAI = Mock()
-                azure_module.BaseModel = Mock()
-
-            with patch.object(AzureOpenAIGenie, "_import_dependencies", mock_import_dependencies):
-                assert not AzureOpenAIGenie._is_available()
+            assert not AzureOpenAIGenie._is_available()
 
     def test_azure_genie_repr(self) -> None:
         """Test AzureOpenAIGenie string representation."""
-        mock_client = Mock()
-        mock_openai_class = Mock(return_value=mock_client)
-
-        def mock_import_dependencies(self):
-            import chonkie.genie.azure_openai as azure_module
-
-            azure_module.AzureOpenAI = mock_openai_class
-            azure_module.BaseModel = Mock()
-
-        with patch.object(AzureOpenAIGenie, "_is_available", return_value=True):
-            with patch.object(AzureOpenAIGenie, "_import_dependencies", mock_import_dependencies):
-                genie = AzureOpenAIGenie(
-                    model="gpt-4",
-                    azure_api_key="test_key",
-                    azure_endpoint="https://custom.azure.com",
-                    deployment="gpt-4",
-                )
-                repr_str = repr(genie)
-                assert "AzureOpenAIGenie" in repr_str
-                assert "gpt-4" in repr_str
+        mock_openai = Mock()
+        with patch.dict(sys.modules, openai=mock_openai):
+            genie = AzureOpenAIGenie(
+                model="gpt-4",
+                azure_api_key="test_key",
+                azure_endpoint="https://custom.azure.com",
+                deployment="gpt-4",
+            )
+            repr_str = repr(genie)
+            assert "AzureOpenAIGenie" in repr_str
+            assert "gpt-4" in repr_str
 
     def test_azure_genie_custom_base_url(self) -> None:
         """Test AzureOpenAIGenie with custom base URL."""
-        mock_client = Mock()
-        mock_openai_class = Mock(return_value=mock_client)
-
-        def mock_import_dependencies(self):
-            import chonkie.genie.azure_openai as azure_module
-
-            azure_module.AzureOpenAI = mock_openai_class
-            azure_module.BaseModel = Mock()
-
-        with patch.object(AzureOpenAIGenie, "_is_available", return_value=True):
-            with patch.object(AzureOpenAIGenie, "_import_dependencies", mock_import_dependencies):
-                genie = AzureOpenAIGenie(
-                    azure_api_key="test_key",
-                    azure_endpoint="https://custom.azure.com",
-                    deployment="gpt-4",
-                )
-                assert genie is not None
-                mock_openai_class.assert_called_once()
+        mock_openai = Mock()
+        with patch.dict(sys.modules, openai=mock_openai):
+            genie = AzureOpenAIGenie(
+                azure_api_key="test_key",
+                azure_endpoint="https://custom.azure.com",
+                deployment="gpt-4",
+            )
+            assert genie is not None
+            mock_openai.AzureOpenAI.assert_called_once()

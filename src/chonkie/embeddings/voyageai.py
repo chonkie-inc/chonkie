@@ -11,7 +11,6 @@ import numpy as np
 from .base import BaseEmbeddings
 
 if TYPE_CHECKING:
-    import voyageai
     from tokenizers import Tokenizer
 
 
@@ -58,15 +57,21 @@ class VoyageAIEmbeddings(BaseEmbeddings):
         """
         super().__init__()
 
-        # Lazy import dependencies
-        self._import_dependencies()
-
         # Check if the API key is provided or set in the environment variable
         key = api_key or os.getenv("VOYAGE_API_KEY")
         if key is None:
             raise ValueError(
                 "No API key provided. Please set VOYAGE_API_KEY environment variable or pass in an api_key parameter.",
             )
+
+        try:
+            import voyageai
+            from tokenizers import Tokenizer
+        except ImportError as ie:
+            raise ImportError(
+                "One (or more) of the following packages is not available: tokenizers or voyageai. "
+                "Please install it via `pip install chonkie[voyageai]`",
+            ) from ie
 
         # Initialize the API clients
         self._client = voyageai.Client(api_key=key, max_retries=max_retries, timeout=timeout)
@@ -300,18 +305,6 @@ class VoyageAIEmbeddings(BaseEmbeddings):
             importutil.find_spec("voyageai") is not None
             and importutil.find_spec("tokenizers") is not None
         )
-
-    def _import_dependencies(self) -> None:
-        """Lazy import dependencies if they are not already imported."""
-        if self._is_available():
-            global Tokenizer, voyageai
-            import voyageai
-            from tokenizers import Tokenizer
-        else:
-            raise ImportError(
-                "One (or more) of the following packages is not available: tokenizers or voyageai."
-                + " Please install it via `pip install chonkie[voyageai]`",
-            )
 
     @property
     def dimension(self) -> int:
