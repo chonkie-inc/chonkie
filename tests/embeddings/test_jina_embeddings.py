@@ -201,7 +201,11 @@ class TestJinaEmbeddingsAPIMocking:
     ) -> None:
         """Test successful single text embedding."""
         with patch("httpx.post") as mock_post:
-            mock_response = httpx.Response(200, content=json.dumps(mock_single_embedding_response).encode(), request=httpx.Request("POST", "https://api.jina.ai/v1/embeddings"))
+            mock_response = httpx.Response(
+                200,
+                content=json.dumps(mock_single_embedding_response).encode(),
+                request=httpx.Request("POST", "https://api.jina.ai/v1/embeddings"),
+            )
             mock_post.return_value = mock_response
 
             result = embeddings.embed("Test text")
@@ -235,7 +239,11 @@ class TestJinaEmbeddingsAPIMocking:
     def test_embed_single_text_invalid_response(self, embeddings: JinaEmbeddings) -> None:
         """Test single text embedding with invalid API response."""
         with patch("httpx.post") as mock_post:
-            mock_response = httpx.Response(200, content=json.dumps({"invalid": "response"}).encode(), request=httpx.Request("POST", "https://api.jina.ai/v1/embeddings"))
+            mock_response = httpx.Response(
+                200,
+                content=json.dumps({"invalid": "response"}).encode(),
+                request=httpx.Request("POST", "https://api.jina.ai/v1/embeddings"),
+            )
             mock_post.return_value = mock_response
 
             with pytest.raises(ValueError, match="Unexpected API response format"):
@@ -250,7 +258,11 @@ class TestJinaEmbeddingsAPIMocking:
         texts = ["Text 1", "Text 2", "Text 3"]
 
         with patch("httpx.post") as mock_post:
-            mock_response = httpx.Response(200, content=json.dumps(mock_batch_embedding_response).encode(), request=httpx.Request("POST", "https://api.jina.ai/v1/embeddings"))
+            mock_response = httpx.Response(
+                200,
+                content=json.dumps(mock_batch_embedding_response).encode(),
+                request=httpx.Request("POST", "https://api.jina.ai/v1/embeddings"),
+            )
             mock_post.return_value = mock_response
 
             results = embeddings.embed_batch(texts)
@@ -285,11 +297,18 @@ class TestJinaEmbeddingsAPIMocking:
         texts = ["Text 1", "Text 2"]
 
         with patch("httpx.post") as mock_post:
-            batch_response = httpx.Response(400, request=httpx.Request("POST", "https://api.jina.ai/v1/embeddings"))
-            single_response = httpx.Response(200, content=json.dumps(mock_single_embedding_response).encode(), request=httpx.Request("POST", "https://api.jina.ai/v1/embeddings"))
+            batch_response = httpx.Response(
+                400,
+                request=httpx.Request("POST", "https://api.jina.ai/v1/embeddings"),
+            )
+            single_response = httpx.Response(
+                200,
+                content=json.dumps(mock_single_embedding_response).encode(),
+                request=httpx.Request("POST", "https://api.jina.ai/v1/embeddings"),
+            )
 
             mock_post.side_effect = [
-                httpx.HTTPStatusError("Batch failed", request=None, response=batch_response), # type: ignore
+                httpx.HTTPStatusError("Batch failed", request=None, response=batch_response),  # type: ignore
                 single_response,
                 single_response,
             ]
@@ -327,7 +346,11 @@ class TestJinaEmbeddingsAPIMocking:
                 "model": "jina-embeddings-v4",
                 "usage": {"total_tokens": batch_size * 10, "prompt_tokens": batch_size * 10},
             }
-            return httpx.Response(200, content=json.dumps(response_data).encode(), request=httpx.Request("POST", "https://api.jina.ai/v1/embeddings"))
+            return httpx.Response(
+                200,
+                content=json.dumps(response_data).encode(),
+                request=httpx.Request("POST", "https://api.jina.ai/v1/embeddings"),
+            )
 
         with patch("httpx.post", side_effect=mock_response_side_effect) as mock_post:
             results = embeddings.embed_batch(texts)
@@ -366,9 +389,13 @@ class TestJinaEmbeddingsErrorHandling:
         """Test that embed retries on HTTP errors."""
         with patch("httpx.post") as mock_post:
             # Fail first two attempts, succeed on third
-            success_response = httpx.Response(200, content=json.dumps({
-                "data": [{"embedding": [0.1] * 2048}],
-            }).encode(), request=httpx.Request("POST", "https://api.jina.ai/v1/embeddings"))
+            success_response = httpx.Response(
+                200,
+                content=json.dumps({
+                    "data": [{"embedding": [0.1] * 2048}],
+                }).encode(),
+                request=httpx.Request("POST", "https://api.jina.ai/v1/embeddings"),
+            )
 
             mock_post.side_effect = [
                 httpx.HTTPError("Server error"),
@@ -395,7 +422,14 @@ class TestJinaEmbeddingsErrorHandling:
         """Test batch embedding with invalid text type in fallback."""
         with patch("httpx.post") as mock_post:
             # First call fails (triggering fallback)
-            mock_post.side_effect = httpx.HTTPStatusError("Batch failed", request=None, response=httpx.Response(400, request=httpx.Request("POST", "https://api.jina.ai/v1/embeddings"))) # type: ignore
+            mock_post.side_effect = httpx.HTTPStatusError(
+                "Batch failed",
+                request=None,
+                response=httpx.Response(
+                    400,
+                    request=httpx.Request("POST", "https://api.jina.ai/v1/embeddings"),
+                ),
+            )  # type: ignore
 
             with pytest.raises(ValueError, match="Invalid text type found in batch"):
                 embeddings.embed_batch([123, "valid text"])  # type: ignore
@@ -403,14 +437,21 @@ class TestJinaEmbeddingsErrorHandling:
     def test_embed_with_response_status_error(self, embeddings: JinaEmbeddings) -> None:
         """Test embed handling response status errors."""
         with patch("httpx.post") as mock_post:
-            mock_response = httpx.Response(401, request=httpx.Request("POST", "https://api.jina.ai/v1/embeddings"))
+            mock_response = httpx.Response(
+                401,
+                request=httpx.Request("POST", "https://api.jina.ai/v1/embeddings"),
+            )
             mock_post.return_value = mock_response
 
             # Mock the raise_for_status to raise HTTPStatusError
             with patch.object(
                 mock_response,
                 "raise_for_status",
-                side_effect=httpx.HTTPStatusError("Unauthorized", request=None, response=mock_response), # type: ignore
+                side_effect=httpx.HTTPStatusError(
+                    "Unauthorized",
+                    request=None,
+                    response=mock_response,
+                ),  # type: ignore
             ):
                 with pytest.raises(ValueError, match="Failed to embed text.*after 3 attempts"):
                     embeddings.embed("Test text")
@@ -489,7 +530,11 @@ class TestJinaEmbeddingsEdgeCases:
         long_text = "word " * 10000  # Very long text
 
         with patch("httpx.post") as mock_post:
-            mock_response = httpx.Response(200, content=json.dumps({"data": [{"embedding": [0.1] * 2048}]}).encode(), request=httpx.Request("POST", "https://api.jina.ai/v1/embeddings"))
+            mock_response = httpx.Response(
+                200,
+                content=json.dumps({"data": [{"embedding": [0.1] * 2048}]}).encode(),
+                request=httpx.Request("POST", "https://api.jina.ai/v1/embeddings"),
+            )
             mock_post.return_value = mock_response
 
             result = embeddings.embed(long_text)
@@ -501,7 +546,11 @@ class TestJinaEmbeddingsEdgeCases:
         unicode_text = "Hello 你好 🌍 café naïve résumé"
 
         with patch("httpx.post") as mock_post:
-            mock_response = httpx.Response(200, content=json.dumps({"data": [{"embedding": [0.1] * 2048}]}).encode(), request=httpx.Request("POST", "https://api.jina.ai/v1/embeddings"))
+            mock_response = httpx.Response(
+                200,
+                content=json.dumps({"data": [{"embedding": [0.1] * 2048}]}).encode(),
+                request=httpx.Request("POST", "https://api.jina.ai/v1/embeddings"),
+            )
             mock_post.return_value = mock_response
 
             result = embeddings.embed(unicode_text)
@@ -528,7 +577,11 @@ class TestJinaEmbeddingsEdgeCases:
                     {"embedding": [0.3] * 2048},
                 ],
             }
-            mock_response = httpx.Response(200, content=json.dumps(response_data).encode(), request=httpx.Request("POST", "https://api.jina.ai/v1/embeddings"))
+            mock_response = httpx.Response(
+                200,
+                content=json.dumps(response_data).encode(),
+                request=httpx.Request("POST", "https://api.jina.ai/v1/embeddings"),
+            )
             mock_post.return_value = mock_response
 
             results = embeddings.embed_batch(texts)
@@ -548,7 +601,11 @@ class TestJinaEmbeddingsEdgeCases:
             response_data = {
                 "data": [{"embedding": [0.1] * 2048}] * 5,  # Max 5 per batch
             }
-            mock_response = httpx.Response(200, content=json.dumps(response_data).encode(), request=httpx.Request("POST", "https://api.jina.ai/v1/embeddings"))
+            mock_response = httpx.Response(
+                200,
+                content=json.dumps(response_data).encode(),
+                request=httpx.Request("POST", "https://api.jina.ai/v1/embeddings"),
+            )
             mock_post.return_value = mock_response
 
             embeddings.embed_batch(texts)
