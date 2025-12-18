@@ -167,6 +167,7 @@ dev = [
     "pandas",
     "tabulate",
     "openpyxl",
+    "uv>=0.9.18",
 ]
 
 [tool.pytest.ini_options]
@@ -226,3 +227,10 @@ ignore_missing_imports = true
 no_implicit_optional = true
 check_untyped_defs = true
 show_error_codes = true
+
+[tool.uv]
+constraint-dependencies = [
+    # This pair of grpcio + protobuf is required by a check in weaviate.proto.v1
+    "grpcio>=1.72",
+    "protobuf>=6.30",
+]
