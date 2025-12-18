@@ -61,7 +61,7 @@ class GeminiGenie(BaseGenie):
         try:
             return dict(json.loads(response.text or ""))
         except Exception as e:
-            raise ValueError(f"Failed to parse JSON response: {e}")
+            raise ValueError(f"Failed to parse JSON response: {e}") from e
 
     @classmethod
     def _is_available(cls) -> bool:
