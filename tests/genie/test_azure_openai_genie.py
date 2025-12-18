@@ -148,13 +148,7 @@ class TestAzureOpenAIGenieUtilities:
                 azure_module.BaseModel = Mock()
 
             with patch.object(AzureOpenAIGenie, "_import_dependencies", mock_import_dependencies):
-                genie = AzureOpenAIGenie(
-                    azure_api_key="test_key",
-                    azure_endpoint="https://custom.azure.com",
-                    deployment="gpt-4",
-                )
-                result = genie._is_available()
-                assert result is True
+                assert AzureOpenAIGenie._is_available()
 
     def test_azure_genie_is_available_false(self) -> None:
         """Test _is_available returns False when dependencies are missing."""
@@ -167,13 +161,7 @@ class TestAzureOpenAIGenieUtilities:
                 azure_module.BaseModel = Mock()
 
             with patch.object(AzureOpenAIGenie, "_import_dependencies", mock_import_dependencies):
-                genie = AzureOpenAIGenie(
-                    azure_api_key="test_key",
-                    azure_endpoint="https://custom.azure.com",
-                    deployment="gpt-4",
-                )
-                result = genie._is_available()
-                assert result is False
+                assert not AzureOpenAIGenie._is_available()
 
     def test_azure_genie_repr(self) -> None:
         """Test AzureOpenAIGenie string representation."""

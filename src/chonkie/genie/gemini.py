@@ -58,7 +58,8 @@ class GeminiGenie(BaseGenie):
         except Exception as e:
             raise ValueError(f"Failed to parse JSON response: {e}")
 
-    def _is_available(self) -> bool:
+    @classmethod
+    def _is_available(cls) -> bool:
         """Check if all the dependencies are available in the environement."""
         if (
             importutil.find_spec("pydantic") is not None

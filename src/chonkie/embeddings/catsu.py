@@ -258,7 +258,8 @@ class CatsuEmbeddings(BaseEmbeddings):
             provider=self.provider,
         )
 
-    def _is_available(self) -> bool:
+    @classmethod
+    def _is_available(cls) -> bool:
         """Check if the Catsu package is available.
 
         Returns:

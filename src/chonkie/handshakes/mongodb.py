@@ -123,7 +123,8 @@ class MongoDBHandshake(BaseHandshake):
             raise ValueError(f"Invalid embedding model: {embedding_model}")
         self.dimension = self.embedding_model.dimension
 
-    def _is_available(self) -> bool:
+    @classmethod
+    def _is_available(cls) -> bool:
         return importutil.find_spec("pymongo") is not None
 
     def _import_dependencies(self) -> None:

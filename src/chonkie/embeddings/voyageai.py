@@ -293,7 +293,8 @@ class VoyageAIEmbeddings(BaseEmbeddings):
             embeddings.extend(result)
         return embeddings
 
-    def _is_available(self) -> bool:
+    @classmethod
+    def _is_available(cls) -> bool:
         """Check if the voyageai package is available."""
         return (
             importutil.find_spec("voyageai") is not None

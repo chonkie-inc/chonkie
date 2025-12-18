@@ -47,7 +47,8 @@ def mock_embeddings():
             def get_tokenizer(self):
                 return lambda x: len(x.split())
 
-            def _is_available(self):
+            @classmethod
+            def _is_available(cls):
                 return True
 
         mock_embedding = MockEmbeddings()

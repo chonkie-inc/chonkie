@@ -150,9 +150,7 @@ class TestOpenAIGenieUtilities:
 
             with patch.object(OpenAIGenie, "_import_dependencies", mock_import_dependencies):
                 with patch.dict(os.environ, {"OPENAI_API_KEY": "test_key"}):
-                    genie = OpenAIGenie()
-                    result = genie._is_available()
-                    assert result is True
+                    assert OpenAIGenie._is_available()
 
     def test_openai_genie_is_available_false(self) -> None:
         """Test _is_available returns False when dependencies are missing."""
@@ -167,9 +165,7 @@ class TestOpenAIGenieUtilities:
 
             with patch.object(OpenAIGenie, "_import_dependencies", mock_import_dependencies):
                 with patch.dict(os.environ, {"OPENAI_API_KEY": "test_key"}):
-                    genie = OpenAIGenie()
-                    result = genie._is_available()
-                    assert result is False
+                    assert not OpenAIGenie._is_available()
 
     def test_openai_genie_repr(self) -> None:
         """Test OpenAIGenie string representation."""

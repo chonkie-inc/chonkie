@@ -139,10 +139,10 @@ class TestJinaEmbeddingsProperties:
             assert model in JinaEmbeddings.AVAILABLE_MODELS
             assert isinstance(JinaEmbeddings.AVAILABLE_MODELS[model], int)
 
-    def test_is_available(self, embeddings: JinaEmbeddings) -> None:
+    def test_is_available(self) -> None:
         """Test _is_available method."""
         # Should return True since dependencies are available in test environment
-        assert embeddings._is_available() is True
+        assert JinaEmbeddings._is_available() is True
 
     def test_import_dependencies_success(self, embeddings: JinaEmbeddings) -> None:
         """Test _import_dependencies when packages are available."""

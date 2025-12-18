@@ -179,24 +179,16 @@ class TestGeminiGenieUtilities:
         with patch("chonkie.genie.gemini.importutil.find_spec") as mock_find_spec:
             mock_find_spec.side_effect = lambda x: Mock() if x in ["pydantic", "google"] else None
 
-            # Test the actual _is_available method directly
-            with patch.object(GeminiGenie, "_is_available", return_value=True):
-                with patch.object(GeminiGenie, "_import_dependencies"):
-                    with patch.dict(os.environ, {"GEMINI_API_KEY": "test_key"}):
-                        genie = GeminiGenie()
-                        assert genie._is_available() is True
+            with patch.object(GeminiGenie, "_import_dependencies"):
+                assert GeminiGenie._is_available() is True
 
     def test_gemini_genie_is_available_false(self) -> None:
         """Test _is_available returns False when dependencies are missing."""
         with patch("chonkie.genie.gemini.importutil.find_spec") as mock_find_spec:
             mock_find_spec.return_value = None
 
-            # Test the actual _is_available method directly
-            with patch.object(GeminiGenie, "_is_available", return_value=False):
-                with patch.object(GeminiGenie, "_import_dependencies"):
-                    with patch.dict(os.environ, {"GEMINI_API_KEY": "test_key"}):
-                        genie = GeminiGenie()
-                        assert genie._is_available() is False
+            with patch.object(GeminiGenie, "_import_dependencies"):
+                assert GeminiGenie._is_available() is False
 
     @patch.dict(os.environ, {"GEMINI_API_KEY": "test_key"})
     def test_gemini_genie_repr(self) -> None:

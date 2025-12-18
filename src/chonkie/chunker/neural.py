@@ -156,7 +156,8 @@ class NeuralChunker(BaseChunker):
         # Set the _use_multiprocessing value to be False
         self._use_multiprocessing = False
 
-    def _is_available(self) -> bool:
+    @classmethod
+    def _is_available(cls) -> bool:
         """Check if the dependencies are installed."""
         return importutil.find_spec("transformers") is not None
 
