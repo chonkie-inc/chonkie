@@ -221,7 +221,8 @@ class GeminiEmbeddings(BaseEmbeddings):
         """
         return self.count_tokens
 
-    def _is_available(self) -> bool:
+    @classmethod
+    def _is_available(cls) -> bool:
         """Check if the Google GenAI package is available."""
         return importutil.find_spec("google.genai") is not None
 

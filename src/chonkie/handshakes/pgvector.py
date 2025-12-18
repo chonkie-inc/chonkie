@@ -117,7 +117,8 @@ class PgvectorHandshake(BaseHandshake):
             dimension=self.vector_dimensions,
         )
 
-    def _is_available(self) -> bool:
+    @classmethod
+    def _is_available(cls) -> bool:
         """Check if the dependencies are available."""
         return importutil.find_spec("vecs") is not None
 

@@ -128,7 +128,8 @@ class QdrantHandshake(BaseHandshake):
                 vectors_config=VectorParams(size=self.dimension, distance=Distance.COSINE),
             )
 
-    def _is_available(self) -> bool:
+    @classmethod
+    def _is_available(cls) -> bool:
         """Check if the dependencies are installed."""
         return importutil.find_spec("qdrant_client") is not None
 

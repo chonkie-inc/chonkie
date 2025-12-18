@@ -196,7 +196,8 @@ class OpenAIEmbeddings(BaseEmbeddings):
         """Return a tiktoken tokenizer object."""
         return self._tokenizer  # type: ignore[return-value]
 
-    def _is_available(self) -> bool:
+    @classmethod
+    def _is_available(cls) -> bool:
         """Check if the OpenAI package is available."""
         # We should check for OpenAI package alongside tiktoken
         return (

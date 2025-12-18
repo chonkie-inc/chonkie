@@ -159,7 +159,8 @@ class MilvusHandshake(BaseHandshake):
                 + "Please install it with `pip install chonkie[milvus]`.",
             )
 
-    def _is_available(self) -> bool:
+    @classmethod
+    def _is_available(cls) -> bool:
         """Check if the dependencies are installed."""
         return importlib.util.find_spec("pymilvus") is not None
 

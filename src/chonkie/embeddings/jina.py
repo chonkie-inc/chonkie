@@ -88,7 +88,8 @@ class JinaEmbeddings(BaseEmbeddings):
             "Authorization": f"Bearer {self.api_key}",
         }
 
-    def _is_available(self) -> bool:
+    @classmethod
+    def _is_available(cls) -> bool:
         """Check if the Jina package is available."""
         return importutil.find_spec("tokenizers") is not None
 

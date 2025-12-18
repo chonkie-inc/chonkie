@@ -150,7 +150,8 @@ class ChromaHandshake(BaseHandshake):
 
         # Now that we have a collection, we can write the Chunks to it!
 
-    def _is_available(self) -> bool:
+    @classmethod
+    def _is_available(cls) -> bool:
         """Check if the dependencies are available."""
         return importutil.find_spec("chromadb") is not None
 

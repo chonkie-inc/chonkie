@@ -122,7 +122,8 @@ class PineconeHandshake(BaseHandshake):
                 )
         self.index = self.client.Index(self.index_name)
 
-    def _is_available(self) -> bool:
+    @classmethod
+    def _is_available(cls) -> bool:
         return importutil.find_spec("pinecone") is not None
 
     def _import_dependencies(self) -> None:

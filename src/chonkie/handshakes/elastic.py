@@ -99,7 +99,8 @@ class ElasticHandshake(BaseHandshake):
             self.client.indices.create(index=self.index_name, mappings=mapping)
             logger.info(f"Index '{self.index_name}' created with vector mapping.")
 
-    def _is_available(self) -> bool:
+    @classmethod
+    def _is_available(cls) -> bool:
         """Check if the dependencies are installed."""
         return importlib.util.find_spec("elasticsearch") is not None
 

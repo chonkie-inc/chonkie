@@ -174,7 +174,8 @@ class WeaviateHandshake(BaseHandshake):
         if not self._collection_exists(self.collection_name):
             self._create_collection()
 
-    def _is_available(self) -> bool:
+    @classmethod
+    def _is_available(cls) -> bool:
         """Check if the dependencies are available."""
         return importutil.find_spec("weaviate") is not None
 

@@ -82,7 +82,8 @@ class TurbopufferHandshake(BaseHandshake):
         # Initialize the embedding model
         self.embedding_model = AutoEmbeddings.get_embeddings(embedding_model)
 
-    def _is_available(self) -> bool:
+    @classmethod
+    def _is_available(cls) -> bool:
         """Check if Turbopuffer is available."""
         return importutil.find_spec("turbopuffer") is not None
 
