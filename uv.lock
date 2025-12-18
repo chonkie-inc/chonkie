@@ -398,6 +398,37 @@ wheels = [
 ]
 
 [[package]]
+name = "cattrs"
+version = "25.3.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "attrs" },
+    { name = "exceptiongroup", marker = "python_full_version < '3.11'" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/6e/00/2432bb2d445b39b5407f0a90e01b9a271475eea7caf913d7a86bcb956385/cattrs-25.3.0.tar.gz", hash = "sha256:1ac88d9e5eda10436c4517e390a4142d88638fe682c436c93db7ce4a277b884a", size = 509321, upload-time = "2025-10-07T12:26:08.737Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/d8/2b/a40e1488fdfa02d3f9a653a61a5935ea08b3c2225ee818db6a76c7ba9695/cattrs-25.3.0-py3-none-any.whl", hash = "sha256:9896e84e0a5bf723bc7b4b68f4481785367ce07a8a02e7e9ee6eb2819bc306ff", size = 70738, upload-time = "2025-10-07T12:26:06.603Z" },
+]
+
+[[package]]
+name = "cerebras-cloud-sdk"
+version = "1.64.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "anyio" },
+    { name = "distro" },
+    { name = "httpx" },
+    { name = "pydantic" },
+    { name = "sniffio" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/52/98/96fa7704e101b5b33c7030a61d081f07c6c117f96d742852d7e06da56345/cerebras_cloud_sdk-1.64.1.tar.gz", hash = "sha256:7200b0cbafaff32e4e6bcb88d5342fc19295435a7a7681fa10156018d79ae67a", size = 131448, upload-time = "2025-12-31T17:54:55.402Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/f3/96/138ed6ecf48f3b17f68ca06bb5c2b506d34c84d73502c9e3a620da7d44a9/cerebras_cloud_sdk-1.64.1-py3-none-any.whl", hash = "sha256:c9c049586e89dcc4e4a8d726d4725bdba28acb9e8b0f2a9640138b24b92444a0", size = 97798, upload-time = "2025-12-31T17:54:54.072Z" },
+]
+
+[[package]]
 name = "certifi"
 version = "2025.10.5"
 source = { registry = "https://pypi.org/simple" }
@@ -566,11 +597,13 @@ all = [
     { name = "accelerate" },
     { name = "azure-identity" },
     { name = "catsu" },
+    { name = "cerebras-cloud-sdk" },
     { name = "chromadb" },
     { name = "cohere" },
     { name = "datasets" },
     { name = "elasticsearch" },
     { name = "google-genai" },
+    { name = "groq" },
     { name = "httpx" },
     { name = "huggingface-hub" },
     { name = "jsonschema" },
@@ -609,6 +642,10 @@ azure-openai = [
 catsu = [
     { name = "catsu" },
 ]
+cerebras = [
+    { name = "cerebras-cloud-sdk" },
+    { name = "pydantic" },
+]
 chroma = [
     { name = "chromadb" },
 ]
@@ -638,6 +675,7 @@ dev = [
     { name = "pytest-asyncio" },
     { name = "pytest-cov" },
     { name = "pytest-xdist" },
+    { name = "requests-cache" },
     { name = "ruff" },
     { name = "tabulate" },
     { name = "transformers" },
@@ -655,6 +693,10 @@ gemini = [
 ]
 genie = [
     { name = "google-genai" },
+    { name = "pydantic" },
+]
+groq = [
+    { name = "groq" },
     { name = "pydantic" },
 ]
 hub = [
@@ -745,6 +787,8 @@ requires-dist = [
     { name = "azure-identity", marker = "extra == 'azure-openai'", specifier = ">=1.23.0" },
     { name = "catsu", marker = "extra == 'all'", specifier = ">=0.0.1" },
     { name = "catsu", marker = "extra == 'catsu'", specifier = ">=0.0.1" },
+    { name = "cerebras-cloud-sdk", marker = "extra == 'all'", specifier = ">=1.0.0" },
+    { name = "cerebras-cloud-sdk", marker = "extra == 'cerebras'", specifier = ">=1.0.0" },
     { name = "chromadb", marker = "extra == 'all'", specifier = ">=1.0.0" },
     { name = "chromadb", marker = "extra == 'chroma'", specifier = ">=1.0.0" },
     { name = "cohere", marker = "extra == 'all'", specifier = ">=5.13.0" },
@@ -759,6 +803,8 @@ requires-dist = [
     { name = "google-genai", marker = "extra == 'all'", specifier = ">=1.0.0" },
     { name = "google-genai", marker = "extra == 'gemini'", specifier = ">=1.0.0" },
     { name = "google-genai", marker = "extra == 'genie'", specifier = ">=1.0.0" },
+    { name = "groq", marker = "extra == 'all'", specifier = ">=0.4.0" },
+    { name = "groq", marker = "extra == 'groq'", specifier = ">=0.4.0" },
     { name = "httpx", marker = "extra == 'all'" },
     { name = "huggingface-hub", marker = "extra == 'all'", specifier = ">=0.24.0" },
     { name = "huggingface-hub", marker = "extra == 'hub'", specifier = ">=0.24.0" },
@@ -789,8 +835,10 @@ requires-dist = [
     { name = "pinecone", marker = "extra == 'pinecone'" },
     { name = "pydantic", marker = "extra == 'all'", specifier = ">=2.0.0" },
     { name = "pydantic", marker = "extra == 'azure-openai'", specifier = ">=2.0.0" },
+    { name = "pydantic", marker = "extra == 'cerebras'", specifier = ">=2.0.0" },
     { name = "pydantic", marker = "extra == 'gemini'", specifier = ">=2.0.0" },
     { name = "pydantic", marker = "extra == 'genie'", specifier = ">=2.0.0" },
+    { name = "pydantic", marker = "extra == 'groq'", specifier = ">=2.0.0" },
     { name = "pydantic", marker = "extra == 'openai'", specifier = ">=2.0.0" },
     { name = "pymilvus", marker = "extra == 'all'", specifier = ">=2.1.0" },
     { name = "pymilvus", marker = "extra == 'milvus'", specifier = ">=2.1.0" },
@@ -802,6 +850,7 @@ requires-dist = [
     { name = "pytest-xdist", marker = "extra == 'dev'", specifier = ">=2.5.0" },
     { name = "qdrant-client", marker = "extra == 'all'", specifier = ">=1.0.0" },
     { name = "qdrant-client", marker = "extra == 'qdrant'", specifier = ">=1.0.0" },
+    { name = "requests-cache", marker = "extra == 'dev'", specifier = ">=1.2.1" },
     { name = "rich", marker = "extra == 'all'", specifier = ">=13.0.0" },
     { name = "rich", marker = "extra == 'viz'", specifier = ">=13.0.0" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.13.3" },
@@ -845,7 +894,7 @@ requires-dist = [
     { name = "weaviate-client", marker = "extra == 'all'", specifier = ">=4.16.7" },
     { name = "weaviate-client", marker = "extra == 'weaviate'", specifier = ">=4.16.7" },
 ]
-provides-extras = ["hub", "viz", "cli", "table", "tokenizers", "tiktoken", "code", "neural", "fast", "model2vec", "st", "openai", "semantic", "gemini", "azure-openai", "voyageai", "cohere", "jina", "catsu", "litellm", "chroma", "qdrant", "tpuf", "pgvector", "weaviate", "datasets", "pinecone", "mongodb", "elastic", "milvus", "genie", "all", "dev"]
+provides-extras = ["hub", "viz", "cli", "table", "tokenizers", "tiktoken", "code", "neural", "fast", "model2vec", "st", "openai", "semantic", "gemini", "azure-openai", "groq", "cerebras", "voyageai", "cohere", "jina", "catsu", "litellm", "chroma", "qdrant", "tpuf", "pgvector", "weaviate", "datasets", "pinecone", "mongodb", "elastic", "milvus", "genie", "all", "dev"]
 
 [package.metadata.requires-dev]
 dev = [{ name = "ruff", specifier = ">=0.13.3" }]
@@ -1683,6 +1732,23 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/23/6e/74407aed965a4ab6ddd93a7ded3180b730d281c77b765788419484cdfeef/greenlet-3.2.4-cp314-cp314-musllinux_1_2_aarch64.whl", hash = "sha256:2917bdf657f5859fbf3386b12d68ede4cf1f04c90c3a6bc1f013dd68a22e2269", size = 1612508, upload-time = "2025-11-04T12:42:23.427Z" },
     { url = "https://files.pythonhosted.org/packages/0d/da/343cd760ab2f92bac1845ca07ee3faea9fe52bee65f7bcb19f16ad7de08b/greenlet-3.2.4-cp314-cp314-musllinux_1_2_x86_64.whl", hash = "sha256:015d48959d4add5d6c9f6c5210ee3803a830dce46356e3bc326d6776bde54681", size = 1680760, upload-time = "2025-11-04T12:42:25.341Z" },
     { url = "https://files.pythonhosted.org/packages/e3/a5/6ddab2b4c112be95601c13428db1d8b6608a8b6039816f2ba09c346c08fc/greenlet-3.2.4-cp314-cp314-win_amd64.whl", hash = "sha256:e37ab26028f12dbb0ff65f29a8d3d44a765c61e729647bf2ddfbbed621726f01", size = 303425, upload-time = "2025-08-07T13:32:27.59Z" },
+]
+
+[[package]]
+name = "groq"
+version = "1.0.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "anyio" },
+    { name = "distro" },
+    { name = "httpx" },
+    { name = "pydantic" },
+    { name = "sniffio" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/3f/12/f4099a141677fcd2ed79dcc1fcec431e60c52e0e90c9c5d935f0ffaf8c0e/groq-1.0.0.tar.gz", hash = "sha256:66cb7bb729e6eb644daac7ce8efe945e99e4eb33657f733ee6f13059ef0c25a9", size = 146068, upload-time = "2025-12-17T23:34:23.115Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/4a/88/3175759d2ef30406ea721f4d837bfa1ba4339fde3b81ba8c5640a96ed231/groq-1.0.0-py3-none-any.whl", hash = "sha256:6e22bf92ffad988f01d2d4df7729add66b8fd5dbfb2154b5bbf3af245b72c731", size = 138292, upload-time = "2025-12-17T23:34:21.957Z" },
 ]
 
 [[package]]
@@ -3412,6 +3478,15 @@ wheels = [
 ]
 
 [[package]]
+name = "platformdirs"
+version = "4.5.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/cf/86/0248f086a84f01b37aaec0fa567b397df1a119f73c16f6c7a9aac73ea309/platformdirs-4.5.1.tar.gz", hash = "sha256:61d5cdcc6065745cdd94f0f878977f8de9437be93de97c1c12f853c9c0cdcbda", size = 21715, upload-time = "2025-12-05T13:52:58.638Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/cb/28/3bfe2fa5a7b9c46fe7e13c97bda14c895fb10fa2ebf1d0abb90e0cea7ee1/platformdirs-4.5.1-py3-none-any.whl", hash = "sha256:d03afa3963c806a9bed9d5125c8f4cb2fdaf74a55ab60e5d59b3fde758104d31", size = 18731, upload-time = "2025-12-05T13:52:56.823Z" },
+]
+
+[[package]]
 name = "pluggy"
 version = "1.6.0"
 source = { registry = "https://pypi.org/simple" }
@@ -4453,6 +4528,23 @@ wheels = [
 ]
 
 [[package]]
+name = "requests-cache"
+version = "1.2.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "attrs" },
+    { name = "cattrs" },
+    { name = "platformdirs" },
+    { name = "requests" },
+    { name = "url-normalize" },
+    { name = "urllib3" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/1a/be/7b2a95a9e7a7c3e774e43d067c51244e61dea8b120ae2deff7089a93fb2b/requests_cache-1.2.1.tar.gz", hash = "sha256:68abc986fdc5b8d0911318fbb5f7c80eebcd4d01bfacc6685ecf8876052511d1", size = 3018209, upload-time = "2024-06-18T17:18:03.774Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/4e/2e/8f4051119f460cfc786aa91f212165bb6e643283b533db572d7b33952bd2/requests_cache-1.2.1-py3-none-any.whl", hash = "sha256:1285151cddf5331067baa82598afe2d47c7495a1334bfe7a7d329b43e9fd3603", size = 61425, upload-time = "2024-06-18T17:17:45Z" },
+]
+
+[[package]]
 name = "requests-oauthlib"
 version = "2.0.0"
 source = { registry = "https://pypi.org/simple" }
@@ -5331,6 +5423,18 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/95/32/1a225d6164441be760d75c2c42e2780dc0873fe382da3e98a2e1e48361e5/tzdata-2025.2.tar.gz", hash = "sha256:b60a638fcc0daffadf82fe0f57e53d06bdec2f36c4df66280ae79bce6bd6f2b9", size = 196380, upload-time = "2025-03-23T13:54:43.652Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/5c/23/c7abc0ca0a1526a0774eca151daeb8de62ec457e77262b66b359c3c7679e/tzdata-2025.2-py2.py3-none-any.whl", hash = "sha256:1a403fada01ff9221ca8044d701868fa132215d84beb92242d9acd2147f667a8", size = 347839, upload-time = "2025-03-23T13:54:41.845Z" },
+]
+
+[[package]]
+name = "url-normalize"
+version = "2.2.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "idna" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/80/31/febb777441e5fcdaacb4522316bf2a527c44551430a4873b052d545e3279/url_normalize-2.2.1.tar.gz", hash = "sha256:74a540a3b6eba1d95bdc610c24f2c0141639f3ba903501e61a52a8730247ff37", size = 18846, upload-time = "2025-04-26T20:37:58.553Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/bc/d9/5ec15501b675f7bc07c5d16aa70d8d778b12375686b6efd47656efdc67cd/url_normalize-2.2.1-py3-none-any.whl", hash = "sha256:3deb687587dc91f7b25c9ae5162ffc0f057ae85d22b1e15cf5698311247f567b", size = 14728, upload-time = "2025-04-26T20:37:57.217Z" },
 ]
 
 [[package]]
