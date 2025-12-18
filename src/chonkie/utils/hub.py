@@ -1,8 +1,24 @@
 """Module for managing access to the Chonkie hub."""
 
 import json
+from functools import cache
 from pathlib import Path
 from typing import Optional
+
+
+@cache
+def _get_recipe_schema(version: str) -> dict:
+    # This is memoized to avoid multiple downloads of the same schema;
+    # we wouldn't expect a version to change during the runtime of a process.
+
+    from huggingface_hub import hf_hub_download
+
+    path = hf_hub_download(
+        repo_id="chonkie-ai/recipes",
+        repo_type="dataset",
+        filename=f"{version}.schema.json",
+    )
+    return dict(json.loads(Path(path).read_bytes()))
 
 
 class Hubbie:
@@ -36,20 +52,14 @@ class Hubbie:
             "repo_type": "dataset",
         }
 
-        # Fetch the current recipe schema from the hub
-        self.recipe_schema = self.get_recipe_schema()
+    @property
+    def recipe_schema(self) -> dict:
+        """The current recipe schema, from the hub."""
+        return _get_recipe_schema(self.SCHEMA_VERSION).copy()
 
     def get_recipe_schema(self) -> dict:
         """Get the current recipe schema from the hub."""
-        from huggingface_hub import hf_hub_download
-
-        path = hf_hub_download(
-            repo_id="chonkie-ai/recipes",
-            repo_type="dataset",
-            filename=f"{self.SCHEMA_VERSION}.schema.json",
-        )
-        with Path(path).open("r") as f:
-            return dict(json.loads(f.read()))
+        return self.recipe_schema
 
     def _validate_recipe(self, recipe: dict) -> Optional[bool]:
         """Validate a recipe against the current schema."""
