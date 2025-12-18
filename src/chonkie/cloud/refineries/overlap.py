@@ -3,7 +3,7 @@
 import os
 from typing import Any, Literal, Optional, Union, cast
 
-import requests
+import httpx
 
 from .base import BaseRefinery
 
@@ -81,7 +81,7 @@ class OverlapRefinery(BaseRefinery):
         }
 
         # Make the request to the Chonkie API
-        response = requests.post(
+        response = httpx.post(
             f"{self.BASE_URL}/{self.VERSION}/refine/overlap",
             json=payload,
             headers={"Authorization": f"Bearer {self.api_key}"},

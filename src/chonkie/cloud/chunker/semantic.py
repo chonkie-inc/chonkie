@@ -3,7 +3,7 @@
 import os
 from typing import Any, Literal, Optional, Union, cast
 
-import requests
+import httpx
 
 from chonkie.cloud.file import FileManager
 from chonkie.types import Chunk
@@ -105,7 +105,7 @@ class SemanticChunker(CloudChunker):
         self.include_delim = include_delim
 
         # Check if the API is up right now
-        response = requests.get(f"{self.BASE_URL}/")
+        response = httpx.get(f"{self.BASE_URL}/")
         if response.status_code != 200:
             raise ValueError(
                 "Oh no! You caught Chonkie at a bad time. It seems to be down right now."
@@ -166,7 +166,7 @@ class SemanticChunker(CloudChunker):
             )
 
         # Make the request to the Chonkie API
-        response = requests.post(
+        response = httpx.post(
             f"{self.BASE_URL}/{self.VERSION}/chunk/semantic",
             json=payload,
             headers={"Authorization": f"Bearer {self.api_key}"},

@@ -7,7 +7,7 @@ import warnings
 from typing import TYPE_CHECKING, Optional
 
 import numpy as np
-import requests
+import httpx
 
 from .base import BaseEmbeddings
 
@@ -86,7 +86,7 @@ class CohereEmbeddings(BaseEmbeddings):
             + (model if self.AVAILABLE_MODELS[model][0] else self.DEFAULT_MODEL)
             + ".json"
         )
-        response = requests.get(tokenizer_url)
+        response = httpx.get(tokenizer_url)
         self._tokenizer = tokenizers.Tokenizer.from_str(response.text)
         self._batch_size = min(batch_size, 96)  # max batch size for cohere is 96
         self._show_warnings = show_warnings
@@ -105,7 +105,7 @@ class CohereEmbeddings(BaseEmbeddings):
             + (model if self.AVAILABLE_MODELS[model][0] else self.DEFAULT_MODEL)
             + ".json"
         )
-        response = requests.get(tokenizer_url)
+        response = httpx.get(tokenizer_url)
         self._tokenizer = tokenizers.Tokenizer.from_str(response.text)
         self._batch_size = min(batch_size, 96)  # max batch size for cohere is 96
         self._show_warnings = show_warnings

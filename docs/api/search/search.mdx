@@ -11,7 +11,7 @@ Perform semantic search over your knowledge bases to find the most relevant chun
 <CodeGroup>
 
 ```python Python
-import requests
+import httpx
 
 url = "https://labs.chonkie.ai/api/v1/search"
 headers = {
@@ -26,7 +26,7 @@ data = {
     "mode": "balanced"
 }
 
-response = requests.post(url, headers=headers, json=data)
+response = httpx.post(url, headers=headers, json=data)
 result = response.json()
 
 print(f"Found {len(result['results'])} results in {result['took']}ms")
