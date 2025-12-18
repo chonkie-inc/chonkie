@@ -96,11 +96,11 @@ class SentenceTransformerEmbeddings(BaseEmbeddings):
             token_embeddings_raw = self.model.encode(split_texts, output_value="token_embeddings")
         except KeyError:
             # Fallback: use sentence embeddings for each split if token_embeddings not available
-            token_embeddings_raw = self.model.encode(split_texts, convert_to_numpy=True)
             # Ensure all fallback embeddings are np.ndarray before expanding dims
             token_embeddings_raw = [
-                np.expand_dims(np.array(emb), axis=0) for emb in token_embeddings_raw
-            ]  # type: ignore
+                np.expand_dims(np.array(emb), axis=0)  # type: ignore
+                for emb in self.model.encode(split_texts, convert_to_numpy=True)
+            ]
 
         # Ensure all embeddings are numpy arrays
         token_embeddings: list[np.ndarray] = []
