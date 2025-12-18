@@ -105,7 +105,7 @@ litellm = ["litellm>=1.0.0", "tiktoken>=0.5.0", "tokenizers>=0.16.0"]
 # Optional dependencies for the friends
 chroma = ["chromadb>=1.0.0"]
 qdrant = ["qdrant-client>=1.0.0"]
-tpuf = ["turbopuffer[fast]>=0.2.0"]
+tpuf = ["turbopuffer~=1.0"]
 pgvector = ["vecs>=0.4.0"]
 weaviate = ["weaviate-client>=4.16.7"]
 datasets = ["datasets>=4.0.0"]
@@ -139,7 +139,7 @@ all = [
     "torch>=2.0.0, <3.0",
     "chromadb>=1.0.0",
     "qdrant-client>=1.0.0",
-    "turbopuffer[fast]>=0.2.0",
+    "turbopuffer~=1.0",
     "weaviate-client>=4.16.7",
     "azure-identity>=1.23.0",
     "pinecone",
