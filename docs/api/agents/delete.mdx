@@ -11,7 +11,7 @@ Delete an agent permanently. This removes the agent configuration but does not a
 <CodeGroup>
 
 ```python Python
-import requests
+import httpx
 
 agent_slug = "old-agent"
 url = f"https://labs.chonkie.ai/api/v1/agents/{agent_slug}"
@@ -19,7 +19,7 @@ headers = {
     "Authorization": "Bearer YOUR_API_KEY"
 }
 
-response = requests.delete(url, headers=headers)
+response = httpx.delete(url, headers=headers)
 result = response.json()
 print(result["message"])
 ```

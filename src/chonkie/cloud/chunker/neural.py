@@ -3,7 +3,7 @@
 import os
 from typing import Any, Optional, Union, cast
 
-import requests
+import httpx
 
 from chonkie.cloud.file import FileManager
 from chonkie.types import Chunk
@@ -50,7 +50,7 @@ class NeuralChunker(CloudChunker):
 
         # Check if the Chonkie API is reachable
         try:
-            response = requests.get(f"{self.BASE_URL}/")
+            response = httpx.get(f"{self.BASE_URL}/")
             if response.status_code != 200:
                 raise ValueError(
                     "Oh no! You caught Chonkie at a bad time. It seems to be down right now. Please try again in a short while."
@@ -96,7 +96,7 @@ class NeuralChunker(CloudChunker):
 
         # Send the request to the Chonkie API
         try:
-            response = requests.post(
+            response = httpx.post(
                 f"{self.BASE_URL}/{self.VERSION}/chunk/neural",
                 json=payload,
                 headers={"Authorization": f"Bearer {self.api_key}"},

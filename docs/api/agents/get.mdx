@@ -11,7 +11,7 @@ Get detailed information about a specific agent.
 <CodeGroup>
 
 ```python Python
-import requests
+import httpx
 
 agent_slug = "documentation-assistant"
 url = f"https://labs.chonkie.ai/api/v1/agents/{agent_slug}"
@@ -19,7 +19,7 @@ headers = {
     "Authorization": "Bearer YOUR_API_KEY"
 }
 
-response = requests.get(url, headers=headers)
+response = httpx.get(url, headers=headers)
 data = response.json()
 agent = data["agent"]
 

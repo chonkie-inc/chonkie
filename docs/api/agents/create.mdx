@@ -11,7 +11,7 @@ Create a new AI agent with customizable LLM settings, system prompts, and knowle
 <CodeGroup>
 
 ```python Python
-import requests
+import httpx
 
 url = "https://labs.chonkie.ai/api/v1/agents"
 headers = {
@@ -30,7 +30,7 @@ data = {
     "knowledge": "product-documentation"
 }
 
-response = requests.post(url, headers=headers, json=data)
+response = httpx.post(url, headers=headers, json=data)
 result = response.json()
 
 print(f"Created agent: {result['agent']['name']}")

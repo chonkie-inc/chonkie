@@ -3,7 +3,8 @@
 from typing import Any
 
 import pytest
-import requests  # Import requests to mock its methods
+import json
+import httpx  # Import httpx to mock its methods
 
 from chonkie.cloud.chunker import NeuralChunker
 from chonkie.types import Chunk
@@ -23,7 +24,7 @@ def mock_requests_get_success(monkeypatch: pytest.MonkeyPatch) -> None:
     def mock_get(*args: Any, **kwargs: Any) -> MockResponse:
         return MockResponse(200)
 
-    monkeypatch.setattr(requests, "get", mock_get)
+    monkeypatch.setattr(httpx, "get", mock_get)
 
 
 @pytest.fixture
@@ -47,7 +48,7 @@ def mock_requests_post_success(monkeypatch: pytest.MonkeyPatch) -> None:
     def mock_post(*args: Any, **kwargs: Any) -> MockResponse:
         return MockResponse(200, dummy_chunks)
 
-    monkeypatch.setattr(requests, "post", mock_post)
+    monkeypatch.setattr(httpx, "post", mock_post)
 
 
 def test_cloud_neural_chunker_initialization(
@@ -105,7 +106,7 @@ def test_cloud_neural_chunker_initialization_api_down(monkeypatch: pytest.Monkey
     def mock_get_api_down(*args: Any, **kwargs: Any) -> MockResponse:
         return MockResponse(500)  # Simulate API being down
 
-    monkeypatch.setattr(requests, "get", mock_get_api_down)
+    monkeypatch.setattr(httpx, "get", mock_get_api_down)
 
     # The exact error message from the API
     with pytest.raises(ValueError, match="Oh no! You caught Chonkie at a bad time"):
@@ -161,7 +162,7 @@ def test_cloud_neural_chunker_batch_texts(
     def mock_post(*args: Any, **kwargs: Any) -> MockResponse:
         return MockResponse(200, custom_chunks)
 
-    monkeypatch.setattr(requests, "post", mock_post)
+    monkeypatch.setattr(httpx, "post", mock_post)
 
     chunker = NeuralChunker()
     texts = [
@@ -208,7 +209,7 @@ def test_cloud_neural_chunker_empty_text(
             [{"text": "default", "start_index": 0, "end_index": 7, "token_count": 1}],
         )
 
-    monkeypatch.setattr(requests, "post", mock_post_empty_result)
+    monkeypatch.setattr(httpx, "post", mock_post_empty_result)
 
     chunker = NeuralChunker()
     result = chunker("")
@@ -229,14 +230,14 @@ def test_cloud_neural_chunker_api_error_on_chunk(
             self.content = content  # Store content for error messages
 
         def json(self) -> list[dict[str, Any]]:  # Typehinted to what the caller expects
-            raise requests.exceptions.JSONDecodeError("Mock JSON decode error", "doc", 0)
+            raise json.JSONDecodeError("Mock JSON decode error", "doc", 0)
 
     def mock_post_api_error(*args: Any, **kwargs: Any) -> MockResponse:
         # Simulate an API error (e.g., 500 internal server error or 400 bad request)
         # For this test, we'll focus on the JSON decode error.
         return MockResponse(200)  # Status code might be 200 but content is bad
 
-    monkeypatch.setattr(requests, "post", mock_post_api_error)
+    monkeypatch.setattr(httpx, "post", mock_post_api_error)
 
     chunker = NeuralChunker()
     with pytest.raises(ValueError, match="Oh no! The Chonkie API returned an invalid response"):

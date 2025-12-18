@@ -3,7 +3,7 @@
 import os
 from typing import Any, Optional, Union, cast
 
-import requests
+import httpx
 
 from chonkie.cloud.file import FileManager
 from chonkie.types import Chunk
@@ -59,7 +59,7 @@ class RecursiveChunker(CloudChunker):
         self.lang = lang
 
         # Check if the API is up right now
-        response = requests.get(f"{self.BASE_URL}/")
+        response = httpx.get(f"{self.BASE_URL}/")
         if response.status_code != 200:
             raise ValueError(
                 "Oh no! You caught Chonkie at a bad time. It seems to be down right now."
@@ -105,7 +105,7 @@ class RecursiveChunker(CloudChunker):
                 "No text or file provided. Please provide either text or a file path.",
             )
         # Make the request to the Chonkie API
-        response = requests.post(
+        response = httpx.post(
             f"{self.BASE_URL}/{self.VERSION}/chunk/recursive",
             json=payload,
             headers={"Authorization": f"Bearer {self.api_key}"},

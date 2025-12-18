@@ -11,7 +11,7 @@ Chat with your agents using an OpenAI-compatible API. Supports both streaming an
 <CodeGroup>
 
 ```python Python - Basic
-import requests
+import httpx
 
 url = "https://labs.chonkie.ai/api/v1/chat/completions"
 headers = {
@@ -26,7 +26,7 @@ data = {
     ]
 }
 
-response = requests.post(url, headers=headers, json=data)
+response = httpx.post(url, headers=headers, json=data)
 result = response.json()
 
 assistant_message = result["choices"][0]["message"]["content"]
@@ -34,7 +34,7 @@ print(f"Assistant: {assistant_message}")
 ```
 
 ```python Python - Streaming
-import requests
+import httpx
 
 data = {
     "model": "documentation-assistant",
@@ -44,21 +44,21 @@ data = {
     "stream": True
 }
 
-response = requests.post(url, headers=headers, json=data, stream=True)
+with httpx.stream("POST", url, headers=headers, json=data) as response:
 
-print("Assistant: ", end="")
-for line in response.iter_lines():
-    if line:
-        line = line.decode('utf-8')
-        if line.startswith('data: '):
-            data_str = line[6:]
-            if data_str == '[DONE]':
-                break
-            import json
-            chunk = json.loads(data_str)
-            content = chunk["choices"][0]["delta"].get("content", "")
-            print(content, end="", flush=True)
-print()
+    print("Assistant: ", end="")
+    for line in response.iter_lines():
+        if line:
+            line = line.decode('utf-8')
+            if line.startswith('data: '):
+                data_str = line[6:]
+                if data_str == '[DONE]':
+                    break
+                import json
+                chunk = json.loads(data_str)
+                content = chunk["choices"][0]["delta"].get("content", "")
+                print(content, end="", flush=True)
+    print()
 ```
 
 ```javascript JavaScript

@@ -11,7 +11,7 @@ Delete a file from a knowledge base. This removes the file from storage and its 
 <CodeGroup>
 
 ```python Python
-import requests
+import httpx
 
 kb_slug = "product-documentation"
 file_id = "1705320000000-old-version.pdf"
@@ -21,7 +21,7 @@ headers = {
     "Authorization": "Bearer YOUR_API_KEY"
 }
 
-response = requests.delete(url, headers=headers)
+response = httpx.delete(url, headers=headers)
 result = response.json()
 print(result["message"])
 ```

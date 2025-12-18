@@ -88,10 +88,10 @@ console.log(`Created ${chunks.length} chunks`);
 ```
 
 ```python Python - Knowledge Base
-import requests
+import httpx
 
 # Create knowledge base
-response = requests.post(
+response = httpx.post(
     "https://labs.chonkie.ai/api/v1/knowledge",
     headers={
         "Authorization": "Bearer YOUR_API_KEY",
