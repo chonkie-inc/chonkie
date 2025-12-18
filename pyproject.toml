@@ -163,6 +163,7 @@ dev = [
     "tabulate",
     "openpyxl",
     "uv>=0.9.18",
+    "requests-cache>=1.2.1",
 ]
 
 [tool.pytest.ini_options]
