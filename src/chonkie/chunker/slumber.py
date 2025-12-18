@@ -70,10 +70,10 @@ class SlumberChunker(BaseChunker):
 
         try:
             from pydantic import BaseModel
-        except ImportError:
+        except ImportError as ie:
             raise ImportError(
                 "The SlumberChunker requires the pydantic library to be installed. Please install it using `pip install chonkie[genie]`.",
-            )
+            ) from ie
 
         class Split(BaseModel):  # type: ignore
             split_index: int
