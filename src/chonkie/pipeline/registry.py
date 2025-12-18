@@ -4,7 +4,7 @@ from typing import Any, Callable, Optional, Type, TypeVar
 
 from .component import Component, ComponentType
 
-ComponentT = TypeVar('ComponentT', bound=Type[Any])
+ComponentT = TypeVar("ComponentT", bound=Type[Any])
 
 
 class _ComponentRegistry:
@@ -15,9 +15,7 @@ class _ComponentRegistry:
         self._components: dict[str, Component] = {}
         # Scoped aliases: (component_type, alias) -> name mapping
         self._aliases: dict[tuple[ComponentType, str], str] = {}
-        self._component_types: dict[ComponentType, list[str]] = {
-            ct: [] for ct in ComponentType
-        }
+        self._component_types: dict[ComponentType, list[str]] = {ct: [] for ct in ComponentType}
 
     def register(
         self,
@@ -46,7 +44,7 @@ class _ComponentRegistry:
                 return
             else:
                 raise ValueError(
-                    f"Component name '{name}' already registered with different class"
+                    f"Component name '{name}' already registered with different class",
                 )
 
         # Check for alias conflicts within the same component type
@@ -55,7 +53,7 @@ class _ComponentRegistry:
             existing_name = self._aliases[alias_key]
             if existing_name != name:
                 raise ValueError(
-                    f"Alias '{alias}' already used by {component_type.value} component '{existing_name}'"
+                    f"Alias '{alias}' already used by {component_type.value} component '{existing_name}'",
                 )
 
         # Create component info
@@ -72,7 +70,9 @@ class _ComponentRegistry:
         self._component_types[component_type].append(name)
 
     def get_component(
-        self, name_or_alias: str, component_type: Optional[ComponentType] = None
+        self,
+        name_or_alias: str,
+        component_type: Optional[ComponentType] = None,
     ) -> Component:
         """Get component info by name or alias.
 
@@ -101,7 +101,7 @@ class _ComponentRegistry:
             if component_type and comp.component_type != component_type:
                 raise ValueError(
                     f"Component '{name_or_alias}' is a {comp.component_type.value}, "
-                    f"not a {component_type.value}"
+                    f"not a {component_type.value}",
                 )
             return comp
 
@@ -117,19 +117,16 @@ class _ComponentRegistry:
             types = [m[0].value for m in matches]
             raise ValueError(
                 f"Ambiguous alias '{name_or_alias}' found in multiple types: {types}. "
-                f"Specify component_type to disambiguate."
+                f"Specify component_type to disambiguate.",
             )
 
         # Not found
         available = [f"{ct.value}:{alias}" for (ct, alias) in self._aliases.keys()]
         raise ValueError(
-            f"Unknown component: '{name_or_alias}'. "
-            f"Available: {sorted(available)[:10]}..."
+            f"Unknown component: '{name_or_alias}'. Available: {sorted(available)[:10]}...",
         )
 
-    def list_components(
-        self, component_type: Optional[ComponentType] = None
-    ) -> list[Component]:
+    def list_components(self, component_type: Optional[ComponentType] = None) -> list[Component]:
         """List all registered components, optionally filtered by type.
 
         Args:
@@ -262,12 +259,16 @@ class _ComponentRegistry:
         if name_or_alias in self._components:
             return True
         # Check aliases - need to check if name_or_alias matches any alias value
-        for (_, alias) in self._aliases.keys():
+        for _, alias in self._aliases.keys():
             if alias == name_or_alias:
                 return True
         return False
 
-    def unregister(self, name_or_alias: str, component_type: Optional[ComponentType] = None) -> None:
+    def unregister(
+        self,
+        name_or_alias: str,
+        component_type: Optional[ComponentType] = None,
+    ) -> None:
         """Unregister a component (mainly for testing).
 
         Args:
@@ -342,7 +343,7 @@ def pipeline_component(
             raise ValueError(
                 f"{cls.__name__} must implement {missing_methods} method(s) "
                 f"to be registered as {component_type.value}. "
-                f"Required methods: {required}"
+                f"Required methods: {required}",
             )
 
         # Register the component

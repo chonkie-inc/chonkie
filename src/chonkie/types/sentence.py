@@ -38,9 +38,7 @@ class Sentence:
         if self.start_index > self.end_index:
             raise ValueError("Start index must be less than end index.")
         if (
-            not (
-                isinstance(self.token_count, int) or isinstance(self.token_count, float)
-            )
+            not (isinstance(self.token_count, int) or isinstance(self.token_count, float))
             or self.token_count < 0
         ):
             raise ValueError("Token count must be a non-negative integer.")
@@ -60,7 +58,7 @@ class Sentence:
         result = self.__dict__.copy()
         # Convert numpy array to list if present
         if self.embedding is not None:
-            if hasattr(self.embedding, 'tolist'):
+            if hasattr(self.embedding, "tolist"):
                 result["embedding"] = self.embedding.tolist()
             else:
                 result["embedding"] = self.embedding
@@ -76,7 +74,5 @@ class Sentence:
             start_index=int(data["start_index"]),
             end_index=int(data["end_index"]),
             token_count=int(data["token_count"]),
-            embedding=embedding_data  # Keep as-is, whatever type it is
+            embedding=embedding_data,  # Keep as-is, whatever type it is
         )
-
-

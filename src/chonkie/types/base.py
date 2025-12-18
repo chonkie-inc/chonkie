@@ -7,6 +7,7 @@ from uuid import uuid4
 if TYPE_CHECKING:
     import numpy as np
 
+
 # Function to generate the IDs for the Chonkie  types
 def generate_id(prefix: str) -> str:
     """Generate a UUID for a given prefix."""
@@ -59,7 +60,7 @@ class Chunk:
 
         try:
             # Check if it's array-like with length
-            if hasattr(self.embedding, '__len__') and hasattr(self.embedding, '__getitem__'):
+            if hasattr(self.embedding, "__len__") and hasattr(self.embedding, "__getitem__"):
                 emb_len = len(self.embedding)
                 if emb_len > 5:
                     # Show first 3 and last 2 values
@@ -69,7 +70,7 @@ class Chunk:
                     preview = "[" + ", ".join(f"{v:.4f}" for v in self.embedding) + "]"
 
                 # Add shape info if available
-                if hasattr(self.embedding, 'shape'):
+                if hasattr(self.embedding, "shape"):
                     preview += f" shape={self.embedding.shape}"
 
                 return preview
@@ -104,7 +105,7 @@ class Chunk:
         result["context"] = self.context
         # Convert embedding to list if it has tolist method (numpy array)
         if self.embedding is not None:
-            if hasattr(self.embedding, 'tolist'):
+            if hasattr(self.embedding, "tolist"):
                 result["embedding"] = self.embedding.tolist()
             else:
                 result["embedding"] = self.embedding

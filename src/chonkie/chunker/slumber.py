@@ -18,6 +18,7 @@ logger = get_logger(__name__)
 
 try:
     from .c_extensions.split import split_text
+
     _CYTHON_AVAILABLE = True
 except ImportError:
     _CYTHON_AVAILABLE = False
@@ -42,14 +43,16 @@ Follow the following rules while finding the splitting passage:
 class SlumberChunker(BaseChunker):
     """SlumberChunker is a chunker based on the LumberChunker — but slightly different."""
 
-    def __init__(self,
-                 genie: Optional[BaseGenie] = None,
-                 tokenizer: Union[str, TokenizerProtocol] = "character",
-                 chunk_size: int = 2048,
-                 rules: RecursiveRules = RecursiveRules(),
-                 candidate_size: int = 128,
-                 min_characters_per_chunk: int = 24,
-                 verbose: bool = True):
+    def __init__(
+        self,
+        genie: Optional[BaseGenie] = None,
+        tokenizer: Union[str, TokenizerProtocol] = "character",
+        chunk_size: int = 2048,
+        rules: RecursiveRules = RecursiveRules(),
+        candidate_size: int = 128,
+        min_characters_per_chunk: int = 24,
+        verbose: bool = True,
+    ):
         """Initialize the SlumberChunker.
 
         Args:
@@ -85,7 +88,7 @@ class SlumberChunker(BaseChunker):
         self.sep = "✄"
         self._CHARS_PER_TOKEN = 6.5
 
-        # Set the _use_multiprocessing to False, since we don't know the 
+        # Set the _use_multiprocessing to False, since we don't know the
         # behaviour of the Genie under multiprocessing conditions
         self._use_multiprocessing = False
 
@@ -94,28 +97,34 @@ class SlumberChunker(BaseChunker):
         if _CYTHON_AVAILABLE:
             # Use the optimized Cython split function
             if recursive_level.whitespace:
-                return list(split_text(
-                    text,
-                    delim=None,
-                    include_delim=recursive_level.include_delim,
-                    min_characters_per_segment=self.min_characters_per_chunk,
-                    whitespace_mode=True,
-                    character_fallback=False
-                ))
+                return list(
+                    split_text(
+                        text,
+                        delim=None,
+                        include_delim=recursive_level.include_delim,
+                        min_characters_per_segment=self.min_characters_per_chunk,
+                        whitespace_mode=True,
+                        character_fallback=False,
+                    ),
+                )
             elif recursive_level.delimiters:
-                return list(split_text(
-                    text,
-                    delim=recursive_level.delimiters,
-                    include_delim=recursive_level.include_delim,
-                    min_characters_per_segment=self.min_characters_per_chunk,
-                    whitespace_mode=False,
-                    character_fallback=False
-                ))
+                return list(
+                    split_text(
+                        text,
+                        delim=recursive_level.delimiters,
+                        include_delim=recursive_level.include_delim,
+                        min_characters_per_segment=self.min_characters_per_chunk,
+                        whitespace_mode=False,
+                        character_fallback=False,
+                    ),
+                )
             else:
                 # Token-based splitting - fall back to original implementation
                 encoded = self.tokenizer.encode(text)
-                token_splits = [encoded[i : i + self.chunk_size]
-                    for i in range(0, len(encoded), self.chunk_size)]
+                token_splits = [
+                    encoded[i : i + self.chunk_size]
+                    for i in range(0, len(encoded), self.chunk_size)
+                ]
                 return list(self.tokenizer.decode_batch(token_splits))
         else:
             # Fallback to original implementation when Cython is not available
@@ -130,9 +139,13 @@ class SlumberChunker(BaseChunker):
             # Add whitespace back; assumes that the whitespace is uniform across the text
             # if the whitespace is not uniform, the split will not be reconstructable.
             if recursive_level.include_delim == "prev":
-                splits = [" "  + split for (i, split) in enumerate(candidate_splits) if i > 0]
+                splits = [" " + split for (i, split) in enumerate(candidate_splits) if i > 0]
             elif recursive_level.include_delim == "next":
-                splits = [split + " " for (i, split) in enumerate(candidate_splits) if i < len(candidate_splits) - 1]
+                splits = [
+                    split + " "
+                    for (i, split) in enumerate(candidate_splits)
+                    if i < len(candidate_splits) - 1
+                ]
             else:
                 splits = candidate_splits
 
@@ -151,11 +164,11 @@ class SlumberChunker(BaseChunker):
         else:
             # Encode, Split, and Decode
             encoded = self.tokenizer.encode(text)
-            token_splits = [ encoded[i : i + self.chunk_size]
-                for i in range(0, len(encoded), self.chunk_size)
+            token_splits = [
+                encoded[i : i + self.chunk_size] for i in range(0, len(encoded), self.chunk_size)
             ]
             splits = list(self.tokenizer.decode_batch(token_splits))
-        
+
         # Merge short splits (preserve spacing/punctuation)
         def _safe_append(base: str, addition: str) -> str:
             """Safely append text while preserving language-specific spacing rules."""
@@ -163,22 +176,22 @@ class SlumberChunker(BaseChunker):
                 return addition
             if not addition:
                 return base
-            
+
             last_char = base[-1]
             first_char = addition[0]
-            
+
             # If either has whitespace, concatenate directly
             if last_char.isspace() or first_char.isspace():
                 return base + addition
-            
+
             # Don't add space before punctuation
             if first_char in ",.;:?!)]}'\"":
                 return base + addition
-            
+
             # Don't add space after opening brackets
             if last_char in "([{'\"":
                 return base + addition
-            
+
             # Otherwise, add a space
             return base + " " + addition
 
@@ -207,44 +220,54 @@ class SlumberChunker(BaseChunker):
         # This will be handled during chunk creation.
         return splits
 
-    def _recursive_split(self, text: str, level: int = 0, offset: int=0) -> list[Chunk]:
+    def _recursive_split(self, text: str, level: int = 0, offset: int = 0) -> list[Chunk]:
         """Recursively split the text into chunks."""
         if not self.rules.levels or level >= len(self.rules.levels):
-            return [Chunk(text=text,
-                         start_index=offset,
-                         end_index=offset + len(text),
-                         token_count=self.tokenizer.count_tokens(text))]
-        
+            return [
+                Chunk(
+                    text=text,
+                    start_index=offset,
+                    end_index=offset + len(text),
+                    token_count=self.tokenizer.count_tokens(text),
+                ),
+            ]
+
         # Do the first split based on the level provided
         splits = self._split_text(text, self.rules.levels[level]) if self.rules.levels else []
 
         # Calculate the token_count of each of the splits
         token_counts = self.tokenizer.count_tokens_batch(splits)
 
-        # Loop throught the splits to see if any split 
+        # Loop throught the splits to see if any split
         chunks = []
         current_offset = offset
         for split, token_count in zip(splits, token_counts):
-            # If the token_count is more than the self.candidate_size, 
+            # If the token_count is more than the self.candidate_size,
             # then call the recursive_split function on it with a higher level
             if token_count > self.candidate_size:
                 child_chunks = self._recursive_split(split, level + 1, current_offset)
                 chunks.extend(child_chunks)
             else:
-                chunks.append(Chunk(text=split,
-                                    start_index=current_offset,
-                                    end_index=current_offset + len(split),
-                                    token_count=token_count))
-            
+                chunks.append(
+                    Chunk(
+                        text=split,
+                        start_index=current_offset,
+                        end_index=current_offset + len(split),
+                        token_count=token_count,
+                    ),
+                )
+
             # Add the offset as the length of the split
             current_offset += len(split)
 
         return chunks
-      
+
     def _prepare_splits(self, splits: list[Chunk]) -> list[str]:
         """Prepare the splits for the chunker."""
-        return [f"ID {i}: " + split.text.replace('\n', '').strip() for (i, split) in enumerate(splits)]
-    
+        return [
+            f"ID {i}: " + split.text.replace("\n", "").strip() for (i, split) in enumerate(splits)
+        ]
+
     def _get_cumulative_token_counts(self, splits: list[Chunk]) -> list[int]:
         """Get the cumulative token counts for the splits."""
         return list(accumulate([0] + [split.token_count for split in splits]))
@@ -252,19 +275,21 @@ class SlumberChunker(BaseChunker):
     def chunk(self, text: str) -> list[Chunk]:
         """Chunk the text with the SlumberChunker."""
         logger.debug(f"Starting slumber chunking for text of length {len(text)}")
-        
+
         # Store original text for accurate extraction
         original_text = text
-        
+
         splits = self._recursive_split(text, level=0, offset=0)
-        logger.debug(f"Created {len(splits)} initial splits for LLM-based semantic boundary detection")
+        logger.debug(
+            f"Created {len(splits)} initial splits for LLM-based semantic boundary detection",
+        )
 
         # Add the IDS to the splits
         prepared_split_texts = self._prepare_splits(splits)
 
         # Calculate the cumulative token counts for each split
         cumulative_token_counts = self._get_cumulative_token_counts(splits)
-        
+
         # If self.verbose has been set to True, show a TQDM progress bar for the text
         if self.verbose:
             progress_bar = tqdm(
@@ -273,26 +298,31 @@ class SlumberChunker(BaseChunker):
                 unit="split",
                 bar_format="{desc} ch{bar:20}nk {percentage:3.0f}% • {n_fmt}/{total_fmt} splits processed [{elapsed}<{remaining}, {rate_fmt}] 🌱",
                 ascii=" o",
-            ) 
+            )
 
-        # Pass the self.chunk_size amount of context through the Genie, 
+        # Pass the self.chunk_size amount of context through the Genie,
         # so we can contol how much context the Genie gets as well.
         # This is especially useful for models that don't have long context
-        # or exhibit weakend reasoning ability over longer texts. 
+        # or exhibit weakend reasoning ability over longer texts.
         chunks = []
         current_pos = 0
         current_token_count = 0
-        while(current_pos < len(splits)):
+        while current_pos < len(splits):
             # bisect_left can return 0? No because input_size > 0 and first value is 0
-            group_end_index = min(bisect_left(cumulative_token_counts, current_token_count + self.chunk_size) - 1, len(splits))
+            group_end_index = min(
+                bisect_left(cumulative_token_counts, current_token_count + self.chunk_size) - 1,
+                len(splits),
+            )
 
             if group_end_index == current_pos:
                 group_end_index += 1
 
-            prompt = self.template.format(passages="\n".join(prepared_split_texts[current_pos:group_end_index]))
-            response = int(self.genie.generate_json(prompt, self.Split)['split_index'])
+            prompt = self.template.format(
+                passages="\n".join(prepared_split_texts[current_pos:group_end_index]),
+            )
+            response = int(self.genie.generate_json(prompt, self.Split)["split_index"])
 
-            # Make sure that the response doesn't bug out and return a index smaller 
+            # Make sure that the response doesn't bug out and return a index smaller
             # than the current position
             if current_pos >= response:
                 response = current_pos + 1
@@ -300,13 +330,15 @@ class SlumberChunker(BaseChunker):
             # Extract text directly from original source to preserve all spacing and formatting
             start_idx = splits[current_pos].start_index
             end_idx = splits[response - 1].end_index
-            
-            chunks.append(Chunk(
-                text=original_text[start_idx:end_idx],
-                start_index=start_idx,
-                end_index=end_idx,
-                token_count=sum([split.token_count for split in splits[current_pos: response]])
-            ))
+
+            chunks.append(
+                Chunk(
+                    text=original_text[start_idx:end_idx],
+                    start_index=start_idx,
+                    end_index=end_idx,
+                    token_count=sum([split.token_count for split in splits[current_pos:response]]),
+                ),
+            )
 
             current_token_count = cumulative_token_counts[response]
             current_pos = response
@@ -319,22 +351,25 @@ class SlumberChunker(BaseChunker):
 
     def _import_dependencies(self) -> None:
         """Import the dependencies for the SlumberChunker."""
-        try: 
+        try:
             from pydantic import BaseModel
 
-            class Split(BaseModel): # type: ignore
+            class Split(BaseModel):  # type: ignore
                 split_index: int
-            
+
             self.Split = Split
-    
+
         except ImportError:
-            raise ImportError("The SlumberChunker requires the pydantic library to be installed. Please install it using `pip install chonkie[genie]`.")
+            raise ImportError(
+                "The SlumberChunker requires the pydantic library to be installed. Please install it using `pip install chonkie[genie]`.",
+            )
 
     def __repr__(self) -> str:
         """Return a string representation of the SlumberChunker."""
-        return (f"SlumberChunker(genie={self.genie}," +
-                f"tokenizer={self.tokenizer}, " +
-                f"chunk_size={self.chunk_size}, " +
-                f"candidate_size={self.candidate_size}, " +
-                f"min_characters_per_chunk={self.min_characters_per_chunk})" # type: ignore
-            )
+        return (
+            f"SlumberChunker(genie={self.genie},"
+            + f"tokenizer={self.tokenizer}, "
+            + f"chunk_size={self.chunk_size}, "
+            + f"candidate_size={self.candidate_size}, "
+            + f"min_characters_per_chunk={self.min_characters_per_chunk})"  # type: ignore
+        )

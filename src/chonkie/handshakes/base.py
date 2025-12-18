@@ -47,7 +47,9 @@ class BaseHandshake(ABC):
         """
         if isinstance(chunks, Chunk) or isinstance(chunks, Sequence):
             chunk_count = 1 if isinstance(chunks, Chunk) else len(chunks)
-            logger.info(f"Writing {chunk_count} chunk(s) to database with {self.__class__.__name__}")
+            logger.info(
+                f"Writing {chunk_count} chunk(s) to database with {self.__class__.__name__}",
+            )
             try:
                 result = self.write(chunks)
                 logger.debug(f"Successfully wrote {chunk_count} chunk(s)")
@@ -56,7 +58,7 @@ class BaseHandshake(ABC):
                 logger.error(
                     f"Failed to write {chunk_count} chunk(s) to database",
                     error=str(e),
-                    error_type=type(e).__name__
+                    error_type=type(e).__name__,
                 )
                 raise
         else:

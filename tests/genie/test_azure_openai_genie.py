@@ -30,7 +30,11 @@ class TestAzureAIGenieErrorHandling:
         """Test AzureOpenAIGenie raises error when endpoint is None or empty."""
         with patch.object(AzureOpenAIGenie, "_is_available", return_value=True):
             with pytest.raises(ValueError, match="`azure_endpoint` is required"):
-                AzureOpenAIGenie(azure_endpoint=None, deployment="x", api_version="2024-02-15-preview")
+                AzureOpenAIGenie(
+                    azure_endpoint=None,
+                    deployment="x",
+                    api_version="2024-02-15-preview",
+                )
 
     def test_missing_dependencies(self):
         """Test AzureOpenAIGenie raises error without dependencies."""
@@ -60,7 +64,6 @@ class TestAzureAIGenieMocked:
             patch.object(AzureOpenAIGenie, "_is_available", return_value=True),
             patch.object(AzureOpenAIGenie, "_import_dependencies", mock_import),
         ):
-
             genie = AzureOpenAIGenie(
                 azure_api_key="test",
                 azure_endpoint="https://test.openai.azure.com",
@@ -93,7 +96,6 @@ class TestAzureAIGenieMocked:
             patch.object(AzureOpenAIGenie, "_is_available", return_value=True),
             patch.object(AzureOpenAIGenie, "_import_dependencies", mock_import),
         ):
-
             genie = AzureOpenAIGenie(
                 azure_api_key="test",
                 azure_endpoint="https://test.openai.azure.com",
@@ -117,7 +119,6 @@ class TestAzureAIGenieMocked:
             patch.object(AzureOpenAIGenie, "_is_available", return_value=True),
             patch.object(AzureOpenAIGenie, "_import_dependencies", mock_import),
         ):
-
             genie = AzureOpenAIGenie(
                 azure_api_key="test",
                 azure_endpoint="https://test.openai.azure.com",
@@ -146,9 +147,7 @@ class TestAzureOpenAIGenieUtilities:
                 azure_module.AzureOpenAI = Mock()
                 azure_module.BaseModel = Mock()
 
-            with patch.object(
-                AzureOpenAIGenie, "_import_dependencies", mock_import_dependencies
-            ):
+            with patch.object(AzureOpenAIGenie, "_import_dependencies", mock_import_dependencies):
                 genie = AzureOpenAIGenie(
                     azure_api_key="test_key",
                     azure_endpoint="https://custom.azure.com",
@@ -159,9 +158,7 @@ class TestAzureOpenAIGenieUtilities:
 
     def test_azure_genie_is_available_false(self) -> None:
         """Test _is_available returns False when dependencies are missing."""
-        with patch(
-            "chonkie.genie.azure_openai.importutil.find_spec", return_value=None
-        ):
+        with patch("chonkie.genie.azure_openai.importutil.find_spec", return_value=None):
 
             def mock_import_dependencies(self):
                 import chonkie.genie.azure_openai as azure_module
@@ -169,9 +166,7 @@ class TestAzureOpenAIGenieUtilities:
                 azure_module.AzureOpenAI = Mock()
                 azure_module.BaseModel = Mock()
 
-            with patch.object(
-                AzureOpenAIGenie, "_import_dependencies", mock_import_dependencies
-            ):
+            with patch.object(AzureOpenAIGenie, "_import_dependencies", mock_import_dependencies):
                 genie = AzureOpenAIGenie(
                     azure_api_key="test_key",
                     azure_endpoint="https://custom.azure.com",
@@ -192,9 +187,7 @@ class TestAzureOpenAIGenieUtilities:
             azure_module.BaseModel = Mock()
 
         with patch.object(AzureOpenAIGenie, "_is_available", return_value=True):
-            with patch.object(
-                AzureOpenAIGenie, "_import_dependencies", mock_import_dependencies
-            ):
+            with patch.object(AzureOpenAIGenie, "_import_dependencies", mock_import_dependencies):
                 genie = AzureOpenAIGenie(
                     model="gpt-4",
                     azure_api_key="test_key",
@@ -217,9 +210,7 @@ class TestAzureOpenAIGenieUtilities:
             azure_module.BaseModel = Mock()
 
         with patch.object(AzureOpenAIGenie, "_is_available", return_value=True):
-            with patch.object(
-                AzureOpenAIGenie, "_import_dependencies", mock_import_dependencies
-            ):
+            with patch.object(AzureOpenAIGenie, "_import_dependencies", mock_import_dependencies):
                 genie = AzureOpenAIGenie(
                     azure_api_key="test_key",
                     azure_endpoint="https://custom.azure.com",

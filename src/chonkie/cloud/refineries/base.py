@@ -14,15 +14,15 @@ class BaseRefinery(ABC):
     def refine(self, chunks: list[Any]) -> list[Any]:
         """Refine the chunks."""
         raise NotImplementedError("Subclasses must implement this method.")
-    
+
     def __call__(self, chunks: list[Any]) -> list[Any]:
         """Call the refinery.
-        
+
         Args:
             chunks: The chunks to refine.
 
         Returns:
             The refined chunks.
-            
+
         """
         return self.refine(chunks)

@@ -3,6 +3,7 @@
 This script configures the Cython extensions used in the Chonkie library.
 It includes the token_chunker, split, merge, and NumPy-free Savitzky-Golay extensions.
 """
+
 import os
 
 from Cython.Build import cythonize

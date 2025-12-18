@@ -17,9 +17,7 @@ from chonkie.handshakes.elastic import ElasticHandshake
 from chonkie.types import Chunk
 
 # Mark all tests in this module to be skipped if elasticsearch is not installed
-pytestmark = pytest.mark.skipif(
-    elasticsearch is None, reason="elasticsearch-py not installed"
-)
+pytestmark = pytest.mark.skipif(elasticsearch is None, reason="elasticsearch-py not installed")
 
 # ---- Fixtures ----
 
@@ -27,9 +25,7 @@ pytestmark = pytest.mark.skipif(
 @pytest.fixture
 def mock_embeddings() -> Generator[MagicMock, None, None]:
     """Mock AutoEmbeddings to avoid downloading models and to provide consistent results."""
-    with patch(
-        "chonkie.embeddings.AutoEmbeddings.get_embeddings"
-    ) as mock_get_embeddings:
+    with patch("chonkie.embeddings.AutoEmbeddings.get_embeddings") as mock_get_embeddings:
         mock_embedding_model = MagicMock(spec=BaseEmbeddings)
         mock_embedding_model.dimension = 128  # Use a consistent dimension for tests
         import numpy as np
@@ -43,9 +39,7 @@ def mock_embeddings() -> Generator[MagicMock, None, None]:
 @pytest.fixture
 def sample_chunk() -> Chunk:
     """Provide a single sample Chunk."""
-    return Chunk(
-        text="This is a test chunk.", start_index=0, end_index=22, token_count=5
-    )
+    return Chunk(text="This is a test chunk.", start_index=0, end_index=22, token_count=5)
 
 
 @pytest.fixture
@@ -70,9 +64,7 @@ def mock_elastic_client_and_bulk(monkeypatch):
     mock_client.search.return_value = {"hits": {"hits": []}}
     mock_bulk = MagicMock()
     mock_bulk.return_value = (1, [])
-    monkeypatch.setattr(
-        "elasticsearch.Elasticsearch", lambda *args, **kwargs: mock_client
-    )
+    monkeypatch.setattr("elasticsearch.Elasticsearch", lambda *args, **kwargs: mock_client)
     monkeypatch.setattr("elasticsearch.helpers.bulk", mock_bulk)
     return mock_client, mock_bulk
 
@@ -118,9 +110,7 @@ def test_write_single_chunk(
     assert action["_index"] == handshake.index_name
     assert "_id" in action
     assert action["_source"]["text"] == sample_chunk.text
-    assert (
-        action["_source"]["embedding"] == [0.1] * 128
-    )  # From mock_embeddings.embed_batch
+    assert action["_source"]["embedding"] == [0.1] * 128  # From mock_embeddings.embed_batch
 
 
 def test_write_multiple_chunks(
@@ -189,9 +179,9 @@ def test_search_with_query(
                         "end_index": 40,
                         "token_count": 7,
                     },
-                }
-            ]
-        }
+                },
+            ],
+        },
     }
     mock_client.search.return_value = mock_es_response
 
@@ -207,7 +197,9 @@ def test_search_with_query(
         "num_candidates": 100,
     }
     mock_client.search.assert_called_once_with(
-        index=handshake.index_name, knn=expected_knn_query, size=1
+        index=handshake.index_name,
+        knn=expected_knn_query,
+        size=1,
     )
 
     # 2. Assert the results are formatted correctly

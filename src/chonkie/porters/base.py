@@ -20,14 +20,14 @@ class BasePorter(ABC):
     @abstractmethod
     def export(self, chunks: list[Chunk], **kwargs: dict[str, Any]) -> None:
         """Export the chunks to the desired format.
-        
+
         Args:
             chunks: The chunks to export.
             **kwargs: Additional keyword arguments.
-        
+
         Raises:
             NotImplementedError: If the subclass does not implement this method.
-            
+
         """
         raise NotImplementedError("Subclasses must implement this method.")
 

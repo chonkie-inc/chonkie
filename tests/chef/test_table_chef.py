@@ -66,10 +66,7 @@ class TestTableChef:
         content_str = str(result.content)
         assert "col1" in content_str and "col2" in content_str
         assert (
-            "1" in content_str
-            and "2" in content_str
-            and "3" in content_str
-            and "4" in content_str
+            "1" in content_str and "2" in content_str and "3" in content_str and "4" in content_str
         )
         assert called["called"]
 
@@ -98,15 +95,14 @@ class TestTableChef:
         content_str = str(result.content)
         assert "col1" in content_str and "col2" in content_str
         assert (
-            "1" in content_str
-            and "2" in content_str
-            and "3" in content_str
-            and "4" in content_str
+            "1" in content_str and "2" in content_str and "3" in content_str and "4" in content_str
         )
         assert called["called"]
 
     def test_process_markdown_table_string(
-        self: "TestTableChef", table_chef: TableChef, markdown_table: str
+        self: "TestTableChef",
+        table_chef: TableChef,
+        markdown_table: str,
     ) -> None:
         """Test processing a markdown table string."""
         result = table_chef.process(markdown_table)
@@ -115,7 +111,10 @@ class TestTableChef:
         assert hasattr(result.tables[0], "content")
 
     def test_process_batch(
-        self: "TestTableChef", table_chef: TableChef, csv_content: str, tmp_path: Path
+        self: "TestTableChef",
+        table_chef: TableChef,
+        csv_content: str,
+        tmp_path: Path,
     ) -> None:
         """Test batch processing of multiple CSV files."""
         file1 = tmp_path / "a.csv"
@@ -143,7 +142,10 @@ class TestTableChef:
                 assert False, f"Unexpected result type: {type(r)}"
 
     def test_call_with_list(
-        self: "TestTableChef", table_chef: TableChef, csv_content: str, tmp_path: Path
+        self: "TestTableChef",
+        table_chef: TableChef,
+        csv_content: str,
+        tmp_path: Path,
     ) -> None:
         """Test calling TableChef with a list of file paths."""
         file1 = tmp_path / "a.csv"
@@ -171,7 +173,10 @@ class TestTableChef:
                 assert False, f"Unexpected result type: {type(r)}"
 
     def test_call_with_single(
-        self: "TestTableChef", table_chef: TableChef, csv_content: str, tmp_path: Path
+        self: "TestTableChef",
+        table_chef: TableChef,
+        csv_content: str,
+        tmp_path: Path,
     ) -> None:
         """Test calling TableChef with a single file path."""
         file1 = tmp_path / "a.csv"
@@ -181,10 +186,7 @@ class TestTableChef:
         content_str = str(result.content)
         assert "col1" in content_str and "col2" in content_str
         assert (
-            "1" in content_str
-            and "2" in content_str
-            and "3" in content_str
-            and "4" in content_str
+            "1" in content_str and "2" in content_str and "3" in content_str and "4" in content_str
         )
 
     def test_call_invalid_type(self: "TestTableChef", table_chef: TableChef) -> None:
@@ -193,7 +195,8 @@ class TestTableChef:
             table_chef(123)  # type: ignore
 
     def test_extract_tables_from_markdown_multiple(
-        self: "TestTableChef", table_chef: TableChef
+        self: "TestTableChef",
+        table_chef: TableChef,
     ) -> None:
         """Test extracting multiple tables from markdown text."""
         md = """

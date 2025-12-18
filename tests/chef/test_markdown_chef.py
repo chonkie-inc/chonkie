@@ -99,7 +99,11 @@ Conclusion text."""
 
     # ==================== Tests for parse() method ====================
 
-    def test_parse_simple_markdown(self, markdown_chef: MarkdownChef, simple_markdown: str) -> None:
+    def test_parse_simple_markdown(
+        self,
+        markdown_chef: MarkdownChef,
+        simple_markdown: str,
+    ) -> None:
         """Test parsing simple markdown text."""
         result = markdown_chef.parse(simple_markdown)
 
@@ -107,7 +111,11 @@ Conclusion text."""
         assert result.content == simple_markdown
         assert len(result.chunks) >= 1
 
-    def test_parse_markdown_with_table(self, markdown_chef: MarkdownChef, markdown_with_table: str) -> None:
+    def test_parse_markdown_with_table(
+        self,
+        markdown_chef: MarkdownChef,
+        markdown_with_table: str,
+    ) -> None:
         """Test parsing markdown with a table."""
         result = markdown_chef.parse(markdown_with_table)
 
@@ -118,7 +126,11 @@ Conclusion text."""
         assert result.tables[0].start_index >= 0
         assert result.tables[0].end_index > result.tables[0].start_index
 
-    def test_parse_markdown_with_code(self, markdown_chef: MarkdownChef, markdown_with_code: str) -> None:
+    def test_parse_markdown_with_code(
+        self,
+        markdown_chef: MarkdownChef,
+        markdown_with_code: str,
+    ) -> None:
         """Test parsing markdown with code blocks."""
         result = markdown_chef.parse(markdown_with_code)
 
@@ -129,7 +141,11 @@ Conclusion text."""
         assert result.code[1].language == "javascript"
         assert 'console.log("Hello")' in result.code[1].content
 
-    def test_parse_markdown_with_images(self, markdown_chef: MarkdownChef, markdown_with_images: str) -> None:
+    def test_parse_markdown_with_images(
+        self,
+        markdown_chef: MarkdownChef,
+        markdown_with_images: str,
+    ) -> None:
         """Test parsing markdown with images."""
         result = markdown_chef.parse(markdown_with_images)
 
@@ -140,7 +156,11 @@ Conclusion text."""
         assert result.images[1].content == "image2.jpg"
         assert result.images[1].link == "https://example.com"
 
-    def test_parse_complex_markdown(self, markdown_chef: MarkdownChef, complex_markdown: str) -> None:
+    def test_parse_complex_markdown(
+        self,
+        markdown_chef: MarkdownChef,
+        complex_markdown: str,
+    ) -> None:
         """Test parsing complex markdown with multiple elements."""
         result = markdown_chef.parse(complex_markdown)
 
@@ -275,7 +295,11 @@ This is not a valid table."""
         assert isinstance(result, MarkdownDocument)
         assert len(result.tables) == 1
 
-    def test_parse_indices_consistency(self, markdown_chef: MarkdownChef, complex_markdown: str) -> None:
+    def test_parse_indices_consistency(
+        self,
+        markdown_chef: MarkdownChef,
+        complex_markdown: str,
+    ) -> None:
         """Test that all extracted elements have valid indices."""
         result = markdown_chef.parse(complex_markdown)
 
@@ -283,7 +307,7 @@ This is not a valid table."""
         for table in result.tables:
             assert 0 <= table.start_index < len(result.content)
             assert table.start_index < table.end_index <= len(result.content)
-            assert result.content[table.start_index:table.end_index] == table.content
+            assert result.content[table.start_index : table.end_index] == table.content
 
         # Check code
         for code in result.code:
@@ -310,7 +334,11 @@ This is not a valid table."""
             assert isinstance(result, MarkdownDocument)
             assert result.content == simple_markdown
 
-    def test_process_file_with_path_object(self, markdown_chef: MarkdownChef, simple_markdown: str) -> None:
+    def test_process_file_with_path_object(
+        self,
+        markdown_chef: MarkdownChef,
+        simple_markdown: str,
+    ) -> None:
         """Test processing a file with Path object."""
         path_obj = Path("test.md")
         with patch("builtins.open", mock_open(read_data=simple_markdown)):

@@ -1,4 +1,5 @@
 """Test the CodeChunker class."""
+
 import pytest
 
 from chonkie import CodeChunker
@@ -86,8 +87,10 @@ def test_code_chunker_chunk_size_python(python_code: str) -> None:
     chunker = CodeChunker(language="python", chunk_size=chunk_size)
     chunks = chunker.chunk(python_code)
     # Allow for some leeway as splitting happens at node boundaries
-    assert all(chunk.token_count < chunk_size + 20 for chunk in chunks[:-1]) # Check all but last chunk rigorously
-    assert chunks[-1].token_count > 0 # Last chunk must have content
+    assert all(
+        chunk.token_count < chunk_size + 20 for chunk in chunks[:-1]
+    )  # Check all but last chunk rigorously
+    assert chunks[-1].token_count > 0  # Last chunk must have content
 
 
 def test_code_chunker_indices_python(python_code: str) -> None:
@@ -98,7 +101,7 @@ def test_code_chunker_indices_python(python_code: str) -> None:
     for chunk in chunks:
         assert chunk.start_index == current_index
         assert chunk.end_index == current_index + len(chunk.text)
-        assert chunk.text == python_code[chunk.start_index:chunk.end_index]
+        assert chunk.text == python_code[chunk.start_index : chunk.end_index]
         current_index = chunk.end_index
     assert current_index == len(python_code)
 
@@ -165,4 +168,4 @@ def test_code_chunker_chunk_size_javascript(js_code: str) -> None:
     chunks = chunker.chunk(js_code)
     # Allow for some leeway
     assert all(chunk.token_count < chunk_size + 15 for chunk in chunks[:-1])
-    assert chunks[-1].token_count > 0 
+    assert chunks[-1].token_count > 0

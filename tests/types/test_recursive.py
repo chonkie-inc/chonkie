@@ -70,14 +70,14 @@ def test_recursive_rules_serialization() -> None:
     assert all(isinstance(level, RecursiveLevel) for level in reconstructed.levels)
 
 
-
 def test_recursive_level_from_recipe() -> None:
     """Test RecursiveLevel from recipe."""
     level = RecursiveLevel.from_recipe("default", lang="en")
     assert isinstance(level, RecursiveLevel)
-    assert level.delimiters == ['. ', '! ', '? ', '\n']
+    assert level.delimiters == [". ", "! ", "? ", "\n"]
     assert not level.whitespace
     assert level.include_delim == "prev"
+
 
 def test_recursive_rules_from_recipe() -> None:
     """Test RecursiveRules from recipe."""
@@ -85,6 +85,7 @@ def test_recursive_rules_from_recipe() -> None:
     assert isinstance(rules, RecursiveRules)
     assert len(rules.levels) == 5
     assert all(isinstance(level, RecursiveLevel) for level in rules.levels)
+
 
 def test_recursive_rules_from_recipe_nonexistent() -> None:
     """Test RecursiveRules from recipe with nonexistent recipe."""

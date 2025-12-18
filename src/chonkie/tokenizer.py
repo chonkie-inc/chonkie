@@ -233,9 +233,7 @@ class CharacterTokenizer(Tokenizer):
         try:
             return "".join([self.vocab[token] for token in tokens])
         except Exception as e:
-            raise ValueError(
-                f"Decoding failed. Tokens: {tokens} not found in vocab."
-            ) from e
+            raise ValueError(f"Decoding failed. Tokens: {tokens} not found in vocab.") from e
 
     def count_tokens(self, text: str) -> int:
         """Count the number of tokens in the given text.
@@ -292,9 +290,7 @@ class WordTokenizer(Tokenizer):
         try:
             return " ".join([self.vocab[token] for token in tokens])
         except Exception as e:
-            raise ValueError(
-                f"Decoding failed. Tokens: {tokens} not found in vocab."
-            ) from e
+            raise ValueError(f"Decoding failed. Tokens: {tokens} not found in vocab.") from e
 
     def count_tokens(self, text: str) -> int:
         """Count the number of tokens in the given text.
@@ -354,7 +350,7 @@ class ByteTokenizer(Tokenizer):
             return bytes(tokens).decode("utf-8")
         except Exception as e:
             raise ValueError(
-                f"Decoding failed. Tokens: {tokens} cannot be decoded as UTF-8."
+                f"Decoding failed. Tokens: {tokens} cannot be decoded as UTF-8.",
             ) from e
 
     def count_tokens(self, text: str) -> int:
@@ -427,9 +423,7 @@ class RowTokenizer(Tokenizer):
         try:
             return "\n".join([self.vocab[token] for token in tokens])
         except Exception as e:
-            raise ValueError(
-                f"Decoding failed. Tokens: {tokens} not found in vocab."
-            ) from e
+            raise ValueError(f"Decoding failed. Tokens: {tokens} not found in vocab.") from e
 
     def count_tokens(self, text: str) -> int:
         """Count the number of rows/lines in the given text.
@@ -474,7 +468,8 @@ class AutoTokenizer:
             self._backend = self._get_backend()
 
     def _load_tokenizer(
-        self, tokenizer: str
+        self,
+        tokenizer: str,
     ) -> Union[
         CharacterTokenizer,
         WordTokenizer,
@@ -504,7 +499,7 @@ class AutoTokenizer:
                 return HFTokenizer.from_pretrained(tokenizer)
             except Exception:
                 warnings.warn(
-                    "Could not load tokenizer with 'tokenizers'. Falling back to 'tiktoken'."
+                    "Could not load tokenizer with 'tokenizers'. Falling back to 'tiktoken'.",
                 )
         else:
             warnings.warn("'tokenizers' library not found. Falling back to 'tiktoken'.")
@@ -517,12 +512,10 @@ class AutoTokenizer:
                 return get_encoding(tokenizer)
             except Exception:
                 warnings.warn(
-                    "Could not load tokenizer with 'tiktoken'. Falling back to 'transformers'."
+                    "Could not load tokenizer with 'tiktoken'. Falling back to 'transformers'.",
                 )
         else:
-            warnings.warn(
-                "'tiktoken' library not found. Falling back to 'transformers'."
-            )
+            warnings.warn("'tiktoken' library not found. Falling back to 'transformers'.")
 
         # Try transformers as last resort
         if importlib.util.find_spec("transformers") is not None:
@@ -531,9 +524,7 @@ class AutoTokenizer:
 
                 return AutoTokenizer.from_pretrained(tokenizer)
             except Exception:
-                raise ValueError(
-                    "Tokenizer not found in transformers, tokenizers, or tiktoken"
-                )
+                raise ValueError("Tokenizer not found in transformers, tokenizers, or tiktoken")
         raise ValueError("Tokenizer not found in transformers, tokenizers, or tiktoken")
 
     def _get_backend(self) -> str:
@@ -580,9 +571,7 @@ class AutoTokenizer:
 
         # Not yet implemented backends
         if self._backend == "callable":
-            raise NotImplementedError(
-                "Encoding not implemented for callable tokenizers."
-            )
+            raise NotImplementedError("Encoding not implemented for callable tokenizers.")
 
         raise ValueError(f"Unsupported tokenizer backend: {self._backend}")
 
@@ -597,9 +586,7 @@ class AutoTokenizer:
 
         """
         if self._backend == "callable":
-            raise NotImplementedError(
-                "Decoding not implemented for callable tokenizers."
-            )
+            raise NotImplementedError("Decoding not implemented for callable tokenizers.")
         return self.tokenizer.decode(tokens)  # type: ignore
 
     def count_tokens(self, text: str) -> int:
@@ -644,9 +631,7 @@ class AutoTokenizer:
         elif self._backend == "tokenizers":
             return [encoding.ids for encoding in self.tokenizer.encode_batch(texts)]  # type: ignore
         if self._backend == "callable":
-            raise NotImplementedError(
-                "Batch encoding not implemented for callable tokenizers."
-            )
+            raise NotImplementedError("Batch encoding not implemented for callable tokenizers.")
         raise ValueError(f"Unsupported tokenizer backend: {self._backend}")
 
     def decode_batch(self, token_sequences: Sequence[Sequence[int]]) -> Sequence[str]:
@@ -666,14 +651,10 @@ class AutoTokenizer:
         elif self._backend in "tokenizers":
             return self.tokenizer.decode_batch(token_sequences)  # type: ignore[union-attr]
         elif self._backend == "transformers":
-            return self.tokenizer.batch_decode(
-                token_sequences, skip_special_tokens=True
-            )  # type: ignore[union-attr]
+            return self.tokenizer.batch_decode(token_sequences, skip_special_tokens=True)  # type: ignore[union-attr]
 
         if self._backend == "callable":
-            raise NotImplementedError(
-                "Batch decoding not implemented for callable tokenizers."
-            )
+            raise NotImplementedError("Batch decoding not implemented for callable tokenizers.")
         else:
             raise ValueError(f"Unsupported tokenizer backend: {self._backend}")
 
@@ -690,16 +671,13 @@ class AutoTokenizer:
         if self._backend == "chonkie":
             return self.tokenizer.count_tokens_batch(texts)  # type: ignore[union-attr]
         elif self._backend == "tiktoken":
-            return [
-                len(token_list) for token_list in self.tokenizer.encode_batch(texts)
-            ]  # type: ignore[union-attr,arg-type]
+            return [len(token_list) for token_list in self.tokenizer.encode_batch(texts)]  # type: ignore[union-attr,arg-type]
         elif self._backend == "transformers":
             encoded = self.tokenizer(texts, add_special_tokens=False)  # type: ignore[operator,call-arg,index,arg-type]
             return [len(token_list) for token_list in encoded["input_ids"]]  # type: ignore[index]
         elif self._backend == "tokenizers":
             return [
-                len(t.ids)
-                for t in self.tokenizer.encode_batch(texts, add_special_tokens=False)
+                len(t.ids) for t in self.tokenizer.encode_batch(texts, add_special_tokens=False)
             ]  # type: ignore[union-attr,call-arg,arg-type,attr-defined]
         elif self._backend == "callable":
             return [self.tokenizer(text) for text in texts]  # type: ignore[operator,misc]

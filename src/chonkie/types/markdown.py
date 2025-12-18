@@ -6,7 +6,7 @@ from typing import Optional
 from .document import Document
 
 
-@dataclass 
+@dataclass
 class MarkdownTable:
     """MarkdownTable is a table found in the middle of a markdown document."""
 
@@ -14,7 +14,8 @@ class MarkdownTable:
     start_index: int = field(default_factory=int)
     end_index: int = field(default_factory=int)
 
-@dataclass 
+
+@dataclass
 class MarkdownCode:
     """MarkdownCode is a code block found in the middle of a markdown document."""
 
@@ -22,6 +23,7 @@ class MarkdownCode:
     language: Optional[str] = field(default=None)
     start_index: int = field(default_factory=int)
     end_index: int = field(default_factory=int)
+
 
 @dataclass
 class MarkdownImage:
@@ -32,6 +34,7 @@ class MarkdownImage:
     start_index: int = field(default_factory=int)
     end_index: int = field(default_factory=int)
     link: Optional[str] = field(default=None)
+
 
 @dataclass
 class MarkdownDocument(Document):
