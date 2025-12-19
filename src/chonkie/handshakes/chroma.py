@@ -22,7 +22,6 @@ from .utils import generate_random_collection_name
 logger = get_logger(__name__)
 
 if TYPE_CHECKING:
-    import chromadb
     import numpy as np
 
 
@@ -113,8 +112,12 @@ class ChromaHandshake(BaseHandshake):
         """
         super().__init__()
 
-        # Lazy importing the dependencies
-        self._import_dependencies()
+        try:
+            import chromadb
+        except ImportError as ie:
+            raise ImportError(
+                "ChromaDB is not installed. Please install it with `pip install chonkie[chroma]`.",
+            ) from ie
 
         # Initialize Chroma client
         if client is None and path is None:
@@ -154,17 +157,6 @@ class ChromaHandshake(BaseHandshake):
     def _is_available(cls) -> bool:
         """Check if the dependencies are available."""
         return importutil.find_spec("chromadb") is not None
-
-    def _import_dependencies(self) -> None:
-        """Lazy import the dependencies."""
-        if self._is_available():
-            global chromadb
-            import chromadb
-        else:
-            raise ImportError(
-                "ChromaDB is not installed. "
-                + "Please install it with `pip install chonkie[chroma]`.",
-            )
 
     def _generate_id(self, index: int, chunk: Chunk) -> str:
         """Generate a unique index name for the Chunk."""

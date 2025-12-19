@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING, Any, Optional
 from .base import BaseGenie
 
 if TYPE_CHECKING:
-    from openai import AzureOpenAI
     from pydantic import BaseModel
 
 
@@ -36,12 +35,17 @@ class AzureOpenAIGenie(BaseGenie):
         if not azure_endpoint:
             raise ValueError("`azure_endpoint` is required for Azure OpenAI.")
 
-        self._import_dependencies()
-
         self.model = model
         self._deployment = deployment or model
         self.api_version = api_version
         self.base_url = azure_endpoint
+
+        try:
+            from openai import AzureOpenAI
+        except ImportError as ie:
+            raise ImportError(
+                "openai is not available. Please install it via `pip install chonkie[azure-openai]`",
+            ) from ie
 
         if azure_api_key:
             self.client = AzureOpenAI(
@@ -92,17 +96,6 @@ class AzureOpenAIGenie(BaseGenie):
             and importutil.find_spec("pydantic") is not None
             and importutil.find_spec("azure.identity") is not None
         )
-
-    def _import_dependencies(self) -> None:
-        if self._is_available():
-            global AzureOpenAI, BaseModel
-            from openai import AzureOpenAI
-            from pydantic import BaseModel
-        else:
-            raise ImportError(
-                "Missing required modules: [openai, azure-identity, pydantic]. "
-                "Install via `pip install chonkie[azure-openai]`.",
-            )
 
     def __repr__(self) -> str:
         """Return a string representation of the AzureOpenAIGenie instance."""

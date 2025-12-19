@@ -3,15 +3,11 @@
 import importlib.util as importutil
 import os
 import warnings
-from typing import TYPE_CHECKING, Any, Optional
+from typing import Any, Optional
 
 import numpy as np
 
 from .base import BaseEmbeddings
-
-if TYPE_CHECKING:
-    from google import genai
-    from google.genai import types
 
 
 class GeminiEmbeddings(BaseEmbeddings):
@@ -57,9 +53,6 @@ class GeminiEmbeddings(BaseEmbeddings):
         """
         super().__init__()
 
-        # Lazy import dependencies if they are not already imported
-        self._import_dependencies()
-
         # Initialize the model - use default if empty string provided
         self.model = model if model else self.DEFAULT_MODEL
         self.task_type = task_type
@@ -86,10 +79,20 @@ class GeminiEmbeddings(BaseEmbeddings):
                 "Gemini API key not found. Either pass it as api_key or set GEMINI_API_KEY environment variable.",
             )
 
-        self.client = genai.Client(api_key=self._api_key)  # type: ignore
+        try:
+            from google.genai import Client as GenAIClient
+        except ImportError as ie:
+            raise ImportError(
+                "One or more of the required modules are not available: [google-genai]. "
+                "Please install it via `pip install chonkie[gemini]`"
+            ) from ie
+
+        self.client = GenAIClient(api_key=self._api_key)
 
     def embed(self, text: str) -> np.ndarray:
         """Get embeddings for a single text."""
+        from google.genai.types import EmbedContentConfig
+
         # Check token count and warn if necessary
         if self._show_warnings:
             token_count = self.count_tokens(text)
@@ -104,7 +107,7 @@ class GeminiEmbeddings(BaseEmbeddings):
                 result = self.client.models.embed_content(
                     model=self.model,
                     contents=text,
-                    config=types.EmbedContentConfig(task_type=self.task_type),  # type: ignore
+                    config=EmbedContentConfig(task_type=self.task_type),
                 )
 
                 # Extract embedding from result
@@ -128,6 +131,8 @@ class GeminiEmbeddings(BaseEmbeddings):
         """Get embeddings for multiple texts."""
         if not texts:
             return []
+
+        from google.genai.types import EmbedContentConfig
 
         all_embeddings = []
 
@@ -154,7 +159,7 @@ class GeminiEmbeddings(BaseEmbeddings):
                             result = self.client.models.embed_content(
                                 model=self.model,
                                 contents=text,
-                                config=types.EmbedContentConfig(task_type=self.task_type),  # type: ignore
+                                config=EmbedContentConfig(task_type=self.task_type),
                             )
                             if hasattr(result, "embeddings") and result.embeddings:
                                 embedding = result.embeddings[0].values
@@ -225,17 +230,6 @@ class GeminiEmbeddings(BaseEmbeddings):
     def _is_available(cls) -> bool:
         """Check if the Google GenAI package is available."""
         return importutil.find_spec("google.genai") is not None
-
-    def _import_dependencies(self) -> None:
-        """Lazy import dependencies for the embeddings implementation."""
-        if self._is_available():
-            global genai, types
-            from google import genai
-            from google.genai import types
-        else:
-            raise ImportError(
-                'google-genai is not available. Please install it via `pip install "chonkie[gemini]"`',
-            )
 
     def __repr__(self) -> str:
         """Representation of the GeminiEmbeddings instance."""

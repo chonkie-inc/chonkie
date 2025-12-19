@@ -20,14 +20,7 @@ logger = get_logger(__name__)
 if TYPE_CHECKING:
     from typing import Any
 
-    try:
-        from tree_sitter import Node
-    except ImportError:
-
-        class Node:  # type: ignore
-            """Stub class for tree_sitter Node when not available."""
-
-            pass
+    from tree_sitter import Node, Tree
 
 
 @chunker("code")
@@ -62,9 +55,6 @@ class CodeChunker(BaseChunker):
             ValueError: If the language is not supported.
 
         """
-        # Lazy import dependencies to avoid importing them when not needed
-        self._import_dependencies()
-
         # Initialize the base chunker
         super().__init__(tokenizer=tokenizer)
 
@@ -87,39 +77,23 @@ class CodeChunker(BaseChunker):
                 "The language is set to `auto`. This would adversely affect the performance of the chunker. "
                 + "Consider setting the `language` parameter to a specific language to improve performance.",
             )
+            from magika import Magika
 
             # Set the language to auto and initialize the Magika instance
-            self.magika = Magika()  # type: ignore
+            self.magika = Magika()
             self.parser = None
         else:
-            self.parser = get_parser(language)  # type: ignore
+            from tree_sitter_language_pack import get_parser
+
+            self.parser = get_parser(language)  # type: ignore[arg-type]
 
         # Set the use_multiprocessing flag
         self._use_multiprocessing = False
 
-    def _import_dependencies(self) -> None:
-        """Import the dependencies for the CodeChunker."""
-        # Lazy import dependencies to avoid importing them when not needed
-        try:
-            # Set the global variables
-            global Node, Parser, Tree
-            global get_parser, SupportedLanguage, Magika
-
-            # Import the dependencies
-            from magika import Magika
-            from tree_sitter import Node, Parser, Tree
-            from tree_sitter_language_pack import SupportedLanguage, get_parser
-        except ImportError:
-            raise ImportError(
-                "One or more of the following dependencies are not installed: "
-                + "[ tree-sitter, tree-sitter-language-pack, magika ]"
-                + " Please install them using `pip install chonkie[code]`.",
-            )
-
     def _detect_language(self, bytes_text: bytes) -> Any:
         """Detect the language of the code."""
         response = self.magika.identify_bytes(bytes_text)
-        return response.output.label  # type: ignore
+        return response.output.label
 
     def _merge_node_groups(self, node_groups: list[list["Node"]]) -> list["Node"]:
         """Merge the node groups together."""
@@ -367,14 +341,17 @@ class CodeChunker(BaseChunker):
         if self.language == "auto":
             language = self._detect_language(original_text_bytes)
             logger.info(f"Auto-detected code language: {language}")
-            self.parser = get_parser(language)  # type: ignore
+            from tree_sitter_language_pack import get_parser
+
+            self.parser = get_parser(language)
         else:
             logger.debug(f"Using configured language: {self.language}")
 
         try:
+            assert self.parser is not None, "Parser is not initialized."
             # Create the parsing tree for the current code
-            tree: Tree = self.parser.parse(original_text_bytes)  # type: ignore
-            root_node: Node = tree.root_node  # type: ignore
+            tree: Tree = self.parser.parse(original_text_bytes)
+            root_node: Node = tree.root_node
 
             # Get the node_groups
             node_groups, token_counts = self._group_child_nodes(root_node)

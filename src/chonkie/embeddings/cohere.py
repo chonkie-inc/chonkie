@@ -12,16 +12,7 @@ import requests
 from .base import BaseEmbeddings
 
 if TYPE_CHECKING:
-    import tokenizers
-
-    try:
-        from cohere import ClientV2
-    except ImportError:
-
-        class ClientV2:  # type: ignore
-            """Stub class for cohere ClientV2 when not available."""
-
-            pass
+    from tokenizers import Tokenizer
 
 
 class CohereEmbeddings(BaseEmbeddings):
@@ -75,8 +66,13 @@ class CohereEmbeddings(BaseEmbeddings):
         """
         super().__init__()
 
-        # Lazy import dependencies if they are not already imported
-        self._import_dependencies()
+        try:
+            import tokenizers
+            from cohere import ClientV2
+        except ImportError as ie:
+            raise ImportError(
+                "cohere is not available. Please install it via `pip install chonkie[cohere]`",
+            ) from ie
 
         if model not in self.AVAILABLE_MODELS:
             raise ValueError(
@@ -227,7 +223,7 @@ class CohereEmbeddings(BaseEmbeddings):
         """Return the embedding dimension."""
         return self._dimension
 
-    def get_tokenizer(self) -> "tokenizers.Tokenizer":
+    def get_tokenizer(self) -> "Tokenizer":
         """Return a tokenizers tokenizer object of the current model."""
         return self._tokenizer
 
@@ -235,23 +231,6 @@ class CohereEmbeddings(BaseEmbeddings):
     def _is_available(cls) -> bool:
         """Check if the Cohere package is available."""
         return importlib.util.find_spec("cohere") is not None
-
-    @classmethod
-    def _import_dependencies(cls) -> None:
-        """Lazy import dependencies for the embeddings implementation.
-
-        This method should be implemented by all embeddings implementations that require
-        additional dependencies. It lazily imports the dependencies only when they are needed.
-
-        """
-        if cls._is_available():
-            global tokenizers, ClientV2
-            import tokenizers
-            from cohere import ClientV2
-        else:
-            raise ImportError(
-                "cohere is not available. Please install it via `pip install chonkie[cohere]`",
-            )
 
     def __repr__(self) -> str:
         """Return a string representation of the CohereEmbeddings object."""

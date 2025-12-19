@@ -25,9 +25,6 @@ def test_hubbie_initialization() -> None:
     assert isinstance(hubbie.recipe_schema, dict)
     assert "$schema" in hubbie.recipe_schema
 
-    # Check that the dependencies are imported
-    assert hubbie._check_dependencies() is True
-
 
 def test_hubbie_get_recipe_hub(hubbie: Hubbie) -> None:
     """Test the Hubbie.get_recipe method."""

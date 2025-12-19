@@ -2,7 +2,7 @@
 
 import re
 from pathlib import Path
-from typing import TYPE_CHECKING, Union
+from typing import Union
 
 from chonkie.chef.base import BaseChef
 from chonkie.logger import get_logger
@@ -10,9 +10,6 @@ from chonkie.pipeline import chef
 from chonkie.types import Document, MarkdownDocument, MarkdownTable
 
 logger = get_logger(__name__)
-
-if TYPE_CHECKING:
-    import pandas as pd
 
 
 @chef("table")
@@ -22,15 +19,6 @@ class TableChef(BaseChef):
     def __init__(self) -> None:
         """Initialize TableChef with a regex pattern for markdown tables."""
         self.table_pattern = re.compile(r"(\|.*?\n(?:\|[-: ]+\|.*?\n)?(?:\|.*?\n)+)")
-
-    def _lazy_import_pandas(self) -> None:
-        try:
-            global pd
-            import pandas as pd
-        except ImportError as e:
-            raise ImportError(
-                "Pandas is required to use TableChef. Please install it with `pip install chonkie[table]`.",
-            ) from e
 
     def parse(self, text: str) -> Document:
         """Parse raw markdown text and extract tables into a MarkdownDocument.
@@ -58,7 +46,12 @@ class TableChef(BaseChef):
 
         """
         logger.debug(f"Processing table file/string: {path}")
-        self._lazy_import_pandas()
+        try:
+            import pandas as pd
+        except ImportError as e:
+            raise ImportError(
+                "Pandas is required to use TableChef. Please install it with `pip install chonkie[table]`.",
+            ) from e
         # if file exists
         path_obj = Path(path)
         if path_obj.is_file():
