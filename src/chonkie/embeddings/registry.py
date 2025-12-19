@@ -176,7 +176,7 @@ EmbeddingsRegistry.register_types(
 EmbeddingsRegistry.register_model("all-minilm-l6-v2", SentenceTransformerEmbeddings)
 EmbeddingsRegistry.register_model("all-mpnet-base-v2", SentenceTransformerEmbeddings)
 EmbeddingsRegistry.register_model("multi-qa-mpnet-base-dot-v1", SentenceTransformerEmbeddings)
-# TODO: Add all the other SentenceTranformer models here as well!
+# TODO: Add all the other SentenceTransformer models here as well!
 
 # Register OpenAI embeddings with pattern
 EmbeddingsRegistry.register_provider("openai", OpenAIEmbeddings)
