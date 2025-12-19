@@ -2,6 +2,7 @@
 
 import json
 import os
+import sys
 from typing import Any, Generator
 from unittest.mock import Mock, patch
 
@@ -144,14 +145,9 @@ class TestJinaEmbeddingsProperties:
         # Should return True since dependencies are available in test environment
         assert JinaEmbeddings._is_available() is True
 
-    def test_import_dependencies_success(self, embeddings: JinaEmbeddings) -> None:
-        """Test _import_dependencies when packages are available."""
-        # Should not raise an exception
-        embeddings._import_dependencies()
-
     def test_import_dependencies_failure(self) -> None:
         """Test _import_dependencies when packages are not available."""
-        with patch("chonkie.embeddings.jina.JinaEmbeddings._is_available", return_value=False):
+        with patch.dict(sys.modules, tokenizers=None):
             with pytest.raises(ImportError, match="tokenizers is not available"):
                 JinaEmbeddings(api_key="test_key")
 

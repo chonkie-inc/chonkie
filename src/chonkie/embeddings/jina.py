@@ -51,8 +51,12 @@ class JinaEmbeddings(BaseEmbeddings):
         """
         super().__init__()
 
-        # Lazy import dependencies if they are not already imported
-        self._import_dependencies()
+        try:
+            from tokenizers import Tokenizer
+        except ImportError as ie:
+            raise ImportError(
+                "tokenizers is not available. Please install it via `pip install chonkie[jina]`",
+            ) from ie
 
         if model not in self.AVAILABLE_MODELS:
             raise ValueError(
@@ -92,16 +96,6 @@ class JinaEmbeddings(BaseEmbeddings):
     def _is_available(cls) -> bool:
         """Check if the Jina package is available."""
         return importutil.find_spec("tokenizers") is not None
-
-    def _import_dependencies(self) -> None:
-        """Lazy import dependencies if they are not already imported."""
-        if self._is_available():
-            global Tokenizer
-            from tokenizers import Tokenizer
-        else:
-            raise ImportError(
-                "tokenizers is not available. Please install it via `pip install chonkie[jina]`",
-            )
 
     def embed(self, text: str) -> np.ndarray:
         """Embed a single text using the Jina embeddings API.

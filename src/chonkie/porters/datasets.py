@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import importlib
 import importlib.util as importutil
 from typing import TYPE_CHECKING, Any
 
@@ -25,17 +24,11 @@ class DatasetsPorter(BasePorter):
     def __init__(self) -> None:
         """Initialize the DatasetsPorter and import dependencies."""
         super().__init__()
-        self._import_dependencies()
-
-    def _import_dependencies(self) -> None:
-        """Import the 'datasets' library and assign it to an instance attribute."""
         if importutil.find_spec("datasets") is None:
             raise ImportError(
                 "The 'datasets' library is not installed. "
                 "Please install it with 'pip install chonkie[datasets]' or 'pip install datasets'.",
             )
-        datasets_module = importlib.import_module("datasets")
-        self.Dataset = datasets_module.Dataset
 
     def export(  # type: ignore[override]
         self,
@@ -58,8 +51,10 @@ class DatasetsPorter(BasePorter):
             Dataset: The Dataset object.
 
         """
+        from datasets import Dataset
+
         logger.debug(f"Exporting {len(chunks)} chunks to HuggingFace Dataset")
-        dataset = self.Dataset.from_list([chunk.to_dict() for chunk in chunks])
+        dataset = Dataset.from_list([chunk.to_dict() for chunk in chunks])
         if save_to_disk:
             logger.debug(f"Saving dataset to disk: {path}")
             dataset.save_to_disk(path, **kwargs)

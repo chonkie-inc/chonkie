@@ -475,17 +475,6 @@ class TestVoyageAIEmbeddingsErrorHandling:
             ):
                 VoyageAIEmbeddings(api_key="test_key")
 
-    def test_import_dependencies_missing_packages(self) -> None:
-        """Test import error when required packages are missing."""
-        embeddings = VoyageAIEmbeddings.__new__(VoyageAIEmbeddings)
-
-        with patch.object(embeddings, "_is_available", return_value=False):
-            with pytest.raises(
-                ImportError,
-                match="One \\(or more\\) of the following packages is not available",
-            ):
-                embeddings._import_dependencies()
-
 
 class TestVoyageAIEmbeddingsIntegration:
     """Integration tests for VoyageAIEmbeddings (these may need real API key)."""

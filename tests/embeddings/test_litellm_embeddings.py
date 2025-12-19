@@ -1,6 +1,7 @@
 """Test suite for LiteLLMEmbeddings."""
 
 import os
+import sys
 from typing import List
 from unittest.mock import MagicMock, patch
 
@@ -227,7 +228,7 @@ def test_cohere_model(mock_embed) -> None:
 
 def test_import_error_when_litellm_not_available() -> None:
     """Test that appropriate error is raised when litellm is not available."""
-    with patch("importlib.util.find_spec", return_value=None):
+    with patch.dict(sys.modules, litellm=None):
         with pytest.raises(ImportError, match="litellm package is not available"):
             LiteLLMEmbeddings()
 

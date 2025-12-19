@@ -15,10 +15,6 @@ logger = get_logger(__name__)
 class BaseRefinery(ABC):
     """Base class for all refinery classes."""
 
-    def _import_dependencies(self) -> None:
-        """Lazy import the dependencies."""
-        raise NotImplementedError("Subclasses must implement this method.")
-
     @abstractmethod
     def refine(self, chunks: list[Chunk]) -> list[Chunk]:
         """Refine the chunks.
