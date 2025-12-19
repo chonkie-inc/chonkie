@@ -179,7 +179,8 @@ class AzureOpenAIEmbeddings(BaseEmbeddings):
         """Return a tiktoken tokenizer object."""
         return self._tokenizer  # type: ignore
 
-    def _is_available(self) -> bool:
+    @classmethod
+    def _is_available(cls) -> bool:
         """Check if the required dependencies are available."""
         return (
             importutil.find_spec("openai") is not None

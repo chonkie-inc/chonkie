@@ -81,13 +81,11 @@ def test_pgvector_handshake_is_available():
     with patch("chonkie.handshakes.pgvector.importutil.find_spec") as mock_find_spec:
         # Mock vecs as available
         mock_find_spec.side_effect = lambda name: Mock() if name == "vecs" else None
-
-        handshake = PgvectorHandshake.__new__(PgvectorHandshake)  # Create without calling __init__
-        assert handshake._is_available() is True
+        assert PgvectorHandshake._is_available() is True
 
         # Test when vecs is not available
         mock_find_spec.side_effect = lambda name: None
-        assert handshake._is_available() is False
+        assert PgvectorHandshake._is_available() is False
 
 
 def test_pgvector_handshake_init_with_individual_params(mock_dependencies):

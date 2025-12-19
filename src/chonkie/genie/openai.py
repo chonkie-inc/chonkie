@@ -70,7 +70,8 @@ class OpenAIGenie(BaseGenie):
             raise ValueError("OpenAI response content is None")
         return content.model_dump()
 
-    def _is_available(self) -> bool:
+    @classmethod
+    def _is_available(cls) -> bool:
         """Check if all the dependencies are available in the environement."""
         if (
             importutil.find_spec("pydantic") is not None

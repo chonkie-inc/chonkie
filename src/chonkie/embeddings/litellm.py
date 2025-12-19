@@ -318,7 +318,8 @@ class LiteLLMEmbeddings(BaseEmbeddings):
         """
         return self._tokenizer
 
-    def _is_available(self) -> bool:
+    @classmethod
+    def _is_available(cls) -> bool:
         """Check if the litellm package is available.
 
         Returns:

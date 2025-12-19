@@ -125,9 +125,9 @@ class TestVoyageAIEmbeddingsProperties:
         assert hasattr(tokenizer, "encode")
         assert hasattr(tokenizer, "encode_batch")
 
-    def test_is_available(self, embeddings: VoyageAIEmbeddings) -> None:
+    def test_is_available(self) -> None:
         """Test availability check."""
-        assert embeddings._is_available() is True
+        assert VoyageAIEmbeddings._is_available() is True
 
     def test_count_tokens_single_text(self, embeddings: VoyageAIEmbeddings) -> None:
         """Test token counting for single text."""

@@ -167,8 +167,7 @@ def test_is_available() -> None:
     """Test that LiteLLMEmbeddings correctly checks if it is available."""
     with patch.object(LiteLLMEmbeddings, "_detect_dimension", return_value=1536):
         with patch.object(LiteLLMEmbeddings, "_initialize_tokenizer", return_value=MagicMock()):
-            embeddings = LiteLLMEmbeddings()
-            assert embeddings._is_available() is True
+            assert LiteLLMEmbeddings._is_available() is True
 
 
 @pytest.mark.skipif(

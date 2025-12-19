@@ -85,7 +85,8 @@ class AzureOpenAIGenie(BaseGenie):
             raise ValueError("Azure OpenAI response content is None")
         return content.model_dump()
 
-    def _is_available(self) -> bool:
+    @classmethod
+    def _is_available(cls) -> bool:
         return (
             importutil.find_spec("openai") is not None
             and importutil.find_spec("pydantic") is not None

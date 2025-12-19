@@ -325,13 +325,11 @@ def test_is_available() -> None:
     with patch("importlib.util.find_spec") as mock_find_spec:
         # Test when dependencies are available
         mock_find_spec.return_value = MagicMock()  # Mock spec found
-
-        embeddings = GeminiEmbeddings.__new__(GeminiEmbeddings)  # Create without calling __init__
-        assert embeddings._is_available() is True
+        assert GeminiEmbeddings._is_available() is True
 
         # Test when dependencies are not available
         mock_find_spec.return_value = None
-        assert embeddings._is_available() is False
+        assert GeminiEmbeddings._is_available() is False
 
 
 def test_import_dependencies_failure() -> None:

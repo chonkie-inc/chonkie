@@ -149,10 +149,7 @@ def test_chroma_handshake_init_specific_collection() -> None:
 
 def test_chroma_handshake_is_available() -> None:
     """Test the _is_available check."""
-    handshake = ChromaHandshake()
-    assert handshake._is_available() is True
-    # Clean up
-    handshake.client.delete_collection(handshake.collection_name)
+    assert ChromaHandshake._is_available()
 
 
 def test_chroma_handshake_generate_id() -> None:
