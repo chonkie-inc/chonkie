@@ -21,9 +21,7 @@ pytestmark = pytest.mark.skipif(weaviate is None, reason="weaviate not installed
 @pytest.fixture(autouse=True)
 def mock_embeddings():
     """Mock AutoEmbeddings to avoid downloading models in CI."""
-    with patch(
-        "chonkie.embeddings.AutoEmbeddings.get_embeddings"
-    ) as mock_get_embeddings:
+    with patch("chonkie.embeddings.AutoEmbeddings.get_embeddings") as mock_get_embeddings:
         # Create a mock embedding model
         mock_embedding = Mock()
 
@@ -88,9 +86,7 @@ def mock_weaviate_client():
 # Sample Chunks for testing
 SAMPLE_CHUNKS: list[Chunk] = [
     Chunk(text="This is the first chunk.", start_index=0, end_index=25, token_count=6),
-    Chunk(
-        text="This is the second chunk.", start_index=26, end_index=52, token_count=6
-    ),
+    Chunk(text="This is the second chunk.", start_index=26, end_index=52, token_count=6),
     Chunk(text="Another chunk follows.", start_index=53, end_index=75, token_count=4),
 ]
 
@@ -131,10 +127,9 @@ def test_weaviate_handshake_init_specific_collection(mock_weaviate_client) -> No
     mock_weaviate_client.collections.create.assert_not_called()
 
 
-def test_weaviate_handshake_is_available(mock_weaviate_client) -> None:
+def test_weaviate_handshake_is_available() -> None:
     """Test the _is_available check."""
-    handshake = WeaviateHandshake(client=mock_weaviate_client)
-    assert handshake._is_available() is True
+    assert WeaviateHandshake._is_available() is True
 
 
 def test_weaviate_handshake_custom_connection_params(mock_weaviate_client) -> None:
@@ -146,9 +141,7 @@ def test_weaviate_handshake_custom_connection_params(mock_weaviate_client) -> No
     from unittest.mock import patch
 
     # Use patch context manager to temporarily replace weaviate.connect_to_custom
-    with patch(
-        "weaviate.connect_to_custom", return_value=mock_weaviate_client
-    ) as mock_connect:
+    with patch("weaviate.connect_to_custom", return_value=mock_weaviate_client) as mock_connect:
         # Test with custom HTTP and gRPC parameters
         WeaviateHandshake(
             url="https://example.com:8443",
@@ -190,7 +183,7 @@ def test_weaviate_handshake_generate_id(mock_weaviate_client) -> None:
         uuid.uuid5(
             uuid.NAMESPACE_OID,
             f"{handshake.collection_name}::chunk-{index}:{chunk.text}",
-        )
+        ),
     )
     generated_id = handshake._generate_id(index, chunk)
     assert generated_id == expected_id_str
@@ -293,9 +286,7 @@ def test_weaviate_handshake_delete_collection(mock_weaviate_client) -> None:
     handshake.delete_collection()
 
     # Check that delete was called
-    mock_weaviate_client.collections.delete.assert_called_once_with(
-        handshake.collection_name
-    )
+    mock_weaviate_client.collections.delete.assert_called_once_with(handshake.collection_name)
 
 
 def test_weaviate_handshake_get_collection_info(mock_weaviate_client) -> None:
@@ -314,9 +305,7 @@ def test_weaviate_handshake_get_collection_info(mock_weaviate_client) -> None:
         Mock(name="token_count"),
         Mock(name="chunk_type"),
     ]
-    mock_weaviate_client.collections.get.return_value.config.get.return_value = (
-        mock_schema
-    )
+    mock_weaviate_client.collections.get.return_value.config.get.return_value = mock_schema
 
     # Call get_collection_info method
     info = handshake.get_collection_info()

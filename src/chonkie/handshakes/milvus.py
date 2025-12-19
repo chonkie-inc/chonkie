@@ -2,7 +2,6 @@
 
 import importlib.util
 from typing import (
-    TYPE_CHECKING,
     Any,
     Literal,
     Optional,
@@ -20,13 +19,6 @@ from .utils import generate_random_collection_name
 
 logger = get_logger(__name__)
 
-if TYPE_CHECKING:
-    from pymilvus import (
-        Collection,
-        CollectionSchema,
-        DataType,
-        FieldSchema,
-    )
 
 class MilvusHandshake(BaseHandshake):
     """Milvus Handshake to export Chonkie's Chunks into a Milvus collection.
@@ -44,12 +36,12 @@ class MilvusHandshake(BaseHandshake):
         user: The username to connect to Milvus. Defaults to "".
         api_key: The API key to connect to Milvus. Defaults to "".
         **kwargs: Additional keyword arguments for future use.
-        
+
     """
 
     def __init__(
         self,
-        client: Optional[Any] = None, 
+        client: Optional[Any] = None,
         uri: Optional[str] = None,
         collection_name: Union[str, Literal["random"]] = "random",
         embedding_model: Union[str, BaseEmbeddings] = "minishlab/potion-retrieval-32M",
@@ -75,18 +67,40 @@ class MilvusHandshake(BaseHandshake):
             **kwargs: Additional keyword arguments for future use.
 
         """
-        self._import_dependencies()
         super().__init__()
         self.alias = alias
+
+        try:
+            import pymilvus
+        except ImportError as e:
+            raise ImportError(
+                "Milvus is not installed. Please install it with `pip install chonkie[milvus]`.",
+            ) from e
 
         # 1. Establish connection using the ORM's global connection manager
         if client is not None:
             self.client = client
         else:
-            self.client = MilvusClient(uri=uri, host=host, port=port, user=user, password=api_key, alias=alias, **kwargs) # type: ignore
+            self.client = pymilvus.MilvusClient(
+                uri=uri,
+                host=host,
+                port=port,
+                user=user,
+                password=api_key,
+                alias=alias,
+                **kwargs,
+            )
         # Always connect using ORM before any collection operations
         try:
-            connections.connect(uri=uri, host=host, port=port, user=user, password=api_key, alias=alias, **kwargs) # type: ignore
+            pymilvus.connections.connect(
+                uri=uri,
+                host=host,
+                port=port,
+                user=user,
+                password=api_key,
+                alias=alias,
+                **kwargs,
+            )
         except Exception as e:
             logger.warning(f"Could not connect with ORM connections: {e}")
         # 3. Initialize the embedding model
@@ -102,7 +116,7 @@ class MilvusHandshake(BaseHandshake):
             while True:
                 self.collection_name = generate_random_collection_name(sep="_")
                 # Pass alias explicitly to utility.has_collection
-                if not self.client.has_collection(self.collection_name): # type: ignore
+                if not self.client.has_collection(self.collection_name):
                     break
         else:
             self.collection_name = collection_name
@@ -111,46 +125,29 @@ class MilvusHandshake(BaseHandshake):
         if not self.client.has_collection(self.collection_name):
             self._create_collection_with_schema()
 
-        self.collection = Collection(self.collection_name) # type: ignore
+        self.collection = pymilvus.Collection(self.collection_name)
         self.collection.load()
 
-    def _import_dependencies(self) -> None:
-        """Lazy import the dependencies."""
-        if self._is_available():
-            global Collection, CollectionSchema, DataType, FieldSchema, connections, utility, ConnectionNotExistException, MilvusClient
-            from pymilvus import (
-                Collection,
-                CollectionSchema,
-                DataType,
-                FieldSchema,
-                MilvusClient,
-                connections,
-                utility,
-            )
-            from pymilvus.exceptions import ConnectionNotExistException
-        else:
-            raise ImportError(
-                "Milvus is not installed. "
-                + "Please install it with `pip install chonkie[milvus]`."
-            )
-
-    def _is_available(self) -> bool:
+    @classmethod
+    def _is_available(cls) -> bool:
         """Check if the dependencies are installed."""
         return importlib.util.find_spec("pymilvus") is not None
 
     def _create_collection_with_schema(self) -> None:
         """Create a new collection with a predefined schema and index."""
         # Define fields: pk, text, metadata, and the vector embedding
+        from pymilvus import Collection, CollectionSchema, DataType, FieldSchema
+
         fields = [
-            FieldSchema(name="pk", dtype=DataType.INT64, is_primary=True, auto_id=True), # type: ignore
-            FieldSchema(name="text", dtype=DataType.VARCHAR, max_length=65_535), # type: ignore
-            FieldSchema(name="start_index", dtype=DataType.INT64), # type: ignore
-            FieldSchema(name="end_index", dtype=DataType.INT64), # type: ignore
-            FieldSchema(name="token_count", dtype=DataType.INT64), # type: ignore
-            FieldSchema(name="embedding", dtype=DataType.FLOAT_VECTOR, dim=self.dimension), # type: ignore
+            FieldSchema(name="pk", dtype=DataType.INT64, is_primary=True, auto_id=True),
+            FieldSchema(name="text", dtype=DataType.VARCHAR, max_length=65_535),
+            FieldSchema(name="start_index", dtype=DataType.INT64),
+            FieldSchema(name="end_index", dtype=DataType.INT64),
+            FieldSchema(name="token_count", dtype=DataType.INT64),
+            FieldSchema(name="embedding", dtype=DataType.FLOAT_VECTOR, dim=self.dimension),
         ]
-        schema = CollectionSchema(fields, description="Chonkie Handshake Collection") # type: ignore
-        collection = Collection(self.collection_name, schema) # type: ignore
+        schema = CollectionSchema(fields, description="Chonkie Handshake Collection")
+        collection = Collection(self.collection_name, schema)
         logger.info(f"Chonkie created a new collection in Milvus: {self.collection_name}")
 
         # Create a default index for the vector field
@@ -177,9 +174,11 @@ class MilvusHandshake(BaseHandshake):
         data_to_insert = [texts, start_indices, end_indices, token_counts, embeddings]
 
         mutation_result = self.collection.insert(data_to_insert)
-        self.collection.flush() # Essential to make data searchable
+        self.collection.flush()  # Essential to make data searchable
 
-        logger.info(f"Chonkie wrote {mutation_result.insert_count} chunks to Milvus collection: {self.collection_name}")
+        logger.info(
+            f"Chonkie wrote {mutation_result.insert_count} chunks to Milvus collection: {self.collection_name}",
+        )
 
     def __repr__(self) -> str:
         """Return the string representation of the MilvusHandshake."""
@@ -207,7 +206,7 @@ class MilvusHandshake(BaseHandshake):
             if embedding and len(embedding) > 0 and isinstance(embedding[0], float):
                 query_vectors = [embedding]
             else:
-                query_vectors = embedding # type: ignore
+                query_vectors = embedding  # type: ignore
 
         # Default search parameters for HNSW index
         search_params = {"metric_type": "L2", "params": {"ef": 64}}
@@ -227,7 +226,7 @@ class MilvusHandshake(BaseHandshake):
         for hit in results[0]:
             match_data = {
                 "id": hit.id,
-                "score": hit.distance, # Milvus uses 'distance', which is analogous to score
+                "score": hit.distance,  # Milvus uses 'distance', which is analogous to score
                 **hit.entity,
             }
             matches.append(match_data)

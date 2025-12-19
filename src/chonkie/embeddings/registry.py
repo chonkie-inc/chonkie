@@ -25,11 +25,7 @@ class EmbeddingsRegistry:
     type_registry: dict[str, type[BaseEmbeddings]] = {}
 
     @classmethod
-    def register_model(
-        cls,
-        name: str,
-        embedding_cls: type[BaseEmbeddings]
-    ) -> None:
+    def register_model(cls, name: str, embedding_cls: type[BaseEmbeddings]) -> None:
         """Register a new embeddings implementation.
 
         Args:
@@ -61,13 +57,9 @@ class EmbeddingsRegistry:
             raise ValueError(f"{embeddings_cls} must be a subclass of BaseEmbeddings")
 
         cls.provider_registry[alias] = embeddings_cls
-    
+
     @classmethod
-    def register_pattern(
-        cls,
-        pattern: str,
-        embeddings_cls: type[BaseEmbeddings]
-    ) -> None:
+    def register_pattern(cls, pattern: str, embeddings_cls: type[BaseEmbeddings]) -> None:
         """Register a new pattern."""
         if not issubclass(embeddings_cls, BaseEmbeddings):
             raise ValueError(f"{embeddings_cls} must be a subclass of BaseEmbeddings")
@@ -79,7 +71,7 @@ class EmbeddingsRegistry:
     def register_types(
         cls,
         types: Union[str, list[str]],
-        embeddings_cls: type[BaseEmbeddings]
+        embeddings_cls: type[BaseEmbeddings],
     ) -> None:
         """Register a new type."""
         if not issubclass(embeddings_cls, BaseEmbeddings):
@@ -129,7 +121,7 @@ class EmbeddingsRegistry:
         if identifier in cls.model_registry:
             return cls.model_registry[identifier]
 
-        # We couldn't match the model name and there's no provider alias mentioned either. 
+        # We couldn't match the model name and there's no provider alias mentioned either.
         # Let's try to get a match from the pattern registry
         for pattern, embeddings_cls in cls.pattern_registry.items():
             if pattern.match(identifier):
@@ -184,7 +176,7 @@ EmbeddingsRegistry.register_types(
 EmbeddingsRegistry.register_model("all-minilm-l6-v2", SentenceTransformerEmbeddings)
 EmbeddingsRegistry.register_model("all-mpnet-base-v2", SentenceTransformerEmbeddings)
 EmbeddingsRegistry.register_model("multi-qa-mpnet-base-dot-v1", SentenceTransformerEmbeddings)
-# TODO: Add all the other SentenceTranformer models here as well!
+# TODO: Add all the other SentenceTransformer models here as well!
 
 # Register OpenAI embeddings with pattern
 EmbeddingsRegistry.register_provider("openai", OpenAIEmbeddings)
@@ -198,11 +190,14 @@ EmbeddingsRegistry.register_provider("azure_openai", AzureOpenAIEmbeddings)
 
 # Register model2vec embeddings
 EmbeddingsRegistry.register_provider("model2vec", Model2VecEmbeddings)
-EmbeddingsRegistry.register_pattern(r"^minishlab/|^minishlab/potion-base-|^minishlab/potion-|^potion-", Model2VecEmbeddings)
+EmbeddingsRegistry.register_pattern(
+    r"^minishlab/|^minishlab/potion-base-|^minishlab/potion-|^potion-",
+    Model2VecEmbeddings,
+)
 EmbeddingsRegistry.register_types("Model2Vec", Model2VecEmbeddings)
 
 # Register Cohere embeddings with pattern
-EmbeddingsRegistry.register_provider("cohere", CohereEmbeddings)    
+EmbeddingsRegistry.register_provider("cohere", CohereEmbeddings)
 EmbeddingsRegistry.register_pattern(r"^cohere|^embed-", CohereEmbeddings)
 EmbeddingsRegistry.register_model("embed-english-v3.0", CohereEmbeddings)
 EmbeddingsRegistry.register_model("embed-english-light-v3.0", CohereEmbeddings)
@@ -235,7 +230,10 @@ EmbeddingsRegistry.register_model("voyage-code-2", CatsuEmbeddings)
 
 # Register Gemini embeddings
 EmbeddingsRegistry.register_provider("gemini", GeminiEmbeddings)
-EmbeddingsRegistry.register_pattern(r"^text-embedding-004|^embedding-001|^gemini-embedding", GeminiEmbeddings)
+EmbeddingsRegistry.register_pattern(
+    r"^text-embedding-004|^embedding-001|^gemini-embedding",
+    GeminiEmbeddings,
+)
 EmbeddingsRegistry.register_model("text-embedding-004", GeminiEmbeddings)
 EmbeddingsRegistry.register_model("embedding-001", GeminiEmbeddings)
 EmbeddingsRegistry.register_model("gemini-embedding-exp-03-07", GeminiEmbeddings)

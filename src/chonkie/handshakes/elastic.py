@@ -1,13 +1,7 @@
 """Elasticsearch Handshake to export Chonkie's Chunks into an Elasticsearch index."""
 
-import importlib.util
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Literal,
-    Optional,
-    Union,
-)
+import importlib.util as importutil
+from typing import TYPE_CHECKING, Any, Literal, Optional, Union
 from uuid import NAMESPACE_OID, uuid5
 
 from chonkie.embeddings import AutoEmbeddings, BaseEmbeddings
@@ -22,7 +16,6 @@ logger = get_logger(__name__)
 
 if TYPE_CHECKING:
     from elasticsearch import Elasticsearch
-    from elasticsearch.helpers import bulk
 
 
 @handshake("elastic")
@@ -55,18 +48,25 @@ class ElasticHandshake(BaseHandshake):
     ) -> None:
         """Initialize the Elasticsearch Handshake."""
         super().__init__()
-        self._import_dependencies()
+
+        try:
+            from elasticsearch import Elasticsearch
+        except ImportError as ie:
+            raise ImportError(
+                "Elasticsearch is not installed. "
+                "Please install it with `pip install chonkie[elastic]`.",
+            ) from ie
 
         # 1. Initialize the Elasticsearch client
         if client:
             self.client = client
         elif cloud_id and api_key:
-            self.client = Elasticsearch(cloud_id=cloud_id, api_key=api_key, **kwargs) # type: ignore
+            self.client = Elasticsearch(cloud_id=cloud_id, api_key=api_key, **kwargs)  # type: ignore[arg-type]
         elif hosts:
-            self.client = Elasticsearch(hosts=hosts, api_key=api_key, **kwargs) # type: ignore
+            self.client = Elasticsearch(hosts=hosts, api_key=api_key, **kwargs)  # type: ignore[arg-type]
         else:
             # Default to a standard local client if no other connection info is provided
-            self.client = Elasticsearch("http://localhost:9200", **kwargs) # type: ignore
+            self.client = Elasticsearch("http://localhost:9200", **kwargs)  # type: ignore[arg-type]
 
         # 2. Initialize the embedding model
         if isinstance(embedding_model, str):
@@ -94,26 +94,15 @@ class ElasticHandshake(BaseHandshake):
                     "start_index": {"type": "integer"},
                     "end_index": {"type": "integer"},
                     "token_count": {"type": "integer"},
-                }
+                },
             }
             self.client.indices.create(index=self.index_name, mappings=mapping)
             logger.info(f"Index '{self.index_name}' created with vector mapping.")
 
-    def _is_available(self) -> bool:
+    @classmethod
+    def _is_available(cls) -> bool:
         """Check if the dependencies are installed."""
-        return importlib.util.find_spec("elasticsearch") is not None
-
-    def _import_dependencies(self) -> None:
-        """Lazy import the dependencies."""
-        if self._is_available():
-            global Elasticsearch, bulk
-            from elasticsearch import Elasticsearch
-            from elasticsearch.helpers import bulk
-        else:
-            raise ImportError(
-                "Elasticsearch is not installed. "
-                + "Please install it with `pip install chonkie[elastic]`."
-            )
+        return importutil.find_spec("elasticsearch") is not None
 
     def _generate_id(self, index: int, chunk: Chunk) -> str:
         """Generate a unique id for the chunk."""
@@ -147,13 +136,15 @@ class ElasticHandshake(BaseHandshake):
         actions = self._create_bulk_actions(chunks)
 
         # Use the bulk helper to efficiently write the documents
+        from elasticsearch.helpers import bulk
+
         success, errors = bulk(self.client, actions, raise_on_error=False)
 
         if errors:
-            logger.warning(f"Encountered {len(errors)} errors during bulk indexing.") # type: ignore
+            logger.warning(f"Encountered {len(errors)} errors during bulk indexing.")  # type: ignore
             # Optionally log the first few errors for debugging
-            for i, error in enumerate(errors[:5]): # type: ignore
-                logger.error(f"Error {i+1}: {error}")
+            for i, error in enumerate(errors[:5]):  # type: ignore
+                logger.error(f"Error {i + 1}: {error}")
 
         logger.info(f"Chonkie wrote {success} chunks to Elasticsearch index: {self.index_name}")
 

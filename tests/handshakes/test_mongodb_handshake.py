@@ -10,6 +10,7 @@ from chonkie.types import Chunk
 # Try to import pymongo, skip tests if unavailable
 try:
     import pymongo
+
     pymongo_available = True
     from chonkie.handshakes.mongodb import MongoDBHandshake
 except ImportError:
@@ -20,17 +21,13 @@ except ImportError:
 DEFAULT_EMBEDDING_MODEL = "minishlab/potion-retrieval-32M"
 
 # Skip all tests in this module if pymongo is not installed
-pytestmark = pytest.mark.skipif(
-    not pymongo_available, reason="pymongo not installed"
-)
+pytestmark = pytest.mark.skipif(not pymongo_available, reason="pymongo not installed")
 
 
 @pytest.fixture(autouse=True)
 def mock_embeddings():
     """Mock AutoEmbeddings to avoid downloading models in CI."""
-    with patch(
-        "chonkie.embeddings.AutoEmbeddings.get_embeddings"
-    ) as mock_get_embeddings:
+    with patch("chonkie.embeddings.AutoEmbeddings.get_embeddings") as mock_get_embeddings:
 
         class MockEmbeddings(BaseEmbeddings):
             def __init__(self):
@@ -50,7 +47,8 @@ def mock_embeddings():
             def get_tokenizer(self):
                 return lambda x: len(x.split())
 
-            def _is_available(self):
+            @classmethod
+            def _is_available(cls):
                 return True
 
         mock_embedding = MockEmbeddings()
@@ -61,9 +59,7 @@ def mock_embeddings():
 @pytest.fixture
 def sample_chunk():
     """Fixture for a sample chunk."""
-    return Chunk(
-        text="This is a test chunk.", start_index=0, end_index=22, token_count=5
-    )
+    return Chunk(text="This is a test chunk.", start_index=0, end_index=22, token_count=5)
 
 
 @pytest.fixture
@@ -148,9 +144,7 @@ def test_generate_id(sample_chunk):
             pytest.fail(f"Generated ID '{generated_id}' is not a valid UUID.")
         assert handshake._generate_id(0, sample_chunk) == generated_id
         assert handshake._generate_id(1, sample_chunk) != generated_id
-        diff_chunk = Chunk(
-            text="Different text", start_index=0, end_index=14, token_count=2
-        )
+        diff_chunk = Chunk(text="Different text", start_index=0, end_index=14, token_count=2)
         assert handshake._generate_id(0, diff_chunk) != generated_id
 
 

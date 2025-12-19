@@ -139,9 +139,13 @@ class LoggerAdapter(logging.LoggerAdapter):
     the 'extra' dict to preserve structured logging data.
     """
 
-    def process(self, msg: str, kwargs: MutableMapping[str, Any]) -> tuple[str, MutableMapping[str, Any]]:
+    def process(
+        self,
+        msg: str,
+        kwargs: MutableMapping[str, Any],
+    ) -> tuple[str, MutableMapping[str, Any]]:
         # Standard logging only supports: exc_info, stack_info, stacklevel, extra
-        valid_keys = {'exc_info', 'stack_info', 'stacklevel', 'extra'}
+        valid_keys = {"exc_info", "stack_info", "stacklevel", "extra"}
 
         # Separate valid kwargs from extra context data
         extra_data = {k: v for k, v in kwargs.items() if k not in valid_keys}
@@ -149,9 +153,9 @@ class LoggerAdapter(logging.LoggerAdapter):
 
         # Merge extra data into the 'extra' dict (preserving structured logging)
         if extra_data:
-            if 'extra' not in valid_kwargs:
-                valid_kwargs['extra'] = {}
-            valid_kwargs['extra'].update(extra_data)
+            if "extra" not in valid_kwargs:
+                valid_kwargs["extra"] = {}
+            valid_kwargs["extra"].update(extra_data)
 
         return msg, valid_kwargs
 

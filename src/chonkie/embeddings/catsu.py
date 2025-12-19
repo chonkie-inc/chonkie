@@ -87,9 +87,6 @@ class CatsuEmbeddings(BaseEmbeddings):
         """
         super().__init__()
 
-        # Lazy import Catsu
-        self._import_dependencies()
-
         # Store configuration
         self.model = model
         self.provider = provider
@@ -97,9 +94,15 @@ class CatsuEmbeddings(BaseEmbeddings):
         self._verbose = verbose
 
         # Initialize Catsu client
-        from catsu import Client
+        try:
+            import catsu
+        except ImportError as e:
+            raise ImportError(
+                "The catsu package is not available. "
+                'Please install it via `pip install "chonkie[catsu]"` or `pip install catsu`',
+            ) from e
 
-        self.client = Client(
+        self.client = catsu.Client(
             verbose=verbose,
             max_retries=max_retries,
             timeout=timeout,
@@ -115,8 +118,7 @@ class CatsuEmbeddings(BaseEmbeddings):
             self._load_model_info()
         except Exception as e:
             warnings.warn(
-                f"Could not load model info for {model}: {e}. "
-                "Will attempt to use model anyway."
+                f"Could not load model info for {model}: {e}. Will attempt to use model anyway.",
             )
 
     def _load_model_info(self) -> None:
@@ -132,7 +134,7 @@ class CatsuEmbeddings(BaseEmbeddings):
             if self._model_info is None and self._verbose:
                 warnings.warn(
                     f"Model '{self.model}' not found in Catsu catalog. "
-                    "Embedding may fail if model name is incorrect."
+                    "Embedding may fail if model name is incorrect.",
                 )
         except Exception as e:
             if self._verbose:
@@ -201,9 +203,7 @@ class CatsuEmbeddings(BaseEmbeddings):
             except Exception as e:
                 # If batch fails, try one by one (with Catsu's built-in retries)
                 if len(batch) > 1:
-                    warnings.warn(
-                        f"Batch embedding failed: {str(e)}. Trying one by one."
-                    )
+                    warnings.warn(f"Batch embedding failed: {str(e)}. Trying one by one.")
                     for text in batch:
                         individual_embedding = self.embed(text)
                         all_embeddings.append(individual_embedding)
@@ -235,7 +235,7 @@ class CatsuEmbeddings(BaseEmbeddings):
                     self._dimension = len(test_embedding)
                 except Exception as e:
                     raise RuntimeError(
-                        f"Could not determine embedding dimension for model {self.model}: {e}"
+                        f"Could not determine embedding dimension for model {self.model}: {e}",
                     )
 
         return self._dimension
@@ -261,7 +261,8 @@ class CatsuEmbeddings(BaseEmbeddings):
             provider=self.provider,
         )
 
-    def _is_available(self) -> bool:
+    @classmethod
+    def _is_available(cls) -> bool:
         """Check if the Catsu package is available.
 
         Returns:
@@ -269,20 +270,6 @@ class CatsuEmbeddings(BaseEmbeddings):
 
         """
         return importutil.find_spec("catsu") is not None
-
-    def _import_dependencies(self) -> None:
-        """Lazy import Catsu dependencies.
-
-        Raises:
-            ImportError: If catsu package is not installed
-
-        """
-        if not self._is_available():
-            raise ImportError(
-                'The catsu package is not available. '
-                'Please install it via `pip install "chonkie[catsu]"` '
-                'or `pip install catsu`'
-            )
 
     def __repr__(self) -> str:
         """Return a string representation of the CatsuEmbeddings instance."""
@@ -357,8 +344,7 @@ class CatsuTokenizerWrapper:
         # Catsu doesn't expose token IDs for all providers
         # Return empty list as fallback
         warnings.warn(
-            "Token encoding not supported via Catsu. "
-            "Use count() for token counting instead."
+            "Token encoding not supported via Catsu. Use count() for token counting instead.",
         )
         return []
 

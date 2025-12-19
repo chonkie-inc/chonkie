@@ -1,6 +1,5 @@
 """Tests for Chonkie logging functionality."""
 
-
 import pytest
 
 from chonkie.logger import (

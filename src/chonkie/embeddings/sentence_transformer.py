@@ -25,9 +25,9 @@ class SentenceTransformerEmbeddings(BaseEmbeddings):
     """
 
     def __init__(
-        self, 
+        self,
         model: Union[str, "SentenceTransformer"] = "all-MiniLM-L6-v2",
-        **kwargs: Any
+        **kwargs: Any,
     ) -> None:
         """Initialize SentenceTransformerEmbeddings with a sentence-transformers model.
 
@@ -41,16 +41,21 @@ class SentenceTransformerEmbeddings(BaseEmbeddings):
 
         """
         super().__init__()
-
-        # Lazy import dependencies if they are not already imported
-        self._import_dependencies()
+        try:
+            from sentence_transformers import SentenceTransformer
+        except ImportError as ie:
+            raise ImportError(
+                "sentence_transformers is not available. Please install it via `pip install chonkie[st]`",
+            ) from ie
 
         if isinstance(model, str):
             self.model_name_or_path = model
             self.model = SentenceTransformer(self.model_name_or_path, **kwargs)
         elif isinstance(model, SentenceTransformer):
             self.model = model
-            self.model_name_or_path = getattr(self.model.model_card_data, 'base_model', None) or "unknown"
+            self.model_name_or_path = (
+                getattr(self.model.model_card_data, "base_model", None) or "unknown"
+            )
         else:
             raise ValueError("model must be a string or SentenceTransformer instance")
 
@@ -58,11 +63,11 @@ class SentenceTransformerEmbeddings(BaseEmbeddings):
 
     def embed(self, text: str) -> np.ndarray:
         """Embed a single text using the sentence-transformers model."""
-        return self.model.encode(text, convert_to_numpy=True)
+        return self.model.encode(text, convert_to_numpy=True)  # type: ignore[return-value]
 
     def embed_batch(self, texts: list[str]) -> list[np.ndarray]:
         """Embed multiple texts using the sentence-transformers model."""
-        return self.model.encode(texts, convert_to_numpy=True)  # type: ignore
+        return self.model.encode(texts, convert_to_numpy=True)  # type: ignore[return-value]
 
     def embed_as_tokens(self, text: str) -> np.ndarray:
         """Embed the text as tokens using the sentence-transformers model.
@@ -91,14 +96,14 @@ class SentenceTransformerEmbeddings(BaseEmbeddings):
         split_texts = [self.model.tokenizer.decode(split) for split in token_splits]
         # Get the token embeddings
         try:
-            token_embeddings_raw = self.model.encode(
-                split_texts, output_value="token_embeddings"
-            )
+            token_embeddings_raw = self.model.encode(split_texts, output_value="token_embeddings")
         except KeyError:
             # Fallback: use sentence embeddings for each split if token_embeddings not available
-            token_embeddings_raw = self.model.encode(split_texts, convert_to_numpy=True)
             # Ensure all fallback embeddings are np.ndarray before expanding dims
-            token_embeddings_raw = [np.expand_dims(np.array(emb), axis=0) for emb in token_embeddings_raw]  # type: ignore
+            token_embeddings_raw = [
+                np.expand_dims(np.array(emb), axis=0)  # type: ignore
+                for emb in self.model.encode(split_texts, convert_to_numpy=True)
+            ]
 
         # Ensure all embeddings are numpy arrays
         token_embeddings: list[np.ndarray] = []
@@ -160,21 +165,6 @@ class SentenceTransformerEmbeddings(BaseEmbeddings):
     def _is_available(cls) -> bool:
         """Check if sentence-transformers is available."""
         return importutil.find_spec("sentence_transformers") is not None
-
-    @classmethod
-    def _import_dependencies(cls) -> None:
-        """Lazy import dependencies for the embeddings implementation.
-
-        This method should be implemented by all embeddings implementations that require
-        additional dependencies. It lazily imports the dependencies only when they are needed.
-        """
-        if cls._is_available():
-            global SentenceTransformer
-            from sentence_transformers import SentenceTransformer
-        else:
-            raise ImportError(
-                "sentence_transformers is not available. Please install it via `pip install chonkie[st]`"
-            )
 
     def __repr__(self) -> str:
         """Representation of the SentenceTransformerEmbeddings instance."""

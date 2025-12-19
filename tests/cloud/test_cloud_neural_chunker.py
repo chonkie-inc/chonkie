@@ -12,12 +12,13 @@ from chonkie.types import Chunk
 @pytest.fixture
 def mock_requests_get_success(monkeypatch: pytest.MonkeyPatch) -> None:
     """Mock requests.get to return a successful response."""
+
     class MockResponse:
         def __init__(self, status_code: int):
             self.status_code = status_code
 
         def json(self) -> dict:
-            return {} # Or some other relevant JSON if needed
+            return {}  # Or some other relevant JSON if needed
 
     def mock_get(*args: Any, **kwargs: Any) -> MockResponse:
         return MockResponse(200)
@@ -28,6 +29,7 @@ def mock_requests_get_success(monkeypatch: pytest.MonkeyPatch) -> None:
 @pytest.fixture
 def mock_requests_post_success(monkeypatch: pytest.MonkeyPatch) -> None:
     """Mock requests.post to return a successful response with dummy chunk data."""
+
     class MockResponse:
         def __init__(self, status_code: int, json_data: list[dict[str, Any]]):
             self.status_code = status_code
@@ -41,13 +43,17 @@ def mock_requests_post_success(monkeypatch: pytest.MonkeyPatch) -> None:
         {"text": "chunk1", "start_index": 0, "end_index": 6, "token_count": 1},
         {"text": "chunk2", "start_index": 7, "end_index": 13, "token_count": 1},
     ]
+
     def mock_post(*args: Any, **kwargs: Any) -> MockResponse:
         return MockResponse(200, dummy_chunks)
 
     monkeypatch.setattr(requests, "post", mock_post)
 
 
-def test_cloud_neural_chunker_initialization(mock_requests_get_success: Any, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_cloud_neural_chunker_initialization(
+    mock_requests_get_success: Any,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """Test that the neural chunker can be initialized."""
     # Set up mock environment
     mock_api_key = "mock-api-key"
@@ -97,7 +103,7 @@ def test_cloud_neural_chunker_initialization_api_down(monkeypatch: pytest.Monkey
             return {"error": "Service unavailable"}
 
     def mock_get_api_down(*args: Any, **kwargs: Any) -> MockResponse:
-        return MockResponse(500) # Simulate API being down
+        return MockResponse(500)  # Simulate API being down
 
     monkeypatch.setattr(requests, "get", mock_get_api_down)
 
@@ -106,7 +112,11 @@ def test_cloud_neural_chunker_initialization_api_down(monkeypatch: pytest.Monkey
         NeuralChunker()
 
 
-def test_cloud_neural_chunker_single_text(mock_requests_get_success: Any, mock_requests_post_success: Any, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_cloud_neural_chunker_single_text(
+    mock_requests_get_success: Any,
+    mock_requests_post_success: Any,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """Test that the Neural Chunker works with a single text."""
     monkeypatch.setenv("CHONKIE_API_KEY", "mock-api-key")
     chunker = NeuralChunker()
@@ -115,7 +125,7 @@ def test_cloud_neural_chunker_single_text(mock_requests_get_success: Any, mock_r
 
     assert isinstance(result, list)
     if result:
-        for chunk_dict in result: # API returns list[Dict] directly
+        for chunk_dict in result:  # API returns list[Dict] directly
             assert isinstance(chunk_dict, Chunk)
             assert isinstance(chunk_dict.text, str)
             assert isinstance(chunk_dict.start_index, int)
@@ -123,9 +133,13 @@ def test_cloud_neural_chunker_single_text(mock_requests_get_success: Any, mock_r
             assert isinstance(chunk_dict.token_count, int)
 
 
-def test_cloud_neural_chunker_batch_texts(mock_requests_get_success: Any, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_cloud_neural_chunker_batch_texts(
+    mock_requests_get_success: Any,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """Test that the Neural Chunker works with a batch of texts."""
     monkeypatch.setenv("CHONKIE_API_KEY", "mock-api-key")
+
     class MockResponse:
         def __init__(self, status_code: int, json_data: list[dict[str, Any]]):
             self.status_code = status_code
@@ -162,15 +176,19 @@ def test_cloud_neural_chunker_batch_texts(mock_requests_get_success: Any, monkey
         assert isinstance(chunk_obj_list, list)
         for j, chunk_obj in enumerate(chunk_obj_list):
             assert isinstance(chunk_obj, Chunk)
-            assert chunk_obj.text == custom_chunks[i][j]['text']
-            assert chunk_obj.start_index == custom_chunks[i][j]['start_index']
-            assert chunk_obj.end_index == custom_chunks[i][j]['end_index']
-            assert chunk_obj.token_count == custom_chunks[i][j]['token_count']
+            assert chunk_obj.text == custom_chunks[i][j]["text"]
+            assert chunk_obj.start_index == custom_chunks[i][j]["start_index"]
+            assert chunk_obj.end_index == custom_chunks[i][j]["end_index"]
+            assert chunk_obj.token_count == custom_chunks[i][j]["token_count"]
 
 
-def test_cloud_neural_chunker_empty_text(mock_requests_get_success: Any, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_cloud_neural_chunker_empty_text(
+    mock_requests_get_success: Any,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """Test that the Neural Chunker works with an empty text."""
     monkeypatch.setenv("CHONKIE_API_KEY", "mock-api-key")
+
     class MockResponse:
         def __init__(self, status_code: int, json_data: list[dict[str, Any]]):
             self.status_code = status_code
@@ -182,38 +200,44 @@ def test_cloud_neural_chunker_empty_text(mock_requests_get_success: Any, monkeyp
     # Mock post to return an empty list for empty text
     def mock_post_empty_result(*args: Any, **kwargs: Any) -> MockResponse:
         payload: dict[str, Any] = kwargs.get("json", {})
-        if payload.get("text") == "": # Assuming this simplified check is intended for the mock
-            return MockResponse(200, []) # API should return empty list for empty string
+        if payload.get("text") == "":  # Assuming this simplified check is intended for the mock
+            return MockResponse(200, [])  # API should return empty list for empty string
         # Fallback to a default non-empty response if needed for other calls in the same test scope
-        return MockResponse(200, [{"text": "default", "start_index": 0, "end_index": 7, "token_count": 1}])
-
+        return MockResponse(
+            200,
+            [{"text": "default", "start_index": 0, "end_index": 7, "token_count": 1}],
+        )
 
     monkeypatch.setattr(requests, "post", mock_post_empty_result)
-    
+
     chunker = NeuralChunker()
     result = chunker("")
     assert isinstance(result, list)
     assert len(result) == 0
 
 
-def test_cloud_neural_chunker_api_error_on_chunk(mock_requests_get_success: None, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_cloud_neural_chunker_api_error_on_chunk(
+    mock_requests_get_success: None,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """Test NeuralChunker's chunk method when the API returns an error."""
     monkeypatch.setenv("CHONKIE_API_KEY", "mock-api-key")
+
     class MockResponse:
         def __init__(self, status_code: int, content: str = "Error content"):
             self.status_code = status_code
-            self.content = content # Store content for error messages
+            self.content = content  # Store content for error messages
 
-        def json(self) -> list[dict[str, Any]]: # Typehinted to what the caller expects
+        def json(self) -> list[dict[str, Any]]:  # Typehinted to what the caller expects
             raise requests.exceptions.JSONDecodeError("Mock JSON decode error", "doc", 0)
 
     def mock_post_api_error(*args: Any, **kwargs: Any) -> MockResponse:
         # Simulate an API error (e.g., 500 internal server error or 400 bad request)
         # For this test, we'll focus on the JSON decode error.
-        return MockResponse(200) # Status code might be 200 but content is bad
+        return MockResponse(200)  # Status code might be 200 but content is bad
 
     monkeypatch.setattr(requests, "post", mock_post_api_error)
-    
+
     chunker = NeuralChunker()
     with pytest.raises(ValueError, match="Oh no! The Chonkie API returned an invalid response"):
         chunker("Some text to chunk")

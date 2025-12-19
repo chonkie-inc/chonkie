@@ -10,8 +10,7 @@ import numpy as np
 from .base import BaseEmbeddings
 
 if TYPE_CHECKING:
-    import tiktoken
-    from openai import AzureOpenAI
+    from tiktoken import Encoding
 
 
 class AzureOpenAIEmbeddings(BaseEmbeddings):
@@ -77,14 +76,20 @@ class AzureOpenAIEmbeddings(BaseEmbeddings):
         if not azure_endpoint:
             raise ValueError(
                 "`azure_endpoint` is required for Azure OpenAI. "
-                "Provide it as a parameter or set the AZURE_OPENAI_ENDPOINT environment variable."
+                "Provide it as a parameter or set the AZURE_OPENAI_ENDPOINT environment variable.",
             )
 
         # Get azure_api_key from env var if not provided
         if azure_api_key is None:
             azure_api_key = os.getenv("AZURE_OPENAI_API_KEY")
 
-        self._import_dependencies()
+        try:
+            import tiktoken
+            from openai import AzureOpenAI
+        except ImportError as ie:
+            raise ImportError(
+                "Required packages not found. Install with `pip install chonkie[azure-openai]`.",
+            ) from ie
 
         self.model = model
         self._deployment = deployment or model
@@ -105,7 +110,8 @@ class AzureOpenAIEmbeddings(BaseEmbeddings):
             from azure.identity import DefaultAzureCredential, get_bearer_token_provider
 
             token_provider = get_bearer_token_provider(
-                DefaultAzureCredential(), "https://cognitiveservices.azure.com/.default"
+                DefaultAzureCredential(),
+                "https://cognitiveservices.azure.com/.default",
             )
             self.client = AzureOpenAI(  # type: ignore
                 azure_endpoint=azure_endpoint,
@@ -120,7 +126,9 @@ class AzureOpenAIEmbeddings(BaseEmbeddings):
         if tokenizer is not None:
             self._tokenizer = tokenizer
         elif model in self.AVAILABLE_MODELS:
-            self._tokenizer = tiktoken.encoding_for_model(model)  # type: ignore
+            import tiktoken
+
+            self._tokenizer = tiktoken.encoding_for_model(model)
         else:
             raise ValueError(f"Tokenizer not available for model '{model}'.")
 
@@ -155,15 +163,11 @@ class AzureOpenAIEmbeddings(BaseEmbeddings):
                     input=batch,
                 )
                 sorted_embeddings = sorted(response.data, key=lambda x: x.index)
-                embeddings = [
-                    np.array(e.embedding, dtype=np.float32) for e in sorted_embeddings
-                ]
+                embeddings = [np.array(e.embedding, dtype=np.float32) for e in sorted_embeddings]
                 all_embeddings.extend(embeddings)
             except Exception as e:
                 if len(batch) > 1:
-                    warnings.warn(
-                        f"Batch failed: {e}. Falling back to single embedding calls."
-                    )
+                    warnings.warn(f"Batch failed: {e}. Falling back to single embedding calls.")
                     all_embeddings.extend(self.embed(t) for t in batch)
                 else:
                     raise
@@ -178,32 +182,18 @@ class AzureOpenAIEmbeddings(BaseEmbeddings):
         """Return the embedding dimension."""
         return self._dimension
 
-    def get_tokenizer(self) -> "tiktoken.Encoding":
+    def get_tokenizer(self) -> "Encoding":
         """Return a tiktoken tokenizer object."""
-        return self._tokenizer  # type: ignore
+        return self._tokenizer
 
-    def _is_available(self) -> bool:
+    @classmethod
+    def _is_available(cls) -> bool:
         """Check if the required dependencies are available."""
         return (
             importutil.find_spec("openai") is not None
             and importutil.find_spec("tiktoken") is not None
             and importutil.find_spec("azure.identity") is not None
         )
-
-    def _import_dependencies(self) -> None:
-        """Lazy import dependencies for the embeddings implementation.
-
-        This method should be implemented by all embeddings implementations that require
-        additional dependencies. It lazily imports the dependencies only when they are needed.
-        """
-        if self._is_available():
-            global tiktoken, AzureOpenAI
-            import tiktoken
-            from openai import AzureOpenAI
-        else:
-            raise ImportError(
-                "Required packages not found. Install with `pip install chonkie[azure-openai]`."
-            )
 
     def __repr__(self) -> str:
         """Representation of the AzureOpenAIEmbeddings instance."""

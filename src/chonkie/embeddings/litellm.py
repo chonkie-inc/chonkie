@@ -2,15 +2,11 @@
 
 import importlib.util as importutil
 import warnings
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 
 from .base import BaseEmbeddings
-
-if TYPE_CHECKING:
-    import litellm
-    import tiktoken
 
 
 class LiteLLMEmbeddings(BaseEmbeddings):
@@ -94,8 +90,12 @@ class LiteLLMEmbeddings(BaseEmbeddings):
         """
         super().__init__()
 
-        # Lazy import dependencies
-        self._import_dependencies()
+        try:
+            import litellm
+        except ImportError as ie:
+            raise ImportError(
+                'litellm package is not available. Please install it via `pip install "chonkie[litellm]"`',
+            ) from ie
 
         # Store configuration
         self.model = model
@@ -107,7 +107,7 @@ class LiteLLMEmbeddings(BaseEmbeddings):
         self._extra_kwargs = kwargs
 
         # Configure LiteLLM settings
-        litellm.set_verbose = False  # type: ignore
+        litellm.set_verbose = False
 
         # Determine dimension
         if dimension is not None:
@@ -147,6 +147,8 @@ class LiteLLMEmbeddings(BaseEmbeddings):
             Any: Tokenizer object (provider-specific)
 
         """
+        import tiktoken
+
         # Extract provider from model name
         provider = self._get_provider()
 
@@ -155,28 +157,29 @@ class LiteLLMEmbeddings(BaseEmbeddings):
             if provider in ("openai", None):
                 # Extract base model name
                 base_model = self.model.split("/")[-1]
-                return tiktoken.encoding_for_model(base_model)  # type: ignore
+                return tiktoken.encoding_for_model(base_model)
 
             # For VoyageAI, try to load their tokenizer
             elif provider == "voyage":
                 try:
                     from tokenizers import Tokenizer
+
                     model_name = self.model.split("/")[-1]
                     return Tokenizer.from_pretrained(f"voyageai/{model_name}")
                 except Exception:
                     # Fallback to cl100k_base for token estimation
-                    return tiktoken.get_encoding("cl100k_base")  # type: ignore
+                    return tiktoken.get_encoding("cl100k_base")
 
             # For other providers, use cl100k_base as fallback
             else:
-                return tiktoken.get_encoding("cl100k_base")  # type: ignore
+                return tiktoken.get_encoding("cl100k_base")
 
         except Exception as e:
             warnings.warn(
                 f"Failed to initialize tokenizer: {e}. Using cl100k_base fallback.",
                 UserWarning,
             )
-            return tiktoken.get_encoding("cl100k_base")  # type: ignore
+            return tiktoken.get_encoding("cl100k_base")
 
     def _get_provider(self) -> Optional[str]:
         """Extract provider name from model string.
@@ -225,9 +228,11 @@ class LiteLLMEmbeddings(BaseEmbeddings):
             RuntimeError: If the API call fails after retries
 
         """
+        import litellm
+
         try:
             kwargs = self._prepare_api_call_kwargs()
-            response = litellm.embedding(  # type: ignore
+            response = litellm.embedding(
                 input=[text],
                 **kwargs,
             )
@@ -255,6 +260,8 @@ class LiteLLMEmbeddings(BaseEmbeddings):
         if not texts:
             return []
 
+        import litellm
+
         all_embeddings = []
 
         # Process in batches
@@ -262,7 +269,7 @@ class LiteLLMEmbeddings(BaseEmbeddings):
             batch = texts[i : i + self._batch_size]
             try:
                 kwargs = self._prepare_api_call_kwargs()
-                response = litellm.embedding(  # type: ignore
+                response = litellm.embedding(
                     input=batch,
                     **kwargs,
                 )
@@ -270,23 +277,18 @@ class LiteLLMEmbeddings(BaseEmbeddings):
                 # Extract embeddings and sort by index
                 sorted_data = sorted(response.data, key=lambda x: x["index"])
                 embeddings = [
-                    np.array(item["embedding"], dtype=np.float32)
-                    for item in sorted_data
+                    np.array(item["embedding"], dtype=np.float32) for item in sorted_data
                 ]
                 all_embeddings.extend(embeddings)
 
             except Exception as e:
                 # If the batch fails, try one by one
                 if len(batch) > 1:
-                    warnings.warn(
-                        f"Batch embedding failed: {str(e)}. Trying one by one."
-                    )
+                    warnings.warn(f"Batch embedding failed: {str(e)}. Trying one by one.")
                     individual_embeddings = [self.embed(text) for text in batch]
                     all_embeddings.extend(individual_embeddings)
                 else:
-                    raise RuntimeError(
-                        f"LiteLLM API error during embedding: {e}"
-                    ) from e
+                    raise RuntimeError(f"LiteLLM API error during embedding: {e}") from e
 
         return all_embeddings
 
@@ -301,9 +303,7 @@ class LiteLLMEmbeddings(BaseEmbeddings):
             np.float32: Cosine similarity score
 
         """
-        return np.float32(
-            np.divide(np.dot(u, v), np.linalg.norm(u) * np.linalg.norm(v))
-        )
+        return np.float32(np.divide(np.dot(u, v), np.linalg.norm(u) * np.linalg.norm(v)))
 
     @property
     def dimension(self) -> int:
@@ -324,7 +324,8 @@ class LiteLLMEmbeddings(BaseEmbeddings):
         """
         return self._tokenizer
 
-    def _is_available(self) -> bool:
+    @classmethod
+    def _is_available(cls) -> bool:
         """Check if the litellm package is available.
 
         Returns:
@@ -332,30 +333,6 @@ class LiteLLMEmbeddings(BaseEmbeddings):
 
         """
         return importutil.find_spec("litellm") is not None
-
-    def _import_dependencies(self) -> None:
-        """Lazy import dependencies for the embeddings implementation.
-
-        Raises:
-            ImportError: If litellm package is not installed
-
-        """
-        if self._is_available():
-            global litellm, tiktoken
-            import litellm
-
-            # Try to import tiktoken for tokenizer support
-            try:
-                import tiktoken
-            except ImportError:
-                warnings.warn(
-                    "tiktoken not available. Tokenizer functionality will be limited.",
-                    UserWarning,
-                )
-        else:
-            raise ImportError(
-                'litellm package is not available. Please install it via `pip install "chonkie[litellm]"`'
-            )
 
     def __repr__(self) -> str:
         """Return string representation of the LiteLLMEmbeddings instance.

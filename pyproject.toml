@@ -105,7 +105,7 @@ litellm = ["litellm>=1.0.0", "tiktoken>=0.5.0", "tokenizers>=0.16.0"]
 # Optional dependencies for the friends
 chroma = ["chromadb>=1.0.0"]
 qdrant = ["qdrant-client>=1.0.0"]
-tpuf = ["turbopuffer[fast]>=0.2.0"]
+tpuf = ["turbopuffer~=1.0"]
 pgvector = ["vecs>=0.4.0"]
 weaviate = ["weaviate-client>=4.16.7"]
 datasets = ["datasets>=4.0.0"]
@@ -139,7 +139,7 @@ all = [
     "torch>=2.0.0, <3.0",
     "chromadb>=1.0.0",
     "qdrant-client>=1.0.0",
-    "turbopuffer[fast]>=0.2.0",
+    "turbopuffer~=1.0",
     "weaviate-client>=4.16.7",
     "azure-identity>=1.23.0",
     "pinecone",
@@ -167,6 +167,7 @@ dev = [
     "pandas",
     "tabulate",
     "openpyxl",
+    "uv>=0.9.18",
 ]
 
 [tool.pytest.ini_options]
@@ -211,6 +212,7 @@ name = "chonkie.chunker.c_extensions.savgol"
 sources = ["src/chonkie/chunker/c_extensions/savgol.pyx"]
 
 [tool.ruff]
+line-length = 99
 exclude = ["*.ipynb"]
 lint.select = ["F", "I", "D"]
 lint.ignore = ["D211", "D213", "D203"]
@@ -225,3 +227,25 @@ ignore_missing_imports = true
 no_implicit_optional = true
 check_untyped_defs = true
 show_error_codes = true
+
+[tool.uv]
+constraint-dependencies = [
+    # This pair of grpcio + protobuf is required by a check in weaviate.proto.v1
+    "grpcio>=1.72",
+    "protobuf>=6.30",
+]
+
+[tool.coverage.report]
+exclude_also = [
+    # Don't complain about missing debug-only code:
+    "def __repr__",
+    # Don't complain if tests don't hit defensive assertion code:
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:",
+    # Don't complain about abstract methods, they aren't run:
+    "@(abc\\.)?abstractmethod",
+    # Don't complain about import error guards:
+    "except ImportError.+",
+]

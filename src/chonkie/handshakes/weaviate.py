@@ -22,7 +22,7 @@ from .utils import generate_random_collection_name
 logger = get_logger(__name__)
 
 if TYPE_CHECKING:
-    import weaviate
+    from weaviate import WeaviateClient
 
 
 @handshake("weaviate")
@@ -33,7 +33,7 @@ class WeaviateHandshake(BaseHandshake):
     It supports both API key and OAuth authentication methods.
 
     Args:
-        client: Optional[weaviate.Client]: An existing Weaviate client instance.
+        client: Optional[weaviate.WeaviateClient]: An existing Weaviate client instance.
         collection_name: Union[str, Literal["random"]]: The name of the collection to use.
         embedding_model: Union[str, BaseEmbeddings]: The embedding model to use.
         url: Optional[str]: The URL to the Weaviate server.
@@ -48,7 +48,7 @@ class WeaviateHandshake(BaseHandshake):
 
     def __init__(
         self,
-        client: Optional[Any] = None,  # weaviate.Client
+        client: Optional["WeaviateClient"] = None,
         collection_name: Union[str, Literal["random"]] = "random",
         embedding_model: Union[str, BaseEmbeddings] = "minishlab/potion-retrieval-32M",
         url: Optional[str] = None,
@@ -84,8 +84,12 @@ class WeaviateHandshake(BaseHandshake):
         """
         super().__init__()
 
-        # Lazy importing the dependencies
-        self._import_dependencies()
+        try:
+            import weaviate
+        except ImportError as ie:
+            raise ImportError(
+                "Weaviate not available. Please install it with `pip install chonkie[weaviate]`."
+            ) from ie
 
         # Initialize the Weaviate client
         if client is None:
@@ -97,7 +101,7 @@ class WeaviateHandshake(BaseHandshake):
                 self.client = weaviate.connect_to_weaviate_cloud(
                     cluster_url=url,
                     auth_credentials=weaviate.auth.Auth.api_key(
-                        api_key if api_key is not None else ""
+                        api_key if api_key is not None else "",
                     ),
                 )
             except Exception:
@@ -115,7 +119,8 @@ class WeaviateHandshake(BaseHandshake):
                         "client_secret is required in auth_config"
                     )
                     auth_credentials = weaviate.auth.Auth.client_credentials(
-                        client_secret=auth_config.pop("client_secret"), **auth_config
+                        client_secret=auth_config.pop("client_secret"),
+                        **auth_config,
                     )
 
                 # Use provided grpc_host or default to HTTP host
@@ -140,9 +145,7 @@ class WeaviateHandshake(BaseHandshake):
         elif isinstance(embedding_model, BaseEmbeddings):
             self.embedding_model = embedding_model
         else:
-            raise ValueError(
-                "embedding_model must be a string or a BaseEmbeddings instance."
-            )
+            raise ValueError("embedding_model must be a string or a BaseEmbeddings instance.")
 
         # Determine vector dimensions
         if (
@@ -175,21 +178,14 @@ class WeaviateHandshake(BaseHandshake):
         if not self._collection_exists(self.collection_name):
             self._create_collection()
 
-    def _is_available(self) -> bool:
+    @classmethod
+    def _is_available(cls) -> bool:
         """Check if the dependencies are available."""
         return importutil.find_spec("weaviate") is not None
 
     def close(self) -> None:
         """Close."""
         self.client.close()
-
-    def _import_dependencies(self) -> None:
-        """Lazy import the dependencies."""
-        if self._is_available():
-            global weaviate
-            import weaviate
-        else:
-            raise ImportError("Please install it with `pip install chonkie[weaviate]`.")
 
     def _collection_exists(self, collection_name: str) -> bool:
         """Check if a collection exists in Weaviate.
@@ -261,9 +257,7 @@ class WeaviateHandshake(BaseHandshake):
             str: A unique ID for the chunk.
 
         """
-        return str(
-            uuid5(NAMESPACE_OID, f"{self.collection_name}::chunk-{index}:{chunk.text}")
-        )
+        return str(uuid5(NAMESPACE_OID, f"{self.collection_name}::chunk-{index}:{chunk.text}"))
 
     def _generate_properties(self, chunk: Chunk) -> dict[str, Any]:
         """Generate properties for the chunk.
@@ -313,16 +307,16 @@ class WeaviateHandshake(BaseHandshake):
         elif not isinstance(chunks, list):
             chunks = list(chunks)
 
-        logger.debug(f"Writing {len(chunks)} chunks to Weaviate collection: {self.collection_name}")
+        logger.debug(
+            f"Writing {len(chunks)} chunks to Weaviate collection: {self.collection_name}",
+        )
         # Get the collection
         collection = self.client.collections.get(self.collection_name)
 
         # Create a batch
         with collection.batch.fixed_size(batch_size=self.batch_size) as batch:
             chunk_ids = []
-            max_errors = min(
-                len(chunks) // 10 + 1, 10
-            )  # Allow up to 10% errors or max 10
+            max_errors = min(len(chunks) // 10 + 1, 10)  # Allow up to 10% errors or max 10
 
             for index, chunk in enumerate(chunks):
                 # Check if we've hit too many errors
@@ -347,9 +341,7 @@ class WeaviateHandshake(BaseHandshake):
                         vector = list(embedding)  # type: ignore[arg-type]
 
                     # Add to batch
-                    batch.add_object(
-                        properties=properties, uuid=chunk_id, vector=vector
-                    )
+                    batch.add_object(properties=properties, uuid=chunk_id, vector=vector)
 
                     chunk_ids.append(chunk_id)
                 except Exception as e:
@@ -368,7 +360,9 @@ class WeaviateHandshake(BaseHandshake):
 
         # Report success
         successful_chunks = len(chunk_ids)
-        logger.info(f"Chonkie wrote {successful_chunks} chunks to Weaviate collection: {self.collection_name}")
+        logger.info(
+            f"Chonkie wrote {successful_chunks} chunks to Weaviate collection: {self.collection_name}",
+        )
         if successful_chunks < len(chunks):
             logger.warning(f"{len(chunks) - successful_chunks} chunks failed to write")
 
@@ -415,9 +409,7 @@ class WeaviateHandshake(BaseHandshake):
                         else:
                             # If it's a Mock or other non-string, use the attribute name
                             # This works for test mocks like Mock(name="text")
-                            property_names.append(
-                                str(prop).split("name='")[1].split("'")[0]
-                            )
+                            property_names.append(str(prop).split("name='")[1].split("'")[0])
             except (AttributeError, TypeError, IndexError):
                 # Fallback to default properties if we can't get names
                 property_names = default_properties
@@ -454,17 +446,19 @@ class WeaviateHandshake(BaseHandshake):
             list[dict[str, Any]]: The list of most similar chunks with their metadata.
 
         """
+        from weaviate.classes.query import MetadataQuery
+
         logger.debug(f"Searching Weaviate collection: {self.collection_name} with limit={limit}")
         if embedding is None and query is None:
             raise ValueError("Either query or embedding must be provided")
         if query is not None:
-            embedding  = self.embedding_model.embed(query).tolist()
+            embedding = self.embedding_model.embed(query).tolist()
         collection = self.client.collections.get(self.collection_name)
         # Weaviate expects a vector for similarity search
         results = collection.query.near_vector(
-            near_vector=embedding, # type: ignore[arg-type] 
+            near_vector=embedding,  # type: ignore[arg-type]
             limit=limit,
-            return_metadata=weaviate.classes.query.MetadataQuery(distance=True),
+            return_metadata=MetadataQuery(distance=True),
         )
         # Format results to match other handshakes
         matches = []

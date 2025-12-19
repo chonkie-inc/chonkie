@@ -42,7 +42,7 @@ class RecursiveChunker(CloudChunker):
         if not self.api_key:
             raise ValueError(
                 "No API key provided. Please set the CHONKIE_API_KEY environment variable"
-                + "or pass an API key to the RecursiveChunker constructor."
+                + "or pass an API key to the RecursiveChunker constructor.",
             )
 
         # Check if the chunk size is valid
@@ -64,13 +64,17 @@ class RecursiveChunker(CloudChunker):
             raise ValueError(
                 "Oh no! You caught Chonkie at a bad time. It seems to be down right now."
                 + "Please try again in a short while."
-                + "If the issue persists, please contact support at support@chonkie.ai."
+                + "If the issue persists, please contact support at support@chonkie.ai.",
             )
 
         # Initialize the file manager to upload files if needed
         self.file_manager = FileManager(api_key=self.api_key)
 
-    def chunk(self, text: Optional[Union[str, list[str]]] = None, file: Optional[str] = None) -> Any:
+    def chunk(
+        self,
+        text: Optional[Union[str, list[str]]] = None,
+        file: Optional[str] = None,
+    ) -> Any:
         """Chunk the text or file into a list of chunks."""
         # Make the payload
         payload: dict[str, Any]
@@ -97,7 +101,9 @@ class RecursiveChunker(CloudChunker):
                 "lang": self.lang,
             }
         else:
-            raise ValueError("No text or file provided. Please provide either text or a file path.")
+            raise ValueError(
+                "No text or file provided. Please provide either text or a file path.",
+            )
         # Make the request to the Chonkie API
         response = requests.post(
             f"{self.BASE_URL}/{self.VERSION}/chunk/recursive",
@@ -124,9 +130,13 @@ class RecursiveChunker(CloudChunker):
             raise ValueError(
                 "Oh no! The Chonkie API returned an invalid response."
                 + "Please try again in a short while."
-                + "If the issue persists, please contact support at support@chonkie.ai."
+                + "If the issue persists, please contact support at support@chonkie.ai.",
             ) from error
 
-    def __call__(self, text: Optional[Union[str, list[str]]] = None, file: Optional[str] = None) -> Any:
+    def __call__(
+        self,
+        text: Optional[Union[str, list[str]]] = None,
+        file: Optional[str] = None,
+    ) -> Any:
         """Call the RecursiveChunker."""
         return self.chunk(text=text, file=file)

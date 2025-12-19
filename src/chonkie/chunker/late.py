@@ -31,7 +31,9 @@ class LateChunker(RecursiveChunker):
     def __init__(
         self,
         embedding_model: Union[
-            str, SentenceTransformerEmbeddings, Any
+            str,
+            SentenceTransformerEmbeddings,
+            Any,
         ] = "nomic-ai/modernbert-embed-base",
         chunk_size: int = 2048,
         rules: RecursiveRules = RecursiveRules(),
@@ -59,7 +61,7 @@ class LateChunker(RecursiveChunker):
         # Probably the dependency hasn't been installed
         if self.embedding_model is None:
             raise ImportError(
-                "Oh! seems like you're missing the proper dependency to run this chunker. Please install it using `pip install chonkie[st]`"
+                "Oh! seems like you're missing the proper dependency to run this chunker. Please install it using `pip install chonkie[st]`",
             )
 
         # Initialize the RecursiveChunker with the embedding_model's tokenizer
@@ -72,16 +74,21 @@ class LateChunker(RecursiveChunker):
 
         # Disable multiprocessing for this chunker
         self._use_multiprocessing = False
-    
+
     @classmethod
-    def from_recipe(cls,  # type: ignore[override]
-                    name: Optional[str] = "default", 
-                    lang: Optional[str] = "en", 
-                    path: Optional[str] = None, 
-                    embedding_model: Union[str, SentenceTransformerEmbeddings] = "sentence-transformers/all-MiniLM-L6-v2",
-                    chunk_size: int = 2048,
-                    min_characters_per_chunk: int = 24,
-                    **kwargs: Any) -> "LateChunker":
+    def from_recipe(  # type: ignore[override]
+        cls,
+        name: Optional[str] = "default",
+        lang: Optional[str] = "en",
+        path: Optional[str] = None,
+        embedding_model: Union[
+            str,
+            SentenceTransformerEmbeddings,
+        ] = "sentence-transformers/all-MiniLM-L6-v2",
+        chunk_size: int = 2048,
+        min_characters_per_chunk: int = 24,
+        **kwargs: Any,
+    ) -> "LateChunker":
         """Create a LateChunker from a recipe.
 
         Args:
@@ -94,7 +101,7 @@ class LateChunker(RecursiveChunker):
             **kwargs: Additional keyword arguments.
 
         Returns:
-            LateChunker: The created LateChunker.   
+            LateChunker: The created LateChunker.
 
         Raises:
             ValueError: If the recipe is invalid or if the recipe is not found.
@@ -109,11 +116,13 @@ class LateChunker(RecursiveChunker):
             chunk_size=chunk_size,
             rules=rules,
             min_characters_per_chunk=min_characters_per_chunk,
-            **kwargs
-        )   
-    
+            **kwargs,
+        )
+
     def _get_late_embeddings(
-        self, token_embeddings: np.ndarray, token_counts: list[int]
+        self,
+        token_embeddings: np.ndarray,
+        token_counts: list[int],
     ) -> list[np.ndarray]:
         # Split the token embeddings into chunks based on the token counts
         embs = []
@@ -123,7 +132,7 @@ class LateChunker(RecursiveChunker):
                 np.mean(
                     token_embeddings[cum_token_counts[i] : cum_token_counts[i + 1]],
                     axis=0,
-                )
+                ),
             )
         return embs
 
@@ -144,16 +153,12 @@ class LateChunker(RecursiveChunker):
         if token_embeddings.shape[0] < sum(token_counts):
             # Fallback: use sentence embeddings for each chunk
             # Re-embed each chunk as a sentence embedding
-            token_embeddings = np.array([
-                self.embedding_model.embed(c.text) for c in chunks
-            ])
+            token_embeddings = np.array([self.embedding_model.embed(c.text) for c in chunks])
             token_counts = [1 for _ in chunks]
 
         # Validate the token_counts with the actual count
         if sum(token_counts) > token_embeddings.shape[0]:
-            raise ValueError(
-                "The sum of token counts exceeds the number of tokens in the text"
-            )
+            raise ValueError("The sum of token counts exceeds the number of tokens in the text")
         if sum(token_counts) < token_embeddings.shape[0]:
             diff = token_embeddings.shape[0] - sum(token_counts)
             token_counts[0] = token_counts[0] + diff // 2
@@ -179,8 +184,7 @@ class LateChunker(RecursiveChunker):
                     end_index=chunk.end_index,  # type: ignore[attr-defined]
                     token_count=token_count,
                     embedding=embedding,
-                )
+                ),
             )
         logger.info(f"Created {len(result)} chunks with late interaction embeddings")
         return result
-
