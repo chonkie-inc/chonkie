@@ -1,7 +1,7 @@
 """Code Chunking for Chonkie API."""
 
 import os
-from typing import Any, Dict, List, Literal, Optional, Union, cast
+from typing import Any, Literal, Optional, Union, cast
 
 import requests
 
@@ -19,19 +19,19 @@ class CodeChunker(CloudChunker):
 
     def __init__(
         self,
-        tokenizer_or_token_counter: str = "gpt2",
+        tokenizer: str = "gpt2",
         chunk_size: int = 512,
         language: Union[Literal["auto"], str] = "auto",
         api_key: Optional[str] = None,
     ) -> None:
         """Initialize the Cloud CodeChunker.
-        
+
         Args:
-            tokenizer_or_token_counter: The tokenizer or token counter to use.
+            tokenizer: The tokenizer to use.
             chunk_size: The size of the chunks to create.
             language: The language of the code to parse. Accepts any of the languages supported by tree-sitter-language-pack.
             api_key: The API key for the Chonkie API.
-            
+
         Raises:
             ValueError: If the API key is not provided or if parameters are invalid.
 
@@ -41,7 +41,7 @@ class CodeChunker(CloudChunker):
         if not self.api_key:
             raise ValueError(
                 "No API key provided. Please set the CHONKIE_API_KEY environment variable"
-                + " or pass an API key to the CodeChunker constructor."
+                + " or pass an API key to the CodeChunker constructor.",
             )
 
         # Validate parameters
@@ -49,7 +49,7 @@ class CodeChunker(CloudChunker):
             raise ValueError("Chunk size must be greater than 0.")
 
         # Assign all the attributes to the instance
-        self.tokenizer_or_token_counter = tokenizer_or_token_counter
+        self.tokenizer = tokenizer
         self.chunk_size = chunk_size
         self.language = language
 
@@ -59,13 +59,17 @@ class CodeChunker(CloudChunker):
             raise ValueError(
                 "Oh no! You caught Chonkie at a bad time. It seems to be down right now."
                 + " Please try again in a short while."
-                + " If the issue persists, please contact support at support@chonkie.ai or raise an issue on GitHub."
+                + " If the issue persists, please contact support at support@chonkie.ai or raise an issue on GitHub.",
             )
 
         # Initialize the file manager to upload files if needed
         self.file_manager = FileManager(api_key=self.api_key)
 
-    def chunk(self, text: Optional[Union[str, List[str]]] = None, file: Optional[str] = None) -> Union[List[Chunk], List[List[Chunk]]]:
+    def chunk(
+        self,
+        text: Optional[Union[str, list[str]]] = None,
+        file: Optional[str] = None,
+    ) -> Union[list[Chunk], list[list[Chunk]]]:
         """Chunk the code into a list of chunks.
 
         Args:
@@ -80,14 +84,14 @@ class CodeChunker(CloudChunker):
 
         """
         # Define the payload for the request
-        payload: Dict[str, Any]
+        payload: dict[str, Any]
         if text is not None:
             payload = {
                 "text": text,
-                "tokenizer_or_token_counter": self.tokenizer_or_token_counter,
+                "tokenizer_or_token_counter": self.tokenizer,
                 "chunk_size": self.chunk_size,
                 "language": self.language,
-                "lang": self.language, # For backward compatibility
+                "lang": self.language,  # For backward compatibility
                 "include_nodes": False,  # API doesn't support tree-sitter nodes
             }
         elif file is not None:
@@ -97,33 +101,33 @@ class CodeChunker(CloudChunker):
                     "type": "document",
                     "content": file_response.name,
                 },
-                "tokenizer_or_token_counter": self.tokenizer_or_token_counter,
+                "tokenizer_or_token_counter": self.tokenizer,
                 "chunk_size": self.chunk_size,
                 "language": self.language,
-                "lang": self.language, # For backward compatibility
+                "lang": self.language,  # For backward compatibility
                 "include_nodes": False,  # API doesn't support tree-sitter nodes
             }
         else:
-            raise ValueError("No text or file provided. Please provide either text or a file path.")
-        
+            raise ValueError(
+                "No text or file provided. Please provide either text or a file path.",
+            )
+
         # Make the request to the Chonkie API
         response = requests.post(
             f"{self.BASE_URL}/{self.VERSION}/chunk/code",
             json=payload,
             headers={"Authorization": f"Bearer {self.api_key}"},
         )
-        
+
         # Check if the response is successful
         if response.status_code != 200:
-            raise ValueError(
-                f"Error from the Chonkie API: {response.status_code} {response.text}"
-            )
+            raise ValueError(f"Error from the Chonkie API: {response.status_code} {response.text}")
 
         # Parse the response
         try:
             if isinstance(text, list):
-                batch_result: List[List[Dict]] = cast(List[List[Dict]], response.json())
-                batch_chunks: List[List[Chunk]] = []
+                batch_result: list[list[dict]] = cast(list[list[dict]], response.json())
+                batch_chunks: list[list[Chunk]] = []
                 for chunk_list in batch_result:
                     curr_chunks = []
                     for chunk in chunk_list:
@@ -131,12 +135,16 @@ class CodeChunker(CloudChunker):
                     batch_chunks.append(curr_chunks)
                 return batch_chunks
             else:
-                single_result: List[Dict] = cast(List[Dict], response.json())
-                single_chunks: List[Chunk] = [Chunk.from_dict(chunk) for chunk in single_result]
+                single_result: list[dict] = cast(list[dict], response.json())
+                single_chunks: list[Chunk] = [Chunk.from_dict(chunk) for chunk in single_result]
                 return single_chunks
         except Exception as error:
             raise ValueError(f"Error parsing the response: {error}") from error
 
-    def __call__(self, text: Optional[Union[str, List[str]]] = None, file: Optional[str] = None) -> Union[List[Chunk], List[List[Chunk]]]:
+    def __call__(
+        self,
+        text: Optional[Union[str, list[str]]] = None,
+        file: Optional[str] = None,
+    ) -> Union[list[Chunk], list[list[Chunk]]]:
         """Call the chunker."""
         return self.chunk(text=text, file=file)

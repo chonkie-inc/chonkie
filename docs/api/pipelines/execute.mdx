@@ -1,0 +1,140 @@
+---
+title: "Execute Pipeline"
+api: "POST /v1/pipeline/{slug}"
+description: "Execute a pipeline on text or file input"
+---
+
+Run a saved pipeline to process text or documents and return chunks.
+
+## Examples
+
+<CodeGroup>
+
+```python Python
+from chonkie.cloud import Pipeline
+
+# Execute with text
+pipeline = Pipeline.get("my-rag-pipeline")
+chunks = pipeline.run(text="Your document text here...")
+
+# Execute with multiple texts
+chunks = pipeline.run(text=["First document", "Second document"])
+
+# Execute with file (auto-uploaded)
+chunks = pipeline.run(file="document.pdf")
+
+# Access chunk data
+for chunk in chunks:
+    print(f"Text: {chunk.text[:100]}...")
+    print(f"Tokens: {chunk.token_count}")
+```
+
+```typescript JavaScript
+import { Pipeline } from '@chonkiejs/cloud';
+
+// Execute with text
+const pipeline = await Pipeline.get('my-rag-pipeline');
+const chunks = await pipeline.run({ text: 'Your document text here...' });
+
+// Execute with file (auto-uploaded)
+const fileChunks = await pipeline.run({ filepath: 'document.pdf' });
+
+// Access chunk data
+for (const chunk of chunks) {
+  console.log(`Text: ${chunk.text.slice(0, 100)}...`);
+  console.log(`Tokens: ${chunk.tokenCount}`);
+}
+```
+
+```bash cURL
+# With text
+curl -X POST https://api.chonkie.ai/v1/pipeline/my-rag-pipeline \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "Your document text here..."
+  }'
+
+# With file reference (after uploading via /v1/file)
+curl -X POST https://api.chonkie.ai/v1/pipeline/my-rag-pipeline \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "file": {
+      "type": "document",
+      "content": "uploaded-file-name.pdf"
+    }
+  }'
+```
+
+</CodeGroup>
+
+## Path Parameters
+
+<ParamField path="slug" type="string" required>
+  The pipeline slug to execute.
+</ParamField>
+
+## Request
+
+<ParamField path="text" type="string | array">
+  Text content to process. Can be a single string or array of strings.
+</ParamField>
+
+<ParamField path="file" type="object">
+  File reference for document processing. Use after uploading via the file upload endpoint.
+
+  <Expandable>
+    <ParamField path="type" type="string">
+      File type (e.g., "document").
+    </ParamField>
+
+    <ParamField path="content" type="string">
+      The uploaded filename or file reference.
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<Note>
+  Provide either `text` or `file`, not both.
+</Note>
+
+## Response
+
+<ResponseField name="chunks" type="array">
+  Array of chunk objects returned by the pipeline.
+
+  <Expandable>
+    <ResponseField name="text" type="string">
+      The chunk text content.
+    </ResponseField>
+
+    <ResponseField name="start_index" type="integer">
+      Starting character index in the original text.
+    </ResponseField>
+
+    <ResponseField name="end_index" type="integer">
+      Ending character index in the original text.
+    </ResponseField>
+
+    <ResponseField name="token_count" type="integer">
+      Number of tokens in the chunk.
+    </ResponseField>
+
+    <ResponseField name="context" type="string">
+      Optional context added by refinement steps.
+    </ResponseField>
+
+    <ResponseField name="embedding" type="array">
+      Optional embedding vector if embeddings step was included.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+## Errors
+
+| Status | Description |
+|--------|-------------|
+| 400 | Invalid request (missing text/file or both provided) |
+| 404 | Pipeline not found |
+| 422 | Processing error |

@@ -8,6 +8,7 @@ from chonkie import Chunk
 
 try:
     import numpy as np  # noqa: F401
+
     NUMPY_AVAILABLE = True
 except ImportError:
     NUMPY_AVAILABLE = False
@@ -73,7 +74,7 @@ def test_chunk_with_embedding():
         start_index=0,
         end_index=4,
         token_count=1,
-        embedding=[0.1, 0.2, 0.3]
+        embedding=[0.1, 0.2, 0.3],
     )
     assert chunk2.embedding == [0.1, 0.2, 0.3]
 
@@ -84,13 +85,7 @@ def test_chunk_with_numpy_embedding():
     import numpy as np
 
     embedding = np.array([0.1, 0.2, 0.3, 0.4, 0.5])
-    chunk = Chunk(
-        text="test",
-        start_index=0,
-        end_index=4,
-        token_count=1,
-        embedding=embedding
-    )
+    chunk = Chunk(text="test", start_index=0, end_index=4, token_count=1, embedding=embedding)
     assert chunk.embedding is not None
     assert isinstance(chunk.embedding, np.ndarray)
     assert len(chunk.embedding) == 5
@@ -109,7 +104,7 @@ def test_chunk_embedding_repr():
         start_index=0,
         end_index=4,
         token_count=1,
-        embedding=[0.1, 0.2, 0.3]
+        embedding=[0.1, 0.2, 0.3],
     )
     repr2 = repr(chunk2)
     assert "embedding" in repr2
@@ -122,7 +117,7 @@ def test_chunk_embedding_repr():
         start_index=0,
         end_index=4,
         token_count=1,
-        embedding=[i * 0.1 for i in range(100)]
+        embedding=[i * 0.1 for i in range(100)],
     )
     repr3 = repr(chunk3)
     assert "embedding" in repr3
@@ -137,13 +132,7 @@ def test_chunk_numpy_embedding_repr():
     import numpy as np
 
     embedding = np.random.randn(768)  # Typical embedding size
-    chunk = Chunk(
-        text="test",
-        start_index=0,
-        end_index=4,
-        token_count=1,
-        embedding=embedding
-    )
+    chunk = Chunk(text="test", start_index=0, end_index=4, token_count=1, embedding=embedding)
     repr_str = repr(chunk)
     assert "embedding" in repr_str
     assert "..." in repr_str  # Should truncate
@@ -158,7 +147,7 @@ def test_chunk_embedding_serialization():
         start_index=0,
         end_index=4,
         token_count=1,
-        embedding=[0.1, 0.2, 0.3]
+        embedding=[0.1, 0.2, 0.3],
     )
     dict1 = chunk1.to_dict()
     assert "embedding" in dict1
@@ -174,13 +163,7 @@ def test_chunk_numpy_embedding_serialization():
     import numpy as np
 
     embedding = np.array([0.1, 0.2, 0.3, 0.4, 0.5])
-    chunk = Chunk(
-        text="test",
-        start_index=0,
-        end_index=4,
-        token_count=1,
-        embedding=embedding
-    )
+    chunk = Chunk(text="test", start_index=0, end_index=4, token_count=1, embedding=embedding)
 
     # to_dict should convert numpy to list
     dict_repr = chunk.to_dict()

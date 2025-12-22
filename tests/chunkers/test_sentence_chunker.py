@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import List
-
 import pytest
 from tokenizers import Tokenizer
 
@@ -48,8 +46,8 @@ def sample_complex_markdown_text() -> str:
 def test_sentence_chunker_initialization(tokenizer: Tokenizer) -> None:
     """Test that the SentenceChunker can be initialized with a tokenizer."""
     chunker = SentenceChunker(
-        tokenizer_or_token_counter=tokenizer, 
-        chunk_size=512, 
+        tokenizer=tokenizer,
+        chunk_size=512,
         chunk_overlap=128,
         min_sentences_per_chunk=1,
         min_characters_per_sentence=12,
@@ -71,8 +69,8 @@ def test_sentence_chunker_initialization(tokenizer: Tokenizer) -> None:
 def test_sentence_chunker_chunking(tokenizer: Tokenizer, sample_text: str) -> None:
     """Test that the SentenceChunker can chunk a sample text into sentences."""
     chunker = SentenceChunker(
-        tokenizer_or_token_counter=tokenizer, 
-        chunk_size=512, 
+        tokenizer=tokenizer,
+        chunk_size=512,
         chunk_overlap=128,
         min_sentences_per_chunk=1,
         min_characters_per_sentence=12,
@@ -93,8 +91,8 @@ def test_sentence_chunker_chunking(tokenizer: Tokenizer, sample_text: str) -> No
 def test_sentence_chunker_empty_text(tokenizer: Tokenizer) -> None:
     """Test that the SentenceChunker can handle empty text input."""
     chunker = SentenceChunker(
-        tokenizer_or_token_counter=tokenizer, 
-        chunk_size=512, 
+        tokenizer=tokenizer,
+        chunk_size=512,
         chunk_overlap=128,
     )
     chunks = chunker.chunk("")
@@ -105,8 +103,8 @@ def test_sentence_chunker_empty_text(tokenizer: Tokenizer) -> None:
 def test_sentence_chunker_single_sentence(tokenizer: Tokenizer) -> None:
     """Test that the SentenceChunker can handle text with a single sentence."""
     chunker = SentenceChunker(
-        tokenizer_or_token_counter=tokenizer, 
-        chunk_size=512, 
+        tokenizer=tokenizer,
+        chunk_size=512,
         chunk_overlap=128,
     )
     chunks = chunker.chunk("This is a single sentence.")
@@ -118,8 +116,8 @@ def test_sentence_chunker_single_sentence(tokenizer: Tokenizer) -> None:
 def test_sentence_chunker_single_chunk_text(tokenizer: Tokenizer) -> None:
     """Test that the SentenceChunker can handle text that fits within a single chunk."""
     chunker = SentenceChunker(
-        tokenizer_or_token_counter=tokenizer, 
-        chunk_size=512, 
+        tokenizer=tokenizer,
+        chunk_size=512,
         chunk_overlap=128,
     )
     chunks = chunker.chunk("Hello, how are you? I am doing well.")
@@ -131,8 +129,8 @@ def test_sentence_chunker_single_chunk_text(tokenizer: Tokenizer) -> None:
 def test_sentence_chunker_repr(tokenizer: Tokenizer) -> None:
     """Test that the SentenceChunker has a string representation."""
     chunker = SentenceChunker(
-        tokenizer_or_token_counter=tokenizer, 
-        chunk_size=512, 
+        tokenizer=tokenizer,
+        chunk_size=512,
         chunk_overlap=128,
     )
 
@@ -151,8 +149,8 @@ def test_sentence_chunker_repr(tokenizer: Tokenizer) -> None:
 def test_sentence_chunker_overlap(tokenizer: Tokenizer, sample_text: str) -> None:
     """Test that the SentenceChunker creates overlapping chunks correctly."""
     chunker = SentenceChunker(
-        tokenizer_or_token_counter=tokenizer, 
-        chunk_size=512, 
+        tokenizer=tokenizer,
+        chunk_size=512,
         chunk_overlap=128,
     )
     chunks = chunker.chunk(sample_text)
@@ -164,7 +162,7 @@ def test_sentence_chunker_overlap(tokenizer: Tokenizer, sample_text: str) -> Non
 def test_sentence_chunker_min_sentences(tokenizer: Tokenizer) -> None:
     """Test that the SentenceChunker respects minimum sentences per chunk."""
     chunker = SentenceChunker(
-        tokenizer_or_token_counter=tokenizer,
+        tokenizer=tokenizer,
         chunk_size=512,
         chunk_overlap=128,
         min_sentences_per_chunk=2,
@@ -175,12 +173,10 @@ def test_sentence_chunker_min_sentences(tokenizer: Tokenizer) -> None:
     for chunk in chunks:
         # Count sentences by splitting on periods
         sentence_count = len([s for s in chunk.text.split(".") if s.strip()])
-        assert (
-            sentence_count >= 2 or sentence_count == 1
-        )  # Last chunk might have fewer sentences
+        assert sentence_count >= 2 or sentence_count == 1  # Last chunk might have fewer sentences
 
 
-def verify_chunk_indices(chunks: List[Chunk], original_text: str) -> None:
+def verify_chunk_indices(chunks: list[Chunk], original_text: str) -> None:
     """Verify that chunk indices correctly map to the original text."""
     for i, chunk in enumerate(chunks):
         # Extract text using the indices
@@ -199,27 +195,24 @@ def verify_chunk_indices(chunks: List[Chunk], original_text: str) -> None:
 
 def test_sentence_chunker_indices(tokenizer: Tokenizer, sample_text: str) -> None:
     """Test that the SentenceChunker correctly maps chunk indices to the original text."""
-    chunker = SentenceChunker(
-        tokenizer_or_token_counter=tokenizer, chunk_size=512, chunk_overlap=128
-    )
+    chunker = SentenceChunker(tokenizer=tokenizer, chunk_size=512, chunk_overlap=128)
     chunks = chunker.chunk(sample_text)
     verify_chunk_indices(chunks, sample_text)
 
 
-def test_sentence_chunker_indices_complex_md(tokenizer: Tokenizer, sample_complex_markdown_text: str) -> None:
+def test_sentence_chunker_indices_complex_md(
+    tokenizer: Tokenizer,
+    sample_complex_markdown_text: str,
+) -> None:
     """Test that the SentenceChunker correctly maps chunk indices to the original text."""
-    chunker = SentenceChunker(
-        tokenizer_or_token_counter=tokenizer, chunk_size=512, chunk_overlap=128
-    )
+    chunker = SentenceChunker(tokenizer=tokenizer, chunk_size=512, chunk_overlap=128)
     chunks = chunker.chunk(sample_complex_markdown_text)
     verify_chunk_indices(chunks, sample_complex_markdown_text)
 
 
 def test_sentence_chunker_token_counts(tokenizer: Tokenizer, sample_text: str) -> None:
     """Test that the SentenceChunker correctly calculates token counts."""
-    chunker = SentenceChunker(
-        tokenizer_or_token_counter=tokenizer, chunk_size=512, chunk_overlap=128
-    )
+    chunker = SentenceChunker(tokenizer=tokenizer, chunk_size=512, chunk_overlap=128)
     chunks = chunker.chunk(sample_text)
     assert all([chunk.token_count > 0 for chunk in chunks]), (
         "All chunks must have a positive token count"
@@ -230,24 +223,23 @@ def test_sentence_chunker_token_counts(tokenizer: Tokenizer, sample_text: str) -
 
     token_counts = [chunker.tokenizer.count_tokens(chunk.text) for chunk in chunks]
     assert all([
-        chunk.token_count == token_count
-        for chunk, token_count in zip(chunks, token_counts)
+        chunk.token_count == token_count for chunk, token_count in zip(chunks, token_counts)
     ]), (
-        "All chunks must have a token count equal to the length of the encoded text.\n" + 
-        f"{[chunk.token_count for chunk in chunks]}\n" + 
-        f"{token_counts}"
+        "All chunks must have a token count equal to the length of the encoded text.\n"
+        + f"{[chunk.token_count for chunk in chunks]}\n"
+        + f"{token_counts}"
     )
 
 
 def test_sentence_chunker_return_type(tokenizer: Tokenizer, sample_text: str) -> None:
     """Test that SentenceChunker returns Chunk objects by default."""
     chunker = SentenceChunker(
-        tokenizer_or_token_counter=tokenizer,
+        tokenizer=tokenizer,
         chunk_size=512,
         chunk_overlap=128,
     )
     chunks = chunker.chunk(sample_text)
-    assert all([hasattr(chunk, 'text') for chunk in chunks])
+    assert all([hasattr(chunk, "text") for chunk in chunks])
     assert all([len(tokenizer.encode(chunk.text)) <= 512 for chunk in chunks])
 
 
@@ -256,7 +248,7 @@ def test_sentence_chunker_min_sentences_per_chunk(tokenizer: Tokenizer, sample_t
     # Test that the minimum sentences per chunk is respected, giving a warning otherwise!
     sample_text = "This is a test."
     chunker = SentenceChunker(
-        tokenizer_or_token_counter=tokenizer,
+        tokenizer=tokenizer,
         chunk_size=512,
         chunk_overlap=128,
         min_sentences_per_chunk=2,
@@ -267,17 +259,21 @@ def test_sentence_chunker_min_sentences_per_chunk(tokenizer: Tokenizer, sample_t
     assert chunks[0].token_count == len(tokenizer.encode(sample_text))
 
 
-def test_sentence_chunker_min_characters_per_sentence(tokenizer: Tokenizer, sample_text: str) -> None:
+def test_sentence_chunker_min_characters_per_sentence(
+    tokenizer: Tokenizer,
+    sample_text: str,
+) -> None:
     """Test that SentenceChunker respects minimum characters per sentence and when less than min_characters_per_sentence, it is merged with the next sentence."""
     sample_text = "Hello!"
     chunker = SentenceChunker(
-        tokenizer_or_token_counter=tokenizer,
+        tokenizer=tokenizer,
         chunk_size=512,
         min_characters_per_sentence=20,
     )
     chunks = chunker.chunk(sample_text)
     assert len(chunks) == 1
     assert chunks[0].text == "Hello!"
+
 
 def test_sentence_chunker_from_recipe_default() -> None:
     """Test that SentenceChunker.from_recipe works with default parameters."""
@@ -287,13 +283,14 @@ def test_sentence_chunker_from_recipe_default() -> None:
     assert chunker.delim == [". ", "! ", "? ", "\n"]
     assert chunker.include_delim == "prev"
 
+
 def test_sentence_chunker_from_recipe_custom_params() -> None:
     """Test that SentenceChunker.from_recipe works with custom parameters."""
     chunker = SentenceChunker.from_recipe(
         name="default",
         lang="en",
         chunk_size=256,
-        min_characters_per_sentence=32
+        min_characters_per_sentence=32,
     )
 
     assert chunker is not None
@@ -301,6 +298,7 @@ def test_sentence_chunker_from_recipe_custom_params() -> None:
     assert chunker.min_characters_per_sentence == 32
     assert chunker.delim == [". ", "! ", "? ", "\n"]
     assert chunker.include_delim == "prev"
+
 
 def test_sentence_chunker_from_recipe_custom_lang() -> None:
     """Test that SentenceChunker.from_recipe works with custom language."""
@@ -320,13 +318,15 @@ def test_sentence_chunker_from_recipe_custom_lang() -> None:
     except (OSError, ValueError, ConnectionError, Exception) as e:
         pytest.skip(f"Could not download recipe (likely network/rate limit issue): {e}")
 
+
 def test_sentence_chunker_from_recipe_nonexistent() -> None:
     """Test that SentenceChunker.from_recipe raises an error if the recipe does not exist."""
     with pytest.raises(ValueError):
         SentenceChunker.from_recipe(name="invalid")
-    
+
     with pytest.raises(ValueError):
         SentenceChunker.from_recipe(name="default", lang="invalid")
+
 
 if __name__ == "__main__":
     pytest.main()

@@ -4,8 +4,6 @@ import importlib.util as importutil
 from typing import (
     TYPE_CHECKING,
     Any,
-    Dict,
-    List,
     Literal,
     Optional,
     Union,
@@ -14,13 +12,16 @@ from typing import (
 from uuid import NAMESPACE_OID, uuid5
 
 from chonkie.embeddings import AutoEmbeddings, BaseEmbeddings
+from chonkie.logger import get_logger
+from chonkie.pipeline import handshake
 from chonkie.types import Chunk
 
 from .base import BaseHandshake
 from .utils import generate_random_collection_name
 
+logger = get_logger(__name__)
+
 if TYPE_CHECKING:
-    import chromadb
     import numpy as np
 
 
@@ -50,22 +51,18 @@ class ChromaEmbeddingFunction:
     def __init__(
         self,
         embedding_model: Union[str, BaseEmbeddings] = "minishlab/potion-retrieval-32M",
-        **kwargs: Dict[str, Any],
+        **kwargs: dict[str, Any],
     ) -> None:
         """Initialize the ChromaEmbeddingFunction."""
         super().__init__()
 
         # Check if the model is a string
         if isinstance(embedding_model, str):
-            self.embedding_model = AutoEmbeddings.get_embeddings(
-                embedding_model, **kwargs
-            )
+            self.embedding_model = AutoEmbeddings.get_embeddings(embedding_model, **kwargs)
             self._model_name = embedding_model  # Store name for ChromaDB compatibility
         elif isinstance(embedding_model, BaseEmbeddings):
             self.embedding_model = embedding_model
-            self._model_name = str(
-                embedding_model
-            )  # Store name for ChromaDB compatibility
+            self._model_name = str(embedding_model)  # Store name for ChromaDB compatibility
         else:
             raise ValueError("Model must be a string or a BaseEmbeddings instance.")
 
@@ -73,9 +70,7 @@ class ChromaEmbeddingFunction:
         """Return the name of the embedding model for ChromaDB compatibility."""
         return self._model_name
 
-    def __call__(
-        self, input: Union[str, List[str]]
-    ) -> Union["np.ndarray", List["np.ndarray"]]:
+    def __call__(self, input: Union[str, list[str]]) -> Union["np.ndarray", list["np.ndarray"]]:
         """Call the ChromaEmbeddingFunction."""
         if isinstance(input, str):
             return self.embedding_model.embed(input)
@@ -85,6 +80,7 @@ class ChromaEmbeddingFunction:
             raise ValueError("Input must be a string or a list of strings.")
 
 
+@handshake("chroma")
 class ChromaHandshake(BaseHandshake):
     """Chroma Handshake to export Chonkie's Chunks into a Chroma collection.
 
@@ -116,8 +112,12 @@ class ChromaHandshake(BaseHandshake):
         """
         super().__init__()
 
-        # Lazy importing the dependencies
-        self._import_dependencies()
+        try:
+            import chromadb
+        except ImportError as ie:
+            raise ImportError(
+                "ChromaDB is not installed. Please install it with `pip install chonkie[chroma]`.",
+            ) from ie
 
         # Initialize Chroma client
         if client is None and path is None:
@@ -134,7 +134,8 @@ class ChromaHandshake(BaseHandshake):
         if collection_name != "random":
             self.collection_name = collection_name
             self.collection = self.client.get_or_create_collection(
-                self.collection_name, embedding_function=self.embedding_function # type: ignore[arg-type]
+                self.collection_name,
+                embedding_function=self.embedding_function,  # type: ignore[arg-type]
             )  # type: ignore[arg-type]
         else:
             # Keep generating random collection names until we find one that doesn't exist
@@ -142,37 +143,24 @@ class ChromaHandshake(BaseHandshake):
                 self.collection_name = generate_random_collection_name()
                 try:
                     self.collection = self.client.create_collection(
-                        self.collection_name, embedding_function=self.embedding_function # type: ignore[arg-type]
+                        self.collection_name,
+                        embedding_function=self.embedding_function,  # type: ignore[arg-type]
                     )  # type: ignore[arg-type]
                     break
                 except Exception:
                     pass
-            print(
-                f"🦛 Chonkie created a new collection in ChromaDB: {self.collection_name}"
-            )
+            logger.info(f"Chonkie created a new collection in ChromaDB: {self.collection_name}")
 
         # Now that we have a collection, we can write the Chunks to it!
 
-    def _is_available(self) -> bool:
+    @classmethod
+    def _is_available(cls) -> bool:
         """Check if the dependencies are available."""
         return importutil.find_spec("chromadb") is not None
 
-    def _import_dependencies(self) -> None:
-        """Lazy import the dependencies."""
-        if self._is_available():
-            global chromadb
-            import chromadb
-        else:
-            raise ImportError(
-                "ChromaDB is not installed. "
-                + "Please install it with `pip install chonkie[chroma]`."
-            )
-
     def _generate_id(self, index: int, chunk: Chunk) -> str:
         """Generate a unique index name for the Chunk."""
-        return str(
-            uuid5(NAMESPACE_OID, f"{self.collection_name}::chunk-{index}:{chunk.text}")
-        )
+        return str(uuid5(NAMESPACE_OID, f"{self.collection_name}::chunk-{index}:{chunk.text}"))
 
     def _generate_metadata(self, chunk: Chunk) -> dict:
         """Generate the metadata for the Chunk."""
@@ -182,11 +170,12 @@ class ChromaHandshake(BaseHandshake):
             "token_count": chunk.token_count,
         }
 
-    def write(self, chunks: Union[Chunk, List[Chunk]]) -> None:
+    def write(self, chunks: Union[Chunk, list[Chunk]]) -> None:
         """Write the Chunks to the Chroma collection."""
         if isinstance(chunks, Chunk):
             chunks = [chunks]
 
+        logger.debug(f"Writing {len(chunks)} chunks to Chroma collection: {self.collection_name}")
         # Generate the ids and metadata
         ids = [self._generate_id(index, chunk) for (index, chunk) in enumerate(chunks)]
         metadata = [self._generate_metadata(chunk) for chunk in chunks]
@@ -200,8 +189,8 @@ class ChromaHandshake(BaseHandshake):
             metadatas=metadata,  # type: ignore
         )
 
-        print(
-            f"🦛 Chonkie wrote {len(chunks)} Chunks to the Chroma collection: {self.collection_name}"
+        logger.info(
+            f"Chonkie wrote {len(chunks)} chunks to the Chroma collection: {self.collection_name}",
         )
 
     def __repr__(self) -> str:
@@ -211,9 +200,9 @@ class ChromaHandshake(BaseHandshake):
     def search(
         self,
         query: Optional[str] = None,
-        embedding: Optional[List[float]] = None,
+        embedding: Optional[list[float]] = None,
         limit: int = 5,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Search the Chroma collection for similar chunks.
 
         Args:
@@ -222,9 +211,10 @@ class ChromaHandshake(BaseHandshake):
             limit: The maximum number of results to return.
 
         Returns:
-            List[Dict[str, Any]]: A list of dictionaries containing the matching chunks and their metadata.
+            list[dict[str, Any]]: A list of dictionaries containing the matching chunks and their metadata.
 
         """
+        logger.debug(f"Searching Chroma collection: {self.collection_name} with limit={limit}")
         if query is None and embedding is None:
             raise ValueError("Either 'query' or 'embedding' must be provided.")
 
@@ -268,14 +258,10 @@ class ChromaHandshake(BaseHandshake):
         # Process and format the results
         matches = []
         distance_metric = (
-            self.collection.metadata.get("hnsw:space", "l2")
-            if self.collection.metadata
-            else "l2"
+            self.collection.metadata.get("hnsw:space", "l2") if self.collection.metadata else "l2"
         )
 
-        for id_val, distance, metadata, document in zip(
-            ids, distances, metadatas, documents
-        ):
+        for id_val, distance, metadata, document in zip(ids, distances, metadatas, documents):
             similarity = None
             if distance is not None:
                 if distance_metric == "cosine":
@@ -295,4 +281,5 @@ class ChromaHandshake(BaseHandshake):
 
             matches.append(match_data)
 
+        logger.info(f"Search complete: found {len(matches)} matching chunks")
         return matches

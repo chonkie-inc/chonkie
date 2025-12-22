@@ -1,0 +1,77 @@
+---
+title: "Delete File"
+api: "DELETE labs.chonkie.ai/api/v1/knowledge/{knowledge_base_slug}/{file_id}"
+description: "Remove a specific file from a knowledge base"
+---
+
+Delete a file from a knowledge base. This removes the file from storage and its vectors from the search index.
+
+## Examples
+
+<CodeGroup>
+
+```python Python
+import requests
+
+kb_slug = "product-documentation"
+file_id = "1705320000000-old-version.pdf"
+
+url = f"https://labs.chonkie.ai/api/v1/knowledge/{kb_slug}/{file_id}"
+headers = {
+    "Authorization": "Bearer YOUR_API_KEY"
+}
+
+response = requests.delete(url, headers=headers)
+result = response.json()
+print(result["message"])
+```
+
+```javascript JavaScript
+const kbSlug = "product-documentation";
+const fileId = "1705320000000-old-version.pdf";
+
+const response = await fetch(
+  `https://labs.chonkie.ai/api/v1/knowledge/${kbSlug}/${fileId}`,
+  {
+    method: "DELETE",
+    headers: {
+      Authorization: "Bearer YOUR_API_KEY",
+    },
+  }
+);
+
+const result = await response.json();
+console.log(result.message);
+```
+
+```bash cURL
+curl -X DELETE \
+  https://labs.chonkie.ai/api/v1/knowledge/product-documentation/1705320000000-old-version.pdf \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+</CodeGroup>
+
+## Request
+
+#### Path Parameters
+
+<ParamField path="knowledge_base_slug" type="string" required>
+  The slug of the knowledge base.
+</ParamField>
+
+<ParamField path="file_id" type="string" required>
+  The file key to delete. Format: `{timestamp}-{filename}`
+</ParamField>
+
+## Response
+
+#### Returns
+
+<ResponseField name="message" type="string">
+  Success message confirming deletion.
+</ResponseField>
+
+<ResponseField name="knowledgeBaseId" type="string">
+  ID of the knowledge base.
+</ResponseField>

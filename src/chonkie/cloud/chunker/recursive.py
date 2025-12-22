@@ -1,7 +1,7 @@
 """Recursive Chunking for Chonkie API."""
 
 import os
-from typing import Any, Callable, Dict, List, Optional, Union, cast
+from typing import Any, Optional, Union, cast
 
 import requests
 
@@ -19,7 +19,7 @@ class RecursiveChunker(CloudChunker):
 
     def __init__(
         self,
-        tokenizer_or_token_counter: Union[str, Callable] = "gpt2",
+        tokenizer: str = "gpt2",
         chunk_size: int = 512,
         min_characters_per_chunk: int = 12,
         recipe: str = "default",
@@ -27,9 +27,9 @@ class RecursiveChunker(CloudChunker):
         api_key: Optional[str] = None,
     ) -> None:
         """Initialize the RecursiveChunker.
-        
+
         Args:
-            tokenizer_or_token_counter: The tokenizer or token counter to use.
+            tokenizer: The tokenizer to use.
             chunk_size: The target maximum size of each chunk (in tokens, as defined by the tokenizer).
             min_characters_per_chunk: The minimum number of characters a chunk should have.
             recipe: The name of the recursive rules recipe to use. Find all available recipes at https://hf.co/datasets/chonkie-ai/recipes
@@ -42,7 +42,7 @@ class RecursiveChunker(CloudChunker):
         if not self.api_key:
             raise ValueError(
                 "No API key provided. Please set the CHONKIE_API_KEY environment variable"
-                + "or pass an API key to the RecursiveChunker constructor."
+                + "or pass an API key to the RecursiveChunker constructor.",
             )
 
         # Check if the chunk size is valid
@@ -52,7 +52,7 @@ class RecursiveChunker(CloudChunker):
             raise ValueError("Minimum characters per chunk must be greater than 0.")
 
         # Add attributes
-        self.tokenizer_or_token_counter = tokenizer_or_token_counter
+        self.tokenizer = tokenizer
         self.chunk_size = chunk_size
         self.min_characters_per_chunk = min_characters_per_chunk
         self.recipe = recipe
@@ -64,20 +64,24 @@ class RecursiveChunker(CloudChunker):
             raise ValueError(
                 "Oh no! You caught Chonkie at a bad time. It seems to be down right now."
                 + "Please try again in a short while."
-                + "If the issue persists, please contact support at support@chonkie.ai."
+                + "If the issue persists, please contact support at support@chonkie.ai.",
             )
 
         # Initialize the file manager to upload files if needed
         self.file_manager = FileManager(api_key=self.api_key)
 
-    def chunk(self, text: Optional[Union[str, List[str]]] = None, file: Optional[str] = None) -> Any:
+    def chunk(
+        self,
+        text: Optional[Union[str, list[str]]] = None,
+        file: Optional[str] = None,
+    ) -> Any:
         """Chunk the text or file into a list of chunks."""
         # Make the payload
-        payload: Dict[str, Any]
+        payload: dict[str, Any]
         if text is not None:
             payload = {
                 "text": text,
-                "tokenizer_or_token_counter": self.tokenizer_or_token_counter,
+                "tokenizer_or_token_counter": self.tokenizer,
                 "chunk_size": self.chunk_size,
                 "min_characters_per_chunk": self.min_characters_per_chunk,
                 "recipe": self.recipe,
@@ -90,14 +94,16 @@ class RecursiveChunker(CloudChunker):
                     "type": "document",
                     "content": file_response.name,
                 },
-                "tokenizer_or_token_counter": self.tokenizer_or_token_counter,
+                "tokenizer_or_token_counter": self.tokenizer,
                 "chunk_size": self.chunk_size,
                 "min_characters_per_chunk": self.min_characters_per_chunk,
                 "recipe": self.recipe,
                 "lang": self.lang,
             }
         else:
-            raise ValueError("No text or file provided. Please provide either text or a file path.")
+            raise ValueError(
+                "No text or file provided. Please provide either text or a file path.",
+            )
         # Make the request to the Chonkie API
         response = requests.post(
             f"{self.BASE_URL}/{self.VERSION}/chunk/recursive",
@@ -108,8 +114,8 @@ class RecursiveChunker(CloudChunker):
         # Try to parse the response
         try:
             if isinstance(text, list):
-                batch_result: List[List[Dict]] = cast(List[List[Dict]], response.json())
-                batch_chunks: List[List[Chunk]] = []
+                batch_result: list[list[dict]] = cast(list[list[dict]], response.json())
+                batch_chunks: list[list[Chunk]] = []
                 for chunk_list in batch_result:
                     curr_chunks = []
                     for chunk in chunk_list:
@@ -117,16 +123,20 @@ class RecursiveChunker(CloudChunker):
                     batch_chunks.append(curr_chunks)
                 return batch_chunks
             else:
-                single_result: List[Dict] = cast(List[Dict], response.json())
-                single_chunks: List[Chunk] = [Chunk.from_dict(chunk) for chunk in single_result]
+                single_result: list[dict] = cast(list[dict], response.json())
+                single_chunks: list[Chunk] = [Chunk.from_dict(chunk) for chunk in single_result]
                 return single_chunks
         except Exception as error:
             raise ValueError(
                 "Oh no! The Chonkie API returned an invalid response."
                 + "Please try again in a short while."
-                + "If the issue persists, please contact support at support@chonkie.ai."
+                + "If the issue persists, please contact support at support@chonkie.ai.",
             ) from error
 
-    def __call__(self, text: Optional[Union[str, List[str]]] = None, file: Optional[str] = None) -> Any:
+    def __call__(
+        self,
+        text: Optional[Union[str, list[str]]] = None,
+        file: Optional[str] = None,
+    ) -> Any:
         """Call the RecursiveChunker."""
         return self.chunk(text=text, file=file)

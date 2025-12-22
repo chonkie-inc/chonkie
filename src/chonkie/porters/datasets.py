@@ -2,35 +2,33 @@
 
 from __future__ import annotations
 
-import importlib
 import importlib.util as importutil
 from typing import TYPE_CHECKING, Any
 
+from chonkie.logger import get_logger
+from chonkie.pipeline import porter
 from chonkie.types import Chunk
 
 from .base import BasePorter
+
+logger = get_logger(__name__)
 
 if TYPE_CHECKING:
     from datasets import Dataset
 
 
+@porter("datasets")
 class DatasetsPorter(BasePorter):
     """Porter to convert Chunks into datasets format for storage."""
 
     def __init__(self) -> None:
         """Initialize the DatasetsPorter and import dependencies."""
         super().__init__()
-        self._import_dependencies()
-
-    def _import_dependencies(self) -> None:
-        """Import the 'datasets' library and assign it to an instance attribute."""
         if importutil.find_spec("datasets") is None:
             raise ImportError(
                 "The 'datasets' library is not installed. "
-                "Please install it with 'pip install chonkie[datasets]' or 'pip install datasets'."
+                "Please install it with 'pip install chonkie[datasets]' or 'pip install datasets'.",
             )
-        datasets_module = importlib.import_module("datasets")
-        self.Dataset = datasets_module.Dataset
 
     def export(  # type: ignore[override]
         self,
@@ -53,9 +51,20 @@ class DatasetsPorter(BasePorter):
             Dataset: The Dataset object.
 
         """
-        dataset = self.Dataset.from_list([chunk.to_dict() for chunk in chunks])
+        from datasets import Dataset
+
+        logger.debug(f"Exporting {len(chunks)} chunks to HuggingFace Dataset")
+        dataset = Dataset.from_list([chunk.to_dict() for chunk in chunks])
         if save_to_disk:
+            logger.debug(f"Saving dataset to disk: {path}")
             dataset.save_to_disk(path, **kwargs)
+            logger.info(
+                f"Successfully exported {len(chunks)} chunks to Dataset and saved to: {path}",
+            )
+        else:
+            logger.info(
+                f"Successfully exported {len(chunks)} chunks to Dataset (not saved to disk)",
+            )
         return dataset
 
     def __call__(  # type: ignore[override]
@@ -81,6 +90,4 @@ class DatasetsPorter(BasePorter):
             Dataset: The Dataset object.
 
         """
-        return self.export(
-            chunks, save_to_disk=save_to_disk, path=path, **kwargs
-        )
+        return self.export(chunks, save_to_disk=save_to_disk, path=path, **kwargs)

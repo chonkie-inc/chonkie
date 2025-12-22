@@ -5,14 +5,19 @@ from __future__ import annotations
 import pytest
 
 from chonkie.chef import BaseChef
+from chonkie.types import Document
 
 
 class ConcreteChef(BaseChef):
     """Concrete implementation of BaseChef for testing."""
 
-    def process(self, path: str) -> str:
-        """Test implementation that returns the path."""
-        return f"processed: {path}"
+    def process(self, path: str) -> Document:
+        """Test implementation that returns a Document."""
+        return Document(content=f"processed: {path}")
+
+    def parse(self, text: str) -> Document:
+        """Test implementation that parses text."""
+        return Document(content=f"parsed: {text}")
 
 
 class TestBaseChef:
@@ -32,7 +37,8 @@ class TestBaseChef:
         """Test that __call__ method delegates to process method."""
         chef = ConcreteChef()
         result = chef("test_path")
-        assert result == "processed: test_path"
+        assert isinstance(result, Document)
+        assert result.content == "processed: test_path"
 
     def test_repr_method(self: "TestBaseChef") -> None:
         """Test __repr__ method returns correct string."""

@@ -1,0 +1,159 @@
+---
+title: "Semantic Chunker"
+api: "POST v1/chunk/semantic"
+description: "Create semantically coherent chunks using embedding similarity"
+---
+
+The Semantic Chunker uses embeddings to identify natural break points in text based on semantic meaning, creating chunks where topic transitions occur.
+
+## Examples
+
+### Text Input
+
+<CodeGroup>
+
+```python Python
+from chonkie.cloud import SemanticChunker
+
+chunker = SemanticChunker(
+    embedding_model="minishlab/potion-base-8M",
+    chunk_size=512,
+)
+
+text = "Your text here..."
+chunks = chunker.chunk(text)
+```
+
+```javascript JavaScript
+import { SemanticChunker } from '@chonkiejs/cloud';
+
+const chunker = new SemanticChunker({
+  embeddingModel: 'minishlab/potion-base-8M',
+  chunkSize: 512,
+});
+
+const text = "Your text here...";
+const chunks = await chunker.chunk({ text });
+```
+
+```bash cURL
+curl -X POST https://api.chonkie.ai/v1/chunk/semantic \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "Your text here...",
+    "embedding_model": "minishlab/potion-base-8M",
+    "chunk_size": 512
+  }'
+```
+
+</CodeGroup>
+
+### File Input
+
+<CodeGroup>
+
+```python Python
+from chonkie.cloud import SemanticChunker
+
+chunker = SemanticChunker(
+    embedding_model="minishlab/potion-base-8M",
+    chunk_size=512,
+)
+
+# Chunk from file
+with open("document.txt", "rb") as f:
+    chunks = chunker.chunk(file=f)
+```
+
+```javascript JavaScript
+import { SemanticChunker } from '@chonkiejs/cloud';
+
+const chunker = new SemanticChunker({
+  embeddingModel: 'minishlab/potion-base-8M',
+  chunkSize: 512,
+});
+
+// Chunk from file path (Node.js)
+const chunks = await chunker.chunk({ filepath: './document.txt' });
+```
+
+```bash cURL
+# Step 1: Upload the file
+curl -X POST https://api.chonkie.ai/v1/files \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -F "file=@document.txt"
+
+# Returns: {"name": "document.txt", "size": "1024"}
+
+# Step 2: Chunk the uploaded file
+curl -X POST https://api.chonkie.ai/v1/chunk/semantic \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "file": {
+      "type": "document",
+      "content": "document.txt"
+    },
+    "embedding_model": "minishlab/potion-base-8M",
+    "chunk_size": 512
+  }'
+```
+
+</CodeGroup>
+
+## Request
+
+#### Parameters
+
+<ParamField path="text" type="string | string[]">
+  The text to chunk. Can be a single string or an array of strings for batch processing. Either `text` or `file` is required.
+</ParamField>
+
+<ParamField path="file" type="file">
+  File to chunk. Use multipart/form-data encoding. Either `text` or `file` is required.
+</ParamField>
+
+<ParamField path="embedding_model" type="string" default="minishlab/potion-base-8M">
+  The embedding model to use to detect semantic similarity.
+</ParamField>
+
+<ParamField path="tokenizer" type="string" default="gpt2">
+  Tokenizer to use for counting tokens.
+</ParamField>
+
+<ParamField path="chunk_size" type="integer" default="512">
+  Target number of tokens per chunk (soft limit).
+</ParamField>
+
+<ParamField path="threshold" type="float" default="0.8">
+  Threshold for semantic similarity (0-1). Lower values create more chunks.
+</ParamField>
+
+<ParamField path="min_sentences_per_chunk" type="integer" default="1">
+  Minimum number of sentences per chunk.
+</ParamField>
+
+## Response
+
+#### Returns
+
+Array of `Chunk` objects with semantically coherent text segments.
+
+<ResponseField name="text" type="string">
+  The chunk text content.
+</ResponseField>
+
+<ResponseField name="start_index" type="integer">
+  Starting character position in the original text.
+</ResponseField>
+
+<ResponseField name="end_index" type="integer">
+  Ending character position in the original text.
+</ResponseField>
+
+<ResponseField name="token_count" type="integer">
+  Number of tokens in the chunk.
+</ResponseField>
+
+

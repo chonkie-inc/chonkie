@@ -27,7 +27,9 @@ class TestTextChef:
         assert isinstance(text_chef, TextChef)
 
     def test_process_single_file_string_path(
-        self: "TestTextChef", text_chef: TextChef, sample_text: str
+        self: "TestTextChef",
+        text_chef: TextChef,
+        sample_text: str,
     ) -> None:
         """Test processing a single file with string path."""
         with patch("builtins.open", mock_open(read_data=sample_text)):
@@ -41,7 +43,9 @@ class TestTextChef:
                     assert result.content == sample_text
 
     def test_process_single_file_path_object(
-        self: "TestTextChef", text_chef: TextChef, sample_text: str
+        self: "TestTextChef",
+        text_chef: TextChef,
+        sample_text: str,
     ) -> None:
         """Test processing a single file with Path object."""
         path_obj = Path("test_file.txt")
@@ -53,7 +57,9 @@ class TestTextChef:
                 assert result.content == sample_text
 
     def test_process_batch_string_paths(
-        self: "TestTextChef", text_chef: TextChef, sample_text: str
+        self: "TestTextChef",
+        text_chef: TextChef,
+        sample_text: str,
     ) -> None:
         """Test processing multiple files with string paths."""
         paths = ["file1.txt", "file2.txt", "file3.txt"]
@@ -63,7 +69,9 @@ class TestTextChef:
             assert all(result.content == sample_text for result in results)
 
     def test_process_batch_path_objects(
-        self: "TestTextChef", text_chef: TextChef, sample_text: str
+        self: "TestTextChef",
+        text_chef: TextChef,
+        sample_text: str,
     ) -> None:
         """Test processing multiple files with Path objects."""
         paths = [Path("file1.txt"), Path("file2.txt"), Path("file3.txt")]
@@ -73,7 +81,9 @@ class TestTextChef:
             assert all(result.content == sample_text for result in results)
 
     def test_process_batch_mixed_path_types(
-        self: "TestTextChef", text_chef: TextChef, sample_text: str
+        self: "TestTextChef",
+        text_chef: TextChef,
+        sample_text: str,
     ) -> None:
         """Test processing multiple files with mixed path types."""
         paths = ["file1.txt", Path("file2.txt"), "file3.txt"]
@@ -83,7 +93,9 @@ class TestTextChef:
             assert all(result.content == sample_text for result in results)
 
     def test_call_single_string_path(
-        self: "TestTextChef", text_chef: TextChef, sample_text: str
+        self: "TestTextChef",
+        text_chef: TextChef,
+        sample_text: str,
     ) -> None:
         """Test __call__ method with single string path."""
         with patch("builtins.open", mock_open(read_data=sample_text)):
@@ -96,7 +108,9 @@ class TestTextChef:
                 assert isinstance(result, Document)
 
     def test_call_single_path_object(
-        self: "TestTextChef", text_chef: TextChef, sample_text: str
+        self: "TestTextChef",
+        text_chef: TextChef,
+        sample_text: str,
     ) -> None:
         """Test __call__ method with single Path object."""
         path_obj = Path("test_file.txt")
@@ -108,7 +122,11 @@ class TestTextChef:
                 assert result.content == sample_text
                 assert isinstance(result, Document)
 
-    def test_call_list_of_strings(self: "TestTextChef", text_chef: TextChef, sample_text: str) -> None:
+    def test_call_list_of_strings(
+        self: "TestTextChef",
+        text_chef: TextChef,
+        sample_text: str,
+    ) -> None:
         """Test __call__ method with list of string paths."""
         paths = ["file1.txt", "file2.txt"]
         with patch("builtins.open", mock_open(read_data=sample_text)):
@@ -118,7 +136,9 @@ class TestTextChef:
             assert all(result.content == sample_text for result in results)
 
     def test_call_list_of_path_objects(
-        self: "TestTextChef", text_chef: TextChef, sample_text: str
+        self: "TestTextChef",
+        text_chef: TextChef,
+        sample_text: str,
     ) -> None:
         """Test __call__ method with list of Path objects."""
         paths = [Path("file1.txt"), Path("file2.txt")]
@@ -128,7 +148,11 @@ class TestTextChef:
             assert len(results) == 2
             assert all(result.content == sample_text for result in results)
 
-    def test_call_tuple_of_paths(self: "TestTextChef", text_chef: TextChef, sample_text: str) -> None:
+    def test_call_tuple_of_paths(
+        self: "TestTextChef",
+        text_chef: TextChef,
+        sample_text: str,
+    ) -> None:
         """Test __call__ method with tuple of paths."""
         paths = ("file1.txt", "file2.txt")
         with patch("builtins.open", mock_open(read_data=sample_text)):
@@ -142,7 +166,10 @@ class TestTextChef:
         with pytest.raises(TypeError, match="Unsupported type"):
             text_chef(123)  # type: ignore[arg-type]
 
-    def test_call_invalid_type_none_raises_error(self: "TestTextChef", text_chef: TextChef) -> None:
+    def test_call_invalid_type_none_raises_error(
+        self: "TestTextChef",
+        text_chef: TextChef,
+    ) -> None:
         """Test __call__ method with None raises TypeError."""
         with pytest.raises(TypeError, match="Unsupported type"):
             text_chef(None)  # type: ignore[arg-type]
@@ -177,7 +204,9 @@ class TestTextChef:
         assert repr(text_chef) == "TextChef()"
 
     def test_file_opened_with_correct_mode(
-        self: "TestTextChef", text_chef: TextChef, sample_text: str
+        self: "TestTextChef",
+        text_chef: TextChef,
+        sample_text: str,
     ) -> None:
         """Test that files are opened in read mode."""
         mock_file = mock_open(read_data=sample_text)
@@ -186,13 +215,13 @@ class TestTextChef:
             mock_file.assert_called_once_with("test_file.txt", "r", encoding="utf-8")
 
     def test_batch_processing_calls_process_for_each_file(
-        self: "TestTextChef", text_chef: TextChef, sample_text: str
+        self: "TestTextChef",
+        text_chef: TextChef,
+        sample_text: str,
     ) -> None:
         """Test that batch processing calls process method for each file."""
         paths = ["file1.txt", "file2.txt"]
-        with patch.object(
-            text_chef, "process", return_value=sample_text
-        ) as mock_process:
+        with patch.object(text_chef, "process", return_value=sample_text) as mock_process:
             results = text_chef.process_batch(paths)
             assert mock_process.call_count == 2
             assert len(results) == 2

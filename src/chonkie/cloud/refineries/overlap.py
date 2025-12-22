@@ -1,6 +1,7 @@
 """Overlap Refinery for Chonkie Cloud."""
+
 import os
-from typing import Any, Dict, List, Literal, Optional, Union, cast
+from typing import Any, Literal, Optional, Union, cast
 
 import requests
 
@@ -10,8 +11,9 @@ from .base import BaseRefinery
 class OverlapRefinery(BaseRefinery):
     """Overlap Refinery for Chonkie Cloud."""
 
-    def __init__(self,         
-        tokenizer_or_token_counter: str = "gpt2",
+    def __init__(
+        self,
+        tokenizer: str = "gpt2",
         context_size: Union[int, float] = 0.25,
         mode: Literal["token", "recursive"] = "token",
         method: Literal["suffix", "prefix"] = "suffix",
@@ -23,12 +25,12 @@ class OverlapRefinery(BaseRefinery):
         """Initialize the OverlapRefinery.
 
         Args:
-            tokenizer_or_token_counter: The tokenizer or token counter to use.
+            tokenizer: The tokenizer to use.
             context_size: The context size to use. Must be a value between 0 and 1 for token mode and an integer for recursive mode.
             mode: The mode to use.
             method: The method to use.
             recipe: The name of the recursive rules recipe to use. Find all available recipes at https://hf.co/datasets/chonkie-ai/recipes
-            lang: The language of the recipe. Please make sure a valide recipe with the given `recipe` value and `lang` values exists on https://hf.co/datasets/chonkie-ai/recipes
+            lang: The language of the recipe. Please make sure a valid recipe with the given `recipe` value and `lang` values exists on https://hf.co/datasets/chonkie-ai/recipes
             merge: Whether to merge the chunks.
             api_key: Your Chonkie Cloud API Key.
 
@@ -37,7 +39,7 @@ class OverlapRefinery(BaseRefinery):
 
         # Get the API key
         self.api_key = api_key or os.getenv("CHONKIE_API_KEY")
-        self.tokenizer_or_token_counter = tokenizer_or_token_counter
+        self.tokenizer = tokenizer
         self.context_size = context_size
         self.mode = mode
         self.method = method
@@ -47,12 +49,12 @@ class OverlapRefinery(BaseRefinery):
         if not self.api_key:
             raise ValueError(
                 "No API key provided. Please set the CHONKIE_API_KEY environment variable"
-                + "or pass an API key to the OverlapRefinery constructor."
+                + "or pass an API key to the OverlapRefinery constructor.",
             )
 
-    def refine(self, chunks: List[Any]) -> List[Any]:
+    def refine(self, chunks: list[Any]) -> list[Any]:
         """Refine the chunks.
-        
+
         Args:
             chunks: The chunks to refine.
 
@@ -69,7 +71,7 @@ class OverlapRefinery(BaseRefinery):
         og_type = type(chunks[0])
         payload = {
             "chunks": [chunk.to_dict() for chunk in chunks],
-            "tokenizer_or_token_counter": self.tokenizer_or_token_counter,
+            "tokenizer_or_token_counter": self.tokenizer,
             "context_size": self.context_size,
             "mode": self.mode,
             "method": self.method,
@@ -86,10 +88,10 @@ class OverlapRefinery(BaseRefinery):
         )
 
         # Parse the response
-        result: List[Dict] = cast(List[Dict], response.json())
+        result: list[dict] = cast(list[dict], response.json())
         result_chunks = [og_type.from_dict(chunk) for chunk in result]
         return result_chunks
 
-    def __call__(self, chunks: List[Any]) -> List[Any]:
+    def __call__(self, chunks: list[Any]) -> list[Any]:
         """Call the OverlapRefinery."""
         return self.refine(chunks)

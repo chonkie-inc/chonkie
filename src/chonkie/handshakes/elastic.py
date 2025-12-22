@@ -1,28 +1,24 @@
 """Elasticsearch Handshake to export Chonkie's Chunks into an Elasticsearch index."""
 
-import importlib.util
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Dict,
-    List,
-    Literal,
-    Optional,
-    Union,
-)
+import importlib.util as importutil
+from typing import TYPE_CHECKING, Any, Literal, Optional, Union
 from uuid import NAMESPACE_OID, uuid5
 
 from chonkie.embeddings import AutoEmbeddings, BaseEmbeddings
+from chonkie.logger import get_logger
+from chonkie.pipeline import handshake
 from chonkie.types import Chunk
 
 from .base import BaseHandshake
 from .utils import generate_random_collection_name
 
+logger = get_logger(__name__)
+
 if TYPE_CHECKING:
     from elasticsearch import Elasticsearch
-    from elasticsearch.helpers import bulk
 
 
+@handshake("elastic")
 class ElasticHandshake(BaseHandshake):
     """Elasticsearch Handshake to export Chonkie's Chunks into an Elasticsearch index.
 
@@ -33,7 +29,7 @@ class ElasticHandshake(BaseHandshake):
         client: Optional[Elasticsearch]: An existing Elasticsearch client instance. If not provided, one will be created.
         index_name: Union[str, Literal["random"]]: The name of the index to use. If "random", a unique name is generated.
         embedding_model: Union[str, BaseEmbeddings]: The embedding model to use for vectorizing chunks.
-        hosts: Optional[Union[str, List[str]]]: URL(s) of the Elasticsearch instance(s).
+        hosts: Optional[Union[str, list[str]]]: URL(s) of the Elasticsearch instance(s).
         cloud_id: Optional[str]: The Cloud ID for connecting to an Elastic Cloud deployment.
         api_key: Optional[str]: The API key for authenticating with an Elastic Cloud deployment.
         **kwargs: Additional keyword arguments to pass to the Elasticsearch client constructor.
@@ -45,25 +41,32 @@ class ElasticHandshake(BaseHandshake):
         client: Optional["Elasticsearch"] = None,
         index_name: Union[str, Literal["random"]] = "random",
         embedding_model: Union[str, BaseEmbeddings] = "minishlab/potion-retrieval-32M",
-        hosts: Optional[Union[str, List[str]]] = None,
+        hosts: Optional[Union[str, list[str]]] = None,
         cloud_id: Optional[str] = None,
         api_key: Optional[str] = None,
-        **kwargs: Dict[str, Any],
+        **kwargs: dict[str, Any],
     ) -> None:
         """Initialize the Elasticsearch Handshake."""
         super().__init__()
-        self._import_dependencies()
+
+        try:
+            from elasticsearch import Elasticsearch
+        except ImportError as ie:
+            raise ImportError(
+                "Elasticsearch is not installed. "
+                "Please install it with `pip install chonkie[elastic]`.",
+            ) from ie
 
         # 1. Initialize the Elasticsearch client
         if client:
             self.client = client
         elif cloud_id and api_key:
-            self.client = Elasticsearch(cloud_id=cloud_id, api_key=api_key, **kwargs) # type: ignore
+            self.client = Elasticsearch(cloud_id=cloud_id, api_key=api_key, **kwargs)  # type: ignore[arg-type]
         elif hosts:
-            self.client = Elasticsearch(hosts=hosts, api_key=api_key, **kwargs) # type: ignore
+            self.client = Elasticsearch(hosts=hosts, api_key=api_key, **kwargs)  # type: ignore[arg-type]
         else:
             # Default to a standard local client if no other connection info is provided
-            self.client = Elasticsearch("http://localhost:9200", **kwargs) # type: ignore
+            self.client = Elasticsearch("http://localhost:9200", **kwargs)  # type: ignore[arg-type]
 
         # 2. Initialize the embedding model
         if isinstance(embedding_model, str):
@@ -78,7 +81,7 @@ class ElasticHandshake(BaseHandshake):
                 self.index_name = generate_random_collection_name()
                 if not self.client.indices.exists(index=self.index_name):
                     break
-            print(f"🦛 Chonkie will create a new index in Elasticsearch: {self.index_name}")
+            logger.info(f"Chonkie will create a new index in Elasticsearch: {self.index_name}")
         else:
             self.index_name = index_name
 
@@ -91,32 +94,21 @@ class ElasticHandshake(BaseHandshake):
                     "start_index": {"type": "integer"},
                     "end_index": {"type": "integer"},
                     "token_count": {"type": "integer"},
-                }
+                },
             }
             self.client.indices.create(index=self.index_name, mappings=mapping)
-            print(f"✅ Index '{self.index_name}' created with vector mapping.")
+            logger.info(f"Index '{self.index_name}' created with vector mapping.")
 
-    def _is_available(self) -> bool:
+    @classmethod
+    def _is_available(cls) -> bool:
         """Check if the dependencies are installed."""
-        return importlib.util.find_spec("elasticsearch") is not None
-
-    def _import_dependencies(self) -> None:
-        """Lazy import the dependencies."""
-        if self._is_available():
-            global Elasticsearch, bulk
-            from elasticsearch import Elasticsearch
-            from elasticsearch.helpers import bulk
-        else:
-            raise ImportError(
-                "Elasticsearch is not installed. "
-                + "Please install it with `pip install chonkie[elastic]`."
-            )
+        return importutil.find_spec("elasticsearch") is not None
 
     def _generate_id(self, index: int, chunk: Chunk) -> str:
         """Generate a unique id for the chunk."""
         return str(uuid5(NAMESPACE_OID, f"{self.index_name}::chunk-{index}:{chunk.text}"))
 
-    def _create_bulk_actions(self, chunks: List[Chunk]) -> List[Dict[str, Any]]:
+    def _create_bulk_actions(self, chunks: list[Chunk]) -> list[dict[str, Any]]:
         """Generate a list of actions for the Elasticsearch bulk API."""
         actions = []
         # Get all embeddings in a single batch call for efficiency
@@ -136,7 +128,7 @@ class ElasticHandshake(BaseHandshake):
             })
         return actions
 
-    def write(self, chunks: Union[Chunk, List[Chunk]]) -> None:
+    def write(self, chunks: Union[Chunk, list[Chunk]]) -> None:
         """Write the chunks to the Elasticsearch index using the bulk API."""
         if isinstance(chunks, Chunk):
             chunks = [chunks]
@@ -144,15 +136,17 @@ class ElasticHandshake(BaseHandshake):
         actions = self._create_bulk_actions(chunks)
 
         # Use the bulk helper to efficiently write the documents
+        from elasticsearch.helpers import bulk
+
         success, errors = bulk(self.client, actions, raise_on_error=False)
 
         if errors:
-            print(f"⚠️ Encountered {len(errors)} errors during bulk indexing.") # type: ignore
+            logger.warning(f"Encountered {len(errors)} errors during bulk indexing.")  # type: ignore
             # Optionally log the first few errors for debugging
-            for i, error in enumerate(errors[:5]): # type: ignore
-                print(f"  Error {i+1}: {error}")
+            for i, error in enumerate(errors[:5]):  # type: ignore
+                logger.error(f"Error {i + 1}: {error}")
 
-        print(f"🦛 Chonkie wrote {success} chunks to Elasticsearch index: {self.index_name}")
+        logger.info(f"Chonkie wrote {success} chunks to Elasticsearch index: {self.index_name}")
 
     def __repr__(self) -> str:
         """Return the string representation of the ElasticHandshake."""
@@ -161,9 +155,9 @@ class ElasticHandshake(BaseHandshake):
     def search(
         self,
         query: Optional[str] = None,
-        embedding: Optional[List[float]] = None,
+        embedding: Optional[list[float]] = None,
         limit: int = 5,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Retrieve the top_k most similar chunks to the query using KNN search.
 
         Args:

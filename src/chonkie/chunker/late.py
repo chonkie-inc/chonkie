@@ -1,23 +1,20 @@
 """Module containing the LateChunker class."""
 
-import importlib.util as importutil
-from typing import TYPE_CHECKING, Any, List, Optional, Union
+from typing import Any, Optional, Union
+
+import numpy as np
 
 # Get all the Chonkie imports
 from chonkie.chunker.recursive import RecursiveChunker
 from chonkie.embeddings.sentence_transformer import SentenceTransformerEmbeddings
+from chonkie.logger import get_logger
+from chonkie.pipeline import chunker
 from chonkie.types import Chunk, RecursiveRules
 
-if TYPE_CHECKING:
-    try:
-        import numpy as np
-    except ImportError:
-        class np:  # type: ignore
-            """Stub class for numpy when not available."""
-
-            pass
+logger = get_logger(__name__)
 
 
+@chunker("late")
 class LateChunker(RecursiveChunker):
     """A chunker that chunks texts based on late interaction.
 
@@ -26,14 +23,18 @@ class LateChunker(RecursiveChunker):
     Args:
         embedding_model: The embedding model to use for chunking.
         chunk_size: The maximum size of each chunk.
+        rules: Recursive rules to chunk by
+        min_characters_per_chunk: Minimum number of characters in a single chunk
 
     """
 
     def __init__(
         self,
         embedding_model: Union[
-            str, SentenceTransformerEmbeddings, Any
-        ] = "sentence-transformers/all-MiniLM-L6-v2",
+            str,
+            SentenceTransformerEmbeddings,
+            Any,
+        ] = "nomic-ai/modernbert-embed-base",
         chunk_size: int = 2048,
         rules: RecursiveRules = RecursiveRules(),
         min_characters_per_chunk: int = 24,
@@ -49,9 +50,6 @@ class LateChunker(RecursiveChunker):
             **kwargs: Additional keyword arguments.
 
         """
-        # Lazy import all the dependencies on initialization
-        self._import_dependencies()
-
         # set all the additional attributes
         if isinstance(embedding_model, SentenceTransformerEmbeddings):
             self.embedding_model = embedding_model
@@ -63,12 +61,12 @@ class LateChunker(RecursiveChunker):
         # Probably the dependency hasn't been installed
         if self.embedding_model is None:
             raise ImportError(
-                "Oh! seems like you're missing the proper dependency to run this chunker. Please install it using `pip install chonkie[st]`"
+                "Oh! seems like you're missing the proper dependency to run this chunker. Please install it using `pip install chonkie[st]`",
             )
 
         # Initialize the RecursiveChunker with the embedding_model's tokenizer
         super().__init__(
-            tokenizer_or_token_counter=self.embedding_model.get_tokenizer_or_token_counter(),
+            tokenizer=self.embedding_model.get_tokenizer(),
             chunk_size=chunk_size,
             rules=rules,
             min_characters_per_chunk=min_characters_per_chunk,
@@ -76,16 +74,21 @@ class LateChunker(RecursiveChunker):
 
         # Disable multiprocessing for this chunker
         self._use_multiprocessing = False
-    
+
     @classmethod
-    def from_recipe(cls,  # type: ignore[override]
-                    name: Optional[str] = "default", 
-                    lang: Optional[str] = "en", 
-                    path: Optional[str] = None, 
-                    embedding_model: Union[str, SentenceTransformerEmbeddings] = "sentence-transformers/all-MiniLM-L6-v2",
-                    chunk_size: int = 2048,
-                    min_characters_per_chunk: int = 24,
-                    **kwargs: Any) -> "LateChunker":
+    def from_recipe(  # type: ignore[override]
+        cls,
+        name: Optional[str] = "default",
+        lang: Optional[str] = "en",
+        path: Optional[str] = None,
+        embedding_model: Union[
+            str,
+            SentenceTransformerEmbeddings,
+        ] = "sentence-transformers/all-MiniLM-L6-v2",
+        chunk_size: int = 2048,
+        min_characters_per_chunk: int = 24,
+        **kwargs: Any,
+    ) -> "LateChunker":
         """Create a LateChunker from a recipe.
 
         Args:
@@ -98,58 +101,65 @@ class LateChunker(RecursiveChunker):
             **kwargs: Additional keyword arguments.
 
         Returns:
-            LateChunker: The created LateChunker.   
+            LateChunker: The created LateChunker.
 
         Raises:
             ValueError: If the recipe is invalid or if the recipe is not found.
 
         """
+        logger.info("Loading LateChunker recipe", name=name, lang=lang)
         # Create a hubbie instance
         rules = RecursiveRules.from_recipe(name, lang, path)
+        logger.debug(f"Recipe loaded successfully with {len(rules.levels or [])} levels")
         return cls(
             embedding_model=embedding_model,
             chunk_size=chunk_size,
             rules=rules,
             min_characters_per_chunk=min_characters_per_chunk,
-            **kwargs
-        )   
-    
+            **kwargs,
+        )
+
     def _get_late_embeddings(
-        self, token_embeddings: "np.ndarray", token_counts: List[int]
-    ) -> List["np.ndarray"]:
+        self,
+        token_embeddings: np.ndarray,
+        token_counts: list[int],
+    ) -> list[np.ndarray]:
         # Split the token embeddings into chunks based on the token counts
         embs = []
-        cum_token_counts = np.cumsum([0] + token_counts)  # type: ignore[name-defined]
+        cum_token_counts = np.cumsum([0] + token_counts)
         for i in range(len(token_counts)):
             embs.append(
-                np.mean(  # type: ignore[name-defined]
+                np.mean(
                     token_embeddings[cum_token_counts[i] : cum_token_counts[i + 1]],
                     axis=0,
-                )
+                ),
             )
         return embs
 
-    def chunk(self, text: str) -> List[Chunk]:
+    def chunk(self, text: str) -> list[Chunk]:
         """Chunk the text via LateChunking."""
+        logger.debug(f"Starting late chunking for text of length {len(text)}")
         # This would first call upon the _recursive_chunk method
         # and then use the embedding model to get the token token_embeddings
         # Lastly, we would combine the methods together to create the LateChunk objects
         chunks = self._recursive_chunk(text)
+        logger.debug(f"Created {len(chunks)} initial chunks from recursive splitting")
         token_embeddings = self.embedding_model.embed_as_tokens(text)
 
         # Get the token_counts for all the chunks
-        # Note: LateChunker always returns chunks, so chunks are always RecursiveChunk objects
         token_counts = [c.token_count for c in chunks]  # type: ignore[union-attr]
+
+        # If fallback was used, token_embeddings may be fewer than sum(token_counts)
+        if token_embeddings.shape[0] < sum(token_counts):
+            # Fallback: use sentence embeddings for each chunk
+            # Re-embed each chunk as a sentence embedding
+            token_embeddings = np.array([self.embedding_model.embed(c.text) for c in chunks])
+            token_counts = [1 for _ in chunks]
 
         # Validate the token_counts with the actual count
         if sum(token_counts) > token_embeddings.shape[0]:
-            raise ValueError(
-                "The sum of token counts exceeds the number of tokens in the text"
-            )
-        # Diff would always be positive now~ which it should be considering token_counts
-        # doesn't have any special tokens added
+            raise ValueError("The sum of token counts exceeds the number of tokens in the text")
         if sum(token_counts) < token_embeddings.shape[0]:
-            # Use a little trick to ensure that the token counts get properly adjusted
             diff = token_embeddings.shape[0] - sum(token_counts)
             token_counts[0] = token_counts[0] + diff // 2
             token_counts[-1] = token_counts[-1] + (diff - diff // 2)
@@ -174,20 +184,7 @@ class LateChunker(RecursiveChunker):
                     end_index=chunk.end_index,  # type: ignore[attr-defined]
                     token_count=token_count,
                     embedding=embedding,
-                )
+                ),
             )
+        logger.info(f"Created {len(result)} chunks with late interaction embeddings")
         return result
-
-    def _import_dependencies(self) -> None:
-        """Lazy import dependencies for the chunker implementation.
-
-        This method should be implemented by all chunker implementations that require
-        additional dependencies. It lazily imports the dependencies only when they are needed.
-        """
-        if importutil.find_spec("numpy"):
-            global np
-            import numpy as np
-        else:
-            raise ImportError(
-                "numpy is not available. Please install it via `pip install chonkie[semantic]`"
-            )

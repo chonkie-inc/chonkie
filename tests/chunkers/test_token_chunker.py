@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import List, cast
+from typing import cast
 
 import pytest
 import tiktoken
@@ -45,17 +45,18 @@ def sample_text() -> str:
 
 
 @pytest.fixture
-def sample_batch(sample_text: str) -> List[str]:
+def sample_batch(sample_text: str) -> list[str]:
     """Fixture that returns a sample batch of 10 texts (500-1000 tokens each) for testing."""
     batch = []
-    base_text = sample_text + " " # Add space for separation when repeating
-    
+    base_text = sample_text + " "  # Add space for separation when repeating
+
     # Create 10 texts with varying lengths within the range
     for i in range(10):
-        repeats = 4 + (i % 3) # Cycle through 4, 5, 6 repeats
+        repeats = 4 + (i % 3)  # Cycle through 4, 5, 6 repeats
         batch.append(base_text * repeats)
-        
+
     return batch
+
 
 @pytest.fixture
 def sample_complex_markdown_text() -> str:
@@ -89,11 +90,11 @@ def test_token_chunker_initialization_tok(tokenizer: Tokenizer) -> None:
     assert chunker.chunk_overlap == 128
 
 
-def test_token_chunker_initialization_hftok(transformers_tokenizer: PreTrainedTokenizerFast) -> None:
+def test_token_chunker_initialization_hftok(
+    transformers_tokenizer: PreTrainedTokenizerFast,
+) -> None:
     """Test that the TokenChunker can be initialized with a tokenizer."""
-    chunker = TokenChunker(
-        tokenizer=transformers_tokenizer, chunk_size=512, chunk_overlap=128
-    )
+    chunker = TokenChunker(tokenizer=transformers_tokenizer, chunk_size=512, chunk_overlap=128)
 
     assert chunker is not None
     assert chunker.tokenizer.tokenizer == transformers_tokenizer
@@ -125,11 +126,12 @@ def test_token_chunker_chunking(tiktokenizer: Encoding, sample_text: str) -> Non
     assert all([chunk.end_index is not None for chunk in chunks])
 
 
-def test_token_chunker_chunking_hf(transformers_tokenizer: PreTrainedTokenizerFast, sample_text: str) -> None:
+def test_token_chunker_chunking_hf(
+    transformers_tokenizer: PreTrainedTokenizerFast,
+    sample_text: str,
+) -> None:
     """Test that the TokenChunker can chunk a sample text into tokens."""
-    chunker = TokenChunker(
-        tokenizer=transformers_tokenizer, chunk_size=512, chunk_overlap=128
-    )
+    chunker = TokenChunker(tokenizer=transformers_tokenizer, chunk_size=512, chunk_overlap=128)
     chunks = chunker.chunk(sample_text)
 
     assert len(chunks) > 0
@@ -173,11 +175,11 @@ def test_token_chunker_single_token_text(tokenizer: Tokenizer) -> None:
     assert chunks[0].text == "Hello"
 
 
-def test_token_chunker_single_token_text_hf(transformers_tokenizer: PreTrainedTokenizerFast) -> None:
+def test_token_chunker_single_token_text_hf(
+    transformers_tokenizer: PreTrainedTokenizerFast,
+) -> None:
     """Test that the TokenChunker can handle text with a single token."""
-    chunker = TokenChunker(
-        tokenizer=transformers_tokenizer, chunk_size=512, chunk_overlap=128
-    )
+    chunker = TokenChunker(tokenizer=transformers_tokenizer, chunk_size=512, chunk_overlap=128)
     chunks = chunker.chunk("Hello")
 
     assert len(chunks) == 1
@@ -205,7 +207,7 @@ def test_token_chunker_single_chunk_text(tokenizer: Tokenizer) -> None:
     assert chunks[0].text == "Hello, how are you?"
 
 
-def test_token_chunker_batch_chunking(tiktokenizer: Encoding, sample_batch: List[str]) -> None:
+def test_token_chunker_batch_chunking(tiktokenizer: Encoding, sample_batch: list[str]) -> None:
     """Test that the TokenChunker can chunk a batch of texts into tokens."""
     chunker = TokenChunker(tokenizer=tiktokenizer, chunk_size=512, chunk_overlap=128)
     chunks = chunker.chunk_batch(sample_batch)
@@ -213,17 +215,11 @@ def test_token_chunker_batch_chunking(tiktokenizer: Encoding, sample_batch: List
     assert len(chunks) > 0
     assert all([len(chunk) > 0 for chunk in chunks])
     assert all([type(chunk[0]) is Chunk for chunk in chunks])
-    assert all([
-        all([chunk.token_count <= 512 for chunk in chunks]) for chunks in chunks
-    ])
+    assert all([all([chunk.token_count <= 512 for chunk in chunks]) for chunks in chunks])
     assert all([all([chunk.token_count > 0 for chunk in chunks]) for chunks in chunks])
     assert all([all([chunk.text is not None for chunk in chunks]) for chunks in chunks])
-    assert all([
-        all([chunk.start_index is not None for chunk in chunks]) for chunks in chunks
-    ])
-    assert all([
-        all([chunk.end_index is not None for chunk in chunks]) for chunks in chunks
-    ])
+    assert all([all([chunk.start_index is not None for chunk in chunks]) for chunks in chunks])
+    assert all([all([chunk.end_index is not None for chunk in chunks]) for chunks in chunks])
 
 
 def test_token_chunker_repr(tiktokenizer: Encoding) -> None:
@@ -251,7 +247,7 @@ def test_token_chunker_call(tiktokenizer: Encoding, sample_text: str) -> None:
     assert all([chunk.end_index is not None for chunk in chunks])
 
 
-def verify_chunk_indices(chunks: List[Chunk], original_text: str):
+def verify_chunk_indices(chunks: list[Chunk], original_text: str):
     """Verify that chunk indices correctly map to the original text."""
     for i, chunk in enumerate(chunks):
         # Extract text using the indices
@@ -295,8 +291,7 @@ def test_token_chunker_token_counts(tiktokenizer: Encoding, sample_text: str) ->
 
     token_counts = [len(tiktokenizer.encode(chunk.text)) for chunk in chunks]
     assert all([
-        chunk.token_count == token_count
-        for chunk, token_count in zip(chunks, token_counts)
+        chunk.token_count == token_count for chunk, token_count in zip(chunks, token_counts)
     ]), "All chunks must have a token count equal to the length of the encoded text"
 
 
@@ -313,7 +308,7 @@ def test_token_chunker_return_type(tiktokenizer: Encoding, sample_text: str) -> 
         tokenizer=tiktokenizer,
         chunk_size=512,
         chunk_overlap=128,
-    ) 
+    )
     chunks = chunker.chunk(sample_text)
     assert all([type(chunk) is Chunk for chunk in chunks])
     assert all([len(tiktokenizer.encode(chunk.text)) <= 512 for chunk in chunks])

@@ -4,14 +4,20 @@ This module provides a TokenChunker class for splitting text into chunks of a sp
 
 """
 
-from typing import Any, Callable, Generator, List, Sequence, Union
+from typing import Generator, Sequence, Union
 
 from tqdm import trange
 
 from chonkie.chunker.base import BaseChunker
+from chonkie.logger import get_logger
+from chonkie.pipeline import chunker
+from chonkie.tokenizer import TokenizerProtocol
 from chonkie.types import Chunk
 
+logger = get_logger(__name__)
 
+
+@chunker("token")
 class TokenChunker(BaseChunker):
     """Chunker that splits text into chunks of a specified token size.
 
@@ -24,7 +30,7 @@ class TokenChunker(BaseChunker):
 
     def __init__(
         self,
-        tokenizer: Union[str, Callable[[str], int], Any] = "character",
+        tokenizer: Union[str, TokenizerProtocol] = "character",
         chunk_size: int = 2048,
         chunk_overlap: Union[int, float] = 0,
     ) -> None:
@@ -48,9 +54,7 @@ class TokenChunker(BaseChunker):
         # Assign the values if they make sense
         self.chunk_size = chunk_size
         self.chunk_overlap = (
-            chunk_overlap
-            if isinstance(chunk_overlap, int)
-            else int(chunk_overlap * chunk_size)
+            chunk_overlap if isinstance(chunk_overlap, int) else int(chunk_overlap * chunk_size)
         )
 
         self._use_multiprocessing = False
@@ -58,9 +62,9 @@ class TokenChunker(BaseChunker):
     def _create_chunks(
         self,
         chunk_texts: Sequence[str],
-        token_groups: List[List[int]],
-        token_counts: List[int],
-    ) -> List[Chunk]:
+        token_groups: list[list[int]],
+        token_counts: list[int],
+    ) -> list[Chunk]:
         """Create chunks from a list of texts."""
         # Find the overlap lengths for index calculation
         if self.chunk_overlap > 0:
@@ -80,7 +84,9 @@ class TokenChunker(BaseChunker):
         chunks = []
         current_index = 0
         for chunk_text, overlap_length, token_count in zip(
-            chunk_texts, overlap_lengths, token_counts
+            chunk_texts,
+            overlap_lengths,
+            token_counts,
         ):
             start_index = current_index
             end_index = start_index + len(chunk_text)
@@ -90,15 +96,13 @@ class TokenChunker(BaseChunker):
                     start_index=start_index,
                     end_index=end_index,
                     token_count=token_count,
-                )
+                ),
             )
             current_index = end_index - overlap_length
 
         return chunks
 
-    def _token_group_generator(
-        self, tokens: Sequence[int]
-    ) -> Generator[List[int], None, None]:
+    def _token_group_generator(self, tokens: Sequence[int]) -> Generator[list[int], None, None]:
         """Generate chunks from a list of tokens."""
         for start in range(0, len(tokens), self.chunk_size - self.chunk_overlap):
             end = min(start + self.chunk_size, len(tokens))
@@ -106,7 +110,7 @@ class TokenChunker(BaseChunker):
             if end == len(tokens):
                 break
 
-    def chunk(self, text: str) -> List[Chunk]:
+    def chunk(self, text: str) -> list[Chunk]:
         """Split text into overlapping chunks of specified token size.
 
         Args:
@@ -118,6 +122,8 @@ class TokenChunker(BaseChunker):
         """
         if not text.strip():
             return []
+
+        logger.debug(f"Chunking text of length {len(text)} with chunk_size={self.chunk_size}")
 
         # Encode full text
         text_tokens = self.tokenizer.encode(text)
@@ -132,9 +138,10 @@ class TokenChunker(BaseChunker):
         # Create the chunks from the token groups and token counts
         chunks = self._create_chunks(chunk_texts, token_groups, token_counts)
 
+        logger.info(f"Created {len(chunks)} chunks from {len(text_tokens)} tokens")
         return chunks
 
-    def _process_batch(self, texts: List[str]) -> List[List[Chunk]]:
+    def _process_batch(self, texts: list[str]) -> list[list[Chunk]]:
         """Process a batch of texts."""
         # encode the texts into tokens in a batch
         tokens_list = self.tokenizer.encode_batch(texts)
@@ -162,10 +169,10 @@ class TokenChunker(BaseChunker):
 
     def chunk_batch(  # type: ignore[override]
         self,
-        texts: List[str],
+        texts: list[str],
         batch_size: int = 1,
         show_progress_bar: bool = True,
-    ) -> List[List[Chunk]]:
+    ) -> list[list[Chunk]]:
         """Split a batch of texts into their respective chunks.
 
         Args:
@@ -194,10 +201,10 @@ class TokenChunker(BaseChunker):
 
     def __call__(  # type: ignore[override]
         self,
-        text: Union[str, List[str]],
+        text: Union[str, list[str]],
         batch_size: int = 1,
         show_progress_bar: bool = True,
-    ) -> Union[List[Chunk], List[List[Chunk]]]:
+    ) -> Union[list[Chunk], list[list[Chunk]]]:
         """Make the TokenChunker callable directly.
 
         Args:
@@ -214,9 +221,7 @@ class TokenChunker(BaseChunker):
         elif isinstance(text, list) and isinstance(text[0], str):
             return self.chunk_batch(text, batch_size, show_progress_bar)
         else:
-            raise ValueError(
-                "Invalid input type. Expected a string or a list of strings."
-            )
+            raise ValueError("Invalid input type. Expected a string or a list of strings.")
 
     def __repr__(self) -> str:
         """Return a string representation of the TokenChunker."""

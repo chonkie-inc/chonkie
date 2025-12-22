@@ -1,33 +1,31 @@
 """Registry for embedding implementations with pattern matching support."""
 
 import re
-from typing import Any, Dict, List, Optional, Pattern, Type, Union
+from typing import Any, Optional, Pattern, Union
 
+from .azure_openai import AzureOpenAIEmbeddings
 from .base import BaseEmbeddings
+from .catsu import CatsuEmbeddings
 from .cohere import CohereEmbeddings
 from .gemini import GeminiEmbeddings
 from .jina import JinaEmbeddings
+from .litellm import LiteLLMEmbeddings
 from .model2vec import Model2VecEmbeddings
 from .openai import OpenAIEmbeddings
 from .sentence_transformer import SentenceTransformerEmbeddings
-from .voyageai import VoyageAIEmbeddings
 
 
 class EmbeddingsRegistry:
     """Registry for embedding implementations with pattern matching support."""
 
     # Create a registry for the model names, provider aliases, patterns, and supported types
-    model_registry: Dict[str, Type[BaseEmbeddings]] = {}
-    provider_registry: Dict[str, Type[BaseEmbeddings]] = {}
-    pattern_registry: Dict[Pattern, Type[BaseEmbeddings]] = {}
-    type_registry: Dict[str, Type[BaseEmbeddings]] = {}
+    model_registry: dict[str, type[BaseEmbeddings]] = {}
+    provider_registry: dict[str, type[BaseEmbeddings]] = {}
+    pattern_registry: dict[Pattern, type[BaseEmbeddings]] = {}
+    type_registry: dict[str, type[BaseEmbeddings]] = {}
 
     @classmethod
-    def register_model(
-        cls,
-        name: str,
-        embedding_cls: Type[BaseEmbeddings]
-    ) -> None:
+    def register_model(cls, name: str, embedding_cls: type[BaseEmbeddings]) -> None:
         """Register a new embeddings implementation.
 
         Args:
@@ -46,7 +44,7 @@ class EmbeddingsRegistry:
     def register_provider(
         cls,
         alias: str,
-        embeddings_cls: Type[BaseEmbeddings],
+        embeddings_cls: type[BaseEmbeddings],
     ) -> None:
         """Register a new provider.
 
@@ -59,13 +57,9 @@ class EmbeddingsRegistry:
             raise ValueError(f"{embeddings_cls} must be a subclass of BaseEmbeddings")
 
         cls.provider_registry[alias] = embeddings_cls
-    
+
     @classmethod
-    def register_pattern(
-        cls,
-        pattern: str,
-        embeddings_cls: Type[BaseEmbeddings]
-    ) -> None:
+    def register_pattern(cls, pattern: str, embeddings_cls: type[BaseEmbeddings]) -> None:
         """Register a new pattern."""
         if not issubclass(embeddings_cls, BaseEmbeddings):
             raise ValueError(f"{embeddings_cls} must be a subclass of BaseEmbeddings")
@@ -76,8 +70,8 @@ class EmbeddingsRegistry:
     @classmethod
     def register_types(
         cls,
-        types: Union[str, List[str]],
-        embeddings_cls: Type[BaseEmbeddings]
+        types: Union[str, list[str]],
+        embeddings_cls: type[BaseEmbeddings],
     ) -> None:
         """Register a new type."""
         if not issubclass(embeddings_cls, BaseEmbeddings):
@@ -92,12 +86,12 @@ class EmbeddingsRegistry:
             raise ValueError(f"Invalid types: {types}")
 
     @classmethod
-    def get_provider(cls, alias: str) -> Optional[Type[BaseEmbeddings]]:
+    def get_provider(cls, alias: str) -> Optional[type[BaseEmbeddings]]:
         """Get the embeddings class for a given provider alias."""
         return cls.provider_registry.get(alias)
 
     @classmethod
-    def match(cls, identifier: str) -> Optional[Type[BaseEmbeddings]]:
+    def match(cls, identifier: str) -> Optional[type[BaseEmbeddings]]:
         """Find matching embeddings class using both exact matches and patterns.
 
         Args:
@@ -127,7 +121,7 @@ class EmbeddingsRegistry:
         if identifier in cls.model_registry:
             return cls.model_registry[identifier]
 
-        # We couldn't match the model name and there's no provider alias mentioned either. 
+        # We couldn't match the model name and there's no provider alias mentioned either.
         # Let's try to get a match from the pattern registry
         for pattern, embeddings_cls in cls.pattern_registry.items():
             if pattern.match(identifier):
@@ -182,7 +176,7 @@ EmbeddingsRegistry.register_types(
 EmbeddingsRegistry.register_model("all-minilm-l6-v2", SentenceTransformerEmbeddings)
 EmbeddingsRegistry.register_model("all-mpnet-base-v2", SentenceTransformerEmbeddings)
 EmbeddingsRegistry.register_model("multi-qa-mpnet-base-dot-v1", SentenceTransformerEmbeddings)
-# TODO: Add all the other SentenceTranformer models here as well!
+# TODO: Add all the other SentenceTransformer models here as well!
 
 # Register OpenAI embeddings with pattern
 EmbeddingsRegistry.register_provider("openai", OpenAIEmbeddings)
@@ -191,13 +185,19 @@ EmbeddingsRegistry.register_model("text-embedding-ada-002", OpenAIEmbeddings)
 EmbeddingsRegistry.register_model("text-embedding-3-small", OpenAIEmbeddings)
 EmbeddingsRegistry.register_model("text-embedding-3-large", OpenAIEmbeddings)
 
+# Register Azure OpenAI embeddings
+EmbeddingsRegistry.register_provider("azure_openai", AzureOpenAIEmbeddings)
+
 # Register model2vec embeddings
 EmbeddingsRegistry.register_provider("model2vec", Model2VecEmbeddings)
-EmbeddingsRegistry.register_pattern(r"^minishlab/|^minishlab/potion-base-|^minishlab/potion-|^potion-", Model2VecEmbeddings)
+EmbeddingsRegistry.register_pattern(
+    r"^minishlab/|^minishlab/potion-base-|^minishlab/potion-|^potion-",
+    Model2VecEmbeddings,
+)
 EmbeddingsRegistry.register_types("Model2Vec", Model2VecEmbeddings)
 
 # Register Cohere embeddings with pattern
-EmbeddingsRegistry.register_provider("cohere", CohereEmbeddings)    
+EmbeddingsRegistry.register_provider("cohere", CohereEmbeddings)
 EmbeddingsRegistry.register_pattern(r"^cohere|^embed-", CohereEmbeddings)
 EmbeddingsRegistry.register_model("embed-english-v3.0", CohereEmbeddings)
 EmbeddingsRegistry.register_model("embed-english-light-v3.0", CohereEmbeddings)
@@ -217,20 +217,38 @@ EmbeddingsRegistry.register_model("jina-embeddings-v2-base-zh", JinaEmbeddings)
 EmbeddingsRegistry.register_model("jina-embeddings-v2-base-code", JinaEmbeddings)
 EmbeddingsRegistry.register_model("jina-embeddings-v4", JinaEmbeddings)
 
-# Register Voyage embeddings
-EmbeddingsRegistry.register_provider("voyageai", VoyageAIEmbeddings)
-EmbeddingsRegistry.register_pattern(r"^voyage|^voyageai", VoyageAIEmbeddings)
-EmbeddingsRegistry.register_model("voyage-3-large", VoyageAIEmbeddings)
-EmbeddingsRegistry.register_model("voyage-3", VoyageAIEmbeddings)
-EmbeddingsRegistry.register_model("voyage-3-lite", VoyageAIEmbeddings)
-EmbeddingsRegistry.register_model("voyage-code-3", VoyageAIEmbeddings)
-EmbeddingsRegistry.register_model("voyage-finance-2", VoyageAIEmbeddings)
-EmbeddingsRegistry.register_model("voyage-law-2", VoyageAIEmbeddings)
-EmbeddingsRegistry.register_model("voyage-code-2", VoyageAIEmbeddings)
+# Register Voyage embeddings (via Catsu for better reliability and features)
+EmbeddingsRegistry.register_provider("voyageai", CatsuEmbeddings)
+EmbeddingsRegistry.register_pattern(r"^voyage|^voyageai", CatsuEmbeddings)
+EmbeddingsRegistry.register_model("voyage-3-large", CatsuEmbeddings)
+EmbeddingsRegistry.register_model("voyage-3", CatsuEmbeddings)
+EmbeddingsRegistry.register_model("voyage-3-lite", CatsuEmbeddings)
+EmbeddingsRegistry.register_model("voyage-code-3", CatsuEmbeddings)
+EmbeddingsRegistry.register_model("voyage-finance-2", CatsuEmbeddings)
+EmbeddingsRegistry.register_model("voyage-law-2", CatsuEmbeddings)
+EmbeddingsRegistry.register_model("voyage-code-2", CatsuEmbeddings)
 
 # Register Gemini embeddings
 EmbeddingsRegistry.register_provider("gemini", GeminiEmbeddings)
-EmbeddingsRegistry.register_pattern(r"^text-embedding-004|^embedding-001|^gemini-embedding", GeminiEmbeddings)
+EmbeddingsRegistry.register_pattern(
+    r"^text-embedding-004|^embedding-001|^gemini-embedding",
+    GeminiEmbeddings,
+)
 EmbeddingsRegistry.register_model("text-embedding-004", GeminiEmbeddings)
 EmbeddingsRegistry.register_model("embedding-001", GeminiEmbeddings)
 EmbeddingsRegistry.register_model("gemini-embedding-exp-03-07", GeminiEmbeddings)
+
+# Register Catsu embeddings (unified provider for 11+ APIs)
+EmbeddingsRegistry.register_provider("catsu", CatsuEmbeddings)
+# Catsu supports patterns from multiple providers (Mistral, Nomic, Cloudflare, etc.)
+EmbeddingsRegistry.register_pattern(r"^mistral-embed", CatsuEmbeddings)
+EmbeddingsRegistry.register_pattern(r"^nomic-embed", CatsuEmbeddings)
+EmbeddingsRegistry.register_pattern(r"^@cf/", CatsuEmbeddings)
+EmbeddingsRegistry.register_pattern(r"^mxbai-embed", CatsuEmbeddings)
+# Register specific Catsu-supported models
+EmbeddingsRegistry.register_model("mistral-embed", CatsuEmbeddings)
+EmbeddingsRegistry.register_model("nomic-embed-text-v1.5", CatsuEmbeddings)
+EmbeddingsRegistry.register_model("mxbai-embed-large-v1", CatsuEmbeddings)
+
+# Register LiteLLM embeddings
+EmbeddingsRegistry.register_provider("litellm", LiteLLMEmbeddings)

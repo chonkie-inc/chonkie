@@ -4,8 +4,6 @@ import importlib.util as importutil
 from typing import (
     TYPE_CHECKING,
     Any,
-    Dict,
-    List,
     Literal,
     Optional,
     Union,
@@ -13,30 +11,21 @@ from typing import (
 from uuid import NAMESPACE_OID, uuid5
 
 from chonkie.embeddings import AutoEmbeddings, BaseEmbeddings
+from chonkie.logger import get_logger
+from chonkie.pipeline import handshake
 from chonkie.types import Chunk
 
 from .base import BaseHandshake
 from .utils import generate_random_collection_name
 
+logger = get_logger(__name__)
+
 if TYPE_CHECKING:
-    import qdrant_client
+    from qdrant_client import QdrantClient
     from qdrant_client.http.models import PointStruct
 
-    try:
-        from qdrant_client.http.models import Distance, VectorParams
-    except ImportError:
 
-        class VectorParams:  # type: ignore
-            """Stub class for qdrant_client VectorParams when not available."""
-
-            pass
-
-        class Distance:  # type: ignore
-            """Stub class for qdrant_client Distance when not available."""
-
-            pass
-
-
+@handshake("qdrant")
 class QdrantHandshake(BaseHandshake):
     """Qdrant Handshake to export Chonkie's Chunks into a Qdrant collection.
 
@@ -54,13 +43,13 @@ class QdrantHandshake(BaseHandshake):
 
     def __init__(
         self,
-        client: Optional["qdrant_client.QdrantClient"] = None,
+        client: Optional["QdrantClient"] = None,
         collection_name: Union[str, Literal["random"]] = "random",
         embedding_model: Union[str, BaseEmbeddings] = "minishlab/potion-retrieval-32M",
         url: Optional[str] = None,
         path: Optional[str] = None,
         api_key: Optional[str] = None,
-        **kwargs: Dict[str, Any],
+        **kwargs: dict[str, Any],
     ) -> None:
         """Initialize the Qdrant Handshake.
 
@@ -76,8 +65,12 @@ class QdrantHandshake(BaseHandshake):
         """
         super().__init__()
 
-        # Lazy importing the dependencies
-        self._import_dependencies()
+        try:
+            import qdrant_client
+        except ImportError as ie:
+            raise ImportError(
+                "Qdrant is not installed. Please install it with `pip install chonkie[qdrant]`.",
+            ) from ie
 
         # Initialize the Qdrant client
         if client is None:
@@ -114,43 +107,27 @@ class QdrantHandshake(BaseHandshake):
                     break
                 else:
                     pass
-            print(
-                f"🦛 Chonkie created a new collection in Qdrant: {self.collection_name}"
-            )
+            logger.info(f"Chonkie created a new collection in Qdrant: {self.collection_name}")
         else:
             self.collection_name = collection_name
 
         # Create the collection, if it doesn't exist
         if not self.client.collection_exists(self.collection_name):
+            from qdrant_client.http.models import Distance, VectorParams
+
             self.client.create_collection(
                 collection_name=self.collection_name,
-                vectors_config=VectorParams(
-                    size=self.dimension, distance=Distance.COSINE
-                ),
+                vectors_config=VectorParams(size=self.dimension, distance=Distance.COSINE),
             )
 
-    def _is_available(self) -> bool:
+    @classmethod
+    def _is_available(cls) -> bool:
         """Check if the dependencies are installed."""
         return importutil.find_spec("qdrant_client") is not None
 
-    def _import_dependencies(self) -> None:
-        """Lazy import the dependencies."""
-        if self._is_available():
-            global qdrant_client, PointStruct, VectorParams, Distance
-            import qdrant_client
-            from qdrant_client.http.models import PointStruct
-            from qdrant_client.models import Distance, VectorParams
-        else:
-            raise ImportError(
-                "Qdrant is not installed. "
-                + "Please install it with `pip install chonkie[qdrant]`."
-            )
-
     def _generate_id(self, index: int, chunk: Chunk) -> str:
         """Generate a unique id for the chunk."""
-        return str(
-            uuid5(NAMESPACE_OID, f"{self.collection_name}::chunk-{index}:{chunk.text}")
-        )
+        return str(uuid5(NAMESPACE_OID, f"{self.collection_name}::chunk-{index}:{chunk.text}"))
 
     def _generate_payload(self, chunk: Chunk) -> dict:
         """Generate the payload for the chunk."""
@@ -161,8 +138,10 @@ class QdrantHandshake(BaseHandshake):
             "token_count": chunk.token_count,
         }
 
-    def _get_points(self, chunks: Union[Chunk, List[Chunk]]) -> List["PointStruct"]:
+    def _get_points(self, chunks: Union[Chunk, list[Chunk]]) -> list["PointStruct"]:
         """Get the points from the chunks."""
+        from qdrant_client.http.models import PointStruct
+
         # Normalize input to always be a sequence
         if isinstance(chunks, Chunk):
             chunks = [chunks]
@@ -174,24 +153,23 @@ class QdrantHandshake(BaseHandshake):
                     id=self._generate_id(index, chunk),
                     vector=self.embedding_model.embed(chunk.text).tolist(),  # type: ignore[arg-type] # Since this passes a numpy array, we need to convert it to a list
                     payload=self._generate_payload(chunk),
-                )
+                ),
             )
         return points
 
-    def write(self, chunks: Union[Chunk, List[Chunk]]) -> None:
+    def write(self, chunks: Union[Chunk, list[Chunk]]) -> None:
         """Write the chunks to the collection."""
         if isinstance(chunks, Chunk):
             chunks = [chunks]
 
+        logger.debug(f"Writing {len(chunks)} chunks to Qdrant collection: {self.collection_name}")
         points = self._get_points(chunks)
 
         # Write the points to the collection
-        self.client.upsert(
-            collection_name=self.collection_name, points=points, wait=True
-        )
+        self.client.upsert(collection_name=self.collection_name, points=points, wait=True)
 
-        print(
-            f"🦛 Chonkie wrote {len(chunks)} chunks to Qdrant collection: {self.collection_name}"
+        logger.info(
+            f"Chonkie wrote {len(chunks)} chunks to Qdrant collection: {self.collection_name}",
         )
 
     def __repr__(self) -> str:
@@ -201,20 +179,21 @@ class QdrantHandshake(BaseHandshake):
     def search(
         self,
         query: Optional[str] = None,
-        embedding: Optional[List[float]] = None,
+        embedding: Optional[list[float]] = None,
         limit: int = 5,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Retrieve the top_k most similar chunks to the query.
 
         Args:
             query: Optional[str]: The query string to search for.
-            embedding: Optional[List[float]]: The embedding vector to search for. If provided, `query` is ignored.
+            embedding: Optional[list[float]]: The embedding vector to search for. If provided, `query` is ignored.
             limit: int: The number of top similar chunks to retrieve.
 
         Returns:
-            List[Dict[str, Any]]: The list of most similar chunks with their metadata.
+            list[dict[str, Any]]: The list of most similar chunks with their metadata.
 
         """
+        logger.debug(f"Searching Qdrant collection: {self.collection_name} with limit={limit}")
         if embedding is None and query is None:
             raise ValueError("Either query or embedding must be provided")
         if query is not None:
@@ -226,7 +205,9 @@ class QdrantHandshake(BaseHandshake):
             limit=limit,
             with_payload=True,
         )
-        return [
+        matches = [
             {"id": result["id"], "score": result["score"], **result["payload"]}
             for result in results.dict()["points"]
         ]
+        logger.info(f"Search complete: found {len(matches)} matching chunks")
+        return matches

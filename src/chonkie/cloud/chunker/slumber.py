@@ -1,7 +1,7 @@
 """Slumber Chunking for Chonkie API."""
 
 import os
-from typing import Any, Callable, Dict, List, Optional, Union, cast
+from typing import Any, Optional, Union, cast
 
 import requests
 
@@ -19,7 +19,7 @@ class SlumberChunker(CloudChunker):
 
     def __init__(
         self,
-        tokenizer_or_token_counter: Union[str, Callable] = "gpt2",
+        tokenizer: str = "gpt2",
         chunk_size: int = 1024,
         recipe: str = "default",
         lang: str = "en",
@@ -30,7 +30,7 @@ class SlumberChunker(CloudChunker):
         """Initialize the SlumberChunker.
 
         Args:
-            tokenizer_or_token_counter (Union[str, Callable]): The tokenizer or token counter to use.
+            tokenizer (str): The tokenizer to use.
             chunk_size (int): The target size of the chunks.
             recipe (str): The recipe to use.
             lang (str): The language to use.
@@ -43,7 +43,7 @@ class SlumberChunker(CloudChunker):
         if not self.api_key:
             raise ValueError(
                 "No API key provided. Please set the CHONKIE_API_KEY environment variable"
-                + " or pass an API key to the SlumberChunker constructor."
+                + " or pass an API key to the SlumberChunker constructor.",
             )
 
         if chunk_size <= 0:
@@ -53,7 +53,7 @@ class SlumberChunker(CloudChunker):
         if min_characters_per_chunk < 1:
             raise ValueError("Minimum characters per chunk must be greater than 0.")
 
-        self.tokenizer_or_token_counter = tokenizer_or_token_counter
+        self.tokenizer = tokenizer
         self.chunk_size = chunk_size
         self.recipe = recipe
         self.lang = lang
@@ -68,29 +68,32 @@ class SlumberChunker(CloudChunker):
             raise ValueError(
                 "Oh no! You caught Chonkie at a bad time. It seems to be down or unreachable."
                 + " Please try again in a short while."
-                + " If the issue persists, please contact support at support@chonkie.ai."
+                + " If the issue persists, please contact support at support@chonkie.ai.",
             ) from error
 
         # Initialize the file manager to upload files if needed
         self.file_manager = FileManager(api_key=self.api_key)
 
-
-    def chunk(self, text: Optional[Union[str, List[str]]] = None, file: Optional[str] = None) -> Union[List[Chunk], List[List[Chunk]]]:
+    def chunk(
+        self,
+        text: Optional[Union[str, list[str]]] = None,
+        file: Optional[str] = None,
+    ) -> Union[list[Chunk], list[list[Chunk]]]:
         """Chunk the text or file into a list of chunks using the Slumber strategy via API.
 
         Args:
-            text (Union[str, List[str]]): The text or list of texts to chunk.
+            text (Union[str, list[str]]): The text or list of texts to chunk.
             file (Optional[str]): The path to a file to chunk.
 
         Returns:
-            List[Dict]: A list of dictionaries representing the chunks or texts.
+            list[Dict]: A list of dictionaries representing the chunks or texts.
 
         """
-        payload: Dict[str, Any]
+        payload: dict[str, Any]
         if text is not None:
             payload = {
                 "text": text,
-                "tokenizer_or_token_counter": self.tokenizer_or_token_counter,
+                "tokenizer_or_token_counter": self.tokenizer,
                 "chunk_size": self.chunk_size,
                 "recipe": self.recipe,
                 "lang": self.lang,
@@ -104,7 +107,7 @@ class SlumberChunker(CloudChunker):
                     "type": "document",
                     "content": file_response.name,
                 },
-                "tokenizer_or_token_counter": self.tokenizer_or_token_counter,
+                "tokenizer_or_token_counter": self.tokenizer,
                 "chunk_size": self.chunk_size,
                 "recipe": self.recipe,
                 "lang": self.lang,
@@ -112,7 +115,9 @@ class SlumberChunker(CloudChunker):
                 "min_characters_per_chunk": self.min_characters_per_chunk,
             }
         else:
-            raise ValueError("No text or file provided. Please provide either text or a file path.")
+            raise ValueError(
+                "No text or file provided. Please provide either text or a file path.",
+            )
 
         try:
             response = requests.post(
@@ -127,48 +132,54 @@ class SlumberChunker(CloudChunker):
                 "Oh no! The Chonkie API returned an error while trying to chunk with Slumber."
                 + " Please try again in a short while."
             )
-            if hasattr(e, 'response') and e.response is not None:
+            if hasattr(e, "response") and e.response is not None:
                 try:
                     error_detail = e.response.json()
                     error_message += f" Details: {error_detail}"
-                except ValueError: # if response is not JSON
-                    error_message += f" Status Code: {e.response.status_code}. Response: {e.response.text}"
-            error_message += " If the issue persists, please contact support at support@chonkie.ai."
+                except ValueError:  # if response is not JSON
+                    error_message += (
+                        f" Status Code: {e.response.status_code}. Response: {e.response.text}"
+                    )
+            error_message += (
+                " If the issue persists, please contact support at support@chonkie.ai."
+            )
             raise ValueError(error_message) from e
-
 
         try:
             # Assuming the API always returns a list of dictionaries.
             if isinstance(text, list):
-                batch_result: List[List[Dict]] = cast(List[List[Dict]], response.json())
-                batch_chunks: List[List[Chunk]] = []
+                batch_result: list[list[dict]] = cast(list[list[dict]], response.json())
+                batch_chunks: list[list[Chunk]] = []
                 for chunk_list in batch_result:
-                    curr_chunks: List[Chunk] = []
+                    curr_chunks: list[Chunk] = []
                     for chunk in chunk_list:
                         curr_chunks.append(Chunk.from_dict(chunk))
                     batch_chunks.append(curr_chunks)
                 return batch_chunks
             else:
-                single_result: List[Dict] = cast(List[Dict], response.json())
-                single_chunks: List[Chunk] = [Chunk.from_dict(chunk) for chunk in single_result]
+                single_result: list[dict] = cast(list[dict], response.json())
+                single_chunks: list[Chunk] = [Chunk.from_dict(chunk) for chunk in single_result]
                 return single_chunks
-        except ValueError as error: # JSONDecodeError inherits from ValueError
+        except ValueError as error:  # JSONDecodeError inherits from ValueError
             raise ValueError(
                 "Oh no! The Chonkie API returned an invalid JSON response for Slumber chunking."
                 + " Please try again in a short while."
                 + f" Response text: {response.text}"
-                + " If the issue persists, please contact support at support@chonkie.ai."
+                + " If the issue persists, please contact support at support@chonkie.ai.",
             ) from error
-        except Exception as error: # Catch any other parsing/validation errors
+        except Exception as error:  # Catch any other parsing/validation errors
             raise ValueError(
                 "Oh no! Failed to parse the response from Chonkie API for Slumber chunking."
                 + " Please try again in a short while."
                 + f" Details: {str(error)}"
-                + " If the issue persists, please contact support at support@chonkie.ai."
+                + " If the issue persists, please contact support at support@chonkie.ai.",
             ) from error
 
-
-    def __call__(self, text: Optional[Union[str, List[str]]] = None, file: Optional[str] = None) -> Union[List[Chunk], List[List[Chunk]]]:
+    def __call__(
+        self,
+        text: Optional[Union[str, list[str]]] = None,
+        file: Optional[str] = None,
+    ) -> Union[list[Chunk], list[list[Chunk]]]:
         """Call the SlumberChunker."""
         return self.chunk(text=text, file=file)
 
@@ -176,7 +187,7 @@ class SlumberChunker(CloudChunker):
         """Return a string representation of the SlumberChunker."""
         return (
             f"SlumberChunker(api_key={'********' if self.api_key else None}, "
-            f"tokenizer_or_token_counter='{self.tokenizer_or_token_counter}', "
+            f"tokenizer='{self.tokenizer}', "
             f"chunk_size={self.chunk_size}, "
             f"recipe='{self.recipe}', "
             f"lang='{self.lang}', "

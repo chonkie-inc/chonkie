@@ -28,10 +28,12 @@ from .cloud import (
 )
 from .embeddings import (
     AutoEmbeddings,
+    AzureOpenAIEmbeddings,
     BaseEmbeddings,
     CohereEmbeddings,
     GeminiEmbeddings,
     JinaEmbeddings,
+    LiteLLMEmbeddings,
     Model2VecEmbeddings,
     OpenAIEmbeddings,
     SentenceTransformerEmbeddings,
@@ -42,6 +44,7 @@ from .fetcher import (
     FileFetcher,
 )
 from .genie import (
+    AzureOpenAIGenie,
     BaseGenie,
     GeminiGenie,
     OpenAIGenie,
@@ -50,6 +53,7 @@ from .handshakes import (
     BaseHandshake,
     ChromaHandshake,
     ElasticHandshake,
+    MilvusHandshake,
     MongoDBHandshake,
     PgvectorHandshake,
     PineconeHandshake,
@@ -57,6 +61,7 @@ from .handshakes import (
     TurbopufferHandshake,
     WeaviateHandshake,
 )
+from .pipeline import Pipeline
 from .porters import (
     BasePorter,
     DatasetsPorter,
@@ -68,8 +73,11 @@ from .refinery import (
     OverlapRefinery,
 )
 from .tokenizer import (
+    AutoTokenizer,
+    ByteTokenizer,
     CharacterTokenizer,
     Tokenizer,
+    TokenizerProtocol,
     WordTokenizer,
 )
 from .types import (
@@ -91,7 +99,7 @@ from .utils import (
 )
 
 # This hippo grows with every release 🦛✨~
-__version__ = "1.3.1"
+__version__ = "1.5.0"
 __name__ = "chonkie"
 __author__ = "🦛 Chonkie Inc"
 

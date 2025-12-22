@@ -1,7 +1,7 @@
 """Custom types for Sentence Chunking."""
 
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any, Dict, List, Union
+from typing import TYPE_CHECKING, Any, Union
 
 if TYPE_CHECKING:
     import numpy as np
@@ -16,7 +16,7 @@ class Sentence:
         start_index (int): The starting index of the sentence in the original text.
         end_index (int): The ending index of the sentence in the original text.
         token_count (int): The number of tokens in the sentence.
-        embedding (Union[List[float], np.ndarray, None]): Optional embedding vector for the sentence,
+        embedding (Union[list[float], np.ndarray, None]): Optional embedding vector for the sentence,
             either as a list of floats or a numpy array.
 
     """
@@ -25,7 +25,7 @@ class Sentence:
     start_index: int
     end_index: int
     token_count: int
-    embedding: Union[List[float], "np.ndarray", None] = field(default=None)
+    embedding: Union[list[float], "np.ndarray", None] = field(default=None)
 
     def __post_init__(self) -> None:
         """Validate attributes."""
@@ -38,9 +38,7 @@ class Sentence:
         if self.start_index > self.end_index:
             raise ValueError("Start index must be less than end index.")
         if (
-            not (
-                isinstance(self.token_count, int) or isinstance(self.token_count, float)
-            )
+            not (isinstance(self.token_count, int) or isinstance(self.token_count, float))
             or self.token_count < 0
         ):
             raise ValueError("Token count must be a non-negative integer.")
@@ -55,19 +53,19 @@ class Sentence:
             repr_str += f", embedding={self.embedding}"
         return repr_str + ")"
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Return the Sentence as a dictionary."""
         result = self.__dict__.copy()
         # Convert numpy array to list if present
         if self.embedding is not None:
-            if hasattr(self.embedding, 'tolist'):
+            if hasattr(self.embedding, "tolist"):
                 result["embedding"] = self.embedding.tolist()
             else:
                 result["embedding"] = self.embedding
         return result
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "Sentence":
+    def from_dict(cls, data: dict[str, Any]) -> "Sentence":
         """Create a Sentence object from a dictionary."""
         # Handle embedding field
         embedding_data = data.get("embedding", None)
@@ -76,7 +74,5 @@ class Sentence:
             start_index=int(data["start_index"]),
             end_index=int(data["end_index"]),
             token_count=int(data["token_count"]),
-            embedding=embedding_data  # Keep as-is, whatever type it is
+            embedding=embedding_data,  # Keep as-is, whatever type it is
         )
-
-

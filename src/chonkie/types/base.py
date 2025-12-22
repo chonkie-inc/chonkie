@@ -1,11 +1,12 @@
 """Custom base types for Chonkie."""
 
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Iterator, List, Optional, Union
+from typing import TYPE_CHECKING, Iterator, Optional, Union
 from uuid import uuid4
 
 if TYPE_CHECKING:
     import numpy as np
+
 
 # Function to generate the IDs for the Chonkie  types
 def generate_id(prefix: str) -> str:
@@ -23,7 +24,7 @@ class Chunk:
         end_index (int): The ending index of the chunk in the original text.
         token_count (int): The number of tokens in the chunk.
         context (Optional[str]): Optional context metadata for the chunk.
-        embedding (Union[List[float], np.ndarray, None]): Optional embedding vector for the chunk,
+        embedding (Union[list[float], np.ndarray, None]): Optional embedding vector for the chunk,
             either as a list of floats or a numpy array.
 
     """
@@ -34,7 +35,7 @@ class Chunk:
     end_index: int = field(default=0)
     token_count: int = field(default=0)
     context: Optional[str] = field(default=None)
-    embedding: Union[List[float], "np.ndarray", None] = field(default=None)
+    embedding: Union[list[float], "np.ndarray", None] = field(default=None)
 
     def __len__(self) -> int:
         """Return the length of the text."""
@@ -59,7 +60,7 @@ class Chunk:
 
         try:
             # Check if it's array-like with length
-            if hasattr(self.embedding, '__len__') and hasattr(self.embedding, '__getitem__'):
+            if hasattr(self.embedding, "__len__") and hasattr(self.embedding, "__getitem__"):
                 emb_len = len(self.embedding)
                 if emb_len > 5:
                     # Show first 3 and last 2 values
@@ -69,7 +70,7 @@ class Chunk:
                     preview = "[" + ", ".join(f"{v:.4f}" for v in self.embedding) + "]"
 
                 # Add shape info if available
-                if hasattr(self.embedding, 'shape'):
+                if hasattr(self.embedding, "shape"):
                     preview += f" shape={self.embedding.shape}"
 
                 return preview
@@ -104,7 +105,7 @@ class Chunk:
         result["context"] = self.context
         # Convert embedding to list if it has tolist method (numpy array)
         if self.embedding is not None:
-            if hasattr(self.embedding, 'tolist'):
+            if hasattr(self.embedding, "tolist"):
                 result["embedding"] = self.embedding.tolist()
             else:
                 result["embedding"] = self.embedding

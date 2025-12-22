@@ -1,12 +1,11 @@
 """Azure OpenAI Genie."""
 
 import importlib.util as importutil
-from typing import TYPE_CHECKING, Any, Dict, Optional
+from typing import TYPE_CHECKING, Any, Optional
 
 from .base import BaseGenie
 
 if TYPE_CHECKING:
-    from openai import AzureOpenAI
     from pydantic import BaseModel
 
 
@@ -36,12 +35,17 @@ class AzureOpenAIGenie(BaseGenie):
         if not azure_endpoint:
             raise ValueError("`azure_endpoint` is required for Azure OpenAI.")
 
-        self._import_dependencies()
-
         self.model = model
         self._deployment = deployment or model
         self.api_version = api_version
         self.base_url = azure_endpoint
+
+        try:
+            from openai import AzureOpenAI
+        except ImportError as ie:
+            raise ImportError(
+                "openai is not available. Please install it via `pip install chonkie[azure-openai]`",
+            ) from ie
 
         if azure_api_key:
             self.client = AzureOpenAI(
@@ -53,7 +57,8 @@ class AzureOpenAIGenie(BaseGenie):
             from azure.identity import DefaultAzureCredential, get_bearer_token_provider
 
             token_provider = get_bearer_token_provider(
-                DefaultAzureCredential(), "https://cognitiveservices.azure.com/.default"
+                DefaultAzureCredential(),
+                "https://cognitiveservices.azure.com/.default",
             )
             self.client = AzureOpenAI(
                 azure_endpoint=azure_endpoint,
@@ -64,14 +69,15 @@ class AzureOpenAIGenie(BaseGenie):
     def generate(self, prompt: str) -> str:
         """Generate a plain-text response."""
         response = self.client.chat.completions.create(
-            model=self._deployment, messages=[{"role": "user", "content": prompt}]
+            model=self._deployment,
+            messages=[{"role": "user", "content": prompt}],
         )
         content = response.choices[0].message.content
         if content is None:
             raise ValueError("Azure OpenAI response content is None")
         return content
 
-    def generate_json(self, prompt: str, schema: "BaseModel") -> Dict[str, Any]:
+    def generate_json(self, prompt: str, schema: "BaseModel") -> dict[str, Any]:
         """Generate a structured JSON response based on a Pydantic schema."""
         response = self.client.beta.chat.completions.parse(
             model=self._deployment,
@@ -83,23 +89,13 @@ class AzureOpenAIGenie(BaseGenie):
             raise ValueError("Azure OpenAI response content is None")
         return content.model_dump()
 
-    def _is_available(self) -> bool:
+    @classmethod
+    def _is_available(cls) -> bool:
         return (
             importutil.find_spec("openai") is not None
             and importutil.find_spec("pydantic") is not None
             and importutil.find_spec("azure.identity") is not None
         )
-
-    def _import_dependencies(self) -> None:
-        if self._is_available():
-            global AzureOpenAI, BaseModel
-            from openai import AzureOpenAI
-            from pydantic import BaseModel
-        else:
-            raise ImportError(
-                "Missing required modules: [openai, azure-identity, pydantic]. "
-                "Install via `pip install chonkie[azure-openai]`."
-            )
 
     def __repr__(self) -> str:
         """Return a string representation of the AzureOpenAIGenie instance."""

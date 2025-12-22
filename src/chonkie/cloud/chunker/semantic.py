@@ -1,7 +1,7 @@
 """Semantic Chunking for Chonkie API."""
 
 import os
-from typing import Any, Dict, List, Literal, Optional, Union, cast
+from typing import Any, Literal, Optional, Union, cast
 
 import requests
 
@@ -25,7 +25,7 @@ class SemanticChunker(CloudChunker):
         similarity_window: int = 1,
         min_sentences_per_chunk: int = 1,
         min_characters_per_sentence: int = 12,
-        delim: Union[str, List[str]] = [". ", "! ", "? ", "\n"],
+        delim: Union[str, list[str]] = [". ", "! ", "? ", "\n"],
         include_delim: Optional[Literal["prev", "next"]] = "prev",
         skip_window: int = 0,
         filter_window: int = 5,
@@ -35,13 +35,13 @@ class SemanticChunker(CloudChunker):
     ) -> None:
         """Initialize the Chonkie Cloud Semantic Chunker."""
         super().__init__()
-        
+
         # Get the API key
         self.api_key = api_key or os.getenv("CHONKIE_API_KEY")
         if not self.api_key:
             raise ValueError(
                 "No API key provided. Please set the CHONKIE_API_KEY environment variable"
-                + "or pass an API key to the SemanticChunker constructor."
+                + "or pass an API key to the SemanticChunker constructor.",
             )
 
         # Check if the chunk size is valid
@@ -75,7 +75,7 @@ class SemanticChunker(CloudChunker):
         # Check if the filter polyorder is valid
         if filter_polyorder < 0 or filter_polyorder >= filter_window:
             raise ValueError(
-                "Filter polyorder must be greater than 0 and less than or equal to filter window."
+                "Filter polyorder must be greater than 0 and less than or equal to filter window.",
             )
 
         # Check if the filter tolerance is valid
@@ -89,7 +89,6 @@ class SemanticChunker(CloudChunker):
         # Check if the include delim is valid
         if include_delim not in ["prev", "next", None]:
             raise ValueError("Include delim must be either 'prev', 'next', or None.")
-
 
         # Add all the attributes
         self.embedding_model = embedding_model
@@ -111,16 +110,20 @@ class SemanticChunker(CloudChunker):
             raise ValueError(
                 "Oh no! You caught Chonkie at a bad time. It seems to be down right now."
                 + "Please try again in a short while."
-                + "If the issue persists, please contact support at support@chonkie.ai."
+                + "If the issue persists, please contact support at support@chonkie.ai.",
             )
 
         # Initialize the file manager to upload files if needed
         self.file_manager = FileManager(api_key=self.api_key)
 
-    def chunk(self, text: Optional[Union[str, List[str]]] = None, file: Optional[str] = None) -> Union[List[Chunk], List[List[Chunk]]]:
+    def chunk(
+        self,
+        text: Optional[Union[str, list[str]]] = None,
+        file: Optional[str] = None,
+    ) -> Union[list[Chunk], list[list[Chunk]]]:
         """Chunk the text or file into a list of chunks."""
         # Make the payload
-        payload: Dict[str, Any]
+        payload: dict[str, Any]
         if text is not None:
             payload = {
                 "text": text,
@@ -158,7 +161,9 @@ class SemanticChunker(CloudChunker):
                 "include_delim": self.include_delim,
             }
         else:
-            raise ValueError("No text or file provided. Please provide either text or a file path.")
+            raise ValueError(
+                "No text or file provided. Please provide either text or a file path.",
+            )
 
         # Make the request to the Chonkie API
         response = requests.post(
@@ -170,8 +175,8 @@ class SemanticChunker(CloudChunker):
         # Try to parse the response
         try:
             if isinstance(text, list):
-                batch_result: List[List[Dict]] = cast(List[List[Dict]], response.json())
-                batch_chunks: List[List[Chunk]] = []
+                batch_result: list[list[dict]] = cast(list[list[dict]], response.json())
+                batch_chunks: list[list[Chunk]] = []
                 for chunk_list in batch_result:
                     curr_chunks = []
                     for chunk in chunk_list:
@@ -179,16 +184,20 @@ class SemanticChunker(CloudChunker):
                     batch_chunks.append(curr_chunks)
                 return batch_chunks
             else:
-                single_result: List[Dict] = cast(List[Dict], response.json())
-                single_chunks: List[Chunk] = [Chunk.from_dict(chunk) for chunk in single_result]
+                single_result: list[dict] = cast(list[dict], response.json())
+                single_chunks: list[Chunk] = [Chunk.from_dict(chunk) for chunk in single_result]
                 return single_chunks
         except Exception as error:
             raise ValueError(
                 "Oh no! The Chonkie API returned an invalid response."
                 + "Please try again in a short while."
-                + "If the issue persists, please contact support at support@chonkie.ai."
+                + "If the issue persists, please contact support at support@chonkie.ai.",
             ) from error
 
-    def __call__(self, text: Optional[Union[str, List[str]]] = None, file: Optional[str] = None) -> Union[List[Chunk], List[List[Chunk]]]:
+    def __call__(
+        self,
+        text: Optional[Union[str, list[str]]] = None,
+        file: Optional[str] = None,
+    ) -> Union[list[Chunk], list[list[Chunk]]]:
         """Call the chunker."""
         return self.chunk(text=text, file=file)

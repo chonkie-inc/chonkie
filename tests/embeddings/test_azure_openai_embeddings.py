@@ -1,7 +1,6 @@
 """Test suite for AzureOpenAIEmbeddings."""
 
 import os
-from typing import List
 
 import numpy as np
 import pytest
@@ -14,9 +13,9 @@ def azure_embedding_model() -> AzureOpenAIEmbeddings:
     """Fixture to create an AzureOpenAIEmbeddings instance."""
     return AzureOpenAIEmbeddings(
         model="text-embedding-3-small",
+        azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
+        azure_api_key=os.getenv("AZURE_OPENAI_API_KEY"),
         deployment="text-embedding-3-small",
-        azure_endpoint=os.environ.get("AZURE_OPENAI_ENDPOINT"),
-        azure_api_key=os.environ.get("AZURE_OPENAI_API_KEY"),
     )
 
 
@@ -27,7 +26,7 @@ def sample_text() -> str:
 
 
 @pytest.fixture
-def sample_texts() -> List[str]:
+def sample_texts() -> list[str]:
     """Fixture to create a list of sample texts for testing."""
     return [
         "This is the first Azure sample.",
@@ -52,9 +51,7 @@ def test_initialization_with_model_name(
     "AZURE_OPENAI_ENDPOINT" not in os.environ,
     reason="Skipping test because AZURE_OPENAI_ENDPOINT is not defined",
 )
-def test_embed_single_text(
-    azure_embedding_model: AzureOpenAIEmbeddings, sample_text: str
-) -> None:
+def test_embed_single_text(azure_embedding_model: AzureOpenAIEmbeddings, sample_text: str) -> None:
     """Test that AzureOpenAIEmbeddings correctly embeds a single text."""
     embedding = azure_embedding_model.embed(sample_text)
     assert isinstance(embedding, np.ndarray)
@@ -66,26 +63,22 @@ def test_embed_single_text(
     reason="Skipping test because AZURE_OPENAI_ENDPOINT is not defined",
 )
 def test_embed_batch_texts(
-    azure_embedding_model: AzureOpenAIEmbeddings, sample_texts: List[str]
+    azure_embedding_model: AzureOpenAIEmbeddings,
+    sample_texts: list[str],
 ) -> None:
     """Test that AzureOpenAIEmbeddings correctly embeds a batch of texts."""
     embeddings = azure_embedding_model.embed_batch(sample_texts)
     assert isinstance(embeddings, list)
     assert len(embeddings) == len(sample_texts)
     assert all(isinstance(embedding, np.ndarray) for embedding in embeddings)
-    assert all(
-        embedding.shape == (azure_embedding_model.dimension,)
-        for embedding in embeddings
-    )
+    assert all(embedding.shape == (azure_embedding_model.dimension,) for embedding in embeddings)
 
 
 @pytest.mark.skipif(
     "AZURE_OPENAI_ENDPOINT" not in os.environ,
     reason="Skipping test because AZURE_OPENAI_ENDPOINT is not defined",
 )
-def test_similarity(
-    azure_embedding_model: AzureOpenAIEmbeddings, sample_texts: List[str]
-) -> None:
+def test_similarity(azure_embedding_model: AzureOpenAIEmbeddings, sample_texts: list[str]) -> None:
     """Test that AzureOpenAIEmbeddings calculates similarity between embeddings."""
     embeddings = azure_embedding_model.embed_batch(sample_texts)
     similarity_score = azure_embedding_model.similarity(embeddings[0], embeddings[1])
@@ -112,9 +105,9 @@ def test_is_available() -> None:
     assert (
         AzureOpenAIEmbeddings(
             model="text-embedding-3-small",
+            azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
+            azure_api_key=os.getenv("AZURE_OPENAI_API_KEY"),
             deployment="text-embedding-3-small",
-            azure_endpoint=os.environ.get("AZURE_OPENAI_ENDPOINT"),
-            azure_api_key=os.environ.get("AZURE_OPENAI_API_KEY"),
         )._is_available()
         is True
     )
@@ -129,3 +122,26 @@ def test_repr(azure_embedding_model: AzureOpenAIEmbeddings) -> None:
     repr_str = repr(azure_embedding_model)
     assert isinstance(repr_str, str)
     assert repr_str.startswith("AzureOpenAIEmbeddings")
+
+
+@pytest.mark.skipif(
+    not os.getenv("AZURE_OPENAI_ENDPOINT"),
+    reason="Skipping test because AZURE_OPENAI_ENDPOINT is not defined",
+)
+def test_initialization_with_env_vars() -> None:
+    """Test that AzureOpenAIEmbeddings can use environment variables."""
+    embeddings = AzureOpenAIEmbeddings(model="text-embedding-3-small")
+    assert embeddings.model == "text-embedding-3-small"
+    assert embeddings.client is not None
+    assert embeddings.base_url == os.getenv("AZURE_OPENAI_ENDPOINT")
+
+
+@pytest.mark.skipif(
+    not os.getenv("AZURE_OPENAI_ENDPOINT"),
+    reason="Skipping test because AZURE_OPENAI_ENDPOINT is not defined",
+)
+def test_initialization_model_as_first_param() -> None:
+    """Test that AzureOpenAIEmbeddings accepts model as first positional parameter."""
+    embeddings = AzureOpenAIEmbeddings("text-embedding-3-small")
+    assert embeddings.model == "text-embedding-3-small"
+    assert embeddings.client is not None

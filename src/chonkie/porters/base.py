@@ -4,7 +4,7 @@ Porters allow the user to _export_ data from chonkie into a variety of formats f
 """
 
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List
+from typing import Any
 
 from chonkie.types import Chunk
 
@@ -18,19 +18,19 @@ class BasePorter(ABC):
     """
 
     @abstractmethod
-    def export(self, chunks: List[Chunk], **kwargs: Dict[str, Any]) -> None:
+    def export(self, chunks: list[Chunk], **kwargs: dict[str, Any]) -> None:
         """Export the chunks to the desired format.
-        
+
         Args:
             chunks: The chunks to export.
             **kwargs: Additional keyword arguments.
-        
+
         Raises:
             NotImplementedError: If the subclass does not implement this method.
-            
+
         """
         raise NotImplementedError("Subclasses must implement this method.")
 
-    def __call__(self, chunks: List[Chunk], **kwargs: Dict[str, Any]) -> None:
+    def __call__(self, chunks: list[Chunk], **kwargs: dict[str, Any]) -> None:
         """Export the chunks to the desired format."""
         return self.export(chunks)
