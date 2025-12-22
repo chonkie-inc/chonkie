@@ -17,10 +17,10 @@ jobs:
         python-version: ["3.10", "3.11", "3.12", "3.13"]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Install uv and set-up python
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v7
         with:
           python-version: ${{ matrix.python-version }}
           version: latest
@@ -31,7 +31,7 @@ jobs:
         run: uv sync --all-extras --dev
 
       - name: Cache Hugging Face models
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.cache/huggingface/hub
           key: ${{ runner.os }}-huggingface-${{ hashFiles('pyproject.toml') }}
