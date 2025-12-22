@@ -29,10 +29,10 @@ jobs:
           - os: windows-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v7
 
       - name: Set up Python
         run: uv python install
@@ -58,7 +58,7 @@ jobs:
           CIBW_MANYLINUX_AARCH64_IMAGE: manylinux_2_28
           CIBW_ENVIRONMENT_WINDOWS: "PIP_PREFER_BINARY=1"
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: cibw-wheels-${{ matrix.os }}
           path: ./wheelhouse/*.whl
@@ -67,10 +67,10 @@ jobs:
     name: Build source distribution
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v7
 
       - name: Set up Python
         run: uv python install
@@ -78,7 +78,7 @@ jobs:
       - name: Build sdist
         run: uv build --sdist
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: cibw-sdist
           path: dist/*.tar.gz
@@ -87,7 +87,7 @@ jobs:
     needs: [build_wheels, build_sdist]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v7
         with:
           pattern: cibw-*
           path: dist
