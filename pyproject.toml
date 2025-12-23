@@ -145,6 +145,8 @@ all = [
     "elasticsearch>=8.0.0",
     "pymilvus>=2.1.0",
     "catsu>=0.0.1",
+    "litellm>=1.0.0",
+    "datasets>=1.14.0",
 ]
 dev = [
     "datasets>=1.14.0",
