@@ -146,20 +146,6 @@ class TestSlumberChunkerInitialization:
             SlumberChunker()  # Create chunker to trigger genie initialization
             assert mock_gemini.called
 
-    def test_import_dependencies_success(self, mock_genie: MockGenie) -> None:
-        """Test successful import of dependencies."""
-        chunker = SlumberChunker(genie=mock_genie)
-        # If initialization succeeds, dependencies were imported successfully
-        assert chunker is not None
-
-    def test_import_dependencies_failure(self) -> None:
-        """Test handling of missing dependencies."""
-        # Create a chunker instance first to test the dependency import failure
-        with patch("builtins.__import__", side_effect=ImportError("No module named 'pydantic'")):
-            chunker = SlumberChunker.__new__(SlumberChunker)  # Create without calling __init__
-            with pytest.raises(ImportError, match="requires the pydantic library"):
-                chunker._import_dependencies()
-
 
 class TestSlumberChunkerInternalMethods:
     """Test SlumberChunker internal methods."""

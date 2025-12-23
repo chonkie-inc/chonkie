@@ -21,22 +21,8 @@ from .utils import generate_random_collection_name
 logger = get_logger(__name__)
 
 if TYPE_CHECKING:
-    import qdrant_client
+    from qdrant_client import QdrantClient
     from qdrant_client.http.models import PointStruct
-
-    try:
-        from qdrant_client.http.models import Distance, VectorParams
-    except ImportError:
-
-        class VectorParams:  # type: ignore
-            """Stub class for qdrant_client VectorParams when not available."""
-
-            pass
-
-        class Distance:  # type: ignore
-            """Stub class for qdrant_client Distance when not available."""
-
-            pass
 
 
 @handshake("qdrant")
@@ -57,7 +43,7 @@ class QdrantHandshake(BaseHandshake):
 
     def __init__(
         self,
-        client: Optional["qdrant_client.QdrantClient"] = None,
+        client: Optional["QdrantClient"] = None,
         collection_name: Union[str, Literal["random"]] = "random",
         embedding_model: Union[str, BaseEmbeddings] = "minishlab/potion-retrieval-32M",
         url: Optional[str] = None,
@@ -79,8 +65,12 @@ class QdrantHandshake(BaseHandshake):
         """
         super().__init__()
 
-        # Lazy importing the dependencies
-        self._import_dependencies()
+        try:
+            import qdrant_client
+        except ImportError as ie:
+            raise ImportError(
+                "Qdrant is not installed. Please install it with `pip install chonkie[qdrant]`.",
+            ) from ie
 
         # Initialize the Qdrant client
         if client is None:
@@ -123,6 +113,8 @@ class QdrantHandshake(BaseHandshake):
 
         # Create the collection, if it doesn't exist
         if not self.client.collection_exists(self.collection_name):
+            from qdrant_client.http.models import Distance, VectorParams
+
             self.client.create_collection(
                 collection_name=self.collection_name,
                 vectors_config=VectorParams(size=self.dimension, distance=Distance.COSINE),
@@ -132,19 +124,6 @@ class QdrantHandshake(BaseHandshake):
     def _is_available(cls) -> bool:
         """Check if the dependencies are installed."""
         return importutil.find_spec("qdrant_client") is not None
-
-    def _import_dependencies(self) -> None:
-        """Lazy import the dependencies."""
-        if self._is_available():
-            global qdrant_client, PointStruct, VectorParams, Distance
-            import qdrant_client
-            from qdrant_client.http.models import PointStruct
-            from qdrant_client.models import Distance, VectorParams
-        else:
-            raise ImportError(
-                "Qdrant is not installed. "
-                + "Please install it with `pip install chonkie[qdrant]`.",
-            )
 
     def _generate_id(self, index: int, chunk: Chunk) -> str:
         """Generate a unique id for the chunk."""
@@ -161,6 +140,8 @@ class QdrantHandshake(BaseHandshake):
 
     def _get_points(self, chunks: Union[Chunk, list[Chunk]]) -> list["PointStruct"]:
         """Get the points from the chunks."""
+        from qdrant_client.http.models import PointStruct
+
         # Normalize input to always be a sequence
         if isinstance(chunks, Chunk):
             chunks = [chunks]

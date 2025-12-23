@@ -14,10 +14,7 @@ from .base import BaseHandshake
 logger = get_logger(__name__)
 
 if TYPE_CHECKING:
-    import vecs
-
-# Module-level variable that will be set by _import_dependencies
-vecs = None
+    from vecs import Client
 
 
 @handshake("pgvector")
@@ -43,7 +40,7 @@ class PgvectorHandshake(BaseHandshake):
 
     def __init__(
         self,
-        client: Optional["vecs.Client"] = None,
+        client: Optional["Client"] = None,
         host: str = "localhost",
         port: int = 5432,
         database: str = "postgres",
@@ -71,8 +68,12 @@ class PgvectorHandshake(BaseHandshake):
         """
         super().__init__()
 
-        # Lazy importing the dependencies
-        self._import_dependencies()
+        try:
+            import vecs
+        except ImportError as ie:
+            raise ImportError(
+                "vecs is not installed. Please install it with `pip install chonkie[pgvector]`.",
+            ) from ie
 
         # Initialize vecs client based on provided parameters
         if client is not None:
@@ -121,16 +122,6 @@ class PgvectorHandshake(BaseHandshake):
     def _is_available(cls) -> bool:
         """Check if the dependencies are available."""
         return importutil.find_spec("vecs") is not None
-
-    def _import_dependencies(self) -> None:
-        """Lazy import the dependencies."""
-        if not self._is_available():
-            raise ImportError(
-                "vecs is not installed. Please install it with `pip install chonkie[pgvector]`.",
-            )
-
-        global vecs
-        import vecs
 
     def _generate_id(self, index: int, chunk: Chunk) -> str:
         """Generate a unique ID for the chunk."""

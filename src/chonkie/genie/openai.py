@@ -7,7 +7,6 @@ from typing import TYPE_CHECKING, Any, Optional
 from .base import BaseGenie
 
 if TYPE_CHECKING:
-    from openai import OpenAI
     from pydantic import BaseModel
 
 
@@ -30,8 +29,13 @@ class OpenAIGenie(BaseGenie):
         """
         super().__init__()
 
-        # Lazily import the dependencies
-        self._import_dependencies()
+        try:
+            from openai import OpenAI
+        except ImportError as ie:
+            raise ImportError(
+                "One or more of the required modules are not available: [pydantic, openai]. "
+                "Please install the dependencies via `pip install chonkie[openai]`"
+            ) from ie
 
         # Initialize the API key
         self.api_key = api_key or os.environ.get("OPENAI_API_KEY")
@@ -72,25 +76,13 @@ class OpenAIGenie(BaseGenie):
 
     @classmethod
     def _is_available(cls) -> bool:
-        """Check if all the dependencies are available in the environement."""
+        """Check if all the dependencies are available in the environment."""
         if (
             importutil.find_spec("pydantic") is not None
             and importutil.find_spec("openai") is not None
         ):
             return True
         return False
-
-    def _import_dependencies(self) -> None:
-        """Import all the required dependencies."""
-        if self._is_available():
-            global OpenAI, BaseModel
-            from openai import OpenAI
-            from pydantic import BaseModel
-        else:
-            raise ImportError(
-                "One or more of the required modules are not available: [pydantic, openai]",
-                "Please install the dependencies via `pip install chonkie[openai]`",
-            )
 
     def __repr__(self) -> str:
         """Return a string representation of the OpenAIGenie instance."""

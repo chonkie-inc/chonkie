@@ -68,8 +68,17 @@ class SlumberChunker(BaseChunker):
         # Since the BaseChunker sets and defines the tokenizer for us, we don't have to worry.
         super().__init__(tokenizer)
 
-        # Lazily import the dependencies
-        self._import_dependencies()
+        try:
+            from pydantic import BaseModel
+        except ImportError:
+            raise ImportError(
+                "The SlumberChunker requires the pydantic library to be installed. Please install it using `pip install chonkie[genie]`.",
+            )
+
+        class Split(BaseModel):  # type: ignore
+            split_index: int
+
+        self.Split = Split
 
         # If the genie is not provided, use the default GeminiGenie
         if genie is None:
@@ -83,7 +92,7 @@ class SlumberChunker(BaseChunker):
         self.min_characters_per_chunk = min_characters_per_chunk
         self.verbose = verbose
 
-        # Set the parameters for the defualt prompt template
+        # Set the parameters for the default prompt template
         self.template = PROMPT_TEMPLATE
         self.sep = "✄"
         self._CHARS_PER_TOKEN = 6.5
@@ -301,7 +310,7 @@ class SlumberChunker(BaseChunker):
             )
 
         # Pass the self.chunk_size amount of context through the Genie,
-        # so we can contol how much context the Genie gets as well.
+        # so we can control how much context the Genie gets as well.
         # This is especially useful for models that don't have long context
         # or exhibit weakend reasoning ability over longer texts.
         chunks = []
@@ -348,21 +357,6 @@ class SlumberChunker(BaseChunker):
 
         logger.info(f"Created {len(chunks)} chunks using LLM-guided semantic splitting")
         return chunks
-
-    def _import_dependencies(self) -> None:
-        """Import the dependencies for the SlumberChunker."""
-        try:
-            from pydantic import BaseModel
-
-            class Split(BaseModel):  # type: ignore
-                split_index: int
-
-            self.Split = Split
-
-        except ImportError:
-            raise ImportError(
-                "The SlumberChunker requires the pydantic library to be installed. Please install it using `pip install chonkie[genie]`.",
-            )
 
     def __repr__(self) -> str:
         """Return a string representation of the SlumberChunker."""

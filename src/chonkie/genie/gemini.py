@@ -24,18 +24,23 @@ class GeminiGenie(BaseGenie):
         """
         super().__init__()
 
-        # Lazily import the dependencies
-        self._import_dependencies()
-
         # Initialize the API key
-        self.api_key = api_key or os.environ.get("GEMINI_API_KEY")
-        if not self.api_key:
+        api_key = api_key or os.environ.get("GEMINI_API_KEY")
+        if not api_key:
             raise ValueError(
                 "GeminiGenie requires an API key. Either pass the `api_key` parameter or set the `GEMINI_API_KEY` in your environment.",
             )
 
+        try:
+            from google.genai import Client as GenAIClient
+        except ImportError as ie:
+            raise ImportError(
+                "One or more of the required modules are not available: [google-genai]. "
+                "Please install the dependencies via `pip install chonkie[gemini]`"
+            ) from ie
+
         # Initialize the client and model
-        self.client = genai.Client(api_key=self.api_key)  # type: ignore
+        self.client = GenAIClient(api_key=api_key)
         self.model = model
 
     def generate(self, prompt: str) -> str:
@@ -54,30 +59,19 @@ class GeminiGenie(BaseGenie):
             },
         )
         try:
-            return dict(json.loads(response.text))
+            return dict(json.loads(response.text or ""))
         except Exception as e:
             raise ValueError(f"Failed to parse JSON response: {e}")
 
     @classmethod
     def _is_available(cls) -> bool:
-        """Check if all the dependencies are available in the environement."""
+        """Check if all the dependencies are available in the environment."""
         if (
             importutil.find_spec("pydantic") is not None
             and importutil.find_spec("google") is not None
         ):
             return True
         return False
-
-    def _import_dependencies(self) -> None:
-        """Import all the required dependencies."""
-        if self._is_available():
-            global BaseModel, genai
-            from google import genai
-            from pydantic import BaseModel
-        else:
-            raise ImportError(
-                "One or more of the required modules are not available: [pydantic, google-genai]",
-            )
 
     def __repr__(self) -> str:
         """Return a string representation of the GeminiGenie instance."""

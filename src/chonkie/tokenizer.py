@@ -561,13 +561,13 @@ class AutoTokenizer:
         """
         # Supported backends
         if self._backend == "chonkie":
-            return self.tokenizer.encode(text)  # type: ignore
+            return self.tokenizer.encode(text)
         elif self._backend == "tiktoken":
-            return self.tokenizer.encode(text)  # type: ignore
+            return self.tokenizer.encode(text)
         elif self._backend == "transformers":
-            return self.tokenizer.encode(text, add_special_tokens=False)  # type: ignore
+            return self.tokenizer.encode(text, add_special_tokens=False)
         elif self._backend == "tokenizers":
-            return self.tokenizer.encode(text, add_special_tokens=False).ids  # type: ignore
+            return self.tokenizer.encode(text, add_special_tokens=False).ids
 
         # Not yet implemented backends
         if self._backend == "callable":
@@ -587,7 +587,7 @@ class AutoTokenizer:
         """
         if self._backend == "callable":
             raise NotImplementedError("Decoding not implemented for callable tokenizers.")
-        return self.tokenizer.decode(tokens)  # type: ignore
+        return self.tokenizer.decode(tokens)
 
     def count_tokens(self, text: str) -> int:
         """Count the number of tokens in the text.
@@ -600,15 +600,15 @@ class AutoTokenizer:
 
         """
         if self._backend == "chonkie":
-            return self.tokenizer.count_tokens(text)  # type: ignore
+            return self.tokenizer.count_tokens(text)
         elif self._backend == "tiktoken":
-            return len(self.tokenizer.encode(text))  # type: ignore
+            return len(self.tokenizer.encode(text))
         elif self._backend == "transformers":
-            return len(self.tokenizer.encode(text, add_special_tokens=False))  # type: ignore
+            return len(self.tokenizer.encode(text, add_special_tokens=False))
         elif self._backend == "tokenizers":
-            return len(self.tokenizer.encode(text, add_special_tokens=False).ids)  # type: ignore
+            return len(self.tokenizer.encode(text, add_special_tokens=False).ids)
         elif self._backend == "callable":
-            return self.tokenizer(text)  # type: ignore
+            return self.tokenizer(text)
         raise ValueError(f"Unsupported tokenizer backend: {self._backend}")
 
     def encode_batch(self, texts: Sequence[str]) -> Sequence[Sequence[int]]:
@@ -622,14 +622,14 @@ class AutoTokenizer:
 
         """
         if self._backend == "chonkie":
-            return self.tokenizer.encode_batch(texts)  # type: ignore
+            return self.tokenizer.encode_batch(texts)
         elif self._backend == "tiktoken":
-            return self.tokenizer.encode_batch(texts)  # type: ignore
+            return self.tokenizer.encode_batch(texts)
         elif self._backend == "transformers":
-            encoded = self.tokenizer(texts, add_special_tokens=False)  # type: ignore
-            return encoded["input_ids"]  # type: ignore
+            encoded = self.tokenizer(texts, add_special_tokens=False)
+            return encoded["input_ids"]
         elif self._backend == "tokenizers":
-            return [encoding.ids for encoding in self.tokenizer.encode_batch(texts)]  # type: ignore
+            return [encoding.ids for encoding in self.tokenizer.encode_batch(texts)]
         if self._backend == "callable":
             raise NotImplementedError("Batch encoding not implemented for callable tokenizers.")
         raise ValueError(f"Unsupported tokenizer backend: {self._backend}")
