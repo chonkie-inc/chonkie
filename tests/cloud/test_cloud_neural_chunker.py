@@ -1,10 +1,10 @@
 """Test the Chonkie Cloud Neural Chunker."""
 
+import json
 from typing import Any
 
+import httpx
 import pytest
-import json
-import httpx  # Import httpx to mock its methods
 
 from chonkie.cloud.chunker import NeuralChunker
 from chonkie.types import Chunk

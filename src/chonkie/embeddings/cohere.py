@@ -6,8 +6,8 @@ import os
 import warnings
 from typing import TYPE_CHECKING, Optional
 
-import numpy as np
 import httpx
+import numpy as np
 
 from .base import BaseEmbeddings
 

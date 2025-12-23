@@ -1,8 +1,8 @@
 """Late Chunking for Chonkie API."""
 
+import json
 from typing import Any, Optional, Union, cast
 
-import json
 import httpx
 
 from chonkie.types import Chunk
