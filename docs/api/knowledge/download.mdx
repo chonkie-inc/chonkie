@@ -11,7 +11,7 @@ Download the original file from a knowledge base. Returns the file as a binary s
 <CodeGroup>
 
 ```python Python
-import httpx
+import requests
 
 kb_slug = "product-documentation"
 file_id = "1705320000000-api.pdf"
@@ -21,7 +21,7 @@ headers = {
     "Authorization": "Bearer YOUR_API_KEY"
 }
 
-response = httpx.get(url, headers=headers)
+response = requests.get(url, headers=headers)
 
 # Save to file
 with open("downloaded-api.pdf", "wb") as f:

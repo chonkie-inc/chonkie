@@ -11,14 +11,14 @@ Retrieve a list of all AI agents in your organization.
 <CodeGroup>
 
 ```python Python
-import httpx
+import requests
 
 url = "https://labs.chonkie.ai/api/v1/agents"
 headers = {
     "Authorization": "Bearer YOUR_API_KEY"
 }
 
-response = httpx.get(url, headers=headers)
+response = requests.get(url, headers=headers)
 agents = response.json()
 
 print(f"Found {len(agents)} agents")

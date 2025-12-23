@@ -11,7 +11,7 @@ Retrieve a list of all files stored in a specific knowledge base.
 <CodeGroup>
 
 ```python Python
-import httpx
+import requests
 
 kb_slug = "product-documentation"
 url = f"https://labs.chonkie.ai/api/v1/knowledge/{kb_slug}"
@@ -19,7 +19,7 @@ headers = {
     "Authorization": "Bearer YOUR_API_KEY"
 }
 
-response = httpx.get(url, headers=headers)
+response = requests.get(url, headers=headers)
 data = response.json()
 files = data["files"]
 
