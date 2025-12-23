@@ -11,7 +11,7 @@ Create a new knowledge base that can store documents, generate embeddings, and e
 <CodeGroup>
 
 ```python Python
-import httpx
+import requests
 
 url = "https://labs.chonkie.ai/api/v1/knowledge"
 headers = {
@@ -24,7 +24,7 @@ data = {
     "description": "Technical documentation for our products"
 }
 
-response = httpx.post(url, headers=headers, json=data)
+response = requests.post(url, headers=headers, json=data)
 kb = response.json()
 
 print(f"Created knowledge base: {kb['name']}")

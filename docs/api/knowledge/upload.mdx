@@ -11,7 +11,7 @@ Upload files to a knowledge base. Files are automatically chunked, embedded, and
 <CodeGroup>
 
 ```python Python
-import httpx
+import requests
 
 kb_slug = "product-documentation"
 url = f"https://labs.chonkie.ai/api/v1/knowledge/{kb_slug}"
@@ -22,7 +22,7 @@ headers = {
 # Upload single file
 with open("api.pdf", "rb") as f:
     files = {"files": f}
-    response = httpx.post(url, headers=headers, files=files)
+    response = requests.post(url, headers=headers, files=files)
 
 result = response.json()
 print(f"Uploaded: {result['files'][0]['originalName']}")
@@ -34,7 +34,7 @@ with open("doc1.pdf", "rb") as f1, \
         ("files", f1),
         ("files", f2)
     ]
-    response = httpx.post(url, headers=headers, files=files)
+    response = requests.post(url, headers=headers, files=files)
 
 result = response.json()
 print(f"Uploaded {len(result['files'])} files")

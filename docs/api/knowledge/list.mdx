@@ -37,14 +37,14 @@ Array of knowledge base objects:
 <CodeGroup>
 
 ```python Python
-import httpx
+import requests
 
 url = "https://labs.chonkie.ai/api/v1/knowledge"
 headers = {
     "Authorization": "Bearer YOUR_API_KEY"
 }
 
-response = httpx.get(url, headers=headers)
+response = requests.get(url, headers=headers)
 knowledge_bases = response.json()
 
 print(f"Found {len(knowledge_bases)} knowledge bases")

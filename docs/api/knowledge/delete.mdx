@@ -11,7 +11,7 @@ Delete an entire knowledge base, including all files, vectors, and metadata. Thi
 <CodeGroup>
 
 ```python Python
-import httpx
+import requests
 
 kb_slug = "old-project-docs"
 url = f"https://labs.chonkie.ai/api/v1/knowledge/{kb_slug}"
@@ -19,7 +19,7 @@ headers = {
     "Authorization": "Bearer YOUR_API_KEY"
 }
 
-response = httpx.delete(url, headers=headers)
+response = requests.delete(url, headers=headers)
 result = response.json()
 print(result["message"])
 ```

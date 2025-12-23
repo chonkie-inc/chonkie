@@ -11,7 +11,7 @@ Update an existing agent's configuration.
 <CodeGroup>
 
 ```python Python
-import httpx
+import requests
 
 agent_slug = "documentation-assistant"
 url = f"https://labs.chonkie.ai/api/v1/agents/{agent_slug}"
@@ -25,7 +25,7 @@ data = {
     "temperature": 0.5
 }
 
-response = httpx.put(url, headers=headers, json=data)
+response = requests.put(url, headers=headers, json=data)
 result = response.json()
 
 print(f"Updated agent: {result['agent']['name']}")
