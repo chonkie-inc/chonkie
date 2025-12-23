@@ -3,8 +3,8 @@
 import os
 from typing import Any, Optional, cast
 
-import numpy as np
 import httpx
+import numpy as np
 
 from .base import BaseRefinery
 

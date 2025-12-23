@@ -6,9 +6,9 @@ import sys
 from typing import Any, Generator
 from unittest.mock import Mock, patch
 
+import httpx
 import numpy as np
 import pytest
-import httpx
 
 from chonkie.embeddings.jina import JinaEmbeddings
 
