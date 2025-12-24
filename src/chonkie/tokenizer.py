@@ -2,15 +2,19 @@
 
 import importlib
 import inspect
-import warnings
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from typing import TYPE_CHECKING, Any, Callable, Protocol, Sequence, Union
+
+from chonkie.logger import get_logger
 
 if TYPE_CHECKING:
     import tiktoken
     import tokenizers
     import transformers
+
+
+logger = get_logger(__name__)
 
 
 class TokenizerProtocol(Protocol):
@@ -497,12 +501,13 @@ class AutoTokenizer:
                 from tokenizers import Tokenizer as HFTokenizer
 
                 return HFTokenizer.from_pretrained(tokenizer)
-            except Exception:
-                warnings.warn(
-                    "Could not load tokenizer with 'tokenizers'. Falling back to 'tiktoken'.",
+            except Exception as e:
+                logger.warning(
+                    f"Could not load tokenizer with 'tokenizers': {e}. Falling back to 'tiktoken'.",
+                    exc_info=True,
                 )
         else:
-            warnings.warn("'tokenizers' library not found. Falling back to 'tiktoken'.")
+            logger.warning("'tokenizers' library not found. Falling back to 'tiktoken'.")
 
         # Try tiktoken
         if importlib.util.find_spec("tiktoken") is not None:
@@ -510,12 +515,13 @@ class AutoTokenizer:
                 from tiktoken import get_encoding
 
                 return get_encoding(tokenizer)
-            except Exception:
-                warnings.warn(
-                    "Could not load tokenizer with 'tiktoken'. Falling back to 'transformers'.",
+            except Exception as e:
+                logger.warning(
+                    f"Could not load tokenizer with 'tiktoken': {e}. Falling back to 'transformers'.",
+                    exc_info=True,
                 )
         else:
-            warnings.warn("'tiktoken' library not found. Falling back to 'transformers'.")
+            logger.warning("'tiktoken' library not found. Falling back to 'transformers'.")
 
         # Try transformers as last resort
         if importlib.util.find_spec("transformers") is not None:
@@ -523,8 +529,11 @@ class AutoTokenizer:
                 from transformers import AutoTokenizer
 
                 return AutoTokenizer.from_pretrained(tokenizer)
-            except Exception:
-                raise ValueError("Tokenizer not found in transformers, tokenizers, or tiktoken")
+            except Exception as e:
+                logger.warning(
+                    f"Could not load tokenizer with 'transformers': {e}",
+                    exc_info=True,
+                )
         raise ValueError("Tokenizer not found in transformers, tokenizers, or tiktoken")
 
     def _get_backend(self) -> str:

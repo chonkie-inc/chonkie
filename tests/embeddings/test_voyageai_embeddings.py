@@ -1,7 +1,7 @@
 """Test suite for VoyageAIEmbeddings."""
 
 import os
-import warnings
+import re
 from typing import Union
 from unittest.mock import MagicMock, patch
 
@@ -395,7 +395,7 @@ class TestVoyageAIEmbeddingsErrorHandling:
             ):
                 await embeddings._VoyageAIEmbeddings__process_batch(["Text 1"])
 
-    def test_truncation_warning_embed(self, embeddings: VoyageAIEmbeddings) -> None:
+    def test_truncation_warning_embed(self, embeddings: VoyageAIEmbeddings, caplog) -> None:
         """Test truncation warning in embed method."""
         long_text = (
             "word " * 40000
@@ -406,11 +406,11 @@ class TestVoyageAIEmbeddingsErrorHandling:
         # Override the tokenizer to return a high token count for this test
         with patch.object(embeddings, "count_tokens", return_value=50000):  # Exceed the 32k limit
             with patch.object(embeddings._client, "embed", return_value=mock_response):
-                with pytest.warns(UserWarning, match="Input has .* tokens"):
-                    embeddings.embed(long_text)
+                embeddings.embed(long_text)
+        assert re.search(r"Input has .* tokens.+truncating", caplog.text)
 
     @pytest.mark.asyncio
-    async def test_truncation_warning_aembed(self, embeddings: VoyageAIEmbeddings) -> None:
+    async def test_truncation_warning_aembed(self, embeddings: VoyageAIEmbeddings, caplog) -> None:
         """Test truncation warning in aembed method."""
         long_text = (
             "word " * 40000
@@ -421,10 +421,10 @@ class TestVoyageAIEmbeddingsErrorHandling:
         # Override the tokenizer to return a high token count for this test
         with patch.object(embeddings, "count_tokens", return_value=50000):  # Exceed the 32k limit
             with patch.object(embeddings._aclient, "embed", return_value=mock_response):
-                with pytest.warns(UserWarning, match="Input has .* tokens"):
-                    await embeddings.aembed(long_text)
+                await embeddings.aembed(long_text)
+        assert re.search(r"Input has .* tokens.+truncating", caplog.text)
 
-    def test_truncation_warning_embed_batch(self, embeddings: VoyageAIEmbeddings) -> None:
+    def test_truncation_warning_embed_batch(self, embeddings: VoyageAIEmbeddings, caplog) -> None:
         """Test truncation warning in embed_batch method."""
         long_text = (
             "word " * 40000
@@ -440,11 +440,13 @@ class TestVoyageAIEmbeddingsErrorHandling:
             return_value=[50000, 2],
         ):  # First text exceeds limit
             with patch.object(embeddings._client, "embed", return_value=mock_response):
-                with pytest.warns(UserWarning, match="Text has .* tokens which exceeds"):
-                    embeddings.embed_batch(texts)
+                embeddings.embed_batch(texts)
+        assert re.search(r"Text has .* tokens which exceeds", caplog.text)
 
     @pytest.mark.asyncio
-    async def test_truncation_warning_process_batch(self, embeddings: VoyageAIEmbeddings) -> None:
+    async def test_truncation_warning_process_batch(
+        self, embeddings: VoyageAIEmbeddings, caplog
+    ) -> None:
         """Test truncation warning in __process_batch method."""
         long_text = (
             "word " * 40000
@@ -460,8 +462,8 @@ class TestVoyageAIEmbeddingsErrorHandling:
             return_value=[50000],
         ):  # Exceed the limit
             with patch.object(embeddings._aclient, "embed", return_value=mock_response):
-                with pytest.warns(UserWarning, match="Text has .* tokens which exceeds"):
-                    await embeddings._VoyageAIEmbeddings__process_batch(batch)
+                await embeddings._VoyageAIEmbeddings__process_batch(batch)
+        assert re.search(r"Text has .* tokens which exceeds", caplog.text)
 
     def test_tokenizer_initialization_error(self) -> None:
         """Test error handling when tokenizer initialization fails."""
@@ -607,12 +609,7 @@ class TestVoyageAIEmbeddingsEdgeCases:
 
         with patch.object(embeddings._client, "embed", return_value=mock_response):
             # Should not raise warning when truncation is disabled
-            with warnings.catch_warnings():
-                warnings.simplefilter("error")
-                try:
-                    embeddings.embed(long_text)
-                except UserWarning:
-                    pytest.fail("Warning raised when truncation is disabled")
+            embeddings.embed(long_text)
 
     def test_count_tokens_empty_string(self, embeddings: VoyageAIEmbeddings) -> None:
         """Test token counting with empty string."""

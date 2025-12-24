@@ -2,15 +2,19 @@
 
 import importlib.util as importutil
 import os
-import warnings
 from typing import TYPE_CHECKING, Any, Optional
 
 import numpy as np
+
+from chonkie.logger import get_logger
 
 from .base import BaseEmbeddings
 
 if TYPE_CHECKING:
     from tiktoken import Encoding
+
+
+logger = get_logger(__name__)
 
 
 class AzureOpenAIEmbeddings(BaseEmbeddings):
@@ -167,7 +171,10 @@ class AzureOpenAIEmbeddings(BaseEmbeddings):
                 all_embeddings.extend(embeddings)
             except Exception as e:
                 if len(batch) > 1:
-                    warnings.warn(f"Batch failed: {e}. Falling back to single embedding calls.")
+                    logger.warning(
+                        f"Batch failed: {e}. Falling back to single embedding calls.",
+                        exc_info=True,
+                    )
                     all_embeddings.extend(self.embed(t) for t in batch)
                 else:
                     raise

@@ -1,7 +1,6 @@
 """Table chunker for processing markdown tables."""
 
 import re
-import warnings
 from typing import Union
 
 from chonkie.chunker.base import BaseChunker
@@ -38,7 +37,7 @@ class TableChunker(BaseChunker):
         if chunk_size <= 0:
             raise ValueError("Chunk size must be greater than 0.")
         if chunk_size == 3 and tokenizer != "row":
-            warnings.warn(
+            logger.warning(
                 "Using default chunk size of 3 with a token-based tokenizer may not be optimal. "
                 "Consider using a larger chunk_size for token-based chunking.",
             )
@@ -71,12 +70,12 @@ class TableChunker(BaseChunker):
         chunks: list[Chunk] = []
         # Basic validation
         if not text.strip():
-            warnings.warn("No table content found. Skipping chunking.")
+            logger.warning("No table content found. Skipping chunking.")
             return []
 
         rows = text.strip().split("\n")
         if len(rows) < 3:  # Need header, separator, and at least one data row
-            warnings.warn(
+            logger.warning(
                 "Table must have at least a header, separator, and one data row. Skipping chunking.",
             )
             return []
