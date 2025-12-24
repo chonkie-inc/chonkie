@@ -253,20 +253,9 @@ class TestNeuralChunkerEdgeCases:
 
     def test_chunk_empty_text(self, neural_chunker):
         """Test chunking empty text."""
-        try:
-            result = neural_chunker.chunk("")
-
-            assert isinstance(result, list)
-            assert len(result) >= 1
-            # For empty text, the result should contain the empty string
-            reconstructed = "".join(chunk.text for chunk in result)
-            assert reconstructed == ""
-        except Exception as e:
-            # Some tokenizers may not handle empty strings well
-            if "index out of range" in str(e).lower():
-                pytest.skip("Tokenizer does not handle empty text well")
-            else:
-                raise
+        result = neural_chunker.chunk("")
+        assert isinstance(result, list)
+        assert not result
 
     def test_chunk_single_character(self, neural_chunker):
         """Test chunking single character."""
