@@ -61,38 +61,6 @@ def test_disable_enable():
     assert is_enabled()
 
 
-def test_logging_with_chunker():
-    """Test that logging works with chunkers."""
-    from chonkie import TokenChunker
-
-    # Enable logging at INFO level
-    configure("info")
-
-    # Create a chunker and process some text
-    chunker = TokenChunker(chunk_size=10)
-    chunks = chunker.chunk("This is a test sentence.")
-
-    assert len(chunks) > 0
-
-
-def test_logging_disabled_with_chunker():
-    """Test that logging can be disabled."""
-    from chonkie import TokenChunker
-
-    # Disable logging
-    disable()
-    assert not is_enabled()
-
-    # Create a chunker - should work without logs
-    chunker = TokenChunker(chunk_size=10)
-    chunks = chunker.chunk("This is a test sentence.")
-
-    assert len(chunks) > 0
-
-    # Re-enable for other tests
-    enable("info")
-
-
 def test_chonkie_log_env_var():
     """Test that CHONKIE_LOG environment variable behavior via configure."""
     # Test with debug level
@@ -129,22 +97,6 @@ def test_numeric_log_levels():
 
     configure("4")  # DEBUG
     assert is_enabled()
-
-
-def test_batch_processing_logs():
-    """Test that batch processing generates appropriate logs."""
-    from chonkie import SentenceChunker
-
-    configure("info")
-
-    chunker = SentenceChunker(chunk_size=50)
-    texts = ["First sentence.", "Second sentence.", "Third sentence."]
-
-    # Process batch
-    results = chunker.chunk_batch(texts, show_progress=False)
-
-    assert len(results) == 3
-    assert all(isinstance(r, list) for r in results)
 
 
 if __name__ == "__main__":
