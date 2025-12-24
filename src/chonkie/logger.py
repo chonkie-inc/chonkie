@@ -32,8 +32,8 @@ from typing import Any, MutableMapping, Optional
 
 # Track if we've configured the logger
 _configured = False
-_enabled = True
-_handler: Optional[logging.Handler] = None
+
+DISABLED_LOG_LEVEL = 9001  # It's over 9000!
 
 # Default configuration
 DEFAULT_LOG_LEVEL = "WARNING"
@@ -88,13 +88,10 @@ def _configure_default() -> None:
     - Can be explicitly left unconfigured with CHONKIE_LOG=unconfigured
     - Supports hierarchical loggers (e.g., chonkie.chunker.base)
     """
-    global _configured, _enabled, _handler
+    global _configured
 
     if _configured:
         return
-
-    # Get the chonkie logger (parent of all chonkie.* loggers)
-    logger = logging.getLogger("chonkie")
 
     # Parse CHONKIE_LOG environment variable
     chonkie_log = os.getenv("CHONKIE_LOG")
@@ -105,36 +102,7 @@ def _configure_default() -> None:
         _configured = True
         return
 
-    enabled, level = _parse_log_setting(chonkie_log)
-    _enabled = enabled
-
-    # Configure handler
-    if not enabled:
-        # Logging is explicitly disabled (CHONKIE_LOG=off)
-        if not logger.handlers:
-            logger.addHandler(logging.NullHandler())
-        logger.setLevel(logging.CRITICAL + 1)  # Effectively disable
-    else:
-        # Logging is enabled (either default WARNING or explicitly set level)
-        # Remove NullHandler if present
-        logger.handlers = [h for h in logger.handlers if not isinstance(h, logging.NullHandler)]
-
-        # Create and configure a StreamHandler
-        _handler = logging.StreamHandler(sys.stderr)
-        _handler.setLevel(getattr(logging, level))
-
-        # Set formatter
-        formatter = logging.Formatter(DEFAULT_FORMAT)
-        _handler.setFormatter(formatter)
-
-        # Add handler to chonkie logger
-        logger.addHandler(_handler)
-        logger.setLevel(getattr(logging, level))
-
-        # Prevent propagation to avoid duplicate logs from Python's root logger
-        logger.propagate = False
-
-    _configured = True
+    configure(chonkie_log)
 
 
 LOG_RECORD_RESERVED_KEYS = {key: f"_{key}" for key in logging.makeLogRecord({}).__dict__}
@@ -228,23 +196,24 @@ def configure(
         >>> chonkie.logger.configure("info")  # Re-enable at INFO level
 
     """
-    global _configured, _enabled, _handler
+    global _configured
 
     # Parse the level setting
     enabled, log_level = _parse_log_setting(level)
-    _enabled = enabled
 
     # Get the chonkie logger
     logger = logging.getLogger("chonkie")
 
     # Remove existing handlers
     logger.handlers = []
-    _handler = None
+
+    # Prevent propagation to avoid duplicate logs
+    logger.propagate = False
 
     if not enabled:
         # Add NullHandler to suppress logs
         logger.addHandler(logging.NullHandler())
-        logger.setLevel(logging.CRITICAL + 1)  # Effectively disable
+        logger.setLevel(DISABLED_LOG_LEVEL)  # Effectively disable
         _configured = True
         return
 
@@ -252,19 +221,16 @@ def configure(
     log_format = format or DEFAULT_FORMAT
 
     # Create and configure handler
-    _handler = logging.StreamHandler(sys.stderr)
-    _handler.setLevel(getattr(logging, log_level))
+    handler = logging.StreamHandler(sys.stderr)
+    handler.setLevel(getattr(logging, log_level))
 
     # Set formatter
     formatter = logging.Formatter(log_format)
-    _handler.setFormatter(formatter)
+    handler.setFormatter(formatter)
 
     # Add handler to logger
-    logger.addHandler(_handler)
+    logger.addHandler(handler)
     logger.setLevel(getattr(logging, log_level))
-
-    # Prevent propagation to avoid duplicate logs
-    logger.propagate = False
 
     _configured = True
 
@@ -312,7 +278,7 @@ def is_enabled() -> bool:
         ...     logger.debug("This will be logged")
 
     """
-    return _enabled
+    return logging.getLogger("chonkie").level < DISABLED_LOG_LEVEL
 
 
 # Export the main functions
