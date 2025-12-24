@@ -1,5 +1,9 @@
 """Tests for Chonkie logging functionality."""
 
+import logging
+from functools import cache
+from unittest.mock import Mock
+
 import pytest
 
 from chonkie.logger import (
@@ -11,10 +15,25 @@ from chonkie.logger import (
 )
 
 
+@pytest.fixture(autouse=True)
+def patched_get_logger(monkeypatch):
+    """Patch logging.getLogger to return an unwired logger for testing."""
+
+    # We want to return the same logger instance for the same name
+    # during the same test; `@cache` is a dead simple way to do that.
+    @cache
+    def _get_logger(name="root"):
+        return logging.Logger(f"_fake_{name}")
+
+    mock = Mock(side_effect=_get_logger)
+    monkeypatch.setattr(logging, "getLogger", mock)
+    return mock
+
+
 def test_get_logger():
     """Test that get_logger returns a logger instance."""
     logger = get_logger("test_module")
-    assert logger is not None
+    assert logger.name == "_fake_test_module"
 
 
 def test_configure_levels():
