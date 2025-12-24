@@ -71,7 +71,7 @@ class BaseChef(ABC):
                 logger.debug(f"Successfully read file: {path}", size=len(content))
                 return content
         except Exception as e:
-            logger.warning(f"Failed to read file: {path}", error=str(e))
+            logger.warning(f"Failed to read file {path}: {e}", exc_info=True)
             raise
 
     def __call__(self, path: Union[str, Path]) -> Document:
