@@ -201,7 +201,10 @@ class WeaviateHandshake(BaseHandshake):
             exists = self.client.collections.exists(collection_name)
             return exists
         except Exception as e:
-            logger.warning(f"Failed to check for collection '{collection_name}': {e}")
+            logger.warning(
+                f"Failed to check for collection '{collection_name}': {e}",
+                exc_info=True,
+            )
             return False
 
     def _create_collection(self) -> None:
@@ -345,7 +348,7 @@ class WeaviateHandshake(BaseHandshake):
 
                     chunk_ids.append(chunk_id)
                 except Exception as e:
-                    logger.error(f"Error processing chunk {index}: {str(e)}")
+                    logger.error(f"Error processing chunk {index}: {e}", exc_info=True)
                     # Continue with next chunk
 
             # After batch is complete, check for errors

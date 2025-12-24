@@ -3,7 +3,6 @@
 import html
 import os
 import tempfile
-import warnings
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -230,7 +229,7 @@ class TestVisualizerPrintMethod:
             with pytest.raises(ValueError, match="Chunks must have 'text'"):
                 viz.print(invalid_chunks)
 
-    def test_print_invalid_chunk_indices(self, sample_text: str) -> None:
+    def test_print_invalid_chunk_indices(self, sample_text: str, caplog) -> None:
         """Test printing with chunks having invalid indices."""
         invalid_chunks = [
             MagicMock(text="Hello ", start_index=None, end_index=6),
@@ -245,16 +244,14 @@ class TestVisualizerPrintMethod:
             mock_console_class.return_value = mock_console
             mock_text_class.return_value = mock_text
             viz = Visualizer()
-            with warnings.catch_warnings(record=True) as w:
-                warnings.simplefilter("always")
-                viz.print(invalid_chunks, sample_text)
-                assert len(w) == 2
-                assert "invalid start/end index" in str(w[0].message)
+            viz.print(invalid_chunks, sample_text)
+            assert "invalid start/end index" in caplog.text
 
     def test_print_stylize_error_handling(
         self,
         sample_chunks: list[Chunk],
         sample_text: str,
+        caplog,
     ) -> None:
         """Test error handling during text stylization."""
         with (
@@ -267,11 +264,8 @@ class TestVisualizerPrintMethod:
             mock_console_class.return_value = mock_console
             mock_text_class.return_value = mock_text
             viz = Visualizer()
-            with warnings.catch_warnings(record=True) as w:
-                warnings.simplefilter("always")
-                viz.print(sample_chunks, sample_text)
-                assert len(w) >= 1
-                assert "Could not apply style" in str(w[0].message)
+            viz.print(sample_chunks, sample_text)
+            assert "Could not apply style" in caplog.text
 
 
 class TestVisualizerSaveMethod:
@@ -549,9 +543,7 @@ class TestVisualizerEdgeCases:
         ]
         with patch("rich.console.Console"):
             viz = Visualizer()
-            with warnings.catch_warnings(record=True):
-                warnings.simplefilter("always")
-                viz.print(equal_indices_chunks, sample_text)
+            viz.print(equal_indices_chunks, sample_text)
 
 
 class TestVisualizerConstants:
