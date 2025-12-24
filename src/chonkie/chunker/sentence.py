@@ -154,7 +154,7 @@ class SentenceChunker(BaseChunker):
         """
         # Create a hubbie instance
         hub = Hubbie()
-        logger.info("Loading SentenceChunker recipe", name=name, lang=lang)
+        logger.info("Loading SentenceChunker recipe", recipe_name=name, lang=lang)
         recipe = hub.get_recipe(name, lang, path)
         logger.debug(
             "Recipe loaded successfully",
