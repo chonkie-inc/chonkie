@@ -3,7 +3,6 @@
 import base64
 import html
 import os
-import warnings
 from typing import Optional, Sequence, Union
 
 from chonkie.logger import get_logger
@@ -288,7 +287,7 @@ class Visualizer:
             darker_rgb = tuple(max(0, int(c * amount)) for c in rgb)
             return "#{:02x}{:02x}{:02x}".format(*darker_rgb)
         except Exception as e:
-            logger.warning(f"Could not darken color {hex_color}: {e}")
+            logger.warning(f"Could not darken color {hex_color}: {e}", exc_info=True)
             return "#808080"
 
     def print(self, chunks: Sequence[Union[Chunk, str]], full_text: Optional[str] = None) -> None:
@@ -323,7 +322,7 @@ class Visualizer:
                     "end": int(chunk.end_index),
                 })
             except (AttributeError, TypeError, ValueError):
-                warnings.warn(f"Warning: Skipping chunk with invalid start/end index: {chunk}")
+                logger.warning(f"Skipping chunk with invalid start/end index: {chunk}")
                 continue
 
         # Apply the styles to the text
@@ -337,8 +336,8 @@ class Visualizer:
                 try:
                     text.stylize(style, start, effective_end)
                 except Exception as e:
-                    warnings.warn(
-                        f"Warning: Could not apply style '{style}' to span ({start}, {effective_end}). Error: {e}",
+                    logger.warning(
+                        f"Could not apply style '{style}' to span ({start}, {effective_end}). Error: {e}",
                     )
         # Print the text with rich highlights
         self.console.print(text)
@@ -401,7 +400,7 @@ class Visualizer:
                         "tokens": token_count,
                     })
             except (AttributeError, TypeError, ValueError):
-                warnings.warn(f"Warning: Skipping chunk with invalid start/end index: {chunk}")
+                logger.warning(f"Skipping chunk with invalid start/end index: {chunk}")
                 continue
 
         # --- 2. Generate HTML Parts (Event-based with Overlap Detection) ---

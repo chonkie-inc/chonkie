@@ -1,6 +1,5 @@
 """Refinery for adding overlap to chunks."""
 
-import warnings
 from functools import lru_cache
 from typing import Literal, Union
 
@@ -192,7 +191,7 @@ class OverlapRefinery(BaseRefinery):
         tokens = self._get_tokens_cached(chunk.text)
 
         if effective_context_size > len(tokens):
-            warnings.warn(
+            logger.warning(
                 "Context size is greater than the chunk size. The entire chunk will be returned as the context.",
             )
             return chunk.text
@@ -337,7 +336,7 @@ class OverlapRefinery(BaseRefinery):
         tokens = self._get_tokens_cached(chunk.text)
 
         if effective_context_size > len(tokens):
-            warnings.warn(
+            logger.warning(
                 "Context size is greater than the chunk size. The entire chunk will be returned as the context.",
             )
             return chunk.text

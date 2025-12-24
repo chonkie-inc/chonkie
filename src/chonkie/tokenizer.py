@@ -2,11 +2,12 @@
 
 import importlib.util as importutil
 import inspect
-import logging
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from collections.abc import Callable, Sequence
 from typing import TYPE_CHECKING, Any, Protocol
+
+from chonkie.logger import get_logger
 
 if TYPE_CHECKING:
     import tiktoken
@@ -14,7 +15,7 @@ if TYPE_CHECKING:
     import transformers
 
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class TokenizerProtocol(Protocol):
