@@ -137,6 +137,9 @@ def _configure_default() -> None:
     _configured = True
 
 
+LOG_RECORD_RESERVED_KEYS = {key: f"_{key}" for key in logging.makeLogRecord({}).__dict__}
+
+
 class LoggerAdapter(logging.LoggerAdapter):
     """Adapter to support loguru-style keyword arguments.
 
@@ -152,18 +155,21 @@ class LoggerAdapter(logging.LoggerAdapter):
         msg: str,
         kwargs: MutableMapping[str, Any],
     ) -> tuple[str, MutableMapping[str, Any]]:
-        # Standard logging only supports: exc_info, stack_info, stacklevel, extra
-        valid_keys = {"exc_info", "stack_info", "stacklevel", "extra"}
+        if not kwargs:
+            return msg, kwargs
 
         # Separate valid kwargs from extra context data
-        extra_data = {k: v for k, v in kwargs.items() if k not in valid_keys}
-        valid_kwargs = {k: v for k, v in kwargs.items() if k in valid_keys}
+        extra_data = {}
+        valid_kwargs = {}
+        for k, v in kwargs.items():
+            if k in {"exc_info", "extra", "stack_info", "stacklevel"}:
+                valid_kwargs[k] = v
+            else:
+                extra_data[LOG_RECORD_RESERVED_KEYS.get(k, k)] = v
 
         # Merge extra data into the 'extra' dict (preserving structured logging)
         if extra_data:
-            if "extra" not in valid_kwargs:
-                valid_kwargs["extra"] = {}
-            valid_kwargs["extra"].update(extra_data)
+            valid_kwargs.setdefault("extra", {}).update(extra_data)
 
         return msg, valid_kwargs
 
