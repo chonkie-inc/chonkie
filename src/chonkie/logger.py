@@ -85,6 +85,7 @@ def _configure_default() -> None:
     - Logging at WARNING level (shows warnings and errors)
     - Can be disabled with CHONKIE_LOG=off
     - Can be made more verbose with CHONKIE_LOG=info or CHONKIE_LOG=debug
+    - Can be explicitly left unconfigured with CHONKIE_LOG=unconfigured
     - Supports hierarchical loggers (e.g., chonkie.chunker.base)
     """
     global _configured, _enabled, _handler
@@ -97,6 +98,13 @@ def _configure_default() -> None:
 
     # Parse CHONKIE_LOG environment variable
     chonkie_log = os.getenv("CHONKIE_LOG")
+
+    if chonkie_log == "unconfigured":
+        # Special case to leave logging unconfigured by this module,
+        # so e.g. pytest can capture logs without interference.
+        _configured = True
+        return
+
     enabled, level = _parse_log_setting(chonkie_log)
     _enabled = enabled
 
