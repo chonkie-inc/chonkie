@@ -1,6 +1,5 @@
 """Base Class for All Chunkers."""
 
-import warnings
 from abc import ABC, abstractmethod
 from typing import Sequence, Union
 
@@ -76,11 +75,10 @@ class BaseChunker(ABC):
                 cpu_cores=cpu_cores,
             )
             return worker_count
-        except Exception as e:
-            warnings.warn(f"Proceeding with 1 worker. Error calculating optimal worker count: {e}")
+        except Exception:
             logger.warning(
                 "Failed to calculate optimal worker count, using 1 worker",
-                error=str(e),
+                exc_info=True,
             )
             return 1
 

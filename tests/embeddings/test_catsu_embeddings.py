@@ -175,6 +175,7 @@ def test_embed_batch_with_batching(embedding_model: CatsuEmbeddings) -> None:
 def test_embed_batch_fallback_on_error(
     embedding_model: CatsuEmbeddings,
     sample_texts: List[str],
+    caplog,
 ) -> None:
     """Test that CatsuEmbeddings falls back to individual embeds on batch failure."""
     # Mock batch embed to fail, individual embeds to succeed
@@ -196,9 +197,8 @@ def test_embed_batch_fallback_on_error(
 
     embedding_model.client.embed.side_effect = mock_embed_side_effect
 
-    with pytest.warns(UserWarning, match="Batch embedding failed"):
-        embeddings = embedding_model.embed_batch(sample_texts)
-
+    embeddings = embedding_model.embed_batch(sample_texts)
+    assert "Batch embedding failed" in caplog.text
     assert len(embeddings) == len(sample_texts)
 
 
@@ -255,14 +255,13 @@ def test_tokenizer_count(embedding_model: CatsuEmbeddings, sample_text: str) -> 
     assert token_count == 10  # From mock
 
 
-def test_tokenizer_encode_warning(embedding_model: CatsuEmbeddings) -> None:
+def test_tokenizer_encode_warning(embedding_model: CatsuEmbeddings, caplog) -> None:
     """Test that tokenizer encode method warns about unsupported functionality."""
     tokenizer = embedding_model.get_tokenizer()
 
-    with pytest.warns(UserWarning, match="Token encoding not supported"):
-        tokens = tokenizer.encode("test text")
-
+    tokens = tokenizer.encode("test text")
     assert tokens == []
+    assert "Token encoding not supported" in caplog.text
 
 
 def test_repr(embedding_model: CatsuEmbeddings) -> None:

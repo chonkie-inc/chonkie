@@ -2,16 +2,20 @@
 
 import importlib.util as importutil
 import os
-import warnings
 from typing import TYPE_CHECKING, Optional
 
 import httpx
 import numpy as np
 
+from chonkie.logger import get_logger
+
 from .base import BaseEmbeddings
 
 if TYPE_CHECKING:
     from tokenizers import Tokenizer
+
+
+logger = get_logger(__name__)
 
 
 class JinaEmbeddings(BaseEmbeddings):
@@ -142,8 +146,9 @@ class JinaEmbeddings(BaseEmbeddings):
                     raise ValueError(
                         f"Failed to embed text '{text[:50]}...' after {self._max_retries} attempts due to: {e}",
                     ) from e
-                warnings.warn(
-                    f"Attempt {attempt + 1} failed for text '{text[:50]}...': {str(e)}. Retrying...",
+                logger.warning(
+                    f"Attempt {attempt + 1} failed for text '{text[:50]}...': {e}. Retrying...",
+                    exc_info=True,
                 )
 
         # This point should theoretically not be reached if max_retries > 0,
@@ -195,8 +200,9 @@ class JinaEmbeddings(BaseEmbeddings):
                 all_embeddings.extend(embeddings)
             except httpx.HTTPError as e:
                 if len(batch) > 1:
-                    warnings.warn(
+                    logger.warning(
                         f"Failed to embed batch: {batch} due to: {e}. Falling back to sequential embedding texts.",
+                        exc_info=True,
                     )
                     # Fall back to single embeddings
                     single_embeddings = []
