@@ -115,7 +115,7 @@ class RecursiveChunker(BaseChunker):
             ValueError: If the recipe is not found.
 
         """
-        logger.info("Loading RecursiveChunker recipe", name=name, lang=lang)
+        logger.info("Loading RecursiveChunker recipe", recipe_name=name, lang=lang)
         # Create a recursive rules object
         rules = RecursiveRules.from_recipe(name, lang, path)
         logger.debug(f"Recipe loaded successfully with {len(rules.levels or [])} levels")
