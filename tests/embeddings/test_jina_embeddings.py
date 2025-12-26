@@ -288,6 +288,7 @@ class TestJinaEmbeddingsAPIMocking:
         self,
         embeddings: JinaEmbeddings,
         mock_single_embedding_response: dict[str, Any],
+        caplog,
     ) -> None:
         """Test batch embedding with fallback to single embeddings."""
         texts = ["Text 1", "Text 2"]
@@ -309,17 +310,15 @@ class TestJinaEmbeddingsAPIMocking:
                 single_response,
             ]
 
-            with patch("warnings.warn") as mock_warn:
-                results = embeddings.embed_batch(texts)
+            results = embeddings.embed_batch(texts)
 
-                assert len(results) == 2
-                for result in results:
-                    assert isinstance(result, np.ndarray)
-                    assert result.shape == (2048,)
+            assert len(results) == 2
+            for result in results:
+                assert isinstance(result, np.ndarray)
+                assert result.shape == (2048,)
 
-                # Should have warned about batch failure
-                mock_warn.assert_called_once()
-                assert "Failed to embed batch" in str(mock_warn.call_args[0][0])
+            # Should have warned about batch failure
+            assert "Failed to embed batch" in caplog.text
 
     def test_embed_batch_large_batch_chunking(self, embeddings: JinaEmbeddings) -> None:
         """Test batch embedding with large batch that gets chunked."""
@@ -381,7 +380,7 @@ class TestJinaEmbeddingsErrorHandling:
         """Create JinaEmbeddings instance for testing."""
         return JinaEmbeddings(api_key="test_key")
 
-    def test_embed_with_http_error_retries(self, embeddings: JinaEmbeddings) -> None:
+    def test_embed_with_http_error_retries(self, embeddings: JinaEmbeddings, caplog) -> None:
         """Test that embed retries on HTTP errors."""
         with patch("httpx.post") as mock_post:
             # Fail first two attempts, succeed on third
@@ -399,12 +398,9 @@ class TestJinaEmbeddingsErrorHandling:
                 success_response,
             ]
 
-            with patch("warnings.warn") as mock_warn:
-                result = embeddings.embed("Test text")
-                assert isinstance(result, np.ndarray)
-
-                # Should have warned about retries
-                assert mock_warn.call_count == 2
+            result = embeddings.embed("Test text")
+            assert isinstance(result, np.ndarray)
+            assert "Retrying" in caplog.text
 
     def test_embed_batch_single_text_failure(self, embeddings: JinaEmbeddings) -> None:
         """Test batch embedding when single text batch fails."""

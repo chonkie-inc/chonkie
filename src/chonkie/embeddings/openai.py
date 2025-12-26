@@ -2,16 +2,19 @@
 
 import importlib.util as importutil
 import os
-import warnings
 from functools import lru_cache
 from typing import TYPE_CHECKING, Any, Optional
 
 import numpy as np
 
+from chonkie.logger import get_logger
+
 from .base import BaseEmbeddings
 
 if TYPE_CHECKING:
     from tiktoken import Encoding
+
+logger = get_logger(__name__)
 
 
 class OpenAIEmbeddings(BaseEmbeddings):
@@ -138,7 +141,7 @@ class OpenAIEmbeddings(BaseEmbeddings):
         if token_estimate > max_tokens:
             tokens = self._tokenizer.encode(text)
             if len(tokens) > max_tokens:
-                warnings.warn(
+                logger.warning(
                     f"OpenAIEmbeddings encountered a text that is too long. Truncating to {max_tokens} tokens.",
                 )
                 return self._tokenizer.decode(tokens[:max_tokens])
@@ -179,7 +182,10 @@ class OpenAIEmbeddings(BaseEmbeddings):
             except Exception as e:
                 # If the batch fails, try one by one
                 if len(batch) > 1:
-                    warnings.warn(f"Batch embedding failed: {str(e)}. Trying one by one.")
+                    logger.warning(
+                        f"Batch embedding failed: {e}. Trying one by one.",
+                        exc_info=True,
+                    )
                     individual_embeddings = [self.embed(text) for text in batch]
                     all_embeddings.extend(individual_embeddings)
                 else:
