@@ -10,6 +10,7 @@ from .sentence import SentenceChunker
 from .slumber import SlumberChunker
 from .table import TableChunker
 from .token import TokenChunker
+from .markdown import MarkdownChunker
 
 __all__ = [
     "BaseChunker",
@@ -22,4 +23,5 @@ __all__ = [
     "SlumberChunker",
     "TableChunker",
     "NeuralChunker",
+    "MarkdownChunker",
 ]

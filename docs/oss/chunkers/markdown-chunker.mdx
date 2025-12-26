@@ -1,0 +1,88 @@
+---
+title: 'Markdown Chunker'
+description: 'Heading-aware Markdown chunker with optional cleanup for docs and web content'
+icon: 'hashtags'
+---
+
+The `MarkdownChunker` splits Markdown using headings and separator lines, optionally cleaning inline formatting while preserving structure. It returns native `Chunk` objects and requires no external dependencies.
+
+## Installation
+
+`MarkdownChunker` ships with the base library and has no extra dependencies.
+
+<Info>See the [Installation Guide](/getting-started/installation) for setup.</Info>
+
+## Initialization
+
+```python
+from chonkie import MarkdownChunker
+
+chunker = MarkdownChunker(
+    tokenizer_or_token_counter="character", # or any supported tokenizer
+    chunk_size=1000,
+    chunk_overlap=0,        # reserved for future use
+    heading_level=3,        # max heading level to consider (1..6)
+    min_characters_per_chunk=50,
+    max_characters_per_section=4000,
+    clean_text=True         # strip inline markdown and URLs from chunks
+)
+```
+
+## Parameters
+
+<ParamField path="tokenizer_or_token_counter" type="Union[str, Any]" default="character">Tokenizer or token counter to use.</ParamField>
+<ParamField path="chunk_size" type="int" default="1000">Target maximum characters per chunk.</ParamField>
+<ParamField path="chunk_overlap" type="int" default="0">Reserved for future overlap controls.</ParamField>
+<ParamField path="heading_level" type="int" default="3">Maximum heading level to consider (1..6).</ParamField>
+<ParamField path="min_characters_per_chunk" type="int" default="50">Minimum characters for a meaningful chunk.</ParamField>
+<ParamField path="max_characters_per_section" type="int" default="4000">Maximum size when combining undersized sections.</ParamField>
+<ParamField path="clean_text" type="bool" default="False">If True, strip inline markdown (bold/italic/code), links and URLs.</ParamField>
+
+## Usage
+
+### Single Text Chunking
+
+```python
+md = """
+# Title
+
+Intro paragraph.
+
+## Subheading
+Some details with a [link](https://example.com).
+"""
+
+chunks = chunker.chunk(md)
+
+for c in chunks:
+    print(c.text)
+    print(c.start_index, c.end_index, c.token_count)
+```
+
+### Batch Chunking
+
+```python
+docs = [md_doc1, md_doc2]
+all_chunks = chunker.chunk_batch(docs)
+```
+
+## How it works
+
+- Splits first on strong separator lines (5+ '=' or '-')
+- Splits within each section by headings (`#`..`######`) with hierarchy-aware boundaries
+- Combines undersized sections up to `max_characters_per_section`
+- Recursively splits oversized ranges using sentence/paragraph-aware heuristics to meet `chunk_size`
+- Optionally cleans inline markdown and URLs if `clean_text=True`
+
+## Return Type
+
+Returns a list of native `Chunk` objects with `text`, `start_index`, `end_index`, and `token_count`.
+
+## When to use
+
+- Markdown documentation, README files, blog posts
+- Web-scraped content converted to Markdown
+- Any heading-structured text where structural boundaries matter
+
+
+

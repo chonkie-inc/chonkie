@@ -59,6 +59,7 @@
               "oss/chunkers/token-chunker",
               "oss/chunkers/sentence-chunker",
               "oss/chunkers/recursive-chunker",
+              "oss/chunkers/markdown-chunker",
               "oss/chunkers/table-chunker",
               "oss/chunkers/code-chunker",
               "oss/chunkers/semantic-chunker",
