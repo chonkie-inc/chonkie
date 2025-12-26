@@ -5,8 +5,8 @@ import os
 import warnings
 from typing import TYPE_CHECKING, Optional
 
+import httpx
 import numpy as np
-import requests
 
 from .base import BaseEmbeddings
 
@@ -108,7 +108,7 @@ class JinaEmbeddings(BaseEmbeddings):
 
         Raises:
             ValueError: If the input `text` is empty or the API response is unexpected.
-            requests.exceptions.RequestException: If the API request fails after retries.
+            httpx.HTTPError: If the API request fails after retries.
 
         """
         if not text:
@@ -124,7 +124,7 @@ class JinaEmbeddings(BaseEmbeddings):
 
         for attempt in range(self._max_retries):
             try:
-                response = requests.post(self.url, json=data, headers=self.headers)
+                response = httpx.post(self.url, json=data, headers=self.headers)
                 response.raise_for_status()
                 vector = response.json()
                 response_data = vector.get("data")
@@ -136,7 +136,7 @@ class JinaEmbeddings(BaseEmbeddings):
                     raise ValueError(f"Unexpected API response format: {vector}")
                 # Assuming the API returns a list with one embedding
                 return np.array(response_data[0]["embedding"], dtype=np.float32)
-            except requests.exceptions.RequestException as e:
+            except httpx.HTTPError as e:
                 if attempt == self._max_retries - 1:
                     # Raise a more informative error including the text that failed
                     raise ValueError(
@@ -163,11 +163,11 @@ class JinaEmbeddings(BaseEmbeddings):
             list["np.ndarray"]: List of numpy arrays with embeddings for each text.
 
         Raises:
-            requests.exceptions.HTTPError: If the initial API request for a batch fails
+            httpx.HTTPStatusError: If the initial API request for a batch fails
                 and the batch contained only one text.
             ValueError: If the API response format is unexpected, or if the fallback
                 to single embedding fails for a text within a failed batch.
-            requests.exceptions.RequestException: If an API request fails after all retries
+            httpx.HTTPError: If an API request fails after all retries
                 (either batch or single fallback).
 
         """
@@ -186,14 +186,14 @@ class JinaEmbeddings(BaseEmbeddings):
             }
 
             try:
-                response = requests.post(self.url, json=payload, headers=self.headers)
+                response = httpx.post(self.url, json=payload, headers=self.headers)
                 response.raise_for_status()
                 response_data = response.json()
                 embeddings = [
                     np.array(item["embedding"], dtype=np.float32) for item in response_data["data"]
                 ]
                 all_embeddings.extend(embeddings)
-            except requests.exceptions.HTTPError as e:
+            except httpx.HTTPError as e:
                 if len(batch) > 1:
                     warnings.warn(
                         f"Failed to embed batch: {batch} due to: {e}. Falling back to sequential embedding texts.",

@@ -45,7 +45,7 @@ def mock_cohere_dependencies():
     mock_client_instance.embed.side_effect = mock_embed_response
 
     with (
-        patch("requests.get", return_value=mock_tokenizer_response),
+        patch("httpx.get", return_value=mock_tokenizer_response),
         patch("tokenizers.Tokenizer.from_str", return_value=mock_tokenizer_instance),
         patch("cohere.ClientV2", return_value=mock_client_instance),
     ):

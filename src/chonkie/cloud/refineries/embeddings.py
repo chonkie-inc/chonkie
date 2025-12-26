@@ -3,8 +3,8 @@
 import os
 from typing import Any, Optional, cast
 
+import httpx
 import numpy as np
-import requests
 
 from .base import BaseRefinery
 
@@ -58,7 +58,7 @@ class EmbeddingsRefinery(BaseRefinery):
         }
 
         # Make the request to the Chonkie API
-        response = requests.post(
+        response = httpx.post(
             f"{self.BASE_URL}/{self.VERSION}/refine/embeddings",
             json=payload,
             headers={"Authorization": f"Bearer {self.api_key}"},

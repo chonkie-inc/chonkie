@@ -48,7 +48,7 @@ def mock_api_response():
 @pytest.fixture
 def mock_requests_get():
     """Mock requests.get for API availability check."""
-    with patch("requests.get") as mock_get:
+    with patch("httpx.get") as mock_get:
         mock_response = Mock()
         mock_response.status_code = 200
         mock_get.return_value = mock_response
@@ -58,7 +58,7 @@ def mock_requests_get():
 @pytest.fixture
 def mock_requests_post():
     """Mock requests.post for API chunking calls."""
-    with patch("requests.post") as mock_post:
+    with patch("httpx.post") as mock_post:
         yield mock_post
 
 

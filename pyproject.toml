@@ -58,7 +58,7 @@ hub = ["huggingface-hub>=0.24.0", "jsonschema>=4.23.0"]
 viz = ["rich>=13.0.0"]
 
 # Optional dependencies for table chef
-table  = ["pandas", "tabulate", "openpyxl"]
+table = ["pandas", "tabulate", "openpyxl"]
 
 # Optional dependencies for tokenizers
 tokenizers = ["tokenizers>=0.16.0"]
@@ -76,16 +76,8 @@ neural = ["transformers>=4.0.0", "torch>=2.0.0, <3.0"]
 
 model2vec = ["tokenizers>=0.16.0", "model2vec>=0.7.0", "numpy>=2.0.0, <3.0"]
 
-st = [
-    "tokenizers>=0.16.0",
-    "sentence-transformers>=3.0.0",
-    "accelerate>=1.6.0",
-]
-openai = [
-    "tiktoken>=0.5.0",
-    "openai>=1.0.0",
-    "pydantic>=2.0.0",
-]
+st = ["tokenizers>=0.16.0", "sentence-transformers>=3.0.0", "accelerate>=1.6.0"]
+openai = ["tiktoken>=0.5.0", "openai>=1.0.0", "pydantic>=2.0.0"]
 
 semantic = ["tokenizers>=0.16.0", "model2vec>=0.3.0"]
 
@@ -119,6 +111,7 @@ genie = ["pydantic>=2.0.0", "google-genai>=1.0.0"]
 
 # All dependencies
 all = [
+    "httpx",
     "tokenizers>=0.16.0",
     "tiktoken>=0.5.0",
     "rich>=13.0.0",
@@ -151,7 +144,9 @@ all = [
     "openpyxl",
     "elasticsearch>=8.0.0",
     "pymilvus>=2.1.0",
-    "catsu>=0.0.1"
+    "catsu>=0.0.1",
+    "litellm>=1.0.0",
+    "datasets>=1.14.0",
 ]
 dev = [
     "datasets>=1.14.0",
@@ -193,23 +188,11 @@ packages = [
     "chonkie.experimental",
     "chonkie.fetcher",
     "chonkie.chef",
-    "chonkie.pipeline"
+    "chonkie.pipeline",
 ]
 
 [tool.setuptools.package-data]
 "chonkie.chunker.c_extensions" = ["*.pyx", "*.pxd", "*.c", "*.so"]
-
-[[tool.setuptools.ext-modules]]
-name = "chonkie.chunker.c_extensions.split"
-sources = ["src/chonkie/chunker/c_extensions/split.pyx"]
-
-[[tool.setuptools.ext-modules]]
-name = "chonkie.chunker.c_extensions.merge"
-sources = ["src/chonkie/chunker/c_extensions/merge.pyx"]
-
-[[tool.setuptools.ext-modules]]
-name = "chonkie.chunker.c_extensions.savgol"
-sources = ["src/chonkie/chunker/c_extensions/savgol.pyx"]
 
 [tool.ruff]
 line-length = 99

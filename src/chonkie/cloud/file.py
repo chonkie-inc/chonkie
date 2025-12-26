@@ -4,7 +4,7 @@ import os
 from dataclasses import dataclass
 from typing import Optional
 
-import requests
+import httpx
 
 BASE_URL = "https://api.chonkie.ai"
 VERSION = "v1"
@@ -37,7 +37,7 @@ class FileManager:
     def upload(self, path: str) -> File:
         """Upload a file to the Chonkie API."""
         with open(path, "rb") as file:
-            response = requests.post(
+            response = httpx.post(
                 f"{BASE_URL}/{VERSION}/files",
                 files={"file": file},
                 headers={"Authorization": f"Bearer {self.api_key}"},
