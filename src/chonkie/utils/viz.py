@@ -257,12 +257,12 @@ class Visualizer:
         if full_text is None:
             try:
                 full_text = self._reconstruct_text_from_chunks(chunks)
-            except AttributeError:
+            except AttributeError as e:
                 raise ValueError(
                     "Error: Chunks must have 'text', 'start_index', and 'end_index' attributes for automatic text reconstruction.",
-                )
+                ) from e
             except Exception as e:
-                raise ValueError(f"Error reconstructing full text: {e}")
+                raise ValueError(f"Error reconstructing full text: {e}") from e
 
         from rich.text import Text
 
@@ -325,12 +325,12 @@ class Visualizer:
         if full_text is None:
             try:
                 full_text = self._reconstruct_text_from_chunks(chunks)
-            except AttributeError:
+            except AttributeError as e:
                 raise AttributeError(
                     "Error: Chunks must have 'text', 'start_index', and 'end_index' attributes for automatic text reconstruction. HTML not saved.",
-                )
+                ) from e
             except Exception as e:
-                raise ValueError(f"Error reconstructing full text: {e}. HTML not saved.")
+                raise ValueError(f"Error reconstructing full text: {e}. HTML not saved.") from e
 
         # If the filename doesn't end with ".html", add it
         if not filename.endswith(".html"):
@@ -486,9 +486,9 @@ class Visualizer:
                 f.write(html_content)
             logger.info(f"HTML visualization saved to: file://{filepath}")
         except IOError as e:
-            raise IOError(f"Error: Could not write file '{filename}': {e}")
+            raise IOError(f"Error: Could not write file '{filename}': {e}") from e
         except Exception as e:
-            raise Exception(f"An unexpected error occurred during file saving: {e}")
+            raise Exception(f"An unexpected error occurred during file saving: {e}") from e
 
     def __call__(self, chunks: list[Chunk], full_text: Optional[str] = None) -> None:
         """Call the visualizer as a function.
