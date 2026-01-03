@@ -1,13 +1,13 @@
 """Fast chunker powered by memchunk."""
 
-from typing import List, Optional, Sequence
+from typing import Any, Callable, Dict, List, Optional, Sequence
 
 from chonkie.chunker.base import BaseChunker
 from chonkie.pipeline import chunker
 from chonkie.types import Chunk
 
 
-def _get_memchunk():
+def _get_memchunk() -> Callable[..., List[tuple[int, int]]]:
     """Lazy import memchunk."""
     try:
         from memchunk import chunk_offsets
@@ -56,7 +56,7 @@ class FastChunker(BaseChunker):
         """Initialize the FastChunker."""
         # Don't call super().__init__() - we don't need a tokenizer
         # But set required attributes for BaseChunker compatibility
-        self._tokenizer = None
+        self._tokenizer = None  # type: ignore[assignment]
         self._use_multiprocessing = False
 
         self.chunk_size = chunk_size
@@ -72,8 +72,9 @@ class FastChunker(BaseChunker):
     def __repr__(self) -> str:
         """Return a string representation of the chunker."""
         return (
-            f"FastChunker(chunk_size={self.chunk_size}, "
-            f"delimiters={self.delimiters!r}, pattern={self.pattern!r})"
+            f"FastChunker(chunk_size={self.chunk_size}, delimiters={self.delimiters!r}, "
+            f"pattern={self.pattern!r}, prefix={self.prefix}, "
+            f"consecutive={self.consecutive}, forward_fallback={self.forward_fallback})"
         )
 
     def chunk(self, text: str) -> List[Chunk]:
@@ -90,7 +91,7 @@ class FastChunker(BaseChunker):
             return []
 
         # Build kwargs for memchunk
-        kwargs = {
+        kwargs: Dict[str, Any] = {
             "size": self.chunk_size,
             "prefix": self.prefix,
             "consecutive": self.consecutive,
