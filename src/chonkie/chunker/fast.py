@@ -1,6 +1,6 @@
 """Fast chunker powered by memchunk."""
 
-from typing import List, Optional, Sequence, Union
+from typing import List, Optional, Sequence
 
 from chonkie.chunker.base import BaseChunker
 from chonkie.pipeline import chunker
@@ -21,7 +21,7 @@ def _get_memchunk():
 
 @chunker("fast")
 class FastChunker(BaseChunker):
-    """Fast byte-based chunker using SIMD-accelerated boundary detection.
+    r"""Fast byte-based chunker using SIMD-accelerated boundary detection.
 
     Unlike other chonkie chunkers that use token counts, FastChunker uses
     byte size limits for maximum performance (~100+ GB/s throughput).
@@ -30,7 +30,7 @@ class FastChunker(BaseChunker):
 
     Args:
         chunk_size: Target chunk size in bytes (default: 4096)
-        delimiters: Delimiter characters for splitting (default: "\\n.?")
+        delimiters: Delimiter characters for splitting (default: "\n.?")
         pattern: Multi-byte pattern to split on (overrides delimiters)
         prefix: Put delimiter at start of next chunk (default: False)
         consecutive: Split at START of consecutive runs (default: False)
@@ -53,6 +53,7 @@ class FastChunker(BaseChunker):
         consecutive: bool = False,
         forward_fallback: bool = False,
     ):
+        """Initialize the FastChunker."""
         # Don't call super().__init__() - we don't need a tokenizer
         # But set required attributes for BaseChunker compatibility
         self._tokenizer = None
