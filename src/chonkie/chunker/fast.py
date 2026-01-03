@@ -15,7 +15,7 @@ def _get_memchunk():
         return chunk_offsets
     except ImportError:
         raise ImportError(
-            "memchunk is required for FastChunker. " "Install it with: pip install memchunk"
+            "memchunk is required for FastChunker. Install it with: pip install memchunk"
         )
 
 
@@ -116,9 +116,7 @@ class FastChunker(BaseChunker):
             for start, end in offsets
         ]
 
-    def chunk_batch(
-        self, texts: Sequence[str], show_progress: bool = True
-    ) -> List[List[Chunk]]:
+    def chunk_batch(self, texts: Sequence[str], show_progress: bool = True) -> List[List[Chunk]]:
         """Chunk a batch of texts.
 
         Args:
