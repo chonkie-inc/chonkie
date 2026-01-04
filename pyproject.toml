@@ -71,6 +71,7 @@ code = [
     "magika>=0.6.0, <1.1.0",
 ]
 neural = ["transformers>=4.0.0", "torch>=2.0.0, <3.0"]
+fast = ["memchunk>=0.3.0"]
 
 # Optional dependencies for the embeddings
 
@@ -147,6 +148,7 @@ all = [
     "catsu>=0.0.1",
     "litellm>=1.0.0",
     "datasets>=1.14.0",
+    "memchunk>=0.3.0",
 ]
 dev = [
     "datasets>=1.14.0",

@@ -127,6 +127,7 @@ Chonkie provides several chunkers to help you split your text efficiently for RA
 | Name               | Alias       | Description                                                                                                                |
 | ------------------ | ----------- | -------------------------------------------------------------------------------------------------------------------------- |
 | `TokenChunker`     | `token`     | Splits text into fixed-size token chunks.                                                                                  |
+| `FastChunker`      | `fast`      | SIMD-accelerated byte-based chunking at 100+ GB/s. Install with `chonkie[fast]`.                                           |
 | `SentenceChunker`  | `sentence`  | Splits text into chunks based on sentences.                                                                                |
 | `RecursiveChunker` | `recursive` | Splits text hierarchically using customizable rules to create semantically meaningful chunks.                              |
 | `SemanticChunker`  | `semantic`  | Splits text into chunks based on semantic similarity. Inspired by the work of [Greg Kamradt](https://github.com/gkamradt). |

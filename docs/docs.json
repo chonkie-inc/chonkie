@@ -57,6 +57,7 @@
             "pages": [
               "oss/chunkers/overview",
               "oss/chunkers/token-chunker",
+              "oss/chunkers/fast-chunker",
               "oss/chunkers/sentence-chunker",
               "oss/chunkers/recursive-chunker",
               "oss/chunkers/table-chunker",

@@ -12,6 +12,7 @@ from .chef import (
 from .chunker import (
     BaseChunker,
     CodeChunker,
+    FastChunker,
     LateChunker,
     NeuralChunker,
     RecursiveChunker,
