@@ -1,22 +1,10 @@
 """Fast chunker powered by memchunk."""
 
-from typing import Any, Callable, Dict, List, Optional, Sequence
+from typing import Any, Dict, List, Optional, Sequence
 
 from chonkie.chunker.base import BaseChunker
 from chonkie.pipeline import chunker
 from chonkie.types import Chunk
-
-
-def _get_memchunk() -> Callable[..., List[tuple[int, int]]]:
-    """Lazy import memchunk."""
-    try:
-        from memchunk import chunk_offsets
-
-        return chunk_offsets
-    except ImportError:
-        raise ImportError(
-            "memchunk is required for FastChunker. Install it with: pip install memchunk"
-        )
 
 
 @chunker("fast")
@@ -65,9 +53,16 @@ class FastChunker(BaseChunker):
         self.prefix = prefix
         self.consecutive = consecutive
         self.forward_fallback = forward_fallback
+        # Lazy import memchunk.
+        try:
+            from memchunk import chunk_offsets
+        except ImportError:
+            raise ImportError(
+                "memchunk is required for FastChunker. Install it with: pip install memchunk"
+            )
 
         # Verify memchunk is available
-        self._chunk_offsets = _get_memchunk()
+        self._chunk_offsets = chunk_offsets
 
     def __repr__(self) -> str:
         """Return a string representation of the chunker."""
