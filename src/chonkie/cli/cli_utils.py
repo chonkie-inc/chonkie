@@ -195,9 +195,7 @@ def pipeline(
             # Pass ext only if it's not None/Empty
             pipe.fetch_from(fetcher, dir=d, ext=ext)
         else:
-            typer.echo(
-                "Error: Must provide either text, a file path, or a directory via --d"
-            )
+            typer.echo("Error: Must provide either text, a file path, or a directory via --d")
             raise typer.Exit(code=1)
 
         # 2. Chef
@@ -242,6 +240,7 @@ def pipeline(
                 typer.echo(f"--- {d_obj.metadata['filename']} ---")
 
             viz(d_obj.chunks)
+
     except Exception as e:
         typer.echo(f"Pipeline error: {e}")
         raise typer.Exit(code=1)

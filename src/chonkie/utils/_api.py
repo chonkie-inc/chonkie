@@ -47,8 +47,6 @@ def load_token() -> Union[str, None]:
                 if api_key:
                     return api_key
                 else:
-                    raise ValueError(
-                        "API key not found in config file, consider logging in."
-                    )
+                    raise ValueError("API key not found in config file, consider logging in.")
         else:
             raise ValueError("config file not found, consider logging in.")
