@@ -24,6 +24,7 @@ logger = get_logger(__name__)
 # Import optimized merge functions
 try:
     from .c_extensions.merge import find_merge_indices
+
     MERGE_CYTHON_AVAILABLE = True
 except ImportError:
     MERGE_CYTHON_AVAILABLE = False
@@ -31,6 +32,7 @@ except ImportError:
 # Import the unified split function
 try:
     from .c_extensions.split import split_text
+
     SPLIT_AVAILABLE = True
 except ImportError:
     SPLIT_AVAILABLE = False
@@ -99,7 +101,9 @@ class SentenceChunker(BaseChunker):
         if include_delim not in ["prev", "next", None]:
             raise ValueError("include_delim must be 'prev', 'next' or None")
         if approximate:
-            warnings.warn("Approximate has been deprecated and will be removed from next version onwards!")
+            warnings.warn(
+                "Approximate has been deprecated and will be removed from next version onwards!",
+            )
 
         # Assign the values if they make sense
         self.chunk_size = chunk_size
@@ -112,7 +116,8 @@ class SentenceChunker(BaseChunker):
         self.sep = "✄"
 
     @classmethod
-    def from_recipe(cls,
+    def from_recipe(
+        cls,
         name: Optional[str] = "default",
         lang: Optional[str] = "en",
         path: Optional[str] = None,
@@ -122,7 +127,7 @@ class SentenceChunker(BaseChunker):
         min_sentences_per_chunk: int = 1,
         min_characters_per_sentence: int = 12,
         approximate: bool = False,
-        ) -> "SentenceChunker":
+    ) -> "SentenceChunker":
         """Create a SentenceChunker from a recipe.
 
         Takes the `delim` and `include_delim` from the recipe and passes the rest of the parameters to the constructor.
@@ -149,9 +154,13 @@ class SentenceChunker(BaseChunker):
         """
         # Create a hubbie instance
         hub = Hubbie()
-        logger.info("Loading SentenceChunker recipe", name=name, lang=lang)
+        logger.info("Loading SentenceChunker recipe", recipe_name=name, lang=lang)
         recipe = hub.get_recipe(name, lang, path)
-        logger.debug("Recipe loaded successfully", delim=recipe.get("delim"), include_delim=recipe.get("include_delim"))
+        logger.debug(
+            "Recipe loaded successfully",
+            delim=recipe.get("delim"),
+            include_delim=recipe.get("include_delim"),
+        )
         return cls(
             tokenizer=tokenizer,
             chunk_size=chunk_size,
@@ -161,7 +170,6 @@ class SentenceChunker(BaseChunker):
             delim=recipe["recipe"]["delimiters"],
             include_delim=recipe["recipe"]["include_delim"],
         )
-
 
     def _split_text(self, text: str) -> list[str]:
         """Fast sentence splitting using unified split function when available.
@@ -177,14 +185,16 @@ class SentenceChunker(BaseChunker):
         """
         if SPLIT_AVAILABLE:
             # Use optimized Cython split function
-            return list(split_text(
-                text=text,
-                delim=self.delim,
-                include_delim=self.include_delim,
-                min_characters_per_segment=self.min_characters_per_sentence,
-                whitespace_mode=False,
-                character_fallback=True
-            ))
+            return list(
+                split_text(
+                    text=text,
+                    delim=self.delim,
+                    include_delim=self.include_delim,
+                    min_characters_per_segment=self.min_characters_per_sentence,
+                    whitespace_mode=False,
+                    character_fallback=True,
+                ),
+            )
         else:
             # Fallback to original Python implementation
             t = text
@@ -246,7 +256,7 @@ class SentenceChunker(BaseChunker):
         for sent in sentence_texts:
             positions.append(current_pos)
             current_pos += len(
-                sent
+                sent,
             )  # No +1 space because sentences are already separated by spaces
 
         # Get accurate token counts in batch (this is faster than estimating)
@@ -317,7 +327,7 @@ class SentenceChunker(BaseChunker):
                 [s.token_count for s in sentences],
                 lambda a, b: a + b,
                 initial=0,
-            )
+            ),
         )
 
         chunks = []
@@ -355,7 +365,7 @@ class SentenceChunker(BaseChunker):
                     warnings.warn(
                         f"Minimum sentences per chunk as {self.min_sentences_per_chunk} could not be met for all chunks. "
                         + f"Last chunk of the text will have only {len(sentences) - pos} sentences. "
-                        + "Consider increasing the chunk_size or decreasing the min_sentences_per_chunk."
+                        + "Consider increasing the chunk_size or decreasing the min_sentences_per_chunk.",
                     )
                     split_idx = len(sentences)
 

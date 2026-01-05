@@ -1,8 +1,9 @@
 """Late Chunking for Chonkie API."""
 
+import json
 from typing import Any, Optional, Union, cast
 
-import requests
+import httpx
 
 from chonkie.types import Chunk
 
@@ -44,7 +45,11 @@ class LateChunker(RecursiveChunker):
             lang=lang,
         )
 
-    def chunk(self, text: Optional[Union[str, list[str]]] = None, file: Optional[str] = None) -> Union[list[Chunk], list[list[Chunk]]]:
+    def chunk(
+        self,
+        text: Optional[Union[str, list[str]]] = None,
+        file: Optional[str] = None,
+    ) -> Union[list[Chunk], list[list[Chunk]]]:
         """Chunk the text or file into a list of late-interaction chunks via the Chonkie API.
 
         Args:
@@ -84,10 +89,12 @@ class LateChunker(RecursiveChunker):
                 "lang": self.lang,
             }
         else:
-            raise ValueError("No text or file provided. Please provide either text or a file path.")
+            raise ValueError(
+                "No text or file provided. Please provide either text or a file path.",
+            )
 
         # Make the request to the Chonkie API's late chunking endpoint
-        response = requests.post(
+        response = httpx.post(
             f"{self.BASE_URL}/{self.VERSION}/chunk/late",
             json=payload,
             headers={"Authorization": f"Bearer {self.api_key}"},
@@ -109,31 +116,35 @@ class LateChunker(RecursiveChunker):
                 single_result: list[dict] = cast(list[dict], response.json())
                 single_chunks: list[Chunk] = [Chunk.from_dict(chunk) for chunk in single_result]
                 return single_chunks
-        except requests.exceptions.HTTPError as http_error:
+        except httpx.HTTPError as http_error:
             # Attempt to get more detailed error from API response if possible
             error_detail = ""
             try:
                 error_detail = response.json().get("detail", "")
-            except requests.exceptions.JSONDecodeError:
+            except (json.JSONDecodeError, httpx.HTTPError):
                 error_detail = response.text
             raise ValueError(
                 f"Oh no! Chonkie API returned an error for late chunking: {http_error}. "
                 f"Details: {error_detail}"
-                + "If the issue persists, please contact support at support@chonkie.ai."
+                + "If the issue persists, please contact support at support@chonkie.ai.",
             ) from http_error
-        except requests.exceptions.JSONDecodeError as error:
+        except json.JSONDecodeError as error:
             raise ValueError(
                 "Oh no! The Chonkie API returned an invalid JSON response for late chunking."
                 + "Please try again in a short while."
-                + "If the issue persists, please contact support at support@chonkie.ai."
+                + "If the issue persists, please contact support at support@chonkie.ai.",
             ) from error
-        except Exception as error: # Catch any other unexpected errors
+        except Exception as error:  # Catch any other unexpected errors
             raise ValueError(
                 "An unexpected error occurred while processing the response from Chonkie API for late chunking."
                 + "Please try again in a short while."
-                + "If the issue persists, please contact support at support@chonkie.ai."
+                + "If the issue persists, please contact support at support@chonkie.ai.",
             ) from error
-    
-    def __call__(self, text: Optional[Union[str, list[str]]] = None, file: Optional[str] = None) -> Union[list[Chunk], list[list[Chunk]]]:
+
+    def __call__(
+        self,
+        text: Optional[Union[str, list[str]]] = None,
+        file: Optional[str] = None,
+    ) -> Union[list[Chunk], list[list[Chunk]]]:
         """Call the LateChunker to chunk text."""
         return self.chunk(text=text, file=file)

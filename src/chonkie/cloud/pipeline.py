@@ -6,7 +6,7 @@ import re
 from dataclasses import dataclass, field
 from typing import Any, Optional, Union
 
-import requests
+import httpx
 
 from chonkie.types import Chunk
 
@@ -97,14 +97,14 @@ class Pipeline:
         if not self._api_key:
             raise ValueError(
                 "No API key provided. Please set the CHONKIE_API_KEY environment "
-                "variable or pass an api_key to the Pipeline constructor."
+                "variable or pass an api_key to the Pipeline constructor.",
             )
 
         # Validate slug format
         if not SLUG_PATTERN.match(slug):
             raise ValueError(
                 f"Invalid slug '{slug}'. Slug must contain only lowercase letters, "
-                "numbers, dashes, and underscores."
+                "numbers, dashes, and underscores.",
             )
 
         self._slug = slug
@@ -164,10 +164,10 @@ class Pipeline:
         if not api_key:
             raise ValueError(
                 "No API key provided. Please set the CHONKIE_API_KEY environment "
-                "variable or pass an api_key."
+                "variable or pass an api_key.",
             )
 
-        response = requests.get(
+        response = httpx.get(
             f"{cls.BASE_URL}/{cls.VERSION}/pipeline/{slug}",
             headers={
                 "Authorization": f"Bearer {api_key}",
@@ -216,10 +216,10 @@ class Pipeline:
         if not api_key:
             raise ValueError(
                 "No API key provided. Please set the CHONKIE_API_KEY environment "
-                "variable or pass an api_key."
+                "variable or pass an api_key.",
             )
 
-        response = requests.get(
+        response = httpx.get(
             f"{cls.BASE_URL}/{cls.VERSION}/pipeline",
             headers={
                 "Authorization": f"Bearer {api_key}",
@@ -271,7 +271,7 @@ class Pipeline:
         if not api_key:
             raise ValueError(
                 "No API key provided. Please set the CHONKIE_API_KEY environment "
-                "variable or pass an api_key."
+                "variable or pass an api_key.",
             )
 
         # Convert to API format
@@ -284,7 +284,7 @@ class Pipeline:
             else:
                 raise ValueError(f"Invalid step format: {type(step)}")
 
-        response = requests.post(
+        response = httpx.post(
             f"{cls.BASE_URL}/{cls.VERSION}/pipeline/validate",
             json={"steps": formatted_steps},
             headers={
@@ -376,7 +376,7 @@ class Pipeline:
             "steps": [step.to_dict() for step in self._steps],
         }
 
-        response = requests.post(
+        response = httpx.post(
             f"{self.BASE_URL}/{self.VERSION}/pipeline",
             json=payload,
             headers=self._get_headers(),
@@ -419,7 +419,7 @@ class Pipeline:
         if not payload:
             return self  # Nothing to update
 
-        response = requests.put(
+        response = httpx.put(
             f"{self.BASE_URL}/{self.VERSION}/pipeline/{self._slug}",
             json=payload,
             headers=self._get_headers(),
@@ -443,7 +443,7 @@ class Pipeline:
             ValueError: If pipeline doesn't exist or API error occurs.
 
         """
-        response = requests.delete(
+        response = httpx.delete(
             f"{self.BASE_URL}/{self.VERSION}/pipeline/{self._slug}",
             headers=self._get_headers(),
         )
@@ -494,7 +494,7 @@ class Pipeline:
             payload["text"] = text
 
         # Execute pipeline
-        response = requests.post(
+        response = httpx.post(
             f"{self.BASE_URL}/{self.VERSION}/pipeline/{self._slug}",
             json=payload,
             headers=self._get_headers(),

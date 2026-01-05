@@ -6,20 +6,13 @@ import os
 import warnings
 from typing import TYPE_CHECKING, Optional
 
+import httpx
 import numpy as np
-import requests
 
 from .base import BaseEmbeddings
 
 if TYPE_CHECKING:
-    import tokenizers
-    try:
-        from cohere import ClientV2
-    except ImportError:
-        class ClientV2:  # type: ignore
-            """Stub class for cohere ClientV2 when not available."""
-
-            pass
+    from tokenizers import Tokenizer
 
 
 class CohereEmbeddings(BaseEmbeddings):
@@ -73,12 +66,17 @@ class CohereEmbeddings(BaseEmbeddings):
         """
         super().__init__()
 
-        # Lazy import dependencies if they are not already imported
-        self._import_dependencies()
+        try:
+            import tokenizers
+            from cohere import ClientV2
+        except ImportError as ie:
+            raise ImportError(
+                "cohere is not available. Please install it via `pip install chonkie[cohere]`",
+            ) from ie
 
         if model not in self.AVAILABLE_MODELS:
             raise ValueError(
-                f"Model {model} is not available. Choose from: {list(self.AVAILABLE_MODELS.keys())}"
+                f"Model {model} is not available. Choose from: {list(self.AVAILABLE_MODELS.keys())}",
             )
 
         self.model = model
@@ -88,7 +86,7 @@ class CohereEmbeddings(BaseEmbeddings):
             + (model if self.AVAILABLE_MODELS[model][0] else self.DEFAULT_MODEL)
             + ".json"
         )
-        response = requests.get(tokenizer_url)
+        response = httpx.get(tokenizer_url)
         self._tokenizer = tokenizers.Tokenizer.from_str(response.text)
         self._batch_size = min(batch_size, 96)  # max batch size for cohere is 96
         self._show_warnings = show_warnings
@@ -97,7 +95,7 @@ class CohereEmbeddings(BaseEmbeddings):
 
         if self._api_key is None:
             raise ValueError(
-                "Cohere API key not found. Either pass it as api_key or set COHERE_API_KEY environment variable."
+                "Cohere API key not found. Either pass it as api_key or set COHERE_API_KEY environment variable.",
             )
 
         self.model = model
@@ -107,7 +105,7 @@ class CohereEmbeddings(BaseEmbeddings):
             + (model if self.AVAILABLE_MODELS[model][0] else self.DEFAULT_MODEL)
             + ".json"
         )
-        response = requests.get(tokenizer_url)
+        response = httpx.get(tokenizer_url)
         self._tokenizer = tokenizers.Tokenizer.from_str(response.text)
         self._batch_size = min(batch_size, 96)  # max batch size for cohere is 96
         self._show_warnings = show_warnings
@@ -116,7 +114,7 @@ class CohereEmbeddings(BaseEmbeddings):
 
         if self._api_key is None:
             raise ValueError(
-                "Cohere API key not found. Either pass it as api_key or set COHERE_API_KEY environment variable."
+                "Cohere API key not found. Either pass it as api_key or set COHERE_API_KEY environment variable.",
             )
 
         # setup Cohere client
@@ -129,12 +127,10 @@ class CohereEmbeddings(BaseEmbeddings):
     def embed(self, text: str) -> np.ndarray:
         """Generate embeddings for a single text."""
         token_count = self.count_tokens(text)
-        if (
-            token_count > 512 and self._show_warnings
-        ):  # Cohere models max_context_length
+        if token_count > 512 and self._show_warnings:  # Cohere models max_context_length
             warnings.warn(
                 f"Text has {token_count} tokens which exceeds the model's context length of 512."
-                "Generation may not be optimal"
+                "Generation may not be optimal",
             )
 
         for _ in range(self._max_retries):
@@ -150,7 +146,7 @@ class CohereEmbeddings(BaseEmbeddings):
             except Exception as e:
                 if self._show_warnings:
                     warnings.warn(
-                        f"There was an exception while generating embeddings. Exception: {str(e)}. Retrying..."
+                        f"There was an exception while generating embeddings. Exception: {str(e)}. Retrying...",
                     )
 
         raise RuntimeError("Unable to generate embeddings through Cohere.")
@@ -173,7 +169,7 @@ class CohereEmbeddings(BaseEmbeddings):
                     if count > 512:
                         warnings.warn(
                             f"Text has {count} tokens which exceeds the model's context length of 512."
-                            "Generation may not be optimal."
+                            "Generation may not be optimal.",
                         )
 
             try:
@@ -195,15 +191,13 @@ class CohereEmbeddings(BaseEmbeddings):
                     except Exception as e:
                         if self._show_warnings:
                             warnings.warn(
-                                f"There was an exception while generating embeddings. Exception: {str(e)}. Retrying..."
+                                f"There was an exception while generating embeddings. Exception: {str(e)}. Retrying...",
                             )
 
             except Exception as e:
                 # If the batch fails, try one by one
                 if len(batch) > 1:
-                    warnings.warn(
-                        f"Batch embedding failed: {str(e)}. Trying one by one."
-                    )
+                    warnings.warn(f"Batch embedding failed: {str(e)}. Trying one by one.")
                     individual_embeddings = [self.embed(text) for text in batch]
                     all_embeddings.extend(individual_embeddings)
                 else:
@@ -222,16 +216,14 @@ class CohereEmbeddings(BaseEmbeddings):
 
     def similarity(self, u: np.ndarray, v: np.ndarray) -> np.float32:
         """Compute cosine similarity between two embeddings."""
-        return np.divide(
-            np.dot(u, v), np.linalg.norm(u) * np.linalg.norm(v), dtype=np.float32
-        )
+        return np.divide(np.dot(u, v), np.linalg.norm(u) * np.linalg.norm(v), dtype=np.float32)
 
     @property
     def dimension(self) -> int:
         """Return the embedding dimension."""
         return self._dimension
 
-    def get_tokenizer(self) -> "tokenizers.Tokenizer":
+    def get_tokenizer(self) -> "Tokenizer":
         """Return a tokenizers tokenizer object of the current model."""
         return self._tokenizer
 
@@ -239,23 +231,6 @@ class CohereEmbeddings(BaseEmbeddings):
     def _is_available(cls) -> bool:
         """Check if the Cohere package is available."""
         return importlib.util.find_spec("cohere") is not None
-
-    @classmethod
-    def _import_dependencies(cls) -> None:
-        """Lazy import dependencies for the embeddings implementation.
-
-        This method should be implemented by all embeddings implementations that require
-        additional dependencies. It lazily imports the dependencies only when they are needed.
-
-        """
-        if cls._is_available():
-            global tokenizers, ClientV2
-            import tokenizers
-            from cohere import ClientV2
-        else:
-            raise ImportError(
-                "cohere is not available. Please install it via `pip install chonkie[cohere]`"
-            )
 
     def __repr__(self) -> str:
         """Return a string representation of the CohereEmbeddings object."""

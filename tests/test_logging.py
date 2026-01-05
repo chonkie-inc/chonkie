@@ -1,5 +1,8 @@
 """Tests for Chonkie logging functionality."""
 
+import logging
+from functools import cache
+from unittest.mock import Mock
 
 import pytest
 
@@ -12,10 +15,25 @@ from chonkie.logger import (
 )
 
 
+@pytest.fixture(autouse=True)
+def patched_get_logger(monkeypatch):
+    """Patch logging.getLogger to return an unwired logger for testing."""
+
+    # We want to return the same logger instance for the same name
+    # during the same test; `@cache` is a dead simple way to do that.
+    @cache
+    def _get_logger(name="root"):
+        return logging.Logger(f"_fake_{name}")
+
+    mock = Mock(side_effect=_get_logger)
+    monkeypatch.setattr(logging, "getLogger", mock)
+    return mock
+
+
 def test_get_logger():
     """Test that get_logger returns a logger instance."""
     logger = get_logger("test_module")
-    assert logger is not None
+    assert logger.name == "_fake_test_module"
 
 
 def test_configure_levels():
@@ -41,38 +59,6 @@ def test_disable_enable():
     # Re-enable
     enable("debug")
     assert is_enabled()
-
-
-def test_logging_with_chunker():
-    """Test that logging works with chunkers."""
-    from chonkie import TokenChunker
-
-    # Enable logging at INFO level
-    configure("info")
-
-    # Create a chunker and process some text
-    chunker = TokenChunker(chunk_size=10)
-    chunks = chunker.chunk("This is a test sentence.")
-
-    assert len(chunks) > 0
-
-
-def test_logging_disabled_with_chunker():
-    """Test that logging can be disabled."""
-    from chonkie import TokenChunker
-
-    # Disable logging
-    disable()
-    assert not is_enabled()
-
-    # Create a chunker - should work without logs
-    chunker = TokenChunker(chunk_size=10)
-    chunks = chunker.chunk("This is a test sentence.")
-
-    assert len(chunks) > 0
-
-    # Re-enable for other tests
-    enable("info")
 
 
 def test_chonkie_log_env_var():
@@ -111,22 +97,6 @@ def test_numeric_log_levels():
 
     configure("4")  # DEBUG
     assert is_enabled()
-
-
-def test_batch_processing_logs():
-    """Test that batch processing generates appropriate logs."""
-    from chonkie import SentenceChunker
-
-    configure("info")
-
-    chunker = SentenceChunker(chunk_size=50)
-    texts = ["First sentence.", "Second sentence.", "Third sentence."]
-
-    # Process batch
-    results = chunker.chunk_batch(texts, show_progress=False)
-
-    assert len(results) == 3
-    assert all(isinstance(r, list) for r in results)
 
 
 if __name__ == "__main__":

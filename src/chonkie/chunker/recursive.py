@@ -23,6 +23,7 @@ logger = get_logger(__name__)
 # Import the unified split function
 try:
     from .c_extensions.split import split_text
+
     SPLIT_AVAILABLE = True
 except ImportError:
     SPLIT_AVAILABLE = False
@@ -30,6 +31,7 @@ except ImportError:
 # Import optimized merge functions
 try:
     from .c_extensions.merge import _merge_splits as _merge_splits_cython
+
     MERGE_CYTHON_AVAILABLE = True
 except ImportError:
     MERGE_CYTHON_AVAILABLE = False
@@ -85,14 +87,15 @@ class RecursiveChunker(BaseChunker):
         self._CHARS_PER_TOKEN = 6.5
 
     @classmethod
-    def from_recipe(cls,
-                    name: Optional[str] = 'default',
-                    lang: Optional[str] = 'en',
-                    path: Optional[str] = None,
-                    tokenizer: Union[str, TokenizerProtocol] = "character",
-                    chunk_size: int = 2048,
-                    min_characters_per_chunk: int = 24,
-                    ) -> "RecursiveChunker":
+    def from_recipe(
+        cls,
+        name: Optional[str] = "default",
+        lang: Optional[str] = "en",
+        path: Optional[str] = None,
+        tokenizer: Union[str, TokenizerProtocol] = "character",
+        chunk_size: int = 2048,
+        min_characters_per_chunk: int = 24,
+    ) -> "RecursiveChunker":
         """Create a RecursiveChunker object from a recipe.
 
         The recipes are registered in the [Chonkie Recipe Store](https://huggingface.co/datasets/chonkie-ai/recipes). If the recipe is not there, you can create your own recipe and share it with the community!
@@ -112,7 +115,7 @@ class RecursiveChunker(BaseChunker):
             ValueError: If the recipe is not found.
 
         """
-        logger.info("Loading RecursiveChunker recipe", name=name, lang=lang)
+        logger.info("Loading RecursiveChunker recipe", recipe_name=name, lang=lang)
         # Create a recursive rules object
         rules = RecursiveRules.from_recipe(name, lang, path)
         logger.debug(f"Recipe loaded successfully with {len(rules.levels or [])} levels")
@@ -133,14 +136,16 @@ class RecursiveChunker(BaseChunker):
         """Split the text into chunks using the delimiters."""
         if SPLIT_AVAILABLE and recursive_level.delimiters:
             # Use optimized Cython split function for delimiter-based splitting only
-            return list(split_text(
-                text=text,
-                delim=recursive_level.delimiters,
-                include_delim=recursive_level.include_delim,
-                min_characters_per_segment=self.min_characters_per_chunk,
-                whitespace_mode=False,
-                character_fallback=False
-            ))
+            return list(
+                split_text(
+                    text=text,
+                    delim=recursive_level.delimiters,
+                    include_delim=recursive_level.include_delim,
+                    min_characters_per_segment=self.min_characters_per_chunk,
+                    whitespace_mode=False,
+                    character_fallback=False,
+                ),
+            )
         else:
             # Fallback to original implementation
             if recursive_level.whitespace:
@@ -190,13 +195,7 @@ class RecursiveChunker(BaseChunker):
 
             return splits
 
-    def _make_chunks(
-        self,
-        text: str,
-        token_count: int,
-        level: int,
-        start_offset: int
-    ) -> Chunk:
+    def _make_chunks(self, text: str, token_count: int, level: int, start_offset: int) -> Chunk:
         """Create a Chunk object with indices based on the current offset.
 
         This method calculates the start and end indices of the chunk using the provided start_offset and the length of the text,
@@ -231,12 +230,7 @@ class RecursiveChunker(BaseChunker):
         """
         if MERGE_CYTHON_AVAILABLE:
             # Use optimized Cython implementation
-            return _merge_splits_cython(
-                splits,
-                token_counts,
-                self.chunk_size,
-                combine_whitespace
-            )
+            return _merge_splits_cython(splits, token_counts, self.chunk_size, combine_whitespace)
         else:
             # Fallback to original Python implementation
             return self._merge_splits_fallback(splits, token_counts, combine_whitespace)
@@ -254,7 +248,7 @@ class RecursiveChunker(BaseChunker):
         # If the number of splits and token counts does not match, raise an error
         if len(splits) != len(token_counts):
             raise ValueError(
-                f"Number of splits {len(splits)} does not match number of token counts {len(token_counts)}"
+                f"Number of splits {len(splits)} does not match number of token counts {len(token_counts)}",
             )
 
         # If all splits are larger than the chunk size, return them
@@ -265,9 +259,7 @@ class RecursiveChunker(BaseChunker):
         merged = []
         if combine_whitespace:
             # +1 for the whitespace
-            cumulative_token_counts = list(
-                accumulate([0] + token_counts, lambda x, y: x + y + 1)
-            )
+            cumulative_token_counts = list(accumulate([0] + token_counts, lambda x, y: x + y + 1))
         else:
             cumulative_token_counts = list(accumulate([0] + token_counts))
         current_index = 0
@@ -301,29 +293,23 @@ class RecursiveChunker(BaseChunker):
 
             # Adjust token count
             combined_token_counts.append(
-                cumulative_token_counts[min(index, len(splits))] - current_token_count
+                cumulative_token_counts[min(index, len(splits))] - current_token_count,
             )
             current_index = index
 
         return merged, combined_token_counts
 
-    def _recursive_chunk(
-        self, text: str, level: int = 0, start_offset: int =0
-    ) -> list[Chunk]:
+    def _recursive_chunk(self, text: str, level: int = 0, start_offset: int = 0) -> list[Chunk]:
         """Recursive helper for core chunking."""
         if not text:
             return []
 
         if level >= len(self.rules):
-            return [
-                self._make_chunks(text, self._estimate_token_count(text), level, start_offset)
-            ]
+            return [self._make_chunks(text, self._estimate_token_count(text), level, start_offset)]
 
         curr_rule = self.rules[level]
         if curr_rule is None:
-            return [
-                self._make_chunks(text, self._estimate_token_count(text), level, start_offset)
-            ]
+            return [self._make_chunks(text, self._estimate_token_count(text), level, start_offset)]
 
         splits = self._split_text(text, curr_rule)
         token_counts = [self._estimate_token_count(split) for split in splits]
@@ -333,7 +319,9 @@ class RecursiveChunker(BaseChunker):
 
         elif curr_rule.delimiters is None and curr_rule.whitespace:
             merged, combined_token_counts = self._merge_splits(
-                splits, token_counts, combine_whitespace=True
+                splits,
+                token_counts,
+                combine_whitespace=True,
             )
             # NOTE: This is a hack to fix the reconstruction issue when whitespace is used.
             # When whitespace is there, " ".join only adds space between words, not before the first word.
@@ -342,7 +330,9 @@ class RecursiveChunker(BaseChunker):
 
         else:
             merged, combined_token_counts = self._merge_splits(
-                splits, token_counts, combine_whitespace=False
+                splits,
+                token_counts,
+                combine_whitespace=False,
             )
 
         # Chunk long merged splits

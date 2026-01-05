@@ -8,12 +8,12 @@ import pytest
 from chonkie import AutoEmbeddings
 from chonkie.embeddings.azure_openai import AzureOpenAIEmbeddings
 from chonkie.embeddings.base import BaseEmbeddings
+from chonkie.embeddings.catsu import CatsuEmbeddings
 from chonkie.embeddings.cohere import CohereEmbeddings
 from chonkie.embeddings.jina import JinaEmbeddings
 from chonkie.embeddings.model2vec import Model2VecEmbeddings
 from chonkie.embeddings.openai import OpenAIEmbeddings
 from chonkie.embeddings.sentence_transformer import SentenceTransformerEmbeddings
-from chonkie.embeddings.voyageai import VoyageAIEmbeddings
 
 
 class TestAutoEmbeddingsModel2Vec:
@@ -42,9 +42,7 @@ class TestAutoEmbeddingsModel2Vec:
 
         if isinstance(result[0], np.ndarray):
             result[0] = result[0].tolist()
-        assert all(
-            isinstance(x, (float, int, np.floating, np.integer)) for x in result[0]
-        )
+        assert all(isinstance(x, (float, int, np.floating, np.integer)) for x in result[0])
 
 
 class TestAutoEmbeddingsSentenceTransformers:
@@ -73,17 +71,13 @@ class TestAutoEmbeddingsSentenceTransformers:
 
         if isinstance(result[0], np.ndarray):
             result[0] = result[0].tolist()
-        assert all(
-            isinstance(x, (float, int, np.floating, np.integer)) for x in result[0]
-        )
+        assert all(isinstance(x, (float, int, np.floating, np.integer)) for x in result[0])
 
 
 class TestAutoEmbeddingsProviderPrefix:
     """Test AutoEmbeddings with provider:// prefix syntax."""
 
-    @pytest.mark.skipif(
-        not os.getenv("OPENAI_API_KEY"), reason="OpenAI API key not set"
-    )
+    @pytest.mark.skipif(not os.getenv("OPENAI_API_KEY"), reason="OpenAI API key not set")
     def test_openai_provider_prefix(self) -> None:
         """Test OpenAI embeddings with provider prefix."""
         embeddings = AutoEmbeddings.get_embeddings("openai://text-embedding-3-small")
@@ -93,18 +87,17 @@ class TestAutoEmbeddingsProviderPrefix:
     def test_cohere_provider_prefix_with_api_key(self) -> None:
         """Test Cohere embeddings with provider prefix and API key."""
         embeddings = AutoEmbeddings.get_embeddings(
-            "cohere://embed-english-light-v3.0", api_key="test_key"
+            "cohere://embed-english-light-v3.0",
+            api_key="test_key",
         )
         assert isinstance(embeddings, CohereEmbeddings)
         assert embeddings.model == "embed-english-light-v3.0"
 
-    @pytest.mark.skipif(
-        not os.getenv("VOYAGE_API_KEY"), reason="Voyage API key not set"
-    )
+    @pytest.mark.skipif(not os.getenv("VOYAGE_API_KEY"), reason="Voyage API key not set")
     def test_voyage_provider_prefix(self) -> None:
-        """Test VoyageAI embeddings with provider prefix."""
+        """Test VoyageAI embeddings with provider prefix (via CatsuEmbeddings)."""
         embeddings = AutoEmbeddings.get_embeddings("voyageai://voyage-3")
-        assert isinstance(embeddings, VoyageAIEmbeddings)
+        assert isinstance(embeddings, CatsuEmbeddings)
         assert embeddings.model == "voyage-3"
 
     @pytest.mark.skipif(not os.getenv("JINA_API_KEY"), reason="Jina API key not set")
@@ -115,18 +108,18 @@ class TestAutoEmbeddingsProviderPrefix:
         assert embeddings.model == "jina-embeddings-v3"
 
     @pytest.mark.skipif(
-        not os.getenv("AZURE_OPENAI_ENDPOINT"), reason="Azure OpenAI endpoint not set"
+        not os.getenv("AZURE_OPENAI_ENDPOINT"),
+        reason="Azure OpenAI endpoint not set",
     )
     def test_azure_openai_provider_prefix(self) -> None:
         """Test Azure OpenAI embeddings with provider prefix."""
-        embeddings = AutoEmbeddings.get_embeddings(
-            "azure_openai://text-embedding-3-small"
-        )
+        embeddings = AutoEmbeddings.get_embeddings("azure_openai://text-embedding-3-small")
         assert isinstance(embeddings, AzureOpenAIEmbeddings)
         assert embeddings.model == "text-embedding-3-small"
 
     @pytest.mark.skipif(
-        not os.getenv("AZURE_OPENAI_ENDPOINT"), reason="Azure OpenAI endpoint not set"
+        not os.getenv("AZURE_OPENAI_ENDPOINT"),
+        reason="Azure OpenAI endpoint not set",
     )
     def test_azure_openai_provider_prefix_with_params(self) -> None:
         """Test Azure OpenAI embeddings with provider prefix and explicit parameters."""
@@ -142,9 +135,7 @@ class TestAutoEmbeddingsProviderPrefix:
 class TestAutoEmbeddingsProviderLookup:
     """Test AutoEmbeddings provider lookup without prefix."""
 
-    @pytest.mark.skipif(
-        not os.getenv("OPENAI_API_KEY"), reason="OpenAI API key not set"
-    )
+    @pytest.mark.skipif(not os.getenv("OPENAI_API_KEY"), reason="OpenAI API key not set")
     def test_openai_model_lookup(self) -> None:
         """Test OpenAI model lookup by identifier."""
         embeddings = AutoEmbeddings.get_embeddings("text-embedding-3-small")

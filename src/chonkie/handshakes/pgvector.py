@@ -14,16 +14,13 @@ from .base import BaseHandshake
 logger = get_logger(__name__)
 
 if TYPE_CHECKING:
-    import vecs
-
-# Module-level variable that will be set by _import_dependencies
-vecs = None
+    from vecs import Client
 
 
 @handshake("pgvector")
 class PgvectorHandshake(BaseHandshake):
     """Pgvector Handshake to export Chonkie's Chunks into a PostgreSQL database with pgvector using vecs.
-    
+
     This handshake allows storing Chonkie chunks in PostgreSQL with vector embeddings
     using the pgvector extension through the vecs client library from Supabase.
 
@@ -43,11 +40,11 @@ class PgvectorHandshake(BaseHandshake):
 
     def __init__(
         self,
-        client: Optional["vecs.Client"] = None,
+        client: Optional["Client"] = None,
         host: str = "localhost",
         port: int = 5432,
         database: str = "postgres",
-        user: str = "postgres", 
+        user: str = "postgres",
         password: str = "postgres",
         connection_string: Optional[str] = None,
         collection_name: str = "chonkie_chunks",
@@ -55,7 +52,7 @@ class PgvectorHandshake(BaseHandshake):
         vector_dimensions: Optional[int] = None,
     ) -> None:
         """Initialize the Pgvector Handshake.
-        
+
         Args:
             client: An existing vecs.Client instance. If provided, other connection parameters are ignored.
             host: PostgreSQL host. Defaults to "localhost".
@@ -68,11 +65,15 @@ class PgvectorHandshake(BaseHandshake):
             embedding_model: The embedding model to use for generating embeddings.
             vector_dimensions: The number of dimensions for the vector embeddings.
 
-        """         
+        """
         super().__init__()
-        
-        # Lazy importing the dependencies
-        self._import_dependencies()
+
+        try:
+            import vecs
+        except ImportError as ie:
+            raise ImportError(
+                "vecs is not installed. Please install it with `pip install chonkie[pgvector]`.",
+            ) from ie
 
         # Initialize vecs client based on provided parameters
         if client is not None:
@@ -85,9 +86,9 @@ class PgvectorHandshake(BaseHandshake):
             # Build connection string from individual parameters
             conn_str = f"postgresql://{user}:{password}@{host}:{port}/{database}"
             self.client = vecs.create_client(conn_str)
-        
+
         self.collection_name = collection_name
-        
+
         # Initialize the embedding model
         if isinstance(embedding_model, str):
             self.embedding_model = AutoEmbeddings.get_embeddings(embedding_model)
@@ -99,7 +100,10 @@ class PgvectorHandshake(BaseHandshake):
         # Determine vector dimensions
         if vector_dimensions is None:
             # Try to get dimensions from embedding model's dimension property first
-            if hasattr(self.embedding_model, 'dimension') and self.embedding_model.dimension is not None:
+            if (
+                hasattr(self.embedding_model, "dimension")
+                and self.embedding_model.dimension is not None
+            ):
                 self.vector_dimensions = self.embedding_model.dimension
             else:
                 # Fall back to test embedding if dimension property is not available or is None
@@ -111,32 +115,17 @@ class PgvectorHandshake(BaseHandshake):
         # Get or create the collection
         self.collection = self.client.get_or_create_collection(
             name=self.collection_name,
-            dimension=self.vector_dimensions
+            dimension=self.vector_dimensions,
         )
 
-    def _is_available(self) -> bool:
+    @classmethod
+    def _is_available(cls) -> bool:
         """Check if the dependencies are available."""
         return importutil.find_spec("vecs") is not None
 
-    def _import_dependencies(self) -> None:
-        """Lazy import the dependencies."""
-        if not self._is_available():
-            raise ImportError(
-                "vecs is not installed. "
-                "Please install it with `pip install chonkie[pgvector]`."
-            )
-        
-        global vecs
-        import vecs
-
     def _generate_id(self, index: int, chunk: Chunk) -> str:
         """Generate a unique ID for the chunk."""
-        return str(
-            uuid5(
-                NAMESPACE_OID, 
-                f"{self.collection_name}::chunk-{index}:{chunk.text}"
-            )
-        )
+        return str(uuid5(NAMESPACE_OID, f"{self.collection_name}::chunk-{index}:{chunk.text}"))
 
     def _generate_metadata(self, chunk: Chunk) -> dict[str, Any]:
         """Generate metadata for the chunk."""
@@ -147,25 +136,25 @@ class PgvectorHandshake(BaseHandshake):
             "token_count": chunk.token_count,
             "chunk_type": type(chunk).__name__,
         }
-        
+
         # Add chunk-specific metadata
         if hasattr(chunk, "sentences") and chunk.sentences:
             metadata["sentence_count"] = len(chunk.sentences)
-        
+
         if hasattr(chunk, "words") and chunk.words:
             metadata["word_count"] = len(chunk.words)
-            
+
         if hasattr(chunk, "language") and chunk.language:
             metadata["language"] = chunk.language
-            
+
         return metadata
 
     def write(self, chunks: Union[Chunk, list[Chunk]]) -> list[str]:
         """Write chunks to the PostgreSQL database using vecs.
-        
+
         Args:
             chunks: A single chunk or sequence of chunks to write.
-            
+
         Returns:
             list[str]: List of IDs of the inserted chunks.
 
@@ -173,7 +162,9 @@ class PgvectorHandshake(BaseHandshake):
         if isinstance(chunks, Chunk):
             chunks = [chunks]
 
-        logger.debug(f"Writing {len(chunks)} chunks to PostgreSQL collection: {self.collection_name}")
+        logger.debug(
+            f"Writing {len(chunks)} chunks to PostgreSQL collection: {self.collection_name}",
+        )
         records = []
         chunk_ids = []
 
@@ -192,26 +183,28 @@ class PgvectorHandshake(BaseHandshake):
         # Upsert all records at once
         self.collection.upsert(records=records)
 
-        logger.info(f"Chonkie wrote {len(chunks)} chunks to PostgreSQL collection: {self.collection_name}")
+        logger.info(
+            f"Chonkie wrote {len(chunks)} chunks to PostgreSQL collection: {self.collection_name}",
+        )
         return chunk_ids
 
     def search(
-        self, 
-        query: str, 
-        limit: int = 5, 
+        self,
+        query: str,
+        limit: int = 5,
         filters: Optional[dict[str, Any]] = None,
         include_metadata: bool = True,
-        include_value: bool = True
+        include_value: bool = True,
     ) -> list[dict[str, Any]]:
         """Search for similar chunks using vector similarity.
-        
+
         Args:
             query: The query text to search for.
             limit: Maximum number of results to return.
             filters: Optional metadata filters in vecs format (e.g., {"year": {"$eq": 2012}}).
             include_metadata: Whether to include metadata in results.
             include_value: Whether to include similarity scores in results.
-            
+
         Returns:
             list[dict[str, Any]]: List of similar chunks with metadata and scores.
 
@@ -226,7 +219,7 @@ class PgvectorHandshake(BaseHandshake):
             limit=limit,
             filters=filters,
             include_metadata=include_metadata,
-            include_value=include_value
+            include_value=include_value,
         )
 
         # Convert vecs results to our format
@@ -249,7 +242,7 @@ class PgvectorHandshake(BaseHandshake):
 
     def create_index(self, method: str = "hnsw", **index_params: Any) -> None:
         """Create a vector index for improved search performance.
-        
+
         Args:
             method: Index method to use. Currently vecs supports various methods.
             **index_params: Additional parameters for the index.

@@ -3,7 +3,7 @@
 import os
 from typing import Any, Literal, Optional, Union, cast
 
-import requests
+import httpx
 
 from chonkie.cloud.file import FileManager
 from chonkie.types import Chunk
@@ -35,7 +35,7 @@ class SentenceChunker(CloudChunker):
         if not self.api_key:
             raise ValueError(
                 "No API key provided. Please set the CHONKIE_API_KEY environment variable"
-                + "or pass an API key to the SentenceChunker constructor."
+                + "or pass an API key to the SentenceChunker constructor.",
             )
 
         # Check if chunk_size and chunk_overlap are valid
@@ -63,18 +63,22 @@ class SentenceChunker(CloudChunker):
         self.include_delim = include_delim
 
         # Check if the API is up right now
-        response = requests.get(f"{self.BASE_URL}/")
+        response = httpx.get(f"{self.BASE_URL}/")
         if response.status_code != 200:
             raise ValueError(
                 "Oh no! You caught Chonkie at a bad time. It seems to be down right now."
                 + "Please try again in a short while."
-                + "If the issue persists, please contact support at support@chonkie.ai or raise an issue on GitHub."
+                + "If the issue persists, please contact support at support@chonkie.ai or raise an issue on GitHub.",
             )
 
         # Initialize the file manager to upload files if needed
         self.file_manager = FileManager(api_key=self.api_key)
 
-    def chunk(self, text: Optional[Union[str, list[str]]] = None, file: Optional[str] = None) -> Union[list[Chunk], list[list[Chunk]]]:
+    def chunk(
+        self,
+        text: Optional[Union[str, list[str]]] = None,
+        file: Optional[str] = None,
+    ) -> Union[list[Chunk], list[list[Chunk]]]:
         """Chunk the text or file via sentence boundaries."""
         # Define the payload for the request
         payload: dict[str, Any]
@@ -107,10 +111,12 @@ class SentenceChunker(CloudChunker):
                 "include_delim": self.include_delim,
             }
         else:
-            raise ValueError("No text or file provided. Please provide either text or a file path.")
+            raise ValueError(
+                "No text or file provided. Please provide either text or a file path.",
+            )
 
         # Make the request to the Chonkie API
-        response = requests.post(
+        response = httpx.post(
             f"{self.BASE_URL}/{self.VERSION}/chunk/sentence",
             json=payload,
             headers={"Authorization": f"Bearer {self.api_key}"},
@@ -135,9 +141,13 @@ class SentenceChunker(CloudChunker):
             raise ValueError(
                 "Oh no! The Chonkie API returned an invalid response."
                 + "Please try again in a short while."
-                + "If the issue persists, please contact support at support@chonkie.ai."
+                + "If the issue persists, please contact support at support@chonkie.ai.",
             ) from error
 
-    def __call__(self, text: Optional[Union[str, list[str]]] = None, file: Optional[str] = None) -> Union[list[Chunk], list[list[Chunk]]]:
+    def __call__(
+        self,
+        text: Optional[Union[str, list[str]]] = None,
+        file: Optional[str] = None,
+    ) -> Union[list[Chunk], list[list[Chunk]]]:
         """Call the SentenceChunker."""
         return self.chunk(text=text, file=file)

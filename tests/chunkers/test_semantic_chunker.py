@@ -1,6 +1,5 @@
 """Test the SemanticChunker class - cleaned version with only working tests."""
 
-
 import pytest
 
 from chonkie import SemanticChunker
@@ -105,13 +104,9 @@ def test_semantic_chunker_single_sentence(embedding_model: BaseEmbeddings) -> No
 
 def test_semantic_chunker_token_counts(embedding_model: BaseEmbeddings, sample_text: str) -> None:
     """Test that the SemanticChunker correctly calculates token counts and respects chunk_size."""
-    chunker = SemanticChunker(
-        embedding_model=embedding_model, 
-        chunk_size=512, 
-        threshold=0.5
-    )
+    chunker = SemanticChunker(embedding_model=embedding_model, chunk_size=512, threshold=0.5)
     chunks = chunker.chunk(sample_text)
-    
+
     assert all([chunk.token_count > 0 for chunk in chunks]), (
         "All chunks must have a positive token count"
     )
@@ -127,13 +122,12 @@ def test_semantic_chunker_token_counts(embedding_model: BaseEmbeddings, sample_t
         )
 
 
-def test_semantic_chunker_reconstruction(embedding_model: BaseEmbeddings, sample_text: str) -> None:
+def test_semantic_chunker_reconstruction(
+    embedding_model: BaseEmbeddings,
+    sample_text: str,
+) -> None:
     """Test that the SemanticChunker can reconstruct the original text."""
-    chunker = SemanticChunker(
-        embedding_model=embedding_model, 
-        chunk_size=512, 
-        threshold=0.5
-    )
+    chunker = SemanticChunker(embedding_model=embedding_model, chunk_size=512, threshold=0.5)
     chunks = chunker.chunk(sample_text)
     assert sample_text == "".join([chunk.text for chunk in chunks])
 
@@ -157,11 +151,7 @@ def verify_chunk_indices(chunks: list[Chunk], original_text: str) -> None:
 
 def test_semantic_chunker_indices(embedding_model: BaseEmbeddings, sample_text: str) -> None:
     """Test that the SemanticChunker correctly maps chunk indices to the original text."""
-    chunker = SemanticChunker(
-        embedding_model=embedding_model, 
-        chunk_size=512, 
-        threshold=0.5
-    )
+    chunker = SemanticChunker(embedding_model=embedding_model, chunk_size=512, threshold=0.5)
     chunks = chunker.chunk(sample_text)
     verify_chunk_indices(chunks, sample_text)
 
@@ -181,7 +171,7 @@ class TestSemanticChunkerParameterValidation:
         """Test that SemanticChunker raises error for invalid min_sentences_per_chunk."""
         with pytest.raises(ValueError, match="min_sentences_per_chunk must be positive"):
             SemanticChunker(embedding_model=embedding_model, min_sentences_per_chunk=0)
-        
+
         with pytest.raises(ValueError, match="min_sentences_per_chunk must be positive"):
             SemanticChunker(embedding_model=embedding_model, min_sentences_per_chunk=-1)
 
@@ -189,7 +179,7 @@ class TestSemanticChunkerParameterValidation:
         """Test that SemanticChunker raises error for invalid similarity_window."""
         with pytest.raises(ValueError, match="similarity_window must be positive"):
             SemanticChunker(embedding_model=embedding_model, similarity_window=0)
-            
+
         with pytest.raises(ValueError, match="similarity_window must be positive"):
             SemanticChunker(embedding_model=embedding_model, similarity_window=-1)
 
@@ -197,13 +187,13 @@ class TestSemanticChunkerParameterValidation:
         """Test that SemanticChunker raises error for invalid threshold values."""
         with pytest.raises(ValueError, match="threshold must be between 0 and 1"):
             SemanticChunker(embedding_model=embedding_model, threshold=0)
-        
+
         with pytest.raises(ValueError, match="threshold must be between 0 and 1"):
             SemanticChunker(embedding_model=embedding_model, threshold=1.0)
-            
+
         with pytest.raises(ValueError, match="threshold must be between 0 and 1"):
             SemanticChunker(embedding_model=embedding_model, threshold=-0.1)
-            
+
         with pytest.raises(ValueError, match="threshold must be between 0 and 1"):
             SemanticChunker(embedding_model=embedding_model, threshold=1.5)
 
@@ -211,20 +201,27 @@ class TestSemanticChunkerParameterValidation:
         """Test that SemanticChunker raises error for non-numeric threshold."""
         with pytest.raises(ValueError, match="threshold must be between 0 and 1"):
             SemanticChunker(embedding_model=embedding_model, threshold="invalid")
-            
+
         with pytest.raises(ValueError, match="threshold must be between 0 and 1"):
             SemanticChunker(embedding_model=embedding_model, threshold=[0.5])
 
     def test_invalid_embedding_model_type(self) -> None:
         """Test that SemanticChunker raises error for invalid embedding model type."""
-        with pytest.raises(ValueError, match="embedding_model must be a string or a BaseEmbeddings object"):
+        with pytest.raises(
+            ValueError,
+            match="embedding_model must be a string or a BaseEmbeddings object",
+        ):
             SemanticChunker(embedding_model=123)
 
 
 class TestSemanticChunkerConfiguration:
     """Test different configuration options."""
 
-    def test_with_different_similarity_windows(self, embedding_model: BaseEmbeddings, sample_text: str) -> None:
+    def test_with_different_similarity_windows(
+        self,
+        embedding_model: BaseEmbeddings,
+        sample_text: str,
+    ) -> None:
         """Test SemanticChunker with different similarity windows."""
         # Test with default window
         chunker1 = SemanticChunker(
@@ -235,36 +232,32 @@ class TestSemanticChunkerConfiguration:
         chunks1 = chunker1.chunk(sample_text)
         assert len(chunks1) > 0
         assert chunker1.similarity_window == 3  # Default value
-        
+
         # Test with larger window
         chunker2 = SemanticChunker(
             embedding_model=embedding_model,
             similarity_window=5,
             threshold=0.5,
-            chunk_size=512
+            chunk_size=512,
         )
         chunks2 = chunker2.chunk(sample_text)
         assert len(chunks2) > 0
         assert chunker2.similarity_window == 5
 
-    def test_with_different_thresholds(self, embedding_model: BaseEmbeddings, sample_text: str) -> None:
+    def test_with_different_thresholds(
+        self,
+        embedding_model: BaseEmbeddings,
+        sample_text: str,
+    ) -> None:
         """Test SemanticChunker with different threshold values."""
         # Low threshold (more merging)
-        chunker1 = SemanticChunker(
-            embedding_model=embedding_model,
-            threshold=0.1,
-            chunk_size=512
-        )
+        chunker1 = SemanticChunker(embedding_model=embedding_model, threshold=0.1, chunk_size=512)
         chunks1 = chunker1.chunk(sample_text)
         assert len(chunks1) > 0
         assert chunker1.threshold == 0.1
 
         # High threshold (less merging)
-        chunker2 = SemanticChunker(
-            embedding_model=embedding_model,
-            threshold=0.9,
-            chunk_size=512
-        )
+        chunker2 = SemanticChunker(embedding_model=embedding_model, threshold=0.9, chunk_size=512)
         chunks2 = chunker2.chunk(sample_text)
         assert len(chunks2) > 0
         assert chunker2.threshold == 0.9
@@ -278,11 +271,11 @@ class TestSemanticChunkerEdgeCases:
         chunker = SemanticChunker(
             embedding_model=embedding_model,
             chunk_size=20,
-            min_sentences_per_chunk=1
+            min_sentences_per_chunk=1,
         )
         text = "Short. Also short. Another short one. Final short sentence."
         chunks = chunker.chunk(text)
-        
+
         assert len(chunks) > 0
         # Chunks should respect the size limit (with some buffer for semantic grouping)
         for chunk in chunks:
@@ -290,11 +283,7 @@ class TestSemanticChunkerEdgeCases:
 
     def test_delim_as_string(self, embedding_model: BaseEmbeddings) -> None:
         """Test SemanticChunker with delim as string instead of list."""
-        chunker = SemanticChunker(
-            embedding_model=embedding_model,
-            delim=".",
-            chunk_size=512
-        )
+        chunker = SemanticChunker(embedding_model=embedding_model, delim=".", chunk_size=512)
         text = "First sentence. Second sentence. Third sentence."
         chunks = chunker.chunk(text)
         assert len(chunks) >= 1
@@ -302,7 +291,7 @@ class TestSemanticChunkerEdgeCases:
 
 class TestSemanticChunkerSkipWindow:
     """Test suite for skip_window functionality in SemanticChunker."""
-    
+
     def test_skip_window_default_disabled(self, embedding_model: BaseEmbeddings) -> None:
         """Test that skip_window=0 (default) disables skip-and-merge."""
         chunker = SemanticChunker(
@@ -311,17 +300,17 @@ class TestSemanticChunkerSkipWindow:
             threshold=0.5,
             # skip_window defaults to 0
         )
-        
+
         # Verify default value
         assert chunker.skip_window == 0
-        
+
         text = """The weather is beautiful today. The sun is shining brightly.
         I love programming in Python. It's a versatile language.
         The climate is changing rapidly. Global temperatures are rising."""
-        
+
         chunks = chunker.chunk(text)
         assert len(chunks) >= 1
-    
+
     def test_skip_window_enabled_single(self, embedding_model: BaseEmbeddings) -> None:
         """Test that skip_window=1 enables merging of adjacent similar groups."""
         # Test with skip_window disabled
@@ -329,95 +318,98 @@ class TestSemanticChunkerSkipWindow:
             embedding_model=embedding_model,
             chunk_size=512,
             threshold=0.7,
-            skip_window=0
+            skip_window=0,
         )
-        
+
         # Test with skip_window enabled
         chunker_with_skip = SemanticChunker(
             embedding_model=embedding_model,
             chunk_size=512,
             threshold=0.7,
-            skip_window=1
+            skip_window=1,
         )
-        
+
         # Text with alternating but related topics
         text = """Dogs are loyal companions. They love to play fetch.
         Cats are independent pets. They enjoy climbing trees.
         Puppies need lots of training. They require patience.
         Kittens are playful animals. They chase laser pointers."""
-        
+
         chunks_no_skip = chunker_no_skip.chunk(text)
         chunks_with_skip = chunker_with_skip.chunk(text)
-        
+
         # Both should produce valid chunks
         assert len(chunks_no_skip) >= 1
         assert len(chunks_with_skip) >= 1
-        
+
         # Skip window may produce different chunking patterns
         # We can't guarantee fewer chunks as it depends on embeddings
         # but we verify the functionality works without errors
-    
+
     def test_skip_window_larger_value(self, embedding_model: BaseEmbeddings) -> None:
         """Test skip_window with larger values (2+)."""
         chunker = SemanticChunker(
             embedding_model=embedding_model,
             chunk_size=512,
             threshold=0.6,
-            skip_window=2
+            skip_window=2,
         )
-        
+
         # Text with topics that might be merged across gaps
         text = """Machine learning is fascinating. Neural networks are powerful.
         The stock market fluctuated today. Economic indicators show growth.
         Deep learning models are complex. They require lots of data.
         Financial markets are volatile. Investors remain cautious."""
-        
+
         chunks = chunker.chunk(text)
         assert len(chunks) >= 1
-        
+
         # Verify all chunks have proper structure
         for chunk in chunks:
             assert isinstance(chunk, Chunk)
             assert chunk.text
             assert chunk.token_count > 0
-    
+
     def test_skip_window_with_different_thresholds(self, embedding_model: BaseEmbeddings) -> None:
         """Test skip_window interaction with different threshold values."""
         thresholds = [0.3, 0.5, 0.7, 0.9]
         skip_windows = [0, 1, 2]
-        
+
         text = """Python is a programming language. It's used for web development.
         JavaScript runs in browsers. It powers interactive websites.
         Python has many libraries. Data science uses Python extensively.
         JavaScript frameworks are popular. React and Vue are examples."""
-        
+
         for threshold in thresholds:
             for skip_window in skip_windows:
                 chunker = SemanticChunker(
                     embedding_model=embedding_model,
                     chunk_size=512,
                     threshold=threshold,
-                    skip_window=skip_window
+                    skip_window=skip_window,
                 )
-                
+
                 chunks = chunker.chunk(text)
                 assert len(chunks) >= 1
-                
+
                 # Verify chunks are valid
                 for chunk in chunks:
                     assert chunk.text
                     assert chunk.start_index >= 0
                     assert chunk.end_index > chunk.start_index
-    
-    def test_skip_window_preserves_chunk_size_limits(self, embedding_model: BaseEmbeddings) -> None:
+
+    def test_skip_window_preserves_chunk_size_limits(
+        self,
+        embedding_model: BaseEmbeddings,
+    ) -> None:
         """Test that skip_window respects chunk_size limits after merging."""
         chunker = SemanticChunker(
             embedding_model=embedding_model,
             chunk_size=50,  # Small chunk size to force splitting
             threshold=0.5,
-            skip_window=2
+            skip_window=2,
         )
-        
+
         # Long text that will need to be split even after merging
         text = """The Renaissance was a period of cultural rebirth in Europe.
         It began in Italy during the 14th century and spread across the continent.
@@ -427,76 +419,67 @@ class TestSemanticChunkerSkipWindow:
         Literature flourished with writers like Shakespeare and Dante.
         Architecture evolved with new techniques and classical influences.
         Trade routes expanded, bringing new goods and ideas to Europe."""
-        
+
         chunks = chunker.chunk(text)
-        
+
         # All chunks should respect the size limit
         for chunk in chunks:
             assert chunk.token_count <= 50
-    
+
     def test_skip_window_with_empty_text(self, embedding_model: BaseEmbeddings) -> None:
         """Test skip_window behavior with empty or minimal text."""
-        chunker = SemanticChunker(
-            embedding_model=embedding_model,
-            skip_window=1
-        )
-        
+        chunker = SemanticChunker(embedding_model=embedding_model, skip_window=1)
+
         # Empty text
         chunks = chunker.chunk("")
         assert chunks == []
-        
+
         # Whitespace only
         chunks = chunker.chunk("   \n  \t  ")
         assert chunks == []
-        
+
         # Single sentence
         chunks = chunker.chunk("Hello world.")
         assert len(chunks) == 1
         assert chunks[0].text == "Hello world."
-    
-    def test_skip_window_with_single_sentence_groups(self, embedding_model: BaseEmbeddings) -> None:
+
+    def test_skip_window_with_single_sentence_groups(
+        self,
+        embedding_model: BaseEmbeddings,
+    ) -> None:
         """Test skip_window when text produces single-sentence groups."""
         chunker = SemanticChunker(
             embedding_model=embedding_model,
             chunk_size=512,
             threshold=0.6,
             skip_window=1,
-            min_sentences_per_chunk=1
+            min_sentences_per_chunk=1,
         )
-        
+
         # Short sentences that might each form their own group
         text = "First. Second. Third. Fourth. Fifth."
-        
+
         chunks = chunker.chunk(text)
         assert len(chunks) >= 1
-        
+
         # Verify reconstruction
         reconstructed = "".join(chunk.text for chunk in chunks)
         assert reconstructed == text
-    
+
     def test_skip_window_parameter_validation(self, embedding_model: BaseEmbeddings) -> None:
         """Test that skip_window parameter validates correctly."""
         # Valid skip_window values
         for skip_window in [0, 1, 2, 5, 10]:
-            chunker = SemanticChunker(
-                embedding_model=embedding_model,
-                skip_window=skip_window
-            )
+            chunker = SemanticChunker(embedding_model=embedding_model, skip_window=skip_window)
             assert chunker.skip_window == skip_window
-        
+
         # Negative skip_window should raise error
         with pytest.raises(ValueError, match="skip_window must be non-negative"):
-            SemanticChunker(
-                embedding_model=embedding_model,
-                skip_window=-1
-            )
-    
+            SemanticChunker(embedding_model=embedding_model, skip_window=-1)
+
     def test_skip_window_representation(self, embedding_model: BaseEmbeddings) -> None:
         """Test that skip_window appears in string representation."""
-        chunker = SemanticChunker(
-            embedding_model=embedding_model,
-            skip_window=2
-        )
-        
+        chunker = SemanticChunker(embedding_model=embedding_model, skip_window=2)
+
         repr_str = repr(chunker)
         assert "skip_window=2" in repr_str

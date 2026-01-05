@@ -40,7 +40,7 @@ class TableChunker(BaseChunker):
         if chunk_size == 3 and tokenizer != "row":
             warnings.warn(
                 "Using default chunk size of 3 with a token-based tokenizer may not be optimal. "
-                "Consider using a larger chunk_size for token-based chunking."
+                "Consider using a larger chunk_size for token-based chunking.",
             )
 
         self.chunk_size = chunk_size
@@ -77,7 +77,7 @@ class TableChunker(BaseChunker):
         rows = text.strip().split("\n")
         if len(rows) < 3:  # Need header, separator, and at least one data row
             warnings.warn(
-                "Table must have at least a header, separator, and one data row. Skipping chunking."
+                "Table must have at least a header, separator, and one data row. Skipping chunking.",
             )
             return []
         # row based table chunking
@@ -90,7 +90,7 @@ class TableChunker(BaseChunker):
                         token_count=len(data_rows),
                         start_index=0,
                         end_index=len(text),
-                    )
+                    ),
                 ]
             else:
                 # Track character position for data rows (after header)
@@ -108,7 +108,7 @@ class TableChunker(BaseChunker):
                             token_count=len(chunk_rows),
                             start_index=current_char_index,
                             end_index=current_char_index + data_rows_len,
-                        )
+                        ),
                     )
                     current_char_index += data_rows_len
 
@@ -125,7 +125,7 @@ class TableChunker(BaseChunker):
                         token_count=table_token_count,
                         start_index=0,
                         end_index=len(text),
-                    )
+                    ),
                 ]
 
             header, data_rows = self._split_table(text)
@@ -138,10 +138,7 @@ class TableChunker(BaseChunker):
             for row in data_rows:
                 row_size = self.tokenizer.count_tokens(row)
                 # if adding this row exceeds chunk size
-                if (
-                    current_token_count + row_size >= self.chunk_size
-                    and len(current_chunk) > 1
-                ):
+                if current_token_count + row_size >= self.chunk_size and len(current_chunk) > 1:
                     # only create a new chunk if the current chunk has more than just the header
                     # if the current chunk only has the header, we need to add the row anyway
                     if chunks == []:
@@ -191,12 +188,10 @@ class TableChunker(BaseChunker):
     def chunk_document(self, document: Document) -> Document:
         """Chunk a document."""
         logger.debug(
-            f"Chunking document with {len(document.content) if hasattr(document, 'content') else 0} characters"
+            f"Chunking document with {len(document.content) if hasattr(document, 'content') else 0} characters",
         )
         if isinstance(document, MarkdownDocument) and document.tables:
-            logger.debug(
-                f"Processing MarkdownDocument with {len(document.tables)} tables"
-            )
+            logger.debug(f"Processing MarkdownDocument with {len(document.tables)} tables")
             for table in document.tables:
                 chunks = self.chunk(table.content)
                 for chunk in chunks:
@@ -207,9 +202,7 @@ class TableChunker(BaseChunker):
         else:
             document.chunks = self.chunk(document.content)
             document.chunks.sort(key=lambda x: x.start_index)
-        logger.info(
-            f"Document chunking complete: {len(document.chunks)} chunks created"
-        )
+        logger.info(f"Document chunking complete: {len(document.chunks)} chunks created")
         return document
 
     def __repr__(self) -> str:

@@ -3,7 +3,7 @@
 import os
 from typing import Any, Optional, Union, cast
 
-import requests
+import httpx
 
 from chonkie.cloud.file import FileManager
 from chonkie.types import Chunk
@@ -35,12 +35,12 @@ class NeuralChunker(CloudChunker):
         if not self.api_key:
             raise ValueError(
                 "No API key provided. Please set the CHONKIE_API_KEY environment variable "
-                + "or pass an API key to the NeuralChunker constructor."
+                + "or pass an API key to the NeuralChunker constructor.",
             )
 
         if model not in self.SUPPORTED_MODELS:
             raise ValueError(
-                f"Model {model} is not supported. Please choose from one of the following: {self.SUPPORTED_MODELS}"
+                f"Model {model} is not supported. Please choose from one of the following: {self.SUPPORTED_MODELS}",
             )
         if min_characters_per_chunk < 1:
             raise ValueError("Minimum characters per chunk must be greater than 0.")
@@ -50,23 +50,25 @@ class NeuralChunker(CloudChunker):
 
         # Check if the Chonkie API is reachable
         try:
-            response = requests.get(f"{self.BASE_URL}/")
+            response = httpx.get(f"{self.BASE_URL}/")
             if response.status_code != 200:
                 raise ValueError(
                     "Oh no! You caught Chonkie at a bad time. It seems to be down right now. Please try again in a short while."
-                    + "If the issue persists, please contact support at support@chonkie.ai."
+                    + "If the issue persists, please contact support at support@chonkie.ai.",
                 )
         except Exception as error:
             raise ValueError(
                 "Oh no! You caught Chonkie at a bad time. It seems to be down right now. Please try again in a short while."
-                + "If the issue persists, please contact support at support@chonkie.ai."
+                + "If the issue persists, please contact support at support@chonkie.ai.",
             ) from error
 
         # Initialize the file manager to upload files if needed
         self.file_manager = FileManager(api_key=self.api_key)
 
     def chunk(
-        self, text: Optional[Union[str, list[str]]] = None, file: Optional[str] = None
+        self,
+        text: Optional[Union[str, list[str]]] = None,
+        file: Optional[str] = None,
     ) -> Union[list[Chunk], list[list[Chunk]]]:
         """Chunk the text or file into a list of chunks."""
         # Create the payload
@@ -89,12 +91,12 @@ class NeuralChunker(CloudChunker):
             }
         else:
             raise ValueError(
-                "No text or file provided. Please provide either text or a file path."
+                "No text or file provided. Please provide either text or a file path.",
             )
 
         # Send the request to the Chonkie API
         try:
-            response = requests.post(
+            response = httpx.post(
                 f"{self.BASE_URL}/{self.VERSION}/chunk/neural",
                 json=payload,
                 headers={"Authorization": f"Bearer {self.api_key}"},
@@ -110,18 +112,18 @@ class NeuralChunker(CloudChunker):
                 return batch_chunks
             else:
                 single_result: list[dict] = cast(list[dict], response.json())
-                single_chunks: list[Chunk] = [
-                    Chunk.from_dict(chunk) for chunk in single_result
-                ]
+                single_chunks: list[Chunk] = [Chunk.from_dict(chunk) for chunk in single_result]
                 return single_chunks
         except Exception as error:
             raise ValueError(
                 "Oh no! The Chonkie API returned an invalid response. Please ensure your input is correct and try again. "
-                + "If the problem continues, contact support at support@chonkie.ai."
+                + "If the problem continues, contact support at support@chonkie.ai.",
             ) from error
 
     def __call__(
-        self, text: Optional[Union[str, list[str]]] = None, file: Optional[str] = None
+        self,
+        text: Optional[Union[str, list[str]]] = None,
+        file: Optional[str] = None,
     ) -> Union[list[Chunk], list[list[Chunk]]]:
         """Call the NeuralChunker."""
         return self.chunk(text=text, file=file)

@@ -29,31 +29,24 @@ class RecursiveLevel:
     def _validate_fields(self) -> None:
         """Validate all fields have legal values."""
         # Check for mutually exclusive options
-        active_options = sum([
-            bool(self.delimiters),
-            self.whitespace,
-            bool(self.pattern)
-        ])
-        
+        active_options = sum([bool(self.delimiters), self.whitespace, bool(self.pattern)])
+
         if active_options > 1:
             raise NotImplementedError(
-                "Cannot use multiple splitting methods simultaneously. Choose one of: delimiters, whitespace, or pattern."
+                "Cannot use multiple splitting methods simultaneously. Choose one of: delimiters, whitespace, or pattern.",
             )
-            
+
         if self.delimiters is not None:
             if isinstance(self.delimiters, str) and len(self.delimiters) == 0:
                 raise ValueError("Custom delimiters cannot be an empty string.")
             if isinstance(self.delimiters, list):
-                if any(
-                    not isinstance(delim, str) or len(delim) == 0
-                    for delim in self.delimiters
-                ):
+                if any(not isinstance(delim, str) or len(delim) == 0 for delim in self.delimiters):
                     raise ValueError("Custom delimiters cannot be an empty string.")
                 if any(delim == " " for delim in self.delimiters):
                     raise ValueError(
-                        "Custom delimiters cannot be whitespace only. Set whitespace to True instead."
+                        "Custom delimiters cannot be whitespace only. Set whitespace to True instead.",
                     )
-                    
+
         if self.pattern is not None:
             if not isinstance(self.pattern, str) or len(self.pattern) == 0:
                 raise ValueError("Pattern must be a non-empty string.")
@@ -61,7 +54,7 @@ class RecursiveLevel:
                 re.compile(self.pattern)
             except re.error as e:
                 raise ValueError(f"Invalid regex pattern: {e}")
-                
+
         if self.pattern_mode not in ["split", "extract"]:
             raise ValueError("pattern_mode must be either 'split' or 'extract'.")
 
@@ -87,11 +80,11 @@ class RecursiveLevel:
         return cls(**data)
 
     @classmethod
-    def from_recipe(cls, name: str, lang: Optional[str] = 'en') -> "RecursiveLevel":
+    def from_recipe(cls, name: str, lang: Optional[str] = "en") -> "RecursiveLevel":
         """Create RecursiveLevel object from a recipe.
-        
+
         The recipes are registered in the [Chonkie Recipe Store](https://huggingface.co/datasets/chonkie-ai/recipes). If the recipe is not there, you can create your own recipe and share it with the community!
-        
+
         Args:
             name (str): The name of the recipe.
             lang (Optional[str]): The language of the recipe.
@@ -107,9 +100,13 @@ class RecursiveLevel:
         recipe = hub.get_recipe(name, lang)
         # If the recipe is not None, we can get the `recursive_rules` key
         if recipe is not None:
-            return cls.from_dict({"delimiters": recipe["recipe"]["delimiters"], "include_delim": recipe["recipe"]["include_delim"]})
+            return cls.from_dict({
+                "delimiters": recipe["recipe"]["delimiters"],
+                "include_delim": recipe["recipe"]["include_delim"],
+            })
         else:
             raise ValueError(f"Tried getting recipe `{name}_{lang}.json` but it is not available.")
+
 
 @dataclass
 class RecursiveRules:
@@ -154,9 +151,7 @@ class RecursiveRules:
             for level in self.levels:
                 level._validate_fields()
         else:
-            raise ValueError(
-                "Levels must be a list of RecursiveLevel objects."
-            )
+            raise ValueError("Levels must be a list of RecursiveLevel objects.")
 
     def __repr__(self) -> str:
         """Return a string representation of the RecursiveRules."""
@@ -165,7 +160,7 @@ class RecursiveRules:
     def __len__(self) -> int:
         """Return the number of levels."""
         return len(self.levels) if self.levels is not None else 0
-            
+
     def __getitem__(self, index: int) -> Optional[RecursiveLevel]:
         """Return the RecursiveLevel at the specified index."""
         return self.levels[index] if self.levels is not None else None
@@ -189,19 +184,23 @@ class RecursiveRules:
     def to_dict(self) -> dict:
         """Return the RecursiveRules as a dictionary."""
         result: dict[str, Optional[list[dict]]] = dict()
-        result["levels"] = [level.to_dict() for level in self.levels] if self.levels is not None else None
+        result["levels"] = (
+            [level.to_dict() for level in self.levels] if self.levels is not None else None
+        )
         return result
 
     @classmethod
-    def from_recipe(cls, 
-                    name: Optional[str] = 'default', 
-                    lang: Optional[str] = 'en', 
-                    path: Optional[str] = None) -> "RecursiveRules":
+    def from_recipe(
+        cls,
+        name: Optional[str] = "default",
+        lang: Optional[str] = "en",
+        path: Optional[str] = None,
+    ) -> "RecursiveRules":
         """Create a RecursiveRules object from a recipe.
-        
+
         The recipes are registered in the [Chonkie Recipe Store](https://huggingface.co/datasets/chonkie-ai/recipes).
         If the recipe is not there, you can create your own recipe and share it with the community!
-        
+
         Args:
             name (str): The name of the recipe.
             lang (Optional[str]): The language of the recipe.
@@ -216,6 +215,5 @@ class RecursiveRules:
         """
         # Create a hubbie instance
         hub = Hubbie()
-        recipe = hub.get_recipe(name, lang, path) 
+        recipe = hub.get_recipe(name, lang, path)
         return cls.from_dict(recipe["recipe"]["recursive_rules"])
-
