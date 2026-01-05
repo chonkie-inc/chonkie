@@ -4,6 +4,7 @@ from .chef import BaseChef, MarkdownChef, TableChef, TextChef
 from .chunker import (
     BaseChunker,
     CodeChunker,
+    FastChunker,
     LateChunker,
     NeuralChunker,
     RecursiveChunker,
