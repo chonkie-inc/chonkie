@@ -103,7 +103,7 @@ from chonkie import FastChunker
 
 # Split at sentence boundaries
 chunker = FastChunker(
-    chunk_size=2048,
+    chunk_size=70,
     delimiters=".!?\n",
 )
 
@@ -122,33 +122,6 @@ for i, chunk in enumerate(chunks):
 
 </Accordion>
 
-<Accordion title="Paragraph-Based Chunking">
-
-```python
-from chonkie import FastChunker
-
-# Split at paragraph boundaries (double newlines)
-chunker = FastChunker(
-    chunk_size=4096,
-    delimiters="\n\n",
-)
-
-text = """First paragraph with multiple sentences.
-This is still the first paragraph.
-
-Second paragraph starts here.
-More content in the second paragraph.
-
-Third paragraph with its own content."""
-
-chunks = chunker.chunk(text)
-
-for i, chunk in enumerate(chunks):
-    print(f"\nParagraph {i+1}: {chunk.text[:50]}...")
-```
-
-</Accordion>
-
 <Accordion title="Pattern-Based Chunking (SentencePiece)">
 
 ```python
@@ -156,7 +129,7 @@ from chonkie import FastChunker
 
 # Split at metaspace boundaries (common in SentencePiece tokenizers)
 chunker = FastChunker(
-    chunk_size=4096,
+    chunk_size=10,
     pattern="▁",      # Metaspace character
     prefix=True,      # Keep ▁ at start of next chunk
 )
@@ -177,12 +150,16 @@ from chonkie import FastChunker
 
 # Split at START of consecutive whitespace runs
 chunker = FastChunker(
-    chunk_size=1024,
+    chunk_size=10,
     pattern=" ",
     consecutive=True,
 )
 
-text = "word1   word2    word3"  # Multiple spaces between words
+text = """First           paragraph with multiple sentences.
+This is still the first paragraph.
+
+Second paragraph starts here.
+More content         in the second paragraph."""  # Multiple spaces between words
 chunks = chunker.chunk(text)
 
 # Without consecutive=True: might split in middle of "   "

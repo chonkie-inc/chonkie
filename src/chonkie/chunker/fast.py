@@ -58,7 +58,7 @@ class FastChunker(BaseChunker):
             from memchunk import chunk_offsets
         except ImportError:
             raise ImportError(
-                "memchunk is required for FastChunker. Install it with: pip install memchunk"
+                "memchunk is required for FastChunker. Install it with: pip install chonkie[fast]"
             )
 
         # Verify memchunk is available
