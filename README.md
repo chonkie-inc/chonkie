@@ -15,11 +15,11 @@
 
 _The lightweight ingestion library for fast, efficient and robust RAG pipelines_
 
-[Installation](#installation) •
-[Usage](#usage) •
-[Chunkers](#chunkers) •
-[Integrations](#integrations) •
-[Benchmarks](#benchmarks)
+[Installation](#-installation) •
+[Usage](#-usage) •
+[Chunkers](#%EF%B8%8F-chunkers) •
+[Integrations](#-integrations) •
+[Benchmarks](#-benchmarks)
 
 </div>
 
