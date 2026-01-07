@@ -16,11 +16,18 @@
         "groups": [
           {
             "group": "Welcome",
-            "pages": ["common/welcome", "common/concepts"]
+            "pages": [
+              "common/welcome",
+              "common/concepts"
+            ]
           },
           {
             "group": "Products",
-            "pages":  ["common/open-source", "common/chunking-api", "common/labs"]
+            "pages": [
+              "common/open-source",
+              "common/chunking-api",
+              "common/labs"
+            ]
           }
         ]
       },
@@ -117,13 +124,18 @@
           },
           {
             "group": "Utils",
-            "pages": ["oss/utils/visualizer", "oss/utils/hubbie", "oss/utils/logging"]
+            "pages": [
+              "oss/utils/visualizer",
+              "oss/utils/hubbie",
+              "oss/utils/logging"
+            ]
           },
           {
             "group": "Experimental",
             "pages": [
               "oss/experimental/overview",
-              "oss/experimental/code-chunker"
+              "oss/experimental/code-chunker",
+              "oss/experimental/chonkie-cli"
             ]
           },
           {
@@ -134,7 +146,9 @@
           },
           {
             "group": "Changelog",
-            "pages": ["oss/changelog"]
+            "pages": [
+              "oss/changelog"
+            ]
           }
         ]
       },
@@ -144,7 +158,10 @@
         "groups": [
           {
             "group": "Getting Started",
-            "pages": ["api/common/introduction", "api/common/playground"]
+            "pages": [
+              "api/common/introduction",
+              "api/common/playground"
+            ]
           },
           {
             "group": "Chunkers",
@@ -192,7 +209,9 @@
           },
           {
             "group": "Search",
-            "pages": ["api/search/search"]
+            "pages": [
+              "api/search/search"
+            ]
           },
           {
             "group": "Agents",
@@ -209,7 +228,9 @@
           },
           {
             "group": "Parse",
-            "pages": ["api/parse/parse"]
+            "pages": [
+              "api/parse/parse"
+            ]
           }
         ]
       }
