@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "chonkie"
-version = "1.5.1"
+version = "1.5.2"
 description = "🦛 CHONK your texts with Chonkie ✨ - The no-nonsense chunking library"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -52,10 +52,14 @@ Homepage = "https://github.com/chonkie-inc/chonkie"
 Documentation = "https://docs.chonkie.ai"
 "Bug Tracker" = "https://github.com/chonkie-inc/chonkie/issues"
 
+[project.scripts]
+chonkie = "chonkie.cli:main"
+
 [project.optional-dependencies]
 # Optional dependencies for the utils
 hub = ["huggingface-hub>=0.24.0", "jsonschema>=4.23.0"]
 viz = ["rich>=13.0.0"]
+cli = ["typer>=0.9.0"]
 
 # Optional dependencies for table chef
 table = ["pandas", "tabulate", "openpyxl"]
@@ -71,6 +75,7 @@ code = [
     "magika>=0.6.0, <1.1.0",
 ]
 neural = ["transformers>=4.0.0", "torch>=2.0.0, <3.0"]
+fast = ["memchunk>=0.3.0"]
 
 # Optional dependencies for the embeddings
 
@@ -147,6 +152,7 @@ all = [
     "catsu>=0.0.1",
     "litellm>=1.0.0",
     "datasets>=1.14.0",
+    "memchunk>=0.3.0",
 ]
 dev = [
     "datasets>=1.14.0",
@@ -189,6 +195,7 @@ packages = [
     "chonkie.fetcher",
     "chonkie.chef",
     "chonkie.pipeline",
+    "chonkie.cli",
 ]
 
 [tool.setuptools.package-data]

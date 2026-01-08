@@ -13,6 +13,10 @@ Chonkie provides multiple chunking strategies to handle different text processin
     Splits text into fixed-size token chunks. Best for maintaining consistent
     chunk sizes and working with token-based models.
   </Card>
+  <Card title="FastChunker" icon="bolt" href="/oss/chunkers/fast-chunker">
+    SIMD-accelerated byte-based chunking at 100+ GB/s. Best for high-throughput
+    pipelines where byte size limits are acceptable.
+  </Card>
   <Card
     title="SentenceChunker"
     icon="align-left"
@@ -74,6 +78,7 @@ Different chunkers are available depending on your installation:
 | Chunker          |                        Default                         |                       embeddings                       |                    `"chonkie[all]"`                    |                   Chonkie JS                    |                          API Chunking                           |
 | ---------------- | :----------------------------------------------------: | :----------------------------------------------------: | :----------------------------------------------------: | :----------------------------------------------------: | :----------------------------------------------------: |
 | TokenChunker     | <Icon icon="check" color="#005c00" iconType="solid" /> | <Icon icon="check" color="#005c00" iconType="solid" /> | <Icon icon="check" color="#005c00" iconType="solid" /> | <Icon icon="check" color="#005c00" iconType="solid" /> | <Icon icon="check" color="#005c00" iconType="solid" /> |
+| FastChunker      |   <Icon icon="x" color="#ff0000" iconType="solid" />   |   <Icon icon="x" color="#ff0000" iconType="solid" />   | <Icon icon="check" color="#005c00" iconType="solid" /> |   <Icon icon="x" color="#ff0000" iconType="solid" />   |   <Icon icon="x" color="#ff0000" iconType="solid" />   |
 | SentenceChunker  | <Icon icon="check" color="#005c00" iconType="solid" /> | <Icon icon="check" color="#005c00" iconType="solid" /> | <Icon icon="check" color="#005c00" iconType="solid" /> |   <Icon icon="x" color="#ff0000" iconType="solid" />   | <Icon icon="check" color="#005c00" iconType="solid" /> |
 | RecursiveChunker | <Icon icon="check" color="#005c00" iconType="solid" /> | <Icon icon="check" color="#005c00" iconType="solid" /> | <Icon icon="check" color="#005c00" iconType="solid" /> | <Icon icon="check" color="#005c00" iconType="solid" /> | <Icon icon="check" color="#005c00" iconType="solid" /> |
 | TableChunker     | <Icon icon="check" color="#005c00" iconType="solid" /> | <Icon icon="check" color="#005c00" iconType="solid" /> | <Icon icon="check" color="#005c00" iconType="solid" /> |   <Icon icon="x" color="#ff0000" iconType="solid" />   | <Icon icon="check" color="#005c00" iconType="solid" /> |
