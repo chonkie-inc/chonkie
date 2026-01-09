@@ -20,16 +20,10 @@ jobs:
           enable-cache: true
           cache-dependency-glob: "pyproject.toml"
 
-      - name: Install the project
-        run: uv sync --all-extras --dev
-
       - name: Run mypy type checking
-        run: |
-          source .venv/bin/activate
-          mypy src/chonkie
+        run: uv run --all-extras --dev mypy src/chonkie
 
       - name: Run mypy on tests (optional)
         run: |
-          source .venv/bin/activate
-          mypy tests/ || echo "Type checking tests is optional and may have errors"
+          uv run --all-extras --dev mypy tests/ || echo "Type checking tests is optional and may have errors"
         continue-on-error: true
