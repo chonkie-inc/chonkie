@@ -174,6 +174,139 @@ class TestSlumberChunkerInternalMethods:
         assert isinstance(splits, list)
         assert len(splits) > 0
 
+    def test_split_text_whitespace_reconstruction(self, mock_genie: MockGenie) -> None:
+        """Test that whitespace splits can be reconstructed to original text."""
+        chunker = SlumberChunker(genie=mock_genie, min_characters_per_chunk=1)
+        text = "hello world test string"
+
+        # Test with include_delim="prev"
+        level = RecursiveLevel(whitespace=True, include_delim="prev")
+        splits = chunker._split_text(text, level)
+        reconstructed = "".join(splits)
+        assert reconstructed == text, f"prev: '{reconstructed}' != '{text}'"
+
+        # Test with include_delim="next"
+        level = RecursiveLevel(whitespace=True, include_delim="next")
+        splits = chunker._split_text(text, level)
+        reconstructed = "".join(splits)
+        assert reconstructed == text, f"next: '{reconstructed}' != '{text}'"
+
+        # Test with no include_delim
+        level = RecursiveLevel(whitespace=True, include_delim=None)
+        splits = chunker._split_text(text, level)
+        reconstructed = "".join(splits)
+        assert reconstructed == text, f"none: '{reconstructed}' != '{text}'"
+
+    def test_split_text_whitespace_index_alignment(self, mock_genie: MockGenie) -> None:
+        """Test that sum of split lengths equals original text length."""
+        chunker = SlumberChunker(genie=mock_genie, min_characters_per_chunk=1)
+        text = "The quick brown fox"
+
+        for include_delim in ["prev", "next", None]:
+            level = RecursiveLevel(whitespace=True, include_delim=include_delim)
+            splits = chunker._split_text(text, level)
+            total_length = sum(len(s) for s in splits)
+            assert total_length == len(text), (
+                f"include_delim={include_delim}: total_length={total_length} != {len(text)}"
+            )
+
+    def test_split_text_whitespace_multiple_spaces(self, mock_genie: MockGenie) -> None:
+        """Test whitespace splitting with multiple consecutive spaces."""
+        chunker = SlumberChunker(genie=mock_genie, min_characters_per_chunk=1)
+        text = "hello  world"  # Two consecutive spaces
+
+        for include_delim in ["prev", "next", None]:
+            level = RecursiveLevel(whitespace=True, include_delim=include_delim)
+            splits = chunker._split_text(text, level)
+            reconstructed = "".join(splits)
+            assert reconstructed == text, (
+                f"include_delim={include_delim}: '{reconstructed}' != '{text}'"
+            )
+
+    def test_split_text_whitespace_leading_trailing(self, mock_genie: MockGenie) -> None:
+        """Test whitespace splitting with leading and trailing spaces."""
+        chunker = SlumberChunker(genie=mock_genie, min_characters_per_chunk=1)
+        text = " hello world "  # Leading and trailing spaces
+
+        for include_delim in ["prev", "next", None]:
+            level = RecursiveLevel(whitespace=True, include_delim=include_delim)
+            splits = chunker._split_text(text, level)
+            reconstructed = "".join(splits)
+            assert reconstructed == text, (
+                f"include_delim={include_delim}: '{reconstructed}' != '{text}'"
+            )
+
+    def test_split_text_whitespace_empty_string(self, mock_genie: MockGenie) -> None:
+        """Test whitespace splitting with empty string."""
+        chunker = SlumberChunker(genie=mock_genie, min_characters_per_chunk=1)
+        for include_delim in ["prev", "next", None]:
+            level = RecursiveLevel(whitespace=True, include_delim=include_delim)
+            splits = chunker._split_text("", level)
+            assert "".join(splits) == ""
+
+    def test_split_text_whitespace_only_spaces(self, mock_genie: MockGenie) -> None:
+        """Test whitespace splitting with only spaces."""
+        chunker = SlumberChunker(genie=mock_genie, min_characters_per_chunk=1)
+        for include_delim in ["prev", "next", None]:
+            level = RecursiveLevel(whitespace=True, include_delim=include_delim)
+            splits = chunker._split_text("   ", level)
+            assert "".join(splits) == "   "
+
+    def test_split_text_whitespace_single_word(self, mock_genie: MockGenie) -> None:
+        """Test whitespace splitting with single word (no spaces)."""
+        chunker = SlumberChunker(genie=mock_genie, min_characters_per_chunk=1)
+        for include_delim in ["prev", "next", None]:
+            level = RecursiveLevel(whitespace=True, include_delim=include_delim)
+            splits = chunker._split_text("hello", level)
+            assert "".join(splits) == "hello"
+
+    def test_whitespace_regression_no_concatenation(self, mock_genie: MockGenie) -> None:
+        """Regression test for bug where whitespace splitting caused concatenation.
+
+        Original bug: "The quick brown fox" -> "Thequickbrownfox"
+        Root cause: Whitespace lost during split/merge causing index drift
+        """
+        chunker = SlumberChunker(genie=mock_genie, min_characters_per_chunk=1)
+        text = "The quick brown fox"
+
+        level = RecursiveLevel(whitespace=True, include_delim="prev")
+        splits = chunker._split_text(text, level)
+        reconstructed = "".join(splits)
+
+        assert "Thequickbrown" not in reconstructed  # Verify no concatenation
+        assert reconstructed == text
+
+    def test_whitespace_mode_specific_structure(self, mock_genie: MockGenie) -> None:
+        """Test that each include_delim mode produces correct structure."""
+        chunker = SlumberChunker(genie=mock_genie, min_characters_per_chunk=1)
+        text = "hello world"
+
+        # "prev" mode: space goes with following word
+        level = RecursiveLevel(whitespace=True, include_delim="prev")
+        splits = chunker._split_text(text, level)
+        assert splits == ["hello", " world"]
+
+        # "next" mode: space goes with preceding word
+        level = RecursiveLevel(whitespace=True, include_delim="next")
+        splits = chunker._split_text(text, level)
+        assert splits == ["hello ", "world"]
+
+        # None mode: space is separate element
+        level = RecursiveLevel(whitespace=True, include_delim=None)
+        splits = chunker._split_text(text, level)
+        assert splits == ["hello", " ", "world"]
+
+    def test_whitespace_with_merging_enabled(self, mock_genie: MockGenie) -> None:
+        """Test whitespace preservation with default merging logic."""
+        chunker = SlumberChunker(genie=mock_genie)  # Default min_characters_per_chunk=24
+        text = "a b c d e f g h i j k l m n o p q r s t u v w x y z"
+
+        level = RecursiveLevel(whitespace=True, include_delim="prev")
+        splits = chunker._split_text(text, level)
+
+        # Verify reconstruction even after merging
+        assert "".join(splits) == text
+
     def test_split_text_delimiters(self, mock_genie: MockGenie) -> None:
         """Test text splitting with custom delimiters."""
         chunker = SlumberChunker(genie=mock_genie)

@@ -1,5 +1,6 @@
 """Module containing the SlumberChunker."""
 
+import re
 from bisect import bisect_left
 from itertools import accumulate
 from typing import Optional, Union
@@ -103,20 +104,15 @@ class SlumberChunker(BaseChunker):
 
     def _split_text(self, text: str, recursive_level: RecursiveLevel) -> list[str]:
         """Split the text into chunks using the delimiters."""
+        # Use Python fallback for whitespace mode because it correctly handles
+        # all three include_delim modes ("prev", "next", None).
+        # The Cython extension ignores include_delim for whitespace splitting.
+        if recursive_level.whitespace:
+            return self._split_text_fallback(text, recursive_level)
+
         if _CYTHON_AVAILABLE:
-            # Use the optimized Cython split function
-            if recursive_level.whitespace:
-                return list(
-                    split_text(
-                        text,
-                        delim=None,
-                        include_delim=recursive_level.include_delim,
-                        min_characters_per_segment=self.min_characters_per_chunk,
-                        whitespace_mode=True,
-                        character_fallback=False,
-                    ),
-                )
-            elif recursive_level.delimiters:
+            # Use the optimized Cython split function for non-whitespace modes
+            if recursive_level.delimiters:
                 return list(
                     split_text(
                         text,
@@ -148,15 +144,15 @@ class SlumberChunker(BaseChunker):
             # Add whitespace back; assumes that the whitespace is uniform across the text
             # if the whitespace is not uniform, the split will not be reconstructable.
             if recursive_level.include_delim == "prev":
-                splits = [" " + split for (i, split) in enumerate(candidate_splits) if i > 0]
+                # Include first word without space, prepend space to subsequent words
+                splits = [candidate_splits[0]] + [" " + s for s in candidate_splits[1:]]
             elif recursive_level.include_delim == "next":
-                splits = [
-                    split + " "
-                    for (i, split) in enumerate(candidate_splits)
-                    if i < len(candidate_splits) - 1
-                ]
+                # Append space to all words except the last one
+                splits = [s + " " for s in candidate_splits[:-1]] + [candidate_splits[-1]]
             else:
-                splits = candidate_splits
+                # Preserve spaces by keeping them as separate elements
+                splits = re.split(r"( )", text)
+                splits = [s for s in splits if s]
 
         elif recursive_level.delimiters:
             if recursive_level.include_delim == "prev":
