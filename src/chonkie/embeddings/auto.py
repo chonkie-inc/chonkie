@@ -79,7 +79,7 @@ class AutoEmbeddings:
                     except Exception as error:
                         raise ValueError(
                             f"Failed to load {model} with {embeddings_cls.__name__}, with error: {error}",
-                        )
+                        ) from error
                 else:
                     raise ValueError(
                         f"No provider found for {provider}. Please check the provider name and try again.",
@@ -117,10 +117,10 @@ class AutoEmbeddings:
             except Exception as e:
                 raise ValueError(
                     f"Failed to load embeddings via SentenceTransformerEmbeddings after registry/fallback failure: {e}",
-                )
+                ) from e
         else:
             # get the wrapped embeddings instance
             try:
                 return EmbeddingsRegistry.wrap(model, **kwargs)
             except Exception as e:
-                raise ValueError(f"Failed to wrap embeddings instance: {e}")
+                raise ValueError(f"Failed to wrap embeddings instance: {e}") from e

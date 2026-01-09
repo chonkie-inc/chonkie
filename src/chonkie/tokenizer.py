@@ -523,8 +523,10 @@ class AutoTokenizer:
                 from transformers import AutoTokenizer
 
                 return AutoTokenizer.from_pretrained(tokenizer)
-            except Exception:
-                raise ValueError("Tokenizer not found in transformers, tokenizers, or tiktoken")
+            except Exception as e:
+                raise ValueError(
+                    "Tokenizer not found in transformers, tokenizers, or tiktoken"
+                ) from e
         raise ValueError("Tokenizer not found in transformers, tokenizers, or tiktoken")
 
     def _get_backend(self) -> str:

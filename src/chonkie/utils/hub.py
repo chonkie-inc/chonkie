@@ -71,7 +71,7 @@ class Hubbie:
         except jsonschema.ValidationError as error:
             raise ValueError(
                 f"Recipe is invalid. Please check the recipe and try again. Error: {error}",
-            )
+            ) from error
 
     def get_recipe(
         self,
@@ -135,7 +135,7 @@ class Hubbie:
         except Exception as error:
             raise ValueError(
                 f"Failed to read the file {path} —— please check if the file is valid JSON and if the path is correct. Error: {error}",
-            )
+            ) from error
 
         # Validate the recipe with jsonschema
         assert self._validate_recipe(recipe), (
@@ -199,7 +199,7 @@ class Hubbie:
             raise ValueError(
                 f"Failed to read the file {path} — please check if the file is valid JSON. "
                 f"Error: {error}",
-            )
+            ) from error
 
         # Validate it has required fields
         if "steps" not in recipe:

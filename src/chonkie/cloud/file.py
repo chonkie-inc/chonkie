@@ -47,4 +47,4 @@ class FileManager:
         try:
             return File.from_dict(response.json())
         except Exception as e:
-            raise ValueError(f"Error uploading file: {e}")
+            raise ValueError(f"Error uploading file: {e}") from e
