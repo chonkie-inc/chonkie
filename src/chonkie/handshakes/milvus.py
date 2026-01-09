@@ -12,6 +12,7 @@ import numpy as np
 
 from chonkie.embeddings import AutoEmbeddings, BaseEmbeddings
 from chonkie.logger import get_logger
+from chonkie.pipeline import handshake
 from chonkie.types import Chunk
 
 from .base import BaseHandshake
@@ -20,6 +21,7 @@ from .utils import generate_random_collection_name
 logger = get_logger(__name__)
 
 
+@handshake("milvus")
 class MilvusHandshake(BaseHandshake):
     """Milvus Handshake to export Chonkie's Chunks into a Milvus collection.
 
