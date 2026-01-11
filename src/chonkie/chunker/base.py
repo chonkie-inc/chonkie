@@ -259,9 +259,11 @@ class BaseChunker(ABC):
         """
         # If the document has chunks already, then we need to re-chunk the content
         if document.chunks:
+            tasks = [self.chunk_async(c.text) for c in document.chunks]
+            chunk_results = await asyncio.gather(*tasks)
+            
             chunks: list[Chunk] = []
-            for old_chunk in document.chunks:
-                new_chunks: list[Chunk] = await self.chunk_async(old_chunk.text)
+            for old_chunk, new_chunks in zip(document.chunks, chunk_results):
                 chunks.extend(self._shift_chunks(new_chunks, old_chunk.start_index))
             document.chunks = chunks
         else:
