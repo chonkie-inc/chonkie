@@ -36,16 +36,17 @@ class BaseHandshake(ABC):
         """
         raise NotImplementedError
 
-    async def write_async(self, chunk: Union[Chunk, list[Chunk]]) -> Any:
+    async def write_async(self, chunk: Union[Chunk, list[Chunk]], **kwargs: Any) -> Any:
         """Write chunks to the vector database asynchronously.
         
         Args:
             chunk (Union[Chunk, list[Chunk]]): The chunk(s) to write.
+            **kwargs: Additional keyword arguments.
             
         Returns:
             Any: The result from the database write operation.
         """
-        return await asyncio.to_thread(self.write, chunk)
+        return await asyncio.to_thread(self.write, chunk, **kwargs)
 
     def __call__(self, chunks: Union[Chunk, list[Chunk]]) -> Any:
         """Write chunks using the default batch method when the instance is called.
