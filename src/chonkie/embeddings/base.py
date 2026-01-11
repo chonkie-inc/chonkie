@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 from typing import Any, Union
 
 import numpy as np
+import asyncio
 
 
 class BaseEmbeddings(ABC):
@@ -43,6 +44,17 @@ class BaseEmbeddings(ABC):
         """
         raise NotImplementedError
 
+    async def embed_async(self, text: str) -> np.ndarray:
+        """Embed a text string asynchronously.
+        
+        Args:
+            text (str): Text string to embed
+            
+        Returns:
+            np.ndarray: Embedding vector for the text string
+        """
+        return await asyncio.to_thread(self.embed, text)
+
     def embed_batch(self, texts: list[str]) -> list[np.ndarray]:
         """Embed a list of text strings into vector representations.
 
@@ -58,6 +70,17 @@ class BaseEmbeddings(ABC):
 
         """
         return [self.embed(text) for text in texts]
+
+    async def embed_batch_async(self, texts: list[str]) -> list[np.ndarray]:
+        """Embed a list of text strings asynchronously.
+        
+        Args:
+            texts (list[str]): List of text strings to embed
+            
+        Returns:
+            list[np.ndarray]: List of embedding vectors for each text in the list
+        """
+        return await asyncio.to_thread(self.embed_batch, texts)
 
     def similarity(self, u: np.ndarray, v: np.ndarray) -> np.float32:
         """Compute the similarity between two embeddings.

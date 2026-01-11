@@ -3,6 +3,7 @@
 import warnings
 from abc import ABC, abstractmethod
 from typing import Sequence, Union
+import asyncio
 
 from tqdm import tqdm
 
@@ -181,6 +182,49 @@ class BaseChunker(ABC):
             return self._parallel_batch_processing(texts, show_progress)
         else:
             return self._sequential_batch_processing(texts, show_progress)
+    
+    async def chunk_async(self, text: str) -> list[Chunk]:
+        """Chunk the given text asynchronously.
+        
+        Args:
+            text (str): The text to chunk.
+            
+        Returns:
+            list[Chunk]: A list of Chunks.
+        """
+        return await asyncio.to_thread(self.chunk, text)
+
+    async def chunk_batch_async(self, texts: Sequence[str], show_progress: bool = True) -> list[list[Chunk]]:
+        """Chunk a batch of texts asynchronously.
+        
+        Args:
+            texts (Sequence[str]): The texts to chunk.
+            show_progress (bool): Whether to show progress.
+            
+        Returns:
+            list[list[Chunk]]: A list of lists of Chunks.
+        """
+        return await asyncio.to_thread(self.chunk_batch, texts, show_progress)
+
+    def _shift_chunks(self, chunks: list[Chunk], start_offset: int) -> list[Chunk]:
+        """Shift chunks by a start offset. Helper for chunking documents.
+        
+        Args:
+            chunks: The chunks to shift.
+            start_offset: The offset to add to the start and end indices.
+            
+        Returns:
+            list[Chunk]: The shifted chunks.
+        """
+        return [
+            Chunk(
+                text=c.text,
+                start_index=c.start_index + start_offset,
+                end_index=c.end_index + start_offset,
+                token_count=c.token_count,
+            )
+            for c in chunks
+        ]
 
     def chunk_document(self, document: Document) -> Document:
         """Chunk a document.
@@ -197,16 +241,29 @@ class BaseChunker(ABC):
             chunks: list[Chunk] = []
             for old_chunk in document.chunks:
                 new_chunks: list[Chunk] = self.chunk(old_chunk.text)
-                for new_chunk in new_chunks:
-                    chunks.append(
-                        Chunk(
-                            text=new_chunk.text,
-                            start_index=new_chunk.start_index + old_chunk.start_index,
-                            end_index=new_chunk.end_index + old_chunk.start_index,
-                            token_count=new_chunk.token_count,
-                        ),
-                    )
+                chunks.extend(self._shift_chunks(new_chunks, old_chunk.start_index))
             document.chunks = chunks
         else:
             document.chunks = self.chunk(document.content)
+        return document
+
+    async def chunk_document_async(self, document: Document) -> Document:
+        """Chunk a document asynchronously.
+
+        Args:
+            document: The document to chunk.
+
+        Returns:
+            The document with chunks populated.
+
+        """
+        # If the document has chunks already, then we need to re-chunk the content
+        if document.chunks:
+            chunks: list[Chunk] = []
+            for old_chunk in document.chunks:
+                new_chunks: list[Chunk] = await self.chunk_async(old_chunk.text)
+                chunks.extend(self._shift_chunks(new_chunks, old_chunk.start_index))
+            document.chunks = chunks
+        else:
+            document.chunks = await self.chunk_async(document.content)
         return document

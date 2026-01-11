@@ -2,6 +2,7 @@
 
 from abc import ABC, abstractmethod
 from typing import Any
+import asyncio
 
 
 class BaseFetcher(ABC):
@@ -15,3 +16,7 @@ class BaseFetcher(ABC):
     def fetch(self, *args: Any, **kwargs: Any) -> Any:
         """Fetch data from the source."""
         raise NotImplementedError("Subclasses must implement fetch()")
+
+    async def fetch_async(self, *args: Any, **kwargs: Any) -> Any:
+        """Fetch data from the source asynchronously."""
+        return await asyncio.to_thread(self.fetch, *args, **kwargs)

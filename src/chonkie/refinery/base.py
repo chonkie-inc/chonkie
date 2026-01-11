@@ -8,6 +8,7 @@ if TYPE_CHECKING:
 
 from chonkie.logger import get_logger
 from chonkie.types import Chunk
+import asyncio
 
 logger = get_logger(__name__)
 
@@ -28,6 +29,17 @@ class BaseRefinery(ABC):
         """
         raise NotImplementedError("Subclasses must implement this method.")
 
+    async def refine_async(self, chunks: list[Chunk]) -> list[Chunk]:
+        """Refine the chunks asynchronously.
+
+        Args:
+            chunks: The chunks to refine.
+
+        Returns:
+            The refined chunks.
+        """
+        return await asyncio.to_thread(self.refine, chunks)
+
     def refine_document(self, document: "Document") -> "Document":
         """Refine the chunks within a document.
 
@@ -39,6 +51,18 @@ class BaseRefinery(ABC):
 
         """
         document.chunks = self.refine(document.chunks)
+        return document
+
+    async def refine_document_async(self, document: "Document") -> "Document":
+        """Refine the chunks within a document asynchronously.
+
+        Args:
+            document: The document whose chunks should be refined.
+
+        Returns:
+            The document with refined chunks.
+        """
+        document.chunks = await self.refine_async(document.chunks)
         return document
 
     def __repr__(self) -> str:
