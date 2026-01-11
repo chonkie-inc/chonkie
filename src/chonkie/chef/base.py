@@ -3,6 +3,7 @@
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Union
+import asyncio
 
 from chonkie.logger import get_logger
 from chonkie.types import Document
@@ -26,6 +27,10 @@ class BaseChef(ABC):
         """
         raise NotImplementedError("Subclasses must implement process()")
 
+    async def process_async(self, path: Union[str, Path]) -> Document:
+        """Process the data from a file path asynchronously."""
+        return await asyncio.to_thread(self.process, path)
+
     @abstractmethod
     def parse(self, text: str) -> Document:
         """Parse raw text into a Document.
@@ -38,6 +43,10 @@ class BaseChef(ABC):
 
         """
         raise NotImplementedError("Subclasses must implement parse()")
+
+    async def parse_async(self, text: str) -> Document:
+        """Parse raw text into a Document asynchronously."""
+        return await asyncio.to_thread(self.parse, text)
 
     def process_batch(self, paths: Union[list[str], list[Path]]) -> list[Document]:
         """Process multiple files in a batch.
@@ -53,6 +62,10 @@ class BaseChef(ABC):
         results = [self.process(path) for path in paths]
         logger.info(f"Completed batch processing of {len(paths)} files")
         return results
+
+    async def process_batch_async(self, paths: Union[list[str], list[Path]]) -> list[Document]:
+        """Process multiple files in a batch asynchronously."""
+        return await asyncio.gather(*[self.process_async(path) for path in paths])
 
     def read(self, path: Union[str, Path]) -> str:
         """Read the file content.
@@ -73,6 +86,10 @@ class BaseChef(ABC):
         except Exception as e:
             logger.warning(f"Failed to read file: {path}", error=str(e))
             raise
+
+    async def read_async(self, path: Union[str, Path]) -> str:
+        """Read the file content asynchronously."""
+        return await asyncio.to_thread(self.read, path)
 
     def __call__(self, path: Union[str, Path]) -> Document:
         """Call the chef to process the data.
