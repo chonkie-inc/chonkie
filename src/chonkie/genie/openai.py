@@ -2,6 +2,7 @@
 
 import importlib.util as importutil
 import os
+import asyncio
 from typing import TYPE_CHECKING, Any, Optional
 
 from .base import BaseGenie
@@ -30,7 +31,7 @@ class OpenAIGenie(BaseGenie):
         super().__init__()
 
         try:
-            from openai import OpenAI
+            from openai import AsyncOpenAI, OpenAI
         except ImportError as ie:
             raise ImportError(
                 "One or more of the required modules are not available: [pydantic, openai]. "
@@ -47,8 +48,10 @@ class OpenAIGenie(BaseGenie):
         # Initialize the client and model
         if base_url is None:
             self.client = OpenAI(api_key=self.api_key)
+            self.async_client = AsyncOpenAI(api_key=self.api_key)
         else:
             self.client = OpenAI(api_key=self.api_key, base_url=base_url)
+            self.async_client = AsyncOpenAI(api_key=self.api_key, base_url=base_url)
         self.model = model
 
     def generate(self, prompt: str) -> str:
@@ -62,9 +65,32 @@ class OpenAIGenie(BaseGenie):
             raise ValueError("OpenAI response content is None")
         return content
 
+    async def generate_async(self, prompt: str) -> str:
+        """Generate a response asynchronously."""
+        response = await self.async_client.chat.completions.create(
+            model=self.model,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        content = response.choices[0].message.content
+        if content is None:
+            raise ValueError("OpenAI response content is None")
+        return content
+
     def generate_json(self, prompt: str, schema: "BaseModel") -> dict[str, Any]:
         """Generate a JSON response based on the given prompt and schema."""
         response = self.client.beta.chat.completions.parse(
+            model=self.model,
+            messages=[{"role": "user", "content": prompt}],
+            response_format=schema,  # type: ignore[arg-type]
+        )
+        content = response.choices[0].message.parsed
+        if content is None:
+            raise ValueError("OpenAI response content is None")
+        return content.model_dump()
+
+    async def generate_json_async(self, prompt: str, schema: "BaseModel") -> dict[str, Any]:
+        """Generate a JSON response asynchronously."""
+        response = await self.async_client.beta.chat.completions.parse(
             model=self.model,
             messages=[{"role": "user", "content": prompt}],
             response_format=schema,  # type: ignore[arg-type]
