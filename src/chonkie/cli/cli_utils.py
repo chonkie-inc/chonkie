@@ -71,12 +71,15 @@ def parse_params(param_list: Optional[list[str]]) -> dict[str, Any]:
             elif value.lower() == "none" or value.lower() == "null":
                 params[key] = None
             else:
-                # Try int first, then float, then keep as string
+                # Try float first, then convert to int if appropriate, or keep as string
                 try:
-                    if "." in value:
-                        params[key] = float(value)
+                    # Try float first (handles both floats and ints in scientific notation)
+                    float_val = float(value)
+                    # If it's a whole number and no decimal point in original, keep as int
+                    if "." not in value and "e" not in value.lower() and float_val.is_integer():
+                        params[key] = int(float_val)
                     else:
-                        params[key] = int(value)
+                        params[key] = float_val
                 except ValueError:
                     # Keep as string
                     params[key] = value
