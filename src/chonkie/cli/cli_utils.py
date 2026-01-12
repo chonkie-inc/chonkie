@@ -5,28 +5,8 @@ from typing import Optional
 
 import typer
 
-from chonkie import (
-    ChromaHandshake,
-    CodeChunker,
-    ElasticHandshake,
-    LateChunker,
-    MilvusHandshake,
-    MongoDBHandshake,
-    NeuralChunker,
-    PgvectorHandshake,
-    PineconeHandshake,
-    Pipeline,
-    QdrantHandshake,
-    RecursiveChunker,
-    SemanticChunker,
-    SentenceChunker,
-    SlumberChunker,
-    TableChunker,
-    TokenChunker,
-    TurbopufferHandshake,
-    Visualizer,
-    WeaviateHandshake,
-)
+from chonkie import Pipeline, Visualizer
+from chonkie.pipeline import ComponentRegistry, ComponentType
 from chonkie.types.document import Document
 
 # from chonkie.utils import login as login_function
@@ -50,29 +30,12 @@ app = typer.Typer(
     add_completion=True,
 )
 
-CHUNKER_MAPPING = {
-    "semantic": SemanticChunker,
-    "recursive": RecursiveChunker,
-    "token": TokenChunker,
-    "sentence": SentenceChunker,
-    "code": CodeChunker,
-    "late": LateChunker,
-    "neural": NeuralChunker,
-    "slumber": SlumberChunker,
-    "table": TableChunker,
-}
-
-HANDSHAKE_MAPPING = {
-    "chroma": ChromaHandshake,
-    "elastic": ElasticHandshake,
-    "milvus": MilvusHandshake,
-    "mongodb": MongoDBHandshake,
-    "pgvector": PgvectorHandshake,
-    "pinecone": PineconeHandshake,
-    "qdrant": QdrantHandshake,
-    "turbopuffer": TurbopufferHandshake,
-    "weaviate": WeaviateHandshake,
-}
+CHUNKERS = sorted(
+    c.alias for c in ComponentRegistry.list_components(component_type=ComponentType.CHUNKER)
+)
+HANDSHAKES = sorted(
+    c.alias for c in ComponentRegistry.list_components(component_type=ComponentType.HANDSHAKE)
+)
 
 
 @app.command()
@@ -80,24 +43,22 @@ def chunk(
     text: str = typer.Argument(..., help="Text to chunk or path to file"),
     chunker: str = typer.Option(
         "semantic",
-        help=f"Chunking method to use. Options: {', '.join(CHUNKER_MAPPING.keys())}",
+        help=f"Chunking method to use. Options: {', '.join(CHUNKERS)}",
     ),
     handshaker: Optional[str] = typer.Option(
         None,
-        help=f"Where to store the chunks. Options: {', '.join(HANDSHAKE_MAPPING.keys())}",
+        help=f"Where to store the chunks. Options: {', '.join(HANDSHAKES)}",
     ),
 ) -> None:
     """Chunk text using a specified chunker and optionally store it."""
     typer.echo(f"Chunking with {chunker}...")
 
-    # Select chunker
-    if chunker not in CHUNKER_MAPPING:
-        typer.echo(
-            f"Error: Unknown chunker '{chunker}'. Available: {', '.join(CHUNKER_MAPPING.keys())}"
-        )
+    try:
+        chunker_class = ComponentRegistry.get_chunker(chunker).component_class
+    except ValueError:
+        typer.echo(f"Error: Unknown chunker '{chunker}'. Available: {', '.join(CHUNKERS)}")
         raise typer.Exit(code=1)
 
-    chunker_class = CHUNKER_MAPPING[chunker]
     chunking_maker = chunker_class()
     viz = Visualizer()
     # Get text content
@@ -117,15 +78,16 @@ def chunk(
     if handshaker is None:
         viz(chunks)
     else:
-        if handshaker not in HANDSHAKE_MAPPING:
+        try:
+            handshake_class = ComponentRegistry.get_handshake(handshaker).component_class
+        except ValueError:
             typer.echo(
-                f"Error: Unknown handshaker '{handshaker}'. Available: {', '.join(HANDSHAKE_MAPPING.keys())}"
+                f"Error: Unknown handshaker '{handshaker}'. Available: {', '.join(HANDSHAKES)}"
             )
             raise typer.Exit(code=1)
 
         typer.echo(f"Storing chunks in {handshaker}...")
         try:
-            handshake_class = HANDSHAKE_MAPPING[handshaker]
             handshake_instance = handshake_class()
             handshake_instance.write(chunks)
             typer.echo("Chunks stored successfully.")

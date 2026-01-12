@@ -555,7 +555,7 @@ wheels = [
 
 [[package]]
 name = "chonkie"
-version = "1.5.0"
+version = "1.5.2"
 source = { editable = "." }
 dependencies = [
     { name = "numpy" },
@@ -569,11 +569,15 @@ all = [
     { name = "catsu" },
     { name = "chromadb" },
     { name = "cohere" },
+    { name = "datasets" },
     { name = "elasticsearch" },
     { name = "google-genai" },
+    { name = "httpx" },
     { name = "huggingface-hub" },
     { name = "jsonschema" },
+    { name = "litellm" },
     { name = "magika" },
+    { name = "memchunk" },
     { name = "model2vec" },
     { name = "openai" },
     { name = "openpyxl" },
@@ -609,6 +613,9 @@ catsu = [
 chroma = [
     { name = "chromadb" },
 ]
+cli = [
+    { name = "typer" },
+]
 code = [
     { name = "magika" },
     { name = "tree-sitter" },
@@ -639,6 +646,9 @@ dev = [
 ]
 elastic = [
     { name = "elasticsearch" },
+]
+fast = [
+    { name = "memchunk" },
 ]
 gemini = [
     { name = "google-genai" },
@@ -723,6 +733,11 @@ weaviate = [
     { name = "weaviate-client" },
 ]
 
+[package.dev-dependencies]
+dev = [
+    { name = "ruff" },
+]
+
 [package.metadata]
 requires-dist = [
     { name = "accelerate", marker = "extra == 'all'", specifier = ">=1.6.0" },
@@ -737,6 +752,7 @@ requires-dist = [
     { name = "cohere", marker = "extra == 'cohere'", specifier = ">=5.13.0" },
     { name = "coverage", marker = "extra == 'dev'" },
     { name = "cython", marker = "extra == 'dev'", specifier = ">=3.0.0" },
+    { name = "datasets", marker = "extra == 'all'", specifier = ">=1.14.0" },
     { name = "datasets", marker = "extra == 'datasets'", specifier = ">=4.0.0" },
     { name = "datasets", marker = "extra == 'dev'", specifier = ">=1.14.0" },
     { name = "elasticsearch", marker = "extra == 'all'", specifier = ">=8.0.0" },
@@ -744,13 +760,17 @@ requires-dist = [
     { name = "google-genai", marker = "extra == 'all'", specifier = ">=1.0.0" },
     { name = "google-genai", marker = "extra == 'gemini'", specifier = ">=1.0.0" },
     { name = "google-genai", marker = "extra == 'genie'", specifier = ">=1.0.0" },
+    { name = "httpx", marker = "extra == 'all'" },
     { name = "huggingface-hub", marker = "extra == 'all'", specifier = ">=0.24.0" },
     { name = "huggingface-hub", marker = "extra == 'hub'", specifier = ">=0.24.0" },
     { name = "jsonschema", marker = "extra == 'all'", specifier = ">=4.23.0" },
     { name = "jsonschema", marker = "extra == 'hub'", specifier = ">=4.23.0" },
+    { name = "litellm", marker = "extra == 'all'", specifier = ">=1.0.0" },
     { name = "litellm", marker = "extra == 'litellm'", specifier = ">=1.0.0" },
     { name = "magika", marker = "extra == 'all'", specifier = ">=0.6.0,<1.1.0" },
     { name = "magika", marker = "extra == 'code'", specifier = ">=0.6.0,<1.1.0" },
+    { name = "memchunk", marker = "extra == 'all'", specifier = ">=0.3.0" },
+    { name = "memchunk", marker = "extra == 'fast'", specifier = ">=0.3.0" },
     { name = "model2vec", marker = "extra == 'all'", specifier = ">=0.7.0" },
     { name = "model2vec", marker = "extra == 'model2vec'", specifier = ">=0.7.0" },
     { name = "model2vec", marker = "extra == 'semantic'", specifier = ">=0.3.0" },
@@ -785,7 +805,7 @@ requires-dist = [
     { name = "qdrant-client", marker = "extra == 'qdrant'", specifier = ">=1.0.0" },
     { name = "rich", marker = "extra == 'all'", specifier = ">=13.0.0" },
     { name = "rich", marker = "extra == 'viz'", specifier = ">=13.0.0" },
-    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.0.265" },
+    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.13.3" },
     { name = "sentence-transformers", marker = "extra == 'all'", specifier = ">=3.0.0" },
     { name = "sentence-transformers", marker = "extra == 'st'", specifier = ">=3.0.0" },
     { name = "tabulate", marker = "extra == 'all'" },
@@ -817,6 +837,7 @@ requires-dist = [
     { name = "tree-sitter-language-pack", marker = "extra == 'code'", specifier = ">=0.7.0" },
     { name = "turbopuffer", marker = "extra == 'all'", specifier = "~=1.0" },
     { name = "turbopuffer", marker = "extra == 'tpuf'", specifier = "~=1.0" },
+    { name = "typer", marker = "extra == 'cli'", specifier = ">=0.9.0" },
     { name = "uv", marker = "extra == 'dev'", specifier = ">=0.9.18" },
     { name = "vecs", marker = "extra == 'all'", specifier = ">=0.4.0" },
     { name = "vecs", marker = "extra == 'pgvector'", specifier = ">=0.4.0" },
@@ -825,7 +846,10 @@ requires-dist = [
     { name = "weaviate-client", marker = "extra == 'all'", specifier = ">=4.16.7" },
     { name = "weaviate-client", marker = "extra == 'weaviate'", specifier = ">=4.16.7" },
 ]
-provides-extras = ["hub", "viz", "table", "tokenizers", "tiktoken", "code", "neural", "model2vec", "st", "openai", "semantic", "gemini", "azure-openai", "voyageai", "cohere", "jina", "catsu", "litellm", "chroma", "qdrant", "tpuf", "pgvector", "weaviate", "datasets", "pinecone", "mongodb", "elastic", "milvus", "genie", "all", "dev"]
+provides-extras = ["hub", "viz", "cli", "table", "tokenizers", "tiktoken", "code", "neural", "fast", "model2vec", "st", "openai", "semantic", "gemini", "azure-openai", "voyageai", "cohere", "jina", "catsu", "litellm", "chroma", "qdrant", "tpuf", "pgvector", "weaviate", "datasets", "pinecone", "mongodb", "elastic", "milvus", "genie", "all", "dev"]
+
+[package.metadata.requires-dev]
+dev = [{ name = "ruff", specifier = ">=0.13.3" }]
 
 [[package]]
 name = "chromadb"
@@ -2283,6 +2307,41 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/d6/54/cfe61301667036ec958cb99bd3efefba235e65cdeb9c84d24a8293ba1d90/mdurl-0.1.2.tar.gz", hash = "sha256:bb413d29f5eea38f31dd4754dd7377d4465116fb207585f97bf925588687c1ba", size = 8729, upload-time = "2022-08-14T12:40:10.846Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/b3/38/89ba8ad64ae25be8de66a6d463314cf1eb366222074cfda9ee839c56a4b4/mdurl-0.1.2-py3-none-any.whl", hash = "sha256:84008a41e51615a49fc9966191ff91509e3c40b939176e643fd50a5c2196b8f8", size = 9979, upload-time = "2022-08-14T12:40:09.779Z" },
+]
+
+[[package]]
+name = "memchunk"
+version = "0.4.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/ac/ec/44a20382eec0c7b974625ecd0ba214bd7e84e3c53066ce9b33febb27d571/memchunk-0.4.0.tar.gz", hash = "sha256:541d1c776016575e6fb0164b065d24e6010bfe974e46f955191eabf33a95506b", size = 34753, upload-time = "2026-01-05T09:44:38.117Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/06/df/624784408e003dccc46476e665c2c74f2e3b6962979714d0f874069d210d/memchunk-0.4.0-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:407114e2f576514170f34731ebf1b38707396052018f1d7cd504b3d3e0492195", size = 290081, upload-time = "2026-01-05T09:44:04.854Z" },
+    { url = "https://files.pythonhosted.org/packages/9f/79/d1ced874b4c1df8b7f1063579485822218311b58809a66b6c6f04b184a1e/memchunk-0.4.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:d1bb6815f2846edc8feff4eb9bf2ae619227ec12430e169e3a1a82eda03128ec", size = 300873, upload-time = "2026-01-05T09:44:06.103Z" },
+    { url = "https://files.pythonhosted.org/packages/51/14/7c3cc75016fb6ea0fdd2be15ac3f29244d62c9be884047c2c1d67ef620f3/memchunk-0.4.0-cp310-cp310-win_amd64.whl", hash = "sha256:ef94d7ab19fd25dbc2e2a0ad3a9f25a0a6809ca92385a764f3f519408b5645f6", size = 151904, upload-time = "2026-01-05T09:44:07.189Z" },
+    { url = "https://files.pythonhosted.org/packages/d4/82/8861d8c2329094d9aa43168727bcdb6e1c982c851070e746e6753f655765/memchunk-0.4.0-cp311-cp311-macosx_10_12_x86_64.whl", hash = "sha256:d9d1a8de1162e9c465539a48eeb750964bac622a815a60036b5a61c89a8c3a1c", size = 268767, upload-time = "2026-01-05T09:44:08.442Z" },
+    { url = "https://files.pythonhosted.org/packages/04/2a/86428ba8d7bcca36b5586d45e91ecae4ad23d4db65e2dd9e9512da943070/memchunk-0.4.0-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:6ba1e3c12501b2987ec6da4b1f6ab7c13a894595b1c098e54803ad460dd28944", size = 259450, upload-time = "2026-01-05T09:44:09.376Z" },
+    { url = "https://files.pythonhosted.org/packages/b1/d8/049e3fc7d72a7ba07560aa8369e26956c8b70e976787e6c897a45fb7a8bc/memchunk-0.4.0-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:00f6ecc5941b357f7a5937cf8a1f759985140e7493342ae08af7343502c99182", size = 290253, upload-time = "2026-01-05T09:44:10.223Z" },
+    { url = "https://files.pythonhosted.org/packages/a4/04/e06273daf7abd53da672bbb5941b985b4604ee083f8410847a2b6259aefd/memchunk-0.4.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:8496f9be7916dcca42043c501912a8043b2a15412ed21d8ce78c24f80850f4dd", size = 300943, upload-time = "2026-01-05T09:44:11.389Z" },
+    { url = "https://files.pythonhosted.org/packages/5f/3d/cdca3b4aed325421c37339973aabf8d6b7711a3dc91d3fc0119ed000971a/memchunk-0.4.0-cp311-cp311-win_amd64.whl", hash = "sha256:22084139dda386ba14894f8f1180b945d1e99baec0fd621f970127af1b24d013", size = 152086, upload-time = "2026-01-05T09:44:12.508Z" },
+    { url = "https://files.pythonhosted.org/packages/df/ee/0ba2f578f6bd10bfb78d5238a765e8eaa2741c41fbd84243f51659677b8a/memchunk-0.4.0-cp312-cp312-macosx_10_12_x86_64.whl", hash = "sha256:ee74bc4075252db167301ed29a7b4db7825406e225a2774ef62d0c3185b65133", size = 266707, upload-time = "2026-01-05T09:44:14.112Z" },
+    { url = "https://files.pythonhosted.org/packages/28/89/3135f1dd8b270a538676ab8f898bf7feb7f7f27fbed52aa92b7df6899688/memchunk-0.4.0-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:5bc422494efad8fb175e848d97a836286000f2c88f2087057c9fd1ac655e020a", size = 256936, upload-time = "2026-01-05T09:44:14.998Z" },
+    { url = "https://files.pythonhosted.org/packages/6a/06/1db57fe234e0d23f632972ed29b230e359c6089de3c74eb7ae1325b3ca19/memchunk-0.4.0-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:47b415a16651029c3b7fa335eefa5b595c0b0c7959db9ce4196f89485870b21c", size = 288135, upload-time = "2026-01-05T09:44:15.962Z" },
+    { url = "https://files.pythonhosted.org/packages/a1/5e/fb724030de2f218ededa6453b3520bfa952d1d7a95f89a82967b572f13dd/memchunk-0.4.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:9dca121d20246be9ba3396ac6c798c14158585574c991a5b8bf38678b242a93e", size = 298852, upload-time = "2026-01-05T09:44:16.852Z" },
+    { url = "https://files.pythonhosted.org/packages/7d/75/5df63e27517befcdb90fcb2c1377c647b18ef08a331fa05c925ba9fca2e3/memchunk-0.4.0-cp312-cp312-win_amd64.whl", hash = "sha256:28e557765f9d6a388ef9a396a34cefe1baf92e74fbefda682090592af213c132", size = 150276, upload-time = "2026-01-05T09:44:17.686Z" },
+    { url = "https://files.pythonhosted.org/packages/36/35/e47ce64f4236934880e7ccbc17d922801e3c83c500dc6cceb608795271f1/memchunk-0.4.0-cp313-cp313-macosx_10_12_x86_64.whl", hash = "sha256:076c9d8808d8c2035663718325057206f558227f32b5315a8279ca2cff0d7d89", size = 266433, upload-time = "2026-01-05T09:44:18.515Z" },
+    { url = "https://files.pythonhosted.org/packages/05/3f/fdf344ab7886d4f97677f1a388420cff72c87debd19538d94e76b26b2f55/memchunk-0.4.0-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:461be33736fe28fb294d903a9ee217eec8816739b1b8d11cba7204bd7bfdf990", size = 256864, upload-time = "2026-01-05T09:44:19.595Z" },
+    { url = "https://files.pythonhosted.org/packages/1c/8f/101442e002010433f53e64b81b3786885a71967bf945ddf474bedd5bfce9/memchunk-0.4.0-cp313-cp313-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:7281372260ac5fc4e32be2140d119e554f51e076620f202b2b70f95a64949748", size = 287605, upload-time = "2026-01-05T09:44:20.48Z" },
+    { url = "https://files.pythonhosted.org/packages/01/45/149b0e9c6993767d9767a157d141e9f5977a4063f5487312a4569e949bdc/memchunk-0.4.0-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:3c17067070345e10667b4ac780691614416397f96fbe14a3e245e93a56383774", size = 298642, upload-time = "2026-01-05T09:44:21.528Z" },
+    { url = "https://files.pythonhosted.org/packages/dc/9c/1d643fce811baa2928abb1fdb4948e45095e73e2d84f6a73563a5353ab89/memchunk-0.4.0-cp313-cp313-win_amd64.whl", hash = "sha256:1905a5ad5d99befe517a49f55a1d1e0cae25fa23a88e62e4cc529401380125c1", size = 150076, upload-time = "2026-01-05T09:44:22.461Z" },
+    { url = "https://files.pythonhosted.org/packages/93/ab/1ef3dd4ee1a15f2a2b229e45d5bd7801d544171baaae230bc57cc9622954/memchunk-0.4.0-cp313-cp313t-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:e6e35d9d794affb80fd29e24adaf3ae3e7fa27aba60c7ecd805a280f0dc06ae5", size = 286461, upload-time = "2026-01-05T09:44:23.316Z" },
+    { url = "https://files.pythonhosted.org/packages/71/57/bce032b5b7b2d179a57af8484549cd098d418fcf500f431fa65cc4195dc5/memchunk-0.4.0-cp314-cp314-macosx_10_12_x86_64.whl", hash = "sha256:24d34c195059e1808c951c22deb5bd10c77724490c58acf958caa974c80bbb02", size = 266095, upload-time = "2026-01-05T09:44:24.199Z" },
+    { url = "https://files.pythonhosted.org/packages/94/74/a1701c9d008eb392ce4e81e46546e4f8780e0eba7d39b0ef311aa3de1bbd/memchunk-0.4.0-cp314-cp314-macosx_11_0_arm64.whl", hash = "sha256:a6630f0de2e3390ca036d451f5b00e4a5e0190776b4588f633c4cc69f39a4ad1", size = 256145, upload-time = "2026-01-05T09:44:25.465Z" },
+    { url = "https://files.pythonhosted.org/packages/00/37/20ac7e381069c8e0f24fb58698bc0644110a3d68e656093bd9d76c4658fd/memchunk-0.4.0-cp314-cp314-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:79b52658043dade715c54c643d1e99c845b06a673262af3b0a2b1e01a65ec045", size = 287616, upload-time = "2026-01-05T09:44:26.398Z" },
+    { url = "https://files.pythonhosted.org/packages/df/df/4adce86798ded8dfbf05b7a8019d26ae630dcd7a69c37da6164950eb15aa/memchunk-0.4.0-cp314-cp314-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:93344db23fa54aedf4ae70467ec7d396043f9383ec06af153b22e9f3ea832e3e", size = 298039, upload-time = "2026-01-05T09:44:27.296Z" },
+    { url = "https://files.pythonhosted.org/packages/13/aa/b3db109d9b08e7be8191d0602ae6a02a29432fdad8c22fe65d0c85ba2fce/memchunk-0.4.0-cp314-cp314-win_amd64.whl", hash = "sha256:dce0844220cc95d5399c9706494b5c38f8037922f30773259116d75108d3a956", size = 150148, upload-time = "2026-01-05T09:44:28.174Z" },
+    { url = "https://files.pythonhosted.org/packages/a8/aa/b1e7261469e05c79b4d2b8c1aad6137050261e98e8b3eb5ba2dfabc02023/memchunk-0.4.0-cp314-cp314t-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:53a2d5341611a4854571f64703ed52cab8363db187cda518190800d704d23659", size = 287019, upload-time = "2026-01-05T09:44:29.695Z" },
+    { url = "https://files.pythonhosted.org/packages/e3/c5/9f29532d32b3b32ae4439a3edb9142b1c2edbd2cd03243bc608e7dade373/memchunk-0.4.0-pp311-pypy311_pp73-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:8212d971a16503fcc42dd230464e37ed54c77b40916b1ecef28f609593a7f540", size = 292128, upload-time = "2026-01-05T09:44:36.392Z" },
+    { url = "https://files.pythonhosted.org/packages/d1/86/a5a589b689fd63d2de13396872ca28108402e1d708d5a42ac92237888c5d/memchunk-0.4.0-pp311-pypy311_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:be49d535b730b2bbf5e1b08238b1f2be1e8337ac5b678d0e8a7155687bbd7e1a", size = 302181, upload-time = "2026-01-05T09:44:37.261Z" },
 ]
 
 [[package]]
