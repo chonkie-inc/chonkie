@@ -1,8 +1,8 @@
 """Core Pipeline class for chonkie."""
 
+import asyncio
 import inspect
 import json
-import asyncio
 from pathlib import Path
 from typing import Any, Optional, Union
 
@@ -561,7 +561,7 @@ class Pipeline:
                 self._component_instances[component_key] = component_info.component_class(
                     **init_kwargs,
                 )
-        
+
         return self._component_instances[component_key], call_kwargs
 
     def _execute_step(self, step: dict[str, Any], input_data: Any) -> Any:
@@ -756,7 +756,9 @@ class Pipeline:
             if isinstance(input_data, list):
                 # Use gather for list input
                 return await asyncio.gather(*[
-                    component.process_async(item) if isinstance(item, Path) else component.parse_async(item)
+                    component.process_async(item)
+                    if isinstance(item, Path)
+                    else component.parse_async(item)
                     for item in input_data
                 ])
             return (
@@ -767,13 +769,17 @@ class Pipeline:
 
         if step_type == "chunk":
             if isinstance(input_data, list):
-                return await asyncio.gather(*[component.chunk_document_async(doc) for doc in input_data])
+                return await asyncio.gather(*[
+                    component.chunk_document_async(doc) for doc in input_data
+                ])
             else:
                 return await component.chunk_document_async(input_data)
 
         if step_type == "refine":
             if isinstance(input_data, list):
-                return await asyncio.gather(*[component.refine_document_async(doc) for doc in input_data])
+                return await asyncio.gather(*[
+                    component.refine_document_async(doc) for doc in input_data
+                ])
             else:
                 return await component.refine_document_async(input_data)
 

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 import tempfile
 from pathlib import Path
 
@@ -100,12 +99,12 @@ class TestPipelineAsync:
         # It's hard to deterministically test concurrency without mocking delays,
         # but we can verify it runs correctly on a batch.
         texts = [f"Text {i}" for i in range(10)]
-        
+
         docs = await Pipeline().chunk_with("recursive").run_async(texts=texts)
-        
+
         assert len(docs) == 10
 
     async def test_pipeline_async_error_handling(self) -> None:
         """Test error handling in async pipeline."""
         with pytest.raises((ValueError, RuntimeError)):
-             await Pipeline().chunk_with("recursive", invalid_param=999).run_async(texts="fail")
+            await Pipeline().chunk_with("recursive", invalid_param=999).run_async(texts="fail")

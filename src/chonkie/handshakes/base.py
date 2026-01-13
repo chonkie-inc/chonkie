@@ -1,5 +1,6 @@
 """Base class for Handshakes."""
 
+import asyncio
 from abc import ABC, abstractmethod
 from typing import (
     Any,
@@ -9,7 +10,6 @@ from typing import (
 
 from chonkie.logger import get_logger
 from chonkie.types import Chunk
-import asyncio
 
 logger = get_logger(__name__)
 
@@ -38,13 +38,14 @@ class BaseHandshake(ABC):
 
     async def write_async(self, chunk: Union[Chunk, list[Chunk]], **kwargs: Any) -> Any:
         """Write chunks to the vector database asynchronously.
-        
+
         Args:
             chunk (Union[Chunk, list[Chunk]]): The chunk(s) to write.
             **kwargs: Additional keyword arguments.
-            
+
         Returns:
             Any: The result from the database write operation.
+
         """
         return await asyncio.to_thread(self.write, chunk, **kwargs)
 

@@ -1,8 +1,8 @@
 """BaseGenie is the base class for all genies."""
 
+import asyncio
 from abc import ABC, abstractmethod
 from typing import Any
-import asyncio
 
 
 class BaseGenie(ABC):
@@ -37,6 +37,7 @@ class BaseGenie(ABC):
             Generates structured JSON responses for a batch of prompts. Uses `generate_json`.
         generate_json_batch_async(prompts: list[str], schema: Any) -> list[Any]:
             Generates structured JSON responses for a batch of prompts asynchronously. Uses `generate_json_batch`.
+
     """
 
     @abstractmethod
@@ -70,4 +71,6 @@ class BaseGenie(ABC):
 
     async def generate_json_batch_async(self, prompts: list[str], schema: Any) -> list[Any]:
         """Generate a batch of JSON responses asynchronously."""
-        return await asyncio.gather(*[self.generate_json_async(prompt, schema) for prompt in prompts])
+        return await asyncio.gather(*[
+            self.generate_json_async(prompt, schema) for prompt in prompts
+        ])

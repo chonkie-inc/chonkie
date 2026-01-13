@@ -6,9 +6,10 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from chonkie.types import Document
 
+import asyncio
+
 from chonkie.logger import get_logger
 from chonkie.types import Chunk
-import asyncio
 
 logger = get_logger(__name__)
 
@@ -37,6 +38,7 @@ class BaseRefinery(ABC):
 
         Returns:
             The refined chunks.
+
         """
         return await asyncio.to_thread(self.refine, chunks)
 
@@ -61,6 +63,7 @@ class BaseRefinery(ABC):
 
         Returns:
             The document with refined chunks.
+
         """
         document.chunks = await self.refine_async(document.chunks)
         return document

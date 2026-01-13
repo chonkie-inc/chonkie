@@ -1,5 +1,6 @@
 """OpenAI embeddings."""
 
+import asyncio
 import importlib.util as importutil
 import os
 import warnings
@@ -230,7 +231,9 @@ class OpenAIEmbeddings(BaseEmbeddings):
                 # If the batch fails, try one by one
                 if len(batch) > 1:
                     warnings.warn(f"Batch embedding failed: {str(e)}. Trying one by one.")
-                    individual_embeddings = await asyncio.gather(*[self.embed_async(text) for text in batch])
+                    individual_embeddings = await asyncio.gather(*[
+                        self.embed_async(text) for text in batch
+                    ])
                     all_embeddings.extend(individual_embeddings)
                 else:
                     raise e

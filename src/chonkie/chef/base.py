@@ -1,9 +1,9 @@
 """Base class for chefs."""
 
+import asyncio
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Union
-import asyncio
 
 from chonkie.logger import get_logger
 from chonkie.types import Document

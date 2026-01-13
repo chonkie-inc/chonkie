@@ -3,9 +3,9 @@
 Porters allow the user to _export_ data from chonkie into a variety of formats for saving on disk or cloud blob storage. Porters make the implicit assumption that the data is not being used for querying, but rather for saving.
 """
 
+import asyncio
 from abc import ABC, abstractmethod
 from typing import Any
-import asyncio
 
 from chonkie.types import Chunk
 
@@ -38,6 +38,7 @@ class BasePorter(ABC):
         Args:
             chunks: The chunks to export.
             **kwargs: Additional keyword arguments.
+
         """
         return await asyncio.to_thread(self.export, chunks, **kwargs)
 

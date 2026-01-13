@@ -1,8 +1,8 @@
 """BaseFetcher is the base class for all fetchers."""
 
+import asyncio
 from abc import ABC, abstractmethod
 from typing import Any
-import asyncio
 
 
 class BaseFetcher(ABC):

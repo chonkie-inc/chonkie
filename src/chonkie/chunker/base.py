@@ -1,9 +1,9 @@
 """Base Class for All Chunkers."""
 
+import asyncio
 import warnings
 from abc import ABC, abstractmethod
 from typing import Sequence, Union
-import asyncio
 
 from tqdm import tqdm
 
@@ -182,39 +182,44 @@ class BaseChunker(ABC):
             return self._parallel_batch_processing(texts, show_progress)
         else:
             return self._sequential_batch_processing(texts, show_progress)
-    
+
     async def chunk_async(self, text: str) -> list[Chunk]:
         """Chunk the given text asynchronously.
-        
+
         Args:
             text (str): The text to chunk.
-            
+
         Returns:
             list[Chunk]: A list of Chunks.
+
         """
         return await asyncio.to_thread(self.chunk, text)
 
-    async def chunk_batch_async(self, texts: Sequence[str], show_progress: bool = True) -> list[list[Chunk]]:
+    async def chunk_batch_async(
+        self, texts: Sequence[str], show_progress: bool = True
+    ) -> list[list[Chunk]]:
         """Chunk a batch of texts asynchronously.
-        
+
         Args:
             texts (Sequence[str]): The texts to chunk.
             show_progress (bool): Whether to show progress.
-            
+
         Returns:
             list[list[Chunk]]: A list of lists of Chunks.
+
         """
         return await asyncio.to_thread(self.chunk_batch, texts, show_progress)
 
     def _shift_chunks(self, chunks: list[Chunk], start_offset: int) -> list[Chunk]:
         """Shift chunks by a start offset. Helper for chunking documents.
-        
+
         Args:
             chunks: The chunks to shift.
             start_offset: The offset to add to the start and end indices.
-            
+
         Returns:
             list[Chunk]: The shifted chunks.
+
         """
         return [
             Chunk(
@@ -261,7 +266,7 @@ class BaseChunker(ABC):
         if document.chunks:
             tasks = [self.chunk_async(c.text) for c in document.chunks]
             chunk_results = await asyncio.gather(*tasks)
-            
+
             chunks: list[Chunk] = []
             for old_chunk, new_chunks in zip(document.chunks, chunk_results):
                 chunks.extend(self._shift_chunks(new_chunks, old_chunk.start_index))

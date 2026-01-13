@@ -2,7 +2,6 @@
 
 import importlib.util as importutil
 import os
-import asyncio
 from typing import TYPE_CHECKING, Any, Optional
 
 from .base import BaseGenie
