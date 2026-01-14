@@ -225,13 +225,12 @@ class SlumberChunker(BaseChunker):
 
         raise ValueError(f"Could not extract integer from response: '{response}'")
 
-    def _get_split_index(self, prompt: str, current_pos: int, group_end_index: int) -> int:
+    def _get_split_index(self, prompt: str, current_pos: int) -> int:
         """Get the split index from the genie using the appropriate extraction mode.
 
         Args:
             prompt: The formatted prompt to send to the genie
             current_pos: The current position in the splits list
-            group_end_index: The end index of the current group
 
         Returns:
             The predicted split index
@@ -259,15 +258,14 @@ class SlumberChunker(BaseChunker):
             try:
                 response = self.genie.generate_json(prompt, self.Split)
                 return int(response["split_index"])
-            except (KeyError, TypeError, ValueError) as e:
+            except (KeyboardInterrupt, SystemExit):
+                raise
+            except Exception as e:
                 last_error = e
                 logger.warning(
                     f"JSON extraction attempt {attempt + 1}/{self.max_retries} failed: {e}"
                 )
                 continue
-            except Exception:
-                # Don't retry on unexpected errors (KeyboardInterrupt, etc.)
-                raise
 
         # All retries failed - log and use fallback
         logger.error(
@@ -294,15 +292,14 @@ class SlumberChunker(BaseChunker):
                 response = self.genie.generate(prompt)
                 index = self._extract_index_from_text(response)
                 return index
-            except ValueError as e:
+            except (KeyboardInterrupt, SystemExit):
+                raise
+            except Exception as e:
                 last_error = e
                 logger.warning(
                     f"Text extraction attempt {attempt + 1}/{self.max_retries} failed: {e}"
                 )
                 continue
-            except Exception:
-                # Don't retry on unexpected errors (KeyboardInterrupt, etc.)
-                raise
 
         # All retries failed - log and use fallback
         logger.error(
@@ -540,7 +537,7 @@ class SlumberChunker(BaseChunker):
             prompt = self.template.format(
                 passages="\n".join(prepared_split_texts[current_pos:group_end_index]),
             )
-            response = self._get_split_index(prompt, current_pos, group_end_index)
+            response = self._get_split_index(prompt, current_pos)
 
             # Make sure that the response doesn't bug out and return a index smaller
             # than the current position
