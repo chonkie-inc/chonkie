@@ -225,28 +225,29 @@ class SlumberChunker(BaseChunker):
 
         raise ValueError(f"Could not extract integer from response: '{response}'")
 
-    def _get_split_index(self, prompt: str, current_pos: int) -> int:
+    def _get_split_index(self, prompt: str, current_pos: int, group_end_index: int) -> int:
         """Get the split index from the genie using the appropriate extraction mode.
 
         Args:
             prompt: The formatted prompt to send to the genie
             current_pos: The current position in the splits list
+            group_end_index: The end index of the current group (fallback if extraction fails)
 
         Returns:
             The predicted split index
 
         """
         if self.extract_mode == "json":
-            return self._get_split_index_json(prompt, current_pos)
+            return self._get_split_index_json(prompt, group_end_index)
         else:
-            return self._get_split_index_text(prompt, current_pos)
+            return self._get_split_index_text(prompt, group_end_index)
 
-    def _get_split_index_json(self, prompt: str, current_pos: int) -> int:
+    def _get_split_index_json(self, prompt: str, group_end_index: int) -> int:
         """Get split index using JSON extraction mode with retry logic.
 
         Args:
             prompt: The formatted prompt
-            current_pos: Current position (used for fallback)
+            group_end_index: End index of current group (used for fallback)
 
         Returns:
             The split index from the JSON response
@@ -267,19 +268,19 @@ class SlumberChunker(BaseChunker):
                 )
                 continue
 
-        # All retries failed - log and use fallback
+        # All retries failed - keep passages together by returning group end
         logger.error(
             f"JSON extraction failed after {self.max_retries} attempts. "
-            f"Last error: {last_error}. Using fallback index."
+            f"Last error: {last_error}. Keeping passages together."
         )
-        return current_pos + 1
+        return group_end_index
 
-    def _get_split_index_text(self, prompt: str, current_pos: int) -> int:
+    def _get_split_index_text(self, prompt: str, group_end_index: int) -> int:
         """Get split index using text extraction mode with retry logic.
 
         Args:
             prompt: The formatted prompt
-            current_pos: Current position (used for fallback)
+            group_end_index: End index of current group (used for fallback)
 
         Returns:
             The extracted split index
@@ -301,13 +302,12 @@ class SlumberChunker(BaseChunker):
                 )
                 continue
 
-        # All retries failed - log and use fallback
+        # All retries failed - keep passages together by returning group end
         logger.error(
             f"Text extraction failed after {self.max_retries} attempts. "
-            f"Last error: {last_error}. Using fallback index."
+            f"Last error: {last_error}. Keeping passages together."
         )
-        # Fallback: return the next position to make progress
-        return current_pos + 1
+        return group_end_index
 
     def _split_text(self, text: str, recursive_level: RecursiveLevel) -> list[str]:
         """Split the text into chunks using the delimiters."""
@@ -540,7 +540,7 @@ class SlumberChunker(BaseChunker):
             prompt = self.template.format(
                 passages="\n".join(prepared_split_texts[current_pos:group_end_index]),
             )
-            response = self._get_split_index(prompt, current_pos)
+            response = self._get_split_index(prompt, current_pos, group_end_index)
 
             # Make sure that the response doesn't bug out and return a index smaller
             # than the current position
