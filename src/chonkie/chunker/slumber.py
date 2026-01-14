@@ -112,6 +112,7 @@ class SlumberChunker(BaseChunker):
         self.extract_mode = self._determine_extract_mode(extract_mode)
 
         # Lazy import pydantic only when using JSON mode
+        self.Split: Optional[type] = None
         if self.extract_mode == "json":
             try:
                 from pydantic import BaseModel
@@ -125,8 +126,6 @@ class SlumberChunker(BaseChunker):
                 split_index: int
 
             self.Split = Split
-        else:
-            self.Split = None  # Not needed for text mode
 
         # Set the parameters for the SlumberChunker
         self.chunk_size = chunk_size
