@@ -74,10 +74,10 @@ class SlumberChunker(BaseChunker):
         genie: Optional[BaseGenie] = None,
         tokenizer: Union[str, TokenizerProtocol] = "character",
         chunk_size: int = 2048,
-        rules: RecursiveRules = RecursiveRules(),
+        rules: Optional[RecursiveRules] = None,
         candidate_size: int = 128,
         min_characters_per_chunk: int = 24,
-        extract_mode: Optional[Literal["text", "json", "auto"]] = "auto",
+        extract_mode: Literal["text", "json", "auto"] = "auto",
         max_retries: int = 3,
         verbose: bool = True,
     ):
@@ -87,7 +87,7 @@ class SlumberChunker(BaseChunker):
             genie (Optional[BaseGenie]): The genie to use.
             tokenizer: The tokenizer to use.
             chunk_size (int): The size of the chunks to create.
-            rules (RecursiveRules): The rules to use to split the candidate chunks.
+            rules (Optional[RecursiveRules]): The rules to use to split the candidate chunks.
             candidate_size (int): The size of the candidate splits that the chunker will consider.
             min_characters_per_chunk (int): The minimum number of characters per chunk.
             extract_mode: Mode for extracting split index from LLM response.
@@ -130,7 +130,7 @@ class SlumberChunker(BaseChunker):
         # Set the parameters for the SlumberChunker
         self.chunk_size = chunk_size
         self.candidate_size = candidate_size
-        self.rules = rules
+        self.rules = rules if rules is not None else RecursiveRules()
         self.min_characters_per_chunk = min_characters_per_chunk
         self.verbose = verbose
 
@@ -356,12 +356,16 @@ class SlumberChunker(BaseChunker):
             # Add whitespace back; assumes that the whitespace is uniform across the text
             # if the whitespace is not uniform, the split will not be reconstructable.
             if recursive_level.include_delim == "prev":
-                splits = [" " + split for (i, split) in enumerate(candidate_splits) if i > 0]
-            elif recursive_level.include_delim == "next":
+                # Attach space to end of each segment (except last)
                 splits = [
-                    split + " "
-                    for (i, split) in enumerate(candidate_splits)
-                    if i < len(candidate_splits) - 1
+                    split + " " if i < len(candidate_splits) - 1 else split
+                    for i, split in enumerate(candidate_splits)
+                ]
+            elif recursive_level.include_delim == "next":
+                # Attach space to start of each segment (except first)
+                splits = [
+                    " " + split if i > 0 else split
+                    for i, split in enumerate(candidate_splits)
                 ]
             else:
                 splits = candidate_splits
@@ -450,7 +454,7 @@ class SlumberChunker(BaseChunker):
             ]
 
         # Do the first split based on the level provided
-        splits = self._split_text(text, self.rules.levels[level]) if self.rules.levels else []
+        splits = self._split_text(text, self.rules.levels[level])
 
         # Calculate the token_count of each of the splits
         token_counts = self.tokenizer.count_tokens_batch(splits)
@@ -482,7 +486,7 @@ class SlumberChunker(BaseChunker):
     def _prepare_splits(self, splits: list[Chunk]) -> list[str]:
         """Prepare the splits for the chunker."""
         return [
-            f"ID {i}: " + split.text.replace("\n", "").strip() for (i, split) in enumerate(splits)
+            f"ID {i}: " + split.text.replace("\n", " ").strip() for (i, split) in enumerate(splits)
         ]
 
     def _get_cumulative_token_counts(self, splits: list[Chunk]) -> list[int]:

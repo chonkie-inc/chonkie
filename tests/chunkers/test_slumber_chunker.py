@@ -272,7 +272,7 @@ class TestSlumberChunkerInternalMethods:
 
         assert len(prepared) == 3
         assert prepared[0] == "ID 0: First chunk"
-        assert prepared[1] == "ID 1: Second chunkwith newline"  # Newlines removed
+        assert prepared[1] == "ID 1: Second chunk with newline"  # Newlines replaced with space
         assert prepared[2] == "ID 2: Third chunk"
 
     def test_get_cumulative_token_counts(self, mock_genie: MockGenie) -> None:
