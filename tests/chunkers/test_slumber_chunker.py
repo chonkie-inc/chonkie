@@ -744,9 +744,7 @@ class TestSlumberChunkerTextMode:
                 return "1"
 
         genie = FlakeyTextGenie()
-        chunker = SlumberChunker(
-            genie=genie, extract_mode="text", max_retries=5, verbose=False
-        )
+        chunker = SlumberChunker(genie=genie, extract_mode="text", max_retries=5, verbose=False)
 
         chunks = chunker.chunk("Short text to chunk here.")
         assert len(chunks) >= 1
@@ -759,9 +757,7 @@ class TestSlumberChunkerTextMode:
                 return "This will never parse as a number"
 
         genie = AlwaysFailTextGenie()
-        chunker = SlumberChunker(
-            genie=genie, extract_mode="text", max_retries=2, verbose=False
-        )
+        chunker = SlumberChunker(genie=genie, extract_mode="text", max_retries=2, verbose=False)
 
         # Should still produce chunks using fallback
         chunks = chunker.chunk(sample_text)
@@ -770,9 +766,7 @@ class TestSlumberChunkerTextMode:
     def test_repr_includes_extract_mode(self) -> None:
         """Test __repr__ includes extract_mode and max_retries."""
         genie = MockGenie()
-        chunker = SlumberChunker(
-            genie=genie, extract_mode="text", max_retries=5, verbose=False
-        )
+        chunker = SlumberChunker(genie=genie, extract_mode="text", max_retries=5, verbose=False)
 
         repr_str = repr(chunker)
         assert "extract_mode=text" in repr_str

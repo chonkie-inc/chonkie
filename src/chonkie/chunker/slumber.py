@@ -166,9 +166,7 @@ class SlumberChunker(BaseChunker):
             # Auto-detect based on genie capabilities
             return self._detect_genie_json_support()
         else:
-            raise ValueError(
-                f"Invalid extract_mode: {mode}. Must be 'text', 'json', or 'auto'."
-            )
+            raise ValueError(f"Invalid extract_mode: {mode}. Must be 'text', 'json', or 'auto'.")
 
     def _detect_genie_json_support(self) -> Literal["text", "json"]:
         """Detect if the genie supports JSON generation.
@@ -195,9 +193,7 @@ class SlumberChunker(BaseChunker):
             )
             return "json"
         except Exception as e:
-            logger.warning(
-                f"Failed to detect genie JSON support: {e}, defaulting to text mode"
-            )
+            logger.warning(f"Failed to detect genie JSON support: {e}, defaulting to text mode")
             return "text"
 
     def _extract_index_from_text(self, response: str) -> int:
@@ -229,9 +225,7 @@ class SlumberChunker(BaseChunker):
 
         raise ValueError(f"Could not extract integer from response: '{response}'")
 
-    def _get_split_index(
-        self, prompt: str, current_pos: int, group_end_index: int
-    ) -> int:
+    def _get_split_index(self, prompt: str, current_pos: int, group_end_index: int) -> int:
         """Get the split index from the genie using the appropriate extraction mode.
 
         Args:
