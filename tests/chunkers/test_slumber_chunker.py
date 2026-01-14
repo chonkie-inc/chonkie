@@ -625,3 +625,160 @@ class TestSlumberChunkerIntegration:
 
         assert len(chunks_sentences) >= 1
         assert all(isinstance(chunk, Chunk) for chunk in chunks_sentences)
+
+
+class MockTextGenie(BaseGenie):
+    """Mock genie that only supports generate() (text generation), not JSON.
+
+    Used for testing text extraction mode.
+    """
+
+    def __init__(self, split_responses: Optional[list[int]] = None) -> None:
+        """Initialize mock genie with predefined responses.
+
+        Args:
+            split_responses: List of split indices to return as plain text.
+
+        """
+        self.split_responses = split_responses or [1]
+        self.call_count = 0
+        self.prompts: list[str] = []
+
+    def generate(self, prompt: str) -> str:
+        """Generate a text response with just the index number."""
+        self.prompts.append(prompt)
+        response_index = self.call_count % len(self.split_responses)
+        split_index = self.split_responses[response_index]
+        self.call_count += 1
+        return str(split_index)
+
+    # Note: generate_json is NOT overridden, so it raises NotImplementedError
+
+
+class TestSlumberChunkerTextMode:
+    """Test SlumberChunker text extraction mode."""
+
+    def test_text_mode_initialization(self) -> None:
+        """Test initialization with text mode."""
+        genie = MockTextGenie()
+        chunker = SlumberChunker(genie=genie, extract_mode="text", verbose=False)
+
+        assert chunker.extract_mode == "text"
+        assert chunker.Split is None  # Pydantic not needed for text mode
+
+    def test_json_mode_initialization(self) -> None:
+        """Test initialization with JSON mode."""
+        genie = MockGenie()
+        chunker = SlumberChunker(genie=genie, extract_mode="json", verbose=False)
+
+        assert chunker.extract_mode == "json"
+        assert chunker.Split is not None  # Pydantic schema needed for JSON
+
+    def test_auto_mode_detection_text(self) -> None:
+        """Test auto mode detects text-only genie."""
+        genie = MockTextGenie()
+        chunker = SlumberChunker(genie=genie, extract_mode="auto", verbose=False)
+
+        # Should auto-detect text mode since MockTextGenie doesn't override generate_json
+        assert chunker.extract_mode == "text"
+
+    def test_auto_mode_detection_json(self) -> None:
+        """Test auto mode detects JSON-capable genie."""
+        genie = MockGenie()
+        chunker = SlumberChunker(genie=genie, extract_mode="auto", verbose=False)
+
+        # Should auto-detect JSON mode since MockGenie overrides generate_json
+        assert chunker.extract_mode == "json"
+
+    def test_text_mode_chunking(self, sample_text: str) -> None:
+        """Test chunking with text extraction mode."""
+        genie = MockTextGenie([2, 3])
+        chunker = SlumberChunker(genie=genie, extract_mode="text", verbose=False)
+
+        chunks = chunker.chunk(sample_text)
+
+        assert len(chunks) >= 1
+        assert all(isinstance(chunk, Chunk) for chunk in chunks)
+
+    def test_extract_index_from_text_direct(self) -> None:
+        """Test _extract_index_from_text with direct integer."""
+        genie = MockGenie()
+        chunker = SlumberChunker(genie=genie, extract_mode="text", verbose=False)
+
+        assert chunker._extract_index_from_text("5") == 5
+        assert chunker._extract_index_from_text("  3  ") == 3
+        assert chunker._extract_index_from_text("0") == 0
+
+    def test_extract_index_from_text_with_noise(self) -> None:
+        """Test _extract_index_from_text extracts first integer."""
+        genie = MockGenie()
+        chunker = SlumberChunker(genie=genie, extract_mode="text", verbose=False)
+
+        assert chunker._extract_index_from_text("The answer is 7") == 7
+        assert chunker._extract_index_from_text("Split at: 3") == 3
+
+    def test_extract_index_from_text_invalid(self) -> None:
+        """Test _extract_index_from_text with invalid input."""
+        genie = MockGenie()
+        chunker = SlumberChunker(genie=genie, extract_mode="text", verbose=False)
+
+        with pytest.raises(ValueError):
+            chunker._extract_index_from_text("no numbers here")
+
+        with pytest.raises(ValueError):
+            chunker._extract_index_from_text("")
+
+    def test_text_mode_retry_on_failure(self, sample_text: str) -> None:
+        """Test text extraction retries on parsing failure."""
+
+        class FlakeyTextGenie(BaseGenie):
+            def __init__(self) -> None:
+                self.call_count = 0
+
+            def generate(self, prompt: str) -> str:
+                self.call_count += 1
+                if self.call_count < 3:
+                    return "Invalid response without numbers"
+                return "1"
+
+        genie = FlakeyTextGenie()
+        chunker = SlumberChunker(
+            genie=genie, extract_mode="text", max_retries=5, verbose=False
+        )
+
+        chunks = chunker.chunk("Short text to chunk here.")
+        assert len(chunks) >= 1
+
+    def test_text_mode_max_retries_fallback(self, sample_text: str) -> None:
+        """Test fallback when max retries exceeded."""
+
+        class AlwaysFailTextGenie(BaseGenie):
+            def generate(self, prompt: str) -> str:
+                return "This will never parse as a number"
+
+        genie = AlwaysFailTextGenie()
+        chunker = SlumberChunker(
+            genie=genie, extract_mode="text", max_retries=2, verbose=False
+        )
+
+        # Should still produce chunks using fallback
+        chunks = chunker.chunk(sample_text)
+        assert len(chunks) >= 1
+
+    def test_repr_includes_extract_mode(self) -> None:
+        """Test __repr__ includes extract_mode and max_retries."""
+        genie = MockGenie()
+        chunker = SlumberChunker(
+            genie=genie, extract_mode="text", max_retries=5, verbose=False
+        )
+
+        repr_str = repr(chunker)
+        assert "extract_mode='text'" in repr_str
+        assert "max_retries=5" in repr_str
+
+    def test_invalid_extract_mode(self) -> None:
+        """Test that invalid extract_mode raises ValueError."""
+        genie = MockGenie()
+
+        with pytest.raises(ValueError):
+            SlumberChunker(genie=genie, extract_mode="invalid", verbose=False)  # type: ignore
