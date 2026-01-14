@@ -4,7 +4,6 @@ import re
 from bisect import bisect_left
 from itertools import accumulate
 from typing import Literal, Optional, Union
-from xml.etree import ElementTree as ET
 
 from tqdm import tqdm
 
@@ -225,7 +224,7 @@ class SlumberChunker(BaseChunker):
             pass
 
         # Try to find any integer in the response
-        match = re.search(r"\b(\d+)\b", cleaned)
+        match = re.search(r"(\d+)", cleaned)
         if match:
             return int(match.group(1))
 
@@ -567,6 +566,6 @@ class SlumberChunker(BaseChunker):
             f"chunk_size={self.chunk_size}, "
             f"candidate_size={self.candidate_size}, "
             f"min_characters_per_chunk={self.min_characters_per_chunk}, "
-            f"extract_mode={self.extract_mode!r}, "
+            f"extract_mode={self.extract_mode}, "
             f"max_retries={self.max_retries})"
         )

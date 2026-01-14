@@ -664,7 +664,7 @@ class TestSlumberChunkerTextMode:
         chunker = SlumberChunker(genie=genie, extract_mode="text", verbose=False)
 
         assert chunker.extract_mode == "text"
-        assert chunker.Split is None  # Pydantic not needed for text mode
+        assert chunker.Split is None  # Pydantic is not needed for text mode
 
     def test_json_mode_initialization(self) -> None:
         """Test initialization with JSON mode."""
@@ -672,7 +672,7 @@ class TestSlumberChunkerTextMode:
         chunker = SlumberChunker(genie=genie, extract_mode="json", verbose=False)
 
         assert chunker.extract_mode == "json"
-        assert chunker.Split is not None  # Pydantic schema needed for JSON
+        assert chunker.Split is not None  # Pydantic schema is needed for JSON
 
     def test_auto_mode_detection_text(self) -> None:
         """Test auto mode detects text-only genie."""
@@ -773,7 +773,7 @@ class TestSlumberChunkerTextMode:
         )
 
         repr_str = repr(chunker)
-        assert "extract_mode='text'" in repr_str
+        assert "extract_mode=text" in repr_str
         assert "max_retries=5" in repr_str
 
     def test_invalid_extract_mode(self) -> None:
