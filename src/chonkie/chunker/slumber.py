@@ -364,8 +364,7 @@ class SlumberChunker(BaseChunker):
             elif recursive_level.include_delim == "next":
                 # Attach space to start of each segment (except first)
                 splits = [
-                    " " + split if i > 0 else split
-                    for i, split in enumerate(candidate_splits)
+                    " " + split if i > 0 else split for i, split in enumerate(candidate_splits)
                 ]
             else:
                 splits = candidate_splits
