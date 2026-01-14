@@ -245,32 +245,50 @@ class SlumberChunker(BaseChunker):
 
         """
         if self.extract_mode == "json":
-            return self._get_split_index_json(prompt)
+            return self._get_split_index_json(prompt, current_pos)
         else:
-            return self._get_split_index_text(prompt, current_pos, group_end_index)
+            return self._get_split_index_text(prompt, current_pos)
 
-    def _get_split_index_json(self, prompt: str) -> int:
-        """Get split index using JSON extraction mode.
+    def _get_split_index_json(self, prompt: str, current_pos: int) -> int:
+        """Get split index using JSON extraction mode with retry logic.
 
         Args:
             prompt: The formatted prompt
+            current_pos: Current position (used for fallback)
 
         Returns:
             The split index from the JSON response
 
         """
-        response = self.genie.generate_json(prompt, self.Split)
-        return int(response["split_index"])
+        last_error = None
 
-    def _get_split_index_text(
-        self, prompt: str, current_pos: int, group_end_index: int
-    ) -> int:
+        for attempt in range(self.max_retries):
+            try:
+                response = self.genie.generate_json(prompt, self.Split)
+                return int(response["split_index"])
+            except (KeyError, TypeError, ValueError) as e:
+                last_error = e
+                logger.warning(
+                    f"JSON extraction attempt {attempt + 1}/{self.max_retries} failed: {e}"
+                )
+                continue
+            except Exception:
+                # Don't retry on unexpected errors (KeyboardInterrupt, etc.)
+                raise
+
+        # All retries failed - log and use fallback
+        logger.error(
+            f"JSON extraction failed after {self.max_retries} attempts. "
+            f"Last error: {last_error}. Using fallback index."
+        )
+        return current_pos + 1
+
+    def _get_split_index_text(self, prompt: str, current_pos: int) -> int:
         """Get split index using text extraction mode with retry logic.
 
         Args:
             prompt: The formatted prompt
             current_pos: Current position (used for fallback)
-            group_end_index: End index of current group (used for fallback)
 
         Returns:
             The extracted split index

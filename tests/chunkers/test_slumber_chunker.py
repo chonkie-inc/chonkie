@@ -416,7 +416,7 @@ class TestSlumberChunkerEdgeCases:
     """Test SlumberChunker edge cases and error conditions."""
 
     def test_genie_json_parsing_error(self, sample_text: str) -> None:
-        """Test handling of genie JSON parsing errors."""
+        """Test handling of genie JSON parsing errors with retry and fallback."""
 
         class ErrorGenie(BaseGenie):
             def generate(self, prompt: str) -> str:
@@ -427,8 +427,10 @@ class TestSlumberChunkerEdgeCases:
 
         chunker = SlumberChunker(genie=ErrorGenie(), verbose=False)
 
-        with pytest.raises(json.JSONDecodeError):
-            chunker.chunk(sample_text)
+        # Should not raise - retry logic falls back gracefully
+        chunks = chunker.chunk(sample_text)
+        assert len(chunks) >= 1
+        assert all(isinstance(chunk, Chunk) for chunk in chunks)
 
     def test_very_small_candidate_size(self, sample_text: str) -> None:
         """Test with very small candidate size."""
