@@ -50,58 +50,54 @@ chonkie --help
 ```bash chunk
 chonkie chunk --help
 
-# Usage: chonkie chunk [OPTIONS] TEXT
-#
-# Chunk text using a specified chunker and optionally store it.
-#
-# ╭─ Arguments ────────────────────────────────────────────────────────────────────────────────────────────────────╮
-# │ *    text      TEXT  Text to chunk or path to file [required]                                                  │
-# ╰────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
-#
-# ╭─ Options ──────────────────────────────────────────────────────────────────────────────────────────────────────╮
-# │ --chunker           TEXT  Chunking method to use. Options: semantic, recursive, token, sentence, code, late,   │
-# │                           neural, slumber, table                                                               │
-# │                           [default: semantic]                                                                  │
-# │ --chunk-size        INT   Maximum number of tokens per chunk                                                   │
-# │ --chunk-overlap      INT   Number of tokens to overlap between chunks                                           │
-# │ --threshold         FLOAT  Threshold for semantic similarity (0-1)                                            │
-# │ --chunker-params    TEXT   Additional parameters for the chunker as key=value pairs (can be used multiple      │
-# │                           times, e.g., --chunker-params tokenizer=gpt2 --chunker-params min_characters_per_chunk=50) │
-# │ --handshaker        TEXT  Where to store the chunks. Options: chroma, elastic, milvus, mongodb, pgvector,      │
-# │                           pinecone, qdrant, turbopuffer, weaviate                                              │
-# │ --help                    Show this message and exit.                                                          │
-# ╰────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+#  Usage: chonkie chunk [OPTIONS] TEXT                                                                                                                                 
+#                                                                                                                                                                      
+# ╭─ Arguments ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+# │ *    text      TEXT  Text to chunk or path to file [required]                                                                                                     │
+# ╰───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+# ╭─ Options ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+# │ --chunker               TEXT     Chunking method to use. Options: code, fast, late, neural, recursive, semantic, sentence, slumber, table, token                  │
+# │                                  [default: semantic]                                                                                                              │
+# │ --chunk-size            INTEGER  Maximum number of tokens per chunk                                                                                               │
+# │ --chunk-overlap         INTEGER  Number of tokens to overlap between chunks                                                                                       │
+# │ --threshold             FLOAT    Threshold for semantic similarity (0-1)                                                                                          │
+# │ --chunker-params        TEXT     Additional parameters for the chunker as key=value pairs (e.g., --chunker-params tokenizer=gpt2 min_characters_per_chunk=50)     │
+# │ --handshaker            TEXT     Where to store the chunks. Options: chroma, elastic, milvus, mongodb, pgvector, pinecone, qdrant, turbopuffer, weaviate          │
+# │ --help                           Show this message and exit.                                                                                                      │
+# ╰───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
 
 ```
 ```bash pipeline
 chonkie pipeline --help
 
-# Usage: chonkie pipeline [OPTIONS] [TEXT]
+#  Usage: chonkie pipeline [OPTIONS] [TEXT]                                                                                  
 #
-# Run a processing pipeline on text or files.
+#  Run a processing pipeline on text or files.
 #
-# ╭─ Arguments ────────────────────────────────────────────────────────────────────────────────────────────────────╮
-# │   text      [TEXT]  Text to process or path to file                                                            │
-# ╰────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
-#
-# ╭─ Options ──────────────────────────────────────────────────────────────────────────────────────────────────────╮
-# │ --fetcher           TEXT  Fetcher method to use (e.g., file) [default: file]                                   │
-# │ --d                 TEXT  directory to process, if text is not a file                                          │
-# │ --ext               TEXT  file extensions to process, if d is specified, example ['.md', '.txt']               │
-# │ --chef              TEXT  Chef method to use (e.g., text, markdown)                                            │
-# │ --chef-params       TEXT  Parameters for the chef as key=value pairs (can be used multiple times)               │
-# │ --chunker           TEXT  Chunking method to use [default: semantic]                                           │
-# │ --chunk-size        INT   Maximum number of tokens per chunk                                                   │
-# │ --chunk-overlap      INT   Number of tokens to overlap between chunks                                           │
-# │ --threshold         FLOAT  Threshold for semantic similarity (0-1)                                               │
-# │ --chunker-params    TEXT   Additional parameters for the chunker as key=value pairs (can be used multiple      │
-# │                           times)                                                                               │
-# │ --refiner           TEXT  Refiner method to use                                                                │
-# │ --refiner-params    TEXT  Parameters for the refiner as key=value pairs (can be used multiple times)             │
-# │ --handshaker        TEXT  Handshaker method to use                                                             │
-# │ --handshaker-params TEXT  Parameters for the handshaker as key=value pairs (can be used multiple times)        │
-# │ --help                    Show this message and exit.                                                          │
-# ╰────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+# ╭─ Arguments ─────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+# │   text      [TEXT]  Text to process or path to file                                                                     │
+# ╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+# ╭─ Options ───────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+# │ --fetcher                  TEXT     Fetcher method to use (e.g., file) [default: file]                                  │
+# │ --d                        TEXT     directory to process, if text is not a file                                         │
+# │ --ext                      TEXT     file extensions to process, if d is specified, example ['.md', '.txt']              │
+# │ --chef                     TEXT     Chef method to use (e.g., text, markdown)                                           │
+# │ --chef-params              TEXT     Parameters for the chef as key=value pairs (e.g., --chef-params                     │
+# │                                     clean_whitespace=true)                                                              │
+# │ --chunker                  TEXT     Chunking method to use [default: semantic]                                          │
+# │ --chunk-size               INTEGER  Maximum number of tokens per chunk                                                  │
+# │ --chunk-overlap            INTEGER  Number of tokens to overlap between chunks                                          │
+# │ --threshold                FLOAT    Threshold for semantic similarity (0-1)                                             │
+# │ --chunker-params           TEXT     Additional parameters for the chunker as key=value pairs (e.g., --chunker-params    │
+# │                                     tokenizer=gpt2 min_characters_per_chunk=50)                                         │
+# │ --refiner                  TEXT     Refiner method to use                                                               │
+# │ --refiner-params           TEXT     Parameters for the refiner as key=value pairs (e.g., --refiner-params               │
+# │                                     context_size=50)                                                                    │
+# │ --handshaker               TEXT     Handshaker method to use                                                            │
+# │ --handshaker-params        TEXT     Parameters for the handshaker as key=value pairs (e.g., --handshaker-params         │
+# │                                     collection_name=documents)                                                          │
+# │ --help                              Show this message and exit.                                                         │
+# ╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
 
 ```
 </CodeGroup>
