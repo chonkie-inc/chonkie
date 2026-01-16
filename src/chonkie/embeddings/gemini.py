@@ -120,8 +120,8 @@ class GeminiEmbeddings(BaseEmbeddings):
             except Exception as e:
                 if attempt == self._max_retries - 1:
                     raise RuntimeError(
-                        f"Failed to get embeddings after {self._max_retries} attempts: {str(e)}",
-                    )
+                        f"Failed to get embeddings after {self._max_retries} attempts: {e}",
+                    ) from e
                 if self._show_warnings:
                     warnings.warn(f"Embedding attempt {attempt + 1} failed: {str(e)}. Retrying...")
 
@@ -188,7 +188,7 @@ class GeminiEmbeddings(BaseEmbeddings):
                             )
 
             except Exception as e:
-                raise RuntimeError(f"Failed to process batch: {str(e)}")
+                raise RuntimeError(f"Failed to process batch: {e}") from e
 
         return all_embeddings
 
