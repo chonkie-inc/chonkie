@@ -98,19 +98,29 @@ class FastChunker(BaseChunker):
         else:
             kwargs["delimiters"] = self.delimiters
 
-        # Get chunk offsets from memchunk
-        offsets = self._chunk_offsets(text, **kwargs)
+        # Encode to bytes for memchunk (which works with byte offsets)
+        text_bytes = text.encode("utf-8")
 
-        # Convert to Chunk objects
-        return [
-            Chunk(
-                text=text[start:end],
-                start_index=start,
-                end_index=end,
-                token_count=0,
+        # Get chunk offsets from memchunk (these are byte offsets)
+        offsets = self._chunk_offsets(text_bytes, **kwargs)
+
+        # Convert to Chunk objects by slicing bytes and decoding
+        # Track character position to convert byte offsets to char offsets
+        chunks = []
+        char_pos = 0
+        for start, end in offsets:
+            chunk_text = text_bytes[start:end].decode("utf-8")
+            chunk_char_len = len(chunk_text)
+            chunks.append(
+                Chunk(
+                    text=chunk_text,
+                    start_index=char_pos,
+                    end_index=char_pos + chunk_char_len,
+                    token_count=0,
+                )
             )
-            for start, end in offsets
-        ]
+            char_pos += chunk_char_len
+        return chunks
 
     def chunk_batch(self, texts: Sequence[str], show_progress: bool = True) -> List[List[Chunk]]:
         """Chunk a batch of texts.

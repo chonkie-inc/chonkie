@@ -1,8 +1,9 @@
 """Module containing the SlumberChunker."""
 
+import re
 from bisect import bisect_left
 from itertools import accumulate
-from typing import Optional, Union
+from typing import Literal, Optional, Union
 
 from tqdm import tqdm
 
@@ -24,19 +25,44 @@ except ImportError:
     _CYTHON_AVAILABLE = False
 
 
-PROMPT_TEMPLATE = """<task> You are given a set of texts between the starting tag <passages> and ending tag </passages>. Each text is labeled as 'ID `N`' where 'N' is the passage number. Your task is to find the first passage where the content clearly separates from the previous passages in topic and/or semantics. </task>
+JSON_PROMPT_TEMPLATE = """<task> You are given a set of texts between the starting tag <passages> and ending tag </passages>. Each text is labeled as 'ID `N`' where 'N' is the passage number. Your task is to find the first passage where the content clearly separates from the previous passages in topic and/or semantics. </task>
 
 <rules>
 Follow the following rules while finding the splitting passage:
 - Always return the answer as a JSON parsable object with the 'split_index' key having a value of the first passage where the topic changes.
 - Avoid very long groups of paragraphs. Aim for a good balance between identifying content shifts and keeping groups manageable.
-- If no clear `split_index` is found, return N + 1, where N is the index of the last passage. 
+- If no clear `split_index` is found, return N + 1, where N is the index of the last passage.
 </rules>
 
 <passages>
 {passages}
 </passages>
 """
+
+TEXT_PROMPT_TEMPLATE = """<context>
+You are chunking text for a RAG (Retrieval Augmented Generation) system.
+Good chunks should be topically coherent so that relevant information can be retrieved together.
+</context>
+
+<task>
+Find the first passage ID where the topic shifts enough to start a new chunk.
+</task>
+
+<examples>
+Example: If passages discuss "philosophy" then suddenly "cooking recipes", split there.
+Example: If passages all discuss aspects of the same topic, keep them together.
+</examples>
+
+<passages>
+{passages}
+</passages>
+
+<format>
+Return ONLY the ID number, or N+1 (where N is the last passage ID) if all passages should stay together.
+Do not include any explanation or additional text.
+</format>
+
+<answer>"""
 
 
 @chunker("slumber")
@@ -48,9 +74,11 @@ class SlumberChunker(BaseChunker):
         genie: Optional[BaseGenie] = None,
         tokenizer: Union[str, TokenizerProtocol] = "character",
         chunk_size: int = 2048,
-        rules: RecursiveRules = RecursiveRules(),
+        rules: Optional[RecursiveRules] = None,
         candidate_size: int = 128,
         min_characters_per_chunk: int = 24,
+        extract_mode: Literal["text", "json", "auto"] = "auto",
+        max_retries: int = 3,
         verbose: bool = True,
     ):
         """Initialize the SlumberChunker.
@@ -59,47 +87,227 @@ class SlumberChunker(BaseChunker):
             genie (Optional[BaseGenie]): The genie to use.
             tokenizer: The tokenizer to use.
             chunk_size (int): The size of the chunks to create.
-            rules (RecursiveRules): The rules to use to split the candidate chunks.
+            rules (Optional[RecursiveRules]): The rules to use to split the candidate chunks.
             candidate_size (int): The size of the candidate splits that the chunker will consider.
             min_characters_per_chunk (int): The minimum number of characters per chunk.
+            extract_mode: Mode for extracting split index from LLM response.
+                - "json": Use structured JSON output via generate_json() (requires genie support)
+                - "text": Use plain text generation via generate() and parse integer response
+                - "auto": Auto-detect based on genie capabilities (default)
+            max_retries (int): Maximum retries for text mode parsing failures.
             verbose (bool): Whether to print verbose output.
 
         """
         # Since the BaseChunker sets and defines the tokenizer for us, we don't have to worry.
         super().__init__(tokenizer)
 
-        try:
-            from pydantic import BaseModel
-        except ImportError as ie:
-            raise ImportError(
-                "The SlumberChunker requires the pydantic library to be installed. Please install it using `pip install chonkie[genie]`.",
-            ) from ie
-
-        class Split(BaseModel):  # type: ignore
-            split_index: int
-
-        self.Split = Split
-
         # If the genie is not provided, use the default GeminiGenie
         if genie is None:
             genie = GeminiGenie()
 
-        # Set the parameters for the SlumberChunker
         self.genie = genie
+        self.max_retries = max_retries
+
+        # Determine effective extract_mode
+        self.extract_mode = self._determine_extract_mode(extract_mode)
+
+        # Lazy import pydantic only when using JSON mode
+        self.Split: Optional[type] = None
+        if self.extract_mode == "json":
+            try:
+                from pydantic import BaseModel
+            except ImportError as ie:
+                raise ImportError(
+                    "The SlumberChunker requires the pydantic library for extract_mode='json'. "
+                    "Please install it using `pip install chonkie[genie]` or use extract_mode='text'.",
+                ) from ie
+
+            class Split(BaseModel):  # type: ignore
+                split_index: int
+
+            self.Split = Split
+
+        # Set the parameters for the SlumberChunker
         self.chunk_size = chunk_size
         self.candidate_size = candidate_size
-        self.rules = rules
+        self.rules = rules if rules is not None else RecursiveRules()
         self.min_characters_per_chunk = min_characters_per_chunk
         self.verbose = verbose
 
-        # Set the parameters for the default prompt template
-        self.template = PROMPT_TEMPLATE
+        # Set the template based on extract_mode
+        if self.extract_mode == "json":
+            self.template = JSON_PROMPT_TEMPLATE
+        else:
+            self.template = TEXT_PROMPT_TEMPLATE
         self.sep = "✄"
         self._CHARS_PER_TOKEN = 6.5
 
         # Set the _use_multiprocessing to False, since we don't know the
         # behaviour of the Genie under multiprocessing conditions
         self._use_multiprocessing = False
+
+    def _determine_extract_mode(
+        self, mode: Optional[Literal["text", "json", "auto"]]
+    ) -> Literal["text", "json"]:
+        """Determine the effective extract mode based on genie capabilities.
+
+        Args:
+            mode: The requested extract mode ("text", "json", or "auto")
+
+        Returns:
+            The effective extract mode to use ("text" or "json")
+
+        """
+        if mode == "json":
+            return "json"
+        elif mode == "text":
+            return "text"
+        elif mode == "auto" or mode is None:
+            # Auto-detect based on genie capabilities
+            return self._detect_genie_json_support()
+        else:
+            raise ValueError(f"Invalid extract_mode: {mode}. Must be 'text', 'json', or 'auto'.")
+
+    def _detect_genie_json_support(self) -> Literal["text", "json"]:
+        """Detect if the genie supports JSON generation.
+
+        Returns:
+            "json" if genie supports generate_json, "text" otherwise
+
+        """
+        try:
+            # Get the generate_json method from the genie's class
+            genie_method = type(self.genie).generate_json
+            base_method = BaseGenie.generate_json
+
+            # If the method is the same as the base class (not overridden), use text
+            if genie_method is base_method:
+                logger.debug(
+                    f"Genie {type(self.genie).__name__} does not override generate_json, using text mode"
+                )
+                return "text"
+
+            # Method is overridden, assume JSON support
+            logger.debug(
+                f"Genie {type(self.genie).__name__} overrides generate_json, using JSON mode"
+            )
+            return "json"
+        except Exception as e:
+            logger.warning(f"Failed to detect genie JSON support: {e}, defaulting to text mode")
+            return "text"
+
+    def _extract_index_from_text(self, response: str) -> int:
+        """Extract the integer index from a plain text response.
+
+        Args:
+            response: The raw text response from the genie
+
+        Returns:
+            The extracted split index as an integer
+
+        Raises:
+            ValueError: If no valid integer can be extracted
+
+        """
+        # Clean the response
+        cleaned = response.strip()
+
+        # Try direct integer parse first
+        try:
+            return int(cleaned)
+        except ValueError:
+            pass
+
+        # Try to find any integer in the response
+        match = re.search(r"(\d+)", cleaned)
+        if match:
+            return int(match.group(1))
+
+        raise ValueError(f"Could not extract integer from response: '{response}'")
+
+    def _get_split_index(self, prompt: str, current_pos: int, group_end_index: int) -> int:
+        """Get the split index from the genie using the appropriate extraction mode.
+
+        Args:
+            prompt: The formatted prompt to send to the genie
+            current_pos: The current position in the splits list
+            group_end_index: The end index of the current group (fallback if extraction fails)
+
+        Returns:
+            The predicted split index
+
+        """
+        if self.extract_mode == "json":
+            return self._get_split_index_json(prompt, group_end_index)
+        else:
+            return self._get_split_index_text(prompt, group_end_index)
+
+    def _get_split_index_json(self, prompt: str, group_end_index: int) -> int:
+        """Get split index using JSON extraction mode with retry logic.
+
+        Args:
+            prompt: The formatted prompt
+            group_end_index: End index of current group (used for fallback)
+
+        Returns:
+            The split index from the JSON response
+
+        """
+        last_error = None
+
+        for attempt in range(self.max_retries):
+            try:
+                response = self.genie.generate_json(prompt, self.Split)
+                return int(response["split_index"])
+            except (KeyboardInterrupt, SystemExit):
+                raise
+            except Exception as e:
+                last_error = e
+                logger.warning(
+                    f"JSON extraction attempt {attempt + 1}/{self.max_retries} failed: {e}"
+                )
+                continue
+
+        # All retries failed - keep passages together by returning group end
+        logger.error(
+            f"JSON extraction failed after {self.max_retries} attempts. "
+            f"Last error: {last_error}. Keeping passages together."
+        )
+        return group_end_index
+
+    def _get_split_index_text(self, prompt: str, group_end_index: int) -> int:
+        """Get split index using text extraction mode with retry logic.
+
+        Args:
+            prompt: The formatted prompt
+            group_end_index: End index of current group (used for fallback)
+
+        Returns:
+            The extracted split index
+
+        """
+        last_error = None
+
+        for attempt in range(self.max_retries):
+            try:
+                response = self.genie.generate(prompt)
+                index = self._extract_index_from_text(response)
+                return index
+            except (KeyboardInterrupt, SystemExit):
+                raise
+            except Exception as e:
+                last_error = e
+                logger.warning(
+                    f"Text extraction attempt {attempt + 1}/{self.max_retries} failed: {e}"
+                )
+                continue
+
+        # All retries failed - keep passages together by returning group end
+        logger.error(
+            f"Text extraction failed after {self.max_retries} attempts. "
+            f"Last error: {last_error}. Keeping passages together."
+        )
+        return group_end_index
 
     def _split_text(self, text: str, recursive_level: RecursiveLevel) -> list[str]:
         """Split the text into chunks using the delimiters."""
@@ -148,12 +356,15 @@ class SlumberChunker(BaseChunker):
             # Add whitespace back; assumes that the whitespace is uniform across the text
             # if the whitespace is not uniform, the split will not be reconstructable.
             if recursive_level.include_delim == "prev":
-                splits = [" " + split for (i, split) in enumerate(candidate_splits) if i > 0]
-            elif recursive_level.include_delim == "next":
+                # Attach space to end of each segment (except last)
                 splits = [
-                    split + " "
-                    for (i, split) in enumerate(candidate_splits)
-                    if i < len(candidate_splits) - 1
+                    split + " " if i < len(candidate_splits) - 1 else split
+                    for i, split in enumerate(candidate_splits)
+                ]
+            elif recursive_level.include_delim == "next":
+                # Attach space to start of each segment (except first)
+                splits = [
+                    " " + split if i > 0 else split for i, split in enumerate(candidate_splits)
                 ]
             else:
                 splits = candidate_splits
@@ -242,7 +453,7 @@ class SlumberChunker(BaseChunker):
             ]
 
         # Do the first split based on the level provided
-        splits = self._split_text(text, self.rules.levels[level]) if self.rules.levels else []
+        splits = self._split_text(text, self.rules.levels[level])
 
         # Calculate the token_count of each of the splits
         token_counts = self.tokenizer.count_tokens_batch(splits)
@@ -274,7 +485,7 @@ class SlumberChunker(BaseChunker):
     def _prepare_splits(self, splits: list[Chunk]) -> list[str]:
         """Prepare the splits for the chunker."""
         return [
-            f"ID {i}: " + split.text.replace("\n", "").strip() for (i, split) in enumerate(splits)
+            f"ID {i}: " + split.text.replace("\n", " ").strip() for (i, split) in enumerate(splits)
         ]
 
     def _get_cumulative_token_counts(self, splits: list[Chunk]) -> list[int]:
@@ -329,7 +540,7 @@ class SlumberChunker(BaseChunker):
             prompt = self.template.format(
                 passages="\n".join(prepared_split_texts[current_pos:group_end_index]),
             )
-            response = int(self.genie.generate_json(prompt, self.Split)["split_index"])
+            response = self._get_split_index(prompt, current_pos, group_end_index)
 
             # Make sure that the response doesn't bug out and return a index smaller
             # than the current position
@@ -361,9 +572,11 @@ class SlumberChunker(BaseChunker):
     def __repr__(self) -> str:
         """Return a string representation of the SlumberChunker."""
         return (
-            f"SlumberChunker(genie={self.genie},"
-            + f"tokenizer={self.tokenizer}, "
-            + f"chunk_size={self.chunk_size}, "
-            + f"candidate_size={self.candidate_size}, "
-            + f"min_characters_per_chunk={self.min_characters_per_chunk})"  # type: ignore
+            f"SlumberChunker(genie={self.genie}, "
+            f"tokenizer={self.tokenizer}, "
+            f"chunk_size={self.chunk_size}, "
+            f"candidate_size={self.candidate_size}, "
+            f"min_characters_per_chunk={self.min_characters_per_chunk}, "
+            f"extract_mode={self.extract_mode}, "
+            f"max_retries={self.max_retries})"
         )
