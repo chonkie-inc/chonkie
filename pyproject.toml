@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "chonkie"
-version = "1.5.2"
+version = "1.5.3"
 description = "🦛 CHONK your texts with Chonkie ✨ - The no-nonsense chunking library"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -209,7 +209,7 @@ packages = [
 [tool.ruff]
 line-length = 99
 exclude = ["*.ipynb"]
-lint.select = ["F", "I", "D"]
+lint.select = ["B904", "F", "I", "D"]
 lint.ignore = ["D211", "D213", "D203"]
 
 [tool.ruff.format]

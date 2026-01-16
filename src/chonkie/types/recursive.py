@@ -53,7 +53,7 @@ class RecursiveLevel:
             try:
                 re.compile(self.pattern)
             except re.error as e:
-                raise ValueError(f"Invalid regex pattern: {e}")
+                raise ValueError(f"Invalid regex pattern: {e}") from e
 
         if self.pattern_mode not in ["split", "extract"]:
             raise ValueError("pattern_mode must be either 'split' or 'extract'.")
