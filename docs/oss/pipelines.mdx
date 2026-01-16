@@ -92,6 +92,25 @@ docs = (Pipeline()
     .run(texts=["Text 1", "Text 2", "Text 3"]))
 ```
 
+### Asynchronous Execution
+
+For high-throughput applications (e.g., web servers, batch processing), use `run_async()`:
+
+```python
+import asyncio
+
+async def process_docs():
+    pipe = Pipeline().chunk_with("recursive")
+
+    # Run pipeline asynchronously
+    doc = await pipe.run_async(texts="Async processing is fast!")
+
+    # Process multiple concurrently
+    docs = await pipe.run_async(texts=["Doc 1", "Doc 2"])
+
+    return docs
+```
+
 ## Pipeline Methods
 
 ### fetch_from()

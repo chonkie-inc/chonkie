@@ -41,7 +41,7 @@ class AzureOpenAIGenie(BaseGenie):
         self.base_url = azure_endpoint
 
         try:
-            from openai import AzureOpenAI
+            from openai import AsyncAzureOpenAI, AzureOpenAI
         except ImportError as ie:
             raise ImportError(
                 "openai is not available. Please install it via `pip install chonkie[azure-openai]`",
@@ -49,6 +49,11 @@ class AzureOpenAIGenie(BaseGenie):
 
         if azure_api_key:
             self.client = AzureOpenAI(
+                azure_endpoint=azure_endpoint,
+                api_key=azure_api_key,
+                api_version=api_version,
+            )
+            self.async_client = AsyncAzureOpenAI(
                 azure_endpoint=azure_endpoint,
                 api_key=azure_api_key,
                 api_version=api_version,
@@ -65,6 +70,11 @@ class AzureOpenAIGenie(BaseGenie):
                 azure_ad_token_provider=token_provider,
                 api_version=api_version,
             )
+            self.async_client = AsyncAzureOpenAI(
+                azure_endpoint=azure_endpoint,
+                azure_ad_token_provider=token_provider,
+                api_version=api_version,
+            )
 
     def generate(self, prompt: str) -> str:
         """Generate a plain-text response."""
@@ -77,9 +87,32 @@ class AzureOpenAIGenie(BaseGenie):
             raise ValueError("Azure OpenAI response content is None")
         return content
 
+    async def generate_async(self, prompt: str) -> str:
+        """Generate a response asynchronously."""
+        response = await self.async_client.chat.completions.create(
+            model=self._deployment,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        content = response.choices[0].message.content
+        if content is None:
+            raise ValueError("Azure OpenAI response content is None")
+        return content
+
     def generate_json(self, prompt: str, schema: "BaseModel") -> dict[str, Any]:
         """Generate a structured JSON response based on a Pydantic schema."""
         response = self.client.beta.chat.completions.parse(
+            model=self._deployment,
+            messages=[{"role": "user", "content": prompt}],
+            response_format=schema,  # type: ignore[arg-type]
+        )
+        content = response.choices[0].message.parsed
+        if content is None:
+            raise ValueError("Azure OpenAI response content is None")
+        return content.model_dump()
+
+    async def generate_json_async(self, prompt: str, schema: "BaseModel") -> dict[str, Any]:
+        """Generate a structured JSON response asynchronously."""
+        response = await self.async_client.beta.chat.completions.parse(
             model=self._deployment,
             messages=[{"role": "user", "content": prompt}],
             response_format=schema,  # type: ignore[arg-type]
