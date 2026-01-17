@@ -173,39 +173,45 @@ EmbeddingsRegistry.register_types(
     "SentenceTransformer",
     SentenceTransformerEmbeddings,
 )
-EmbeddingsRegistry.register_model("all-minilm-l6-v2", SentenceTransformerEmbeddings)
-EmbeddingsRegistry.register_model("all-mpnet-base-v2", SentenceTransformerEmbeddings)
-EmbeddingsRegistry.register_model("multi-qa-mpnet-base-dot-v1", SentenceTransformerEmbeddings)
-EmbeddingsRegistry.register_model("all-MiniLM-L12-v2", SentenceTransformerEmbeddings)
-EmbeddingsRegistry.register_model("all-distilroberta-v1", SentenceTransformerEmbeddings)
-EmbeddingsRegistry.register_model("all-roberta-large-v1", SentenceTransformerEmbeddings)
-EmbeddingsRegistry.register_model("paraphrase-multilingual-MiniLM-L12-v2", SentenceTransformerEmbeddings)
-EmbeddingsRegistry.register_model("paraphrase-multilingual-mpnet-base-v2", SentenceTransformerEmbeddings)
-EmbeddingsRegistry.register_model("distiluse-base-multilingual-cased-v1", SentenceTransformerEmbeddings)
-EmbeddingsRegistry.register_model("distiluse-base-multilingual-cased-v2", SentenceTransformerEmbeddings)
-EmbeddingsRegistry.register_model("paraphrase-xlm-r-multilingual-v1", SentenceTransformerEmbeddings)
-EmbeddingsRegistry.register_model("paraphrase-MiniLM-L6-v2", SentenceTransformerEmbeddings)
-EmbeddingsRegistry.register_model("paraphrase-MiniLM-L3-v2", SentenceTransformerEmbeddings)
-EmbeddingsRegistry.register_model("paraphrase-mpnet-base-v2", SentenceTransformerEmbeddings)
-EmbeddingsRegistry.register_model("paraphrase-distilroberta-base-v2", SentenceTransformerEmbeddings)
-EmbeddingsRegistry.register_model("paraphrase-albert-small-v2", SentenceTransformerEmbeddings)
-EmbeddingsRegistry.register_model("paraphrase-TinyBERT-L6-v2", SentenceTransformerEmbeddings)
-EmbeddingsRegistry.register_model("multi-qa-MiniLM-L6-cos-v1", SentenceTransformerEmbeddings)
-EmbeddingsRegistry.register_model("multi-qa-distilbert-cos-v1", SentenceTransformerEmbeddings)
-EmbeddingsRegistry.register_model("multi-qa-mpnet-base-cos-v1", SentenceTransformerEmbeddings)
-EmbeddingsRegistry.register_model("msmarco-distilbert-base-v4", SentenceTransformerEmbeddings)
-EmbeddingsRegistry.register_model("msmarco-roberta-base-v3", SentenceTransformerEmbeddings)
-EmbeddingsRegistry.register_model("msmarco-distilbert-base-tas-b", SentenceTransformerEmbeddings)
-EmbeddingsRegistry.register_model("msmarco-MiniLM-L6-cos-v5", SentenceTransformerEmbeddings)
-EmbeddingsRegistry.register_model("msmarco-MiniLM-L12-cos-v5", SentenceTransformerEmbeddings)
-EmbeddingsRegistry.register_model("gtr-t5-large", SentenceTransformerEmbeddings)
-EmbeddingsRegistry.register_model("gtr-t5-xl", SentenceTransformerEmbeddings)
-EmbeddingsRegistry.register_model("sentence-t5-large", SentenceTransformerEmbeddings)
-EmbeddingsRegistry.register_model("sentence-t5-xl", SentenceTransformerEmbeddings)
-EmbeddingsRegistry.register_model("LaBSE", SentenceTransformerEmbeddings)
-EmbeddingsRegistry.register_model("allenai-specter", SentenceTransformerEmbeddings)
-EmbeddingsRegistry.register_model("average_word_embeddings_glove.6B.300d", SentenceTransformerEmbeddings)
-EmbeddingsRegistry.register_model("average_word_embeddings_komninos", SentenceTransformerEmbeddings)
+
+SENTENCE_TRANSFORMER_MODELS= [
+    "all-minilm-l6-v2",
+    "all-mpnet-base-v2",
+    "multi-qa-mpnet-base-dot-v1",
+    "all-MiniLM-L12-v2",
+    "all-distilroberta-v1",
+    "all-roberta-large-v1",
+    "paraphrase-multilingual-MiniLM-L12-v2",
+    "paraphrase-multilingual-mpnet-base-v2",
+    "distiluse-base-multilingual-cased-v1",
+    "distiluse-base-multilingual-cased-v2",
+    "paraphrase-xlm-r-multilingual-v1",
+    "paraphrase-MiniLM-L6-v2",
+    "paraphrase-MiniLM-L3-v2",
+    "paraphrase-mpnet-base-v2",
+    "paraphrase-distilroberta-base-v2",
+    "paraphrase-albert-small-v2",
+    "paraphrase-TinyBERT-L6-v2",
+    "multi-qa-MiniLM-L6-cos-v1",
+    "multi-qa-distilbert-cos-v1",
+    "multi-qa-mpnet-base-cos-v1",
+    "msmarco-distilbert-base-v4",
+    "msmarco-roberta-base-v3",
+    "msmarco-distilbert-base-tas-b",
+    "msmarco-MiniLM-L6-cos-v5",
+    "msmarco-MiniLM-L12-cos-v5",
+    "gtr-t5-large",
+    "gtr-t5-xl",
+    "sentence-t5-large",
+    "sentence-t5-xl",
+    "LaBSE",
+    "allenai-specter",
+    "average_word_embeddings_glove.6B.300d",
+    "average_word_embeddings_komninos",
+]
+
+for model_name in SENTENCE_TRANSFORMER_MODELS:
+    EmbeddingsRegistry.register_model(model_name, SentenceTransformerEmbeddings)
 
 # Register OpenAI embeddings with pattern
 EmbeddingsRegistry.register_provider("openai", OpenAIEmbeddings)
