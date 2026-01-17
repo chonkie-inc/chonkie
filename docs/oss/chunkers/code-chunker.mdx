@@ -15,10 +15,7 @@ The `CodeChunker` splits code into chunks based on its structure, leveraging Abs
 
 <Accordion title="Show all supported languages">
 
-
-Each language is identified by the **key** used with  
-`get_language(key)` and `get_parser(key)`.
-
+Each language is identified by the **key** used with `get_language(key)` and `get_parser(key)`.
 
  ### General-Purpose Programming Languages
 
@@ -48,7 +45,6 @@ Each language is identified by the **key** used with
 | TypeScript | `typescript` | MIT |
 | Zig | `zig` | MIT |
 
-
 ###  Web, UI & Markup
 
 | Language | Key | License |
@@ -66,7 +62,6 @@ Each language is identified by the **key** used with
 | XML | `xml` | MIT |
 | YAML | `yaml` | MIT |
 
-
  ### Config, Build & DevOps
 
 | Language | Key | License |
@@ -81,7 +76,6 @@ Each language is identified by the **key** used with
 | Prisma | `prisma` | MIT |
 | Requirements | `requirements` | MIT |
 
-
 ### Systems, GPU & Low-level
 
 | Language | Key | License |
@@ -94,8 +88,7 @@ Each language is identified by the **key** used with
 | Verilog | `verilog` | MIT |
 | VHDL | `vhdl` | MIT |
 | WGSL | `wgsl` | MIT |
-| WAST / WAT | `wast & wat` | Apache-2.0 + LLVM |
-
+| WAST / WAT | `wasm` | Apache-2.0 + LLVM |
 
 </Accordion>
 
@@ -148,7 +141,7 @@ chunker = CodeChunker(
 ```
 
 <Note>
-Use of Magika for Auto language detection may adversely affect performance of chunker. Prefer setting language parameter to a specific language to improve performance.
+Automatic language detection using Magika can impact performance. For best results, specify the language directly via the `language` parameter.
 </Note>
 
 ## Parameters
