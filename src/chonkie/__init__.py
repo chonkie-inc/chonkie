@@ -1,5 +1,13 @@
 """Main package for Chonkie."""
 
+import importlib.util
+import os
+import platform
+
+# Enable PyTorch fallback for MPS (Apple Silicon) to support operations like _embedding_bag
+if platform.system() == "Darwin" and importlib.util.find_spec("torch"):
+    os.environ.setdefault("PYTORCH_ENABLE_MPS_FALLBACK", "1")
+
 from .chef import BaseChef, MarkdownChef, TableChef, TextChef
 from .chunker import (
     BaseChunker,
