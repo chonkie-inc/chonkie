@@ -1,6 +1,7 @@
 """Cerebras Genie."""
 
 import importlib.util as importutil
+import json
 import os
 from typing import TYPE_CHECKING, Any, Optional
 
@@ -46,40 +47,45 @@ class CerebrasGenie(BaseGenie):
         self.client = Cerebras(api_key=self.api_key)
         self.model = model
 
+    def _extract_content(self, response: Any) -> str:
+        """Extract and validate content from API response."""
+        content = response.choices[0].message.content
+        if content is None:
+            raise ValueError("Cerebras response content is None")
+        return content
+
     def generate(self, prompt: str) -> str:
         """Generate a response based on the given prompt."""
         response = self.client.chat.completions.create(
             model=self.model,
             messages=[{"role": "user", "content": prompt}],
         )
-        content = response.choices[0].message.content
-        if content is None:
-            raise ValueError("Cerebras response content is None")
-        return content
+        return self._extract_content(response)
 
     def generate_json(self, prompt: str, schema: "BaseModel") -> dict[str, Any]:
-        """Generate a JSON response based on the given prompt and schema."""
+        """Generate a JSON response based on the given prompt and schema.
+
+        Note: Cerebras currently supports basic JSON mode. The schema is included
+        in the prompt to guide the model's output structure.
+        """
+        schema_json = json.dumps(schema.model_json_schema(), indent=2)
+        enhanced_prompt = (
+            f"{prompt}\n\nRespond with valid JSON matching this schema:\n{schema_json}"
+        )
         response = self.client.chat.completions.create(
             model=self.model,
-            messages=[{"role": "user", "content": prompt}],
+            messages=[{"role": "user", "content": enhanced_prompt}],
             response_format={"type": "json_object"},
         )
-        content = response.choices[0].message.content
-        if content is None:
-            raise ValueError("Cerebras response content is None")
-        import json
-
-        return json.loads(content)
+        return json.loads(self._extract_content(response))
 
     @classmethod
     def _is_available(cls) -> bool:
         """Check if all the dependencies are available in the environment."""
-        if (
+        return (
             importutil.find_spec("pydantic") is not None
-            and importutil.find_spec("cerebras") is not None
-        ):
-            return True
-        return False
+            and importutil.find_spec("cerebras.cloud.sdk") is not None
+        )
 
     def __repr__(self) -> str:
         """Return a string representation of the CerebrasGenie instance."""

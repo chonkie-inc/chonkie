@@ -1,6 +1,7 @@
 """Groq Genie."""
 
 import importlib.util as importutil
+import json
 import os
 from typing import TYPE_CHECKING, Any, Optional
 
@@ -46,40 +47,46 @@ class GroqGenie(BaseGenie):
         self.client = Groq(api_key=self.api_key)
         self.model = model
 
+    def _extract_content(self, response: Any) -> str:
+        """Extract and validate content from API response."""
+        content = response.choices[0].message.content
+        if content is None:
+            raise ValueError("Groq response content is None")
+        return content
+
     def generate(self, prompt: str) -> str:
         """Generate a response based on the given prompt."""
         response = self.client.chat.completions.create(
             model=self.model,
             messages=[{"role": "user", "content": prompt}],
         )
-        content = response.choices[0].message.content
-        if content is None:
-            raise ValueError("Groq response content is None")
-        return content
+        return self._extract_content(response)
 
     def generate_json(self, prompt: str, schema: "BaseModel") -> dict[str, Any]:
-        """Generate a JSON response based on the given prompt and schema."""
+        """Generate a JSON response based on the given prompt and schema.
+
+        Uses Groq's JSON schema support to enforce structured output.
+        """
         response = self.client.chat.completions.create(
             model=self.model,
             messages=[{"role": "user", "content": prompt}],
-            response_format={"type": "json_object"},
+            response_format={
+                "type": "json_schema",
+                "json_schema": {
+                    "name": "response",
+                    "schema": schema.model_json_schema(),
+                },
+            },
         )
-        content = response.choices[0].message.content
-        if content is None:
-            raise ValueError("Groq response content is None")
-        import json
-
-        return json.loads(content)
+        return json.loads(self._extract_content(response))
 
     @classmethod
     def _is_available(cls) -> bool:
         """Check if all the dependencies are available in the environment."""
-        if (
+        return (
             importutil.find_spec("pydantic") is not None
             and importutil.find_spec("groq") is not None
-        ):
-            return True
-        return False
+        )
 
     def __repr__(self) -> str:
         """Return a string representation of the GroqGenie instance."""
