@@ -13,7 +13,14 @@ To use the `SlumberChunker` via the API, check out the [API reference documentat
 
 ## Introducing Genie! 🧞
 
-The magic behind `SlumberChunker` is **Genie**, Chonkie's new interface for integrating generative models and APIs (like Gemini, OpenAI, Anthropic, etc.). Genie allows `SlumberChunker` to intelligently analyze text structure, identify optimal split points, and even summarize or rephrase content for the best possible chunk quality.
+The magic behind `SlumberChunker` is **Genie**, Chonkie's interface for integrating generative models and APIs. Genie allows `SlumberChunker` to intelligently analyze text structure, identify optimal split points, and even summarize or rephrase content for the best possible chunk quality.
+
+**Available Genies:**
+- `GeminiGenie` - Google Gemini APIs
+- `OpenAIGenie` - OpenAI APIs (also works with OpenAI-compatible providers)
+- `AzureOpenAIGenie` - Azure OpenAI APIs
+- `GroqGenie` - Fast inference on Groq hardware
+- `CerebrasGenie` - Fastest inference on Cerebras hardware
 
 <Card title="Requires [genie] Install" icon="wand-magic">
   To unleash the power of SlumberChunker and Genie, you need the `[genie]`
