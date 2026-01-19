@@ -101,12 +101,10 @@ def merge_params(explicit_params: dict[str, Any], parsed_params: dict[str, Any])
         Merged dictionary
 
     """
-    merged = parsed_params.copy()
-    # Explicit params override parsed params
-    for key, value in explicit_params.items():
-        if value is not None:
-            merged[key] = value
-    return merged
+    return dict(
+       parsed_params,
+       **{key: value for key, value in explicit_params.items() if value is not None},
+    )
 
 
 @app.command()
