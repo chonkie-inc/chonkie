@@ -68,6 +68,7 @@ class CerebrasGenie(BaseGenie):
         if content is None:
             raise ValueError("Cerebras response content is None")
         import json
+
         return json.loads(content)
 
     @classmethod

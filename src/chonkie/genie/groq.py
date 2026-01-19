@@ -68,6 +68,7 @@ class GroqGenie(BaseGenie):
         if content is None:
             raise ValueError("Groq response content is None")
         import json
+
         return json.loads(content)
 
     @classmethod
