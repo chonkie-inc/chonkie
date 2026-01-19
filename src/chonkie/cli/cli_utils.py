@@ -428,14 +428,8 @@ def pipeline(
                     if d_obj.chunks:
                         typer.echo(f"Chunked into {len(d_obj.chunks)} chunks:")
                         for i, chunk in enumerate(d_obj.chunks, 1):
-                            chunk_text = (
-                                getattr(chunk, "text", "")[:200] if hasattr(chunk, "text") else ""
-                            )
-                            token_count = (
-                                getattr(chunk, "token_count", 0)
-                                if hasattr(chunk, "token_count")
-                                else 0
-                            )
+                            chunk_text = str(getattr(chunk, "text", ""))[:200]
+                            token_count = getattr(chunk, "token_count", 0)
                             typer.echo(f"\n--- Chunk {i} ({token_count} tokens) ---")
                             # Truncate and escape problematic characters for display
                             preview = chunk_text.encode("ascii", errors="replace").decode("ascii")
