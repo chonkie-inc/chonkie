@@ -39,7 +39,7 @@ HANDSHAKES = sorted(
 )
 
 
-def parse_params(param_list: Optional[list[str]]) -> dict[str, Any]:
+def parse_params(param_list: list[str] | None) -> dict[str, Any]:
     """Parse a list of key=value strings into a dictionary.
 
     Args:
