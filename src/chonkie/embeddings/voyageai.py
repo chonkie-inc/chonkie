@@ -94,7 +94,7 @@ class VoyageAIEmbeddings(BaseEmbeddings):
         try:
             self._tokenizer = Tokenizer.from_pretrained(f"voyageai/{model}")
         except Exception as e:
-            raise ValueError(f"Failed to initialize tokenizer for model {model}: {e}")
+            raise ValueError(f"Failed to initialize tokenizer for model {model}: {e}") from e
 
         # Set the truncation, batch size, and output dimension
         self.truncation = truncation

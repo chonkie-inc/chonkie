@@ -213,7 +213,7 @@ packages = [
 [tool.ruff]
 line-length = 99
 exclude = ["*.ipynb"]
-lint.select = ["F", "I", "D"]
+lint.select = ["B904", "F", "I", "D"]
 lint.ignore = ["D211", "D213", "D203"]
 
 [tool.ruff.format]

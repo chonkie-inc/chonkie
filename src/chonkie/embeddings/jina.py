@@ -81,7 +81,7 @@ class JinaEmbeddings(BaseEmbeddings):
         try:
             self._tokenizer = Tokenizer.from_pretrained(f"jinaai/{model}")
         except Exception as e:
-            raise ValueError(f"Failed to initialize tokenizer for model {model}: {e}")
+            raise ValueError(f"Failed to initialize tokenizer for model {model}: {e}") from e
 
         # Initialize the URL for the API request
         self.url = "https://api.jina.ai/v1/embeddings"
@@ -141,7 +141,7 @@ class JinaEmbeddings(BaseEmbeddings):
                     # Raise a more informative error including the text that failed
                     raise ValueError(
                         f"Failed to embed text '{text[:50]}...' after {self._max_retries} attempts due to: {e}",
-                    )
+                    ) from e
                 warnings.warn(
                     f"Attempt {attempt + 1} failed for text '{text[:50]}...': {str(e)}. Retrying...",
                 )
@@ -204,10 +204,12 @@ class JinaEmbeddings(BaseEmbeddings):
                         if isinstance(text, str):
                             single_embeddings.append(self.embed(text))
                         else:
-                            raise ValueError(f"Invalid text type found in batch: {type(text)}")
+                            raise ValueError(
+                                f"Invalid text type found in batch: {type(text)}",
+                            ) from None
                     all_embeddings.extend(single_embeddings)
                 else:
-                    raise ValueError(f"Failed to embed text: {batch} due to: {e}")
+                    raise ValueError(f"Failed to embed text: {batch} due to: {e}") from e
         return all_embeddings
 
     def similarity(self, u: "np.ndarray", v: "np.ndarray") -> "np.float32":
