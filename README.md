@@ -243,15 +243,17 @@ Seamlessly works with various embedding model providers. Bring your favorite emb
 </details>
 
 <details>
-<summary><strong>🧞‍♂️ Power Up with Genies! Chonkie supports 3+ LLM providers!</strong></summary>
+<summary><strong>🧞‍♂️ Power Up with Genies! Chonkie supports 5+ LLM providers!</strong></summary>
 
 Genies provide interfaces to interact with Large Language Models (LLMs) for advanced chunking strategies or other tasks within the pipeline.
 
-| Genie Name     | Class              | Description                       | Optional Install        |
-| -------------- | ------------------ | --------------------------------- | ----------------------- |
-| `gemini`       | `GeminiGenie`      | Interact with Google Gemini APIs. | `chonkie[gemini]`       |
-| `openai`       | `OpenAIGenie`      | Interact with OpenAI APIs.        | `chonkie[openai]`       |
-| `azure-openai` | `AzureOpenAIGenie` | Interact with Azure OpenAI APIs.  | `chonkie[azure-openai]` |
+| Genie Name     | Class              | Description                                | Optional Install        |
+| -------------- | ------------------ | ------------------------------------------ | ----------------------- |
+| `gemini`       | `GeminiGenie`      | Interact with Google Gemini APIs.          | `chonkie[gemini]`       |
+| `openai`       | `OpenAIGenie`      | Interact with OpenAI APIs.                 | `chonkie[openai]`       |
+| `azure-openai` | `AzureOpenAIGenie` | Interact with Azure OpenAI APIs.           | `chonkie[azure-openai]` |
+| `groq`         | `GroqGenie`        | Fast inference on Groq hardware.           | `chonkie[groq]`         |
+| `cerebras`     | `CerebrasGenie`    | Fastest inference on Cerebras hardware.    | `chonkie[cerebras]`     |
 
 You can also use the `OpenAIGenie` to interact with any LLM provider that supports the OpenAI API format, by simply changing the `model`, `base_url`, and `api_key` parameters. For example, here's how to use the `OpenAIGenie` to interact with the `Llama-4-Maverick` model via OpenRouter:
 

@@ -132,6 +132,12 @@ pip install "chonkie[neural]"
 # For SlumberChunker support (Genie/LLM interface)
 pip install "chonkie[genie]"
 
+# For Groq Genie support (fast inference)
+pip install "chonkie[groq]"
+
+# For Cerebras Genie support (fastest inference)
+pip install "chonkie[cerebras]"
+
 # For installing multiple features together
 pip install "chonkie[st, code, genie]"
 
@@ -193,6 +199,8 @@ Here's what each installation option adds:
 | 'code'              | + tree-sitter, tree-sitter-language-pack, magika          |
 | 'neural'            | + transformers, torch (or tensorflow/flax), sentencepiece |
 | 'genie'             | + pydantic, google-genai                                  |
+| 'groq'              | + pydantic, groq                                          |
+| 'cerebras'          | + pydantic, cerebras-cloud-sdk                            |
 | 'all'               | all above dependencies                                    |
 
 _(Note: Specific dependencies for `[genie]` might vary slightly based on implementation details and chosen models/APIs.)_
