@@ -210,7 +210,8 @@ class BaseChunker(ABC):
         """
         return await asyncio.to_thread(self.chunk_batch, texts, show_progress)
 
-    def _shift_chunks(self, chunks: list[Chunk], start_offset: int) -> list[Chunk]:
+    @staticmethod
+    def _shift_chunks(chunks: list[Chunk], start_offset: int) -> list[Chunk]:
         """Shift chunks by a start offset. Helper for chunking documents.
 
         Args:
