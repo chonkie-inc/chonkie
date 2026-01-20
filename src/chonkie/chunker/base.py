@@ -3,8 +3,8 @@
 import asyncio
 import warnings
 from abc import ABC, abstractmethod
-from typing import Sequence, Union
 from dataclasses import replace
+from typing import Sequence, Union
 
 from tqdm import tqdm
 

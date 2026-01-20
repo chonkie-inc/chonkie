@@ -64,6 +64,7 @@ class BaseGenie(ABC):
             
         Returns:
             list[str]: List of generated responses.
+
         """
         semaphore = asyncio.Semaphore(max_concurrency)
 
@@ -97,6 +98,7 @@ class BaseGenie(ABC):
             
         Returns:
             list[Any]: List of generated JSON responses.
+
         """
         semaphore = asyncio.Semaphore(max_concurrency)
 
