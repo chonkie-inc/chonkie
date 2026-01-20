@@ -93,6 +93,8 @@ azure-openai = [
     "openai>=1.0.0",
     "pydantic>=2.0.0",
 ]
+groq = ["pydantic>=2.0.0", "groq>=0.4.0"]
+cerebras = ["pydantic>=2.0.0", "cerebras-cloud-sdk>=1.0.0"]
 voyageai = ["tokenizers>=0.16.0", "voyageai>=0.3.2"]
 cohere = ["tokenizers>=0.16.0", "cohere>=5.13.0"]
 jina = ["tokenizers>=0.16.0"]
@@ -133,6 +135,8 @@ all = [
     "jsonschema>=4.23.0",
     "pydantic>=2.0.0",
     "google-genai>=1.0.0",
+    "groq>=0.4.0",
+    "cerebras-cloud-sdk>=1.0.0",
     "transformers>=4.0.0",
     "torch>=2.0.0, <3.0",
     "chromadb>=1.0.0",

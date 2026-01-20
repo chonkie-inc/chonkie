@@ -29,7 +29,7 @@ from .embeddings import (
     VoyageAIEmbeddings,
 )
 from .fetcher import BaseFetcher, FileFetcher
-from .genie import AzureOpenAIGenie, BaseGenie, GeminiGenie, OpenAIGenie
+from .genie import AzureOpenAIGenie, BaseGenie, CerebrasGenie, GeminiGenie, GroqGenie, OpenAIGenie
 from .handshakes import (
     BaseHandshake,
     ChromaHandshake,
@@ -109,7 +109,9 @@ __all__ = (
     # genie
     "AzureOpenAIGenie",
     "BaseGenie",
+    "CerebrasGenie",
     "GeminiGenie",
+    "GroqGenie",
     "OpenAIGenie",
     # handshakes
     "BaseHandshake",
