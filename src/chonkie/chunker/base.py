@@ -4,6 +4,7 @@ import asyncio
 import warnings
 from abc import ABC, abstractmethod
 from typing import Sequence, Union
+from dataclasses import replace
 
 from tqdm import tqdm
 
@@ -223,11 +224,10 @@ class BaseChunker(ABC):
 
         """
         return [
-            Chunk(
-                text=c.text,
+            replace(
+                c,
                 start_index=c.start_index + start_offset,
                 end_index=c.end_index + start_offset,
-                token_count=c.token_count,
             )
             for c in chunks
         ]
