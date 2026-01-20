@@ -57,11 +57,11 @@ class BaseGenie(ABC):
         self, prompts: list[str], max_concurrency: int = 10
     ) -> list[str]:
         """Generate a batch of responses asynchronously.
-        
+
         Args:
             prompts: List of prompts to generate responses for.
             max_concurrency: Maximum number of concurrent requests. Defaults to 10.
-            
+
         Returns:
             list[str]: List of generated responses.
 
@@ -90,12 +90,12 @@ class BaseGenie(ABC):
         self, prompts: list[str], schema: Any, max_concurrency: int = 10
     ) -> list[Any]:
         """Generate a batch of JSON responses asynchronously.
-        
+
         Args:
             prompts: List of prompts to generate responses for.
             schema: The schema for the JSON response.
             max_concurrency: Maximum number of concurrent requests. Defaults to 10.
-            
+
         Returns:
             list[Any]: List of generated JSON responses.
 
@@ -106,6 +106,4 @@ class BaseGenie(ABC):
             async with semaphore:
                 return await self.generate_json_async(prompt, schema)
 
-        return await asyncio.gather(*[
-            _bounded_generate_json(prompt) for prompt in prompts
-        ])
+        return await asyncio.gather(*[_bounded_generate_json(prompt) for prompt in prompts])
