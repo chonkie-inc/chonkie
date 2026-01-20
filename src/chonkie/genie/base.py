@@ -53,9 +53,25 @@ class BaseGenie(ABC):
         """Generate a batch of responses based on the given prompts."""
         return [self.generate(prompt) for prompt in prompts]
 
-    async def generate_batch_async(self, prompts: list[str]) -> list[str]:
-        """Generate a batch of responses asynchronously."""
-        return await asyncio.gather(*[self.generate_async(prompt) for prompt in prompts])
+    async def generate_batch_async(
+        self, prompts: list[str], max_concurrency: int = 10
+    ) -> list[str]:
+        """Generate a batch of responses asynchronously.
+        
+        Args:
+            prompts: List of prompts to generate responses for.
+            max_concurrency: Maximum number of concurrent requests. Defaults to 10.
+            
+        Returns:
+            list[str]: List of generated responses.
+        """
+        semaphore = asyncio.Semaphore(max_concurrency)
+
+        async def _bounded_generate(prompt: str) -> str:
+            async with semaphore:
+                return await self.generate_async(prompt)
+
+        return await asyncio.gather(*[_bounded_generate(prompt) for prompt in prompts])
 
     def generate_json(self, prompt: str, schema: Any) -> Any:
         """Generate a JSON response based on the given prompt and BaseModel schema."""
@@ -69,8 +85,25 @@ class BaseGenie(ABC):
         """Generate a batch of JSON responses based on the given prompts and BaseModel schema."""
         return [self.generate_json(prompt, schema) for prompt in prompts]
 
-    async def generate_json_batch_async(self, prompts: list[str], schema: Any) -> list[Any]:
-        """Generate a batch of JSON responses asynchronously."""
+    async def generate_json_batch_async(
+        self, prompts: list[str], schema: Any, max_concurrency: int = 10
+    ) -> list[Any]:
+        """Generate a batch of JSON responses asynchronously.
+        
+        Args:
+            prompts: List of prompts to generate responses for.
+            schema: The schema for the JSON response.
+            max_concurrency: Maximum number of concurrent requests. Defaults to 10.
+            
+        Returns:
+            list[Any]: List of generated JSON responses.
+        """
+        semaphore = asyncio.Semaphore(max_concurrency)
+
+        async def _bounded_generate_json(prompt: str) -> Any:
+            async with semaphore:
+                return await self.generate_json_async(prompt, schema)
+
         return await asyncio.gather(*[
-            self.generate_json_async(prompt, schema) for prompt in prompts
+            _bounded_generate_json(prompt) for prompt in prompts
         ])
