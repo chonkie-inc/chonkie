@@ -174,7 +174,7 @@ EmbeddingsRegistry.register_types(
     SentenceTransformerEmbeddings,
 )
 
-SENTENCE_TRANSFORMER_MODELS= [
+for model in [
     "all-minilm-l6-v2",
     "all-mpnet-base-v2",
     "multi-qa-mpnet-base-dot-v1",
@@ -208,10 +208,8 @@ SENTENCE_TRANSFORMER_MODELS= [
     "allenai-specter",
     "average_word_embeddings_glove.6B.300d",
     "average_word_embeddings_komninos",
-]
-
-for model_name in SENTENCE_TRANSFORMER_MODELS:
-    EmbeddingsRegistry.register_model(model_name, SentenceTransformerEmbeddings)
+]:
+    EmbeddingsRegistry.register_model(model, SentenceTransformerEmbeddings)
 
 # Register OpenAI embeddings with pattern
 EmbeddingsRegistry.register_provider("openai", OpenAIEmbeddings)
