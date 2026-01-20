@@ -152,12 +152,6 @@ class OpenAIEmbeddings(BaseEmbeddings):
                 return self._tokenizer.decode(tokens[:max_tokens])
         return text
 
-    def _process_embedding_response(self, response: Any) -> list[np.ndarray]:
-        """Process the response from the OpenAI API. Helper function for embed batch."""
-        # Sort embeddings by index as OpenAI might return them in different order
-        sorted_embeddings = sorted(response.data, key=lambda x: x.index)
-        return [np.array(e.embedding, dtype=np.float32) for e in sorted_embeddings]
-
     def embed(self, text: str) -> np.ndarray:
         """Get embeddings for a single text."""
         text = self._truncate(text)
@@ -175,6 +169,13 @@ class OpenAIEmbeddings(BaseEmbeddings):
             input=text,
         )
         return np.array(response.data[0].embedding, dtype=np.float32)
+
+    @staticmethod
+    def _process_embedding_response(response: Any) -> list[np.ndarray]:
+        """Process the response from the OpenAI API. Helper function for embed batch."""
+        # Sort embeddings by index as OpenAI might return them in different order
+        sorted_embeddings = sorted(response.data, key=lambda x: x.index)
+        return [np.array(e.embedding, dtype=np.float32) for e in sorted_embeddings]
 
     def embed_batch(self, texts: list[str]) -> list[np.ndarray]:
         """Get embeddings for multiple texts using batched API calls."""
