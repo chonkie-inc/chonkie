@@ -1,156 +1,166 @@
 """Main package for Chonkie."""
 
+from .chef import BaseChef, MarkdownChef, TableChef, TextChef
 from .chunker import (
     BaseChunker,
     CodeChunker,
+    FastChunker,
     LateChunker,
     NeuralChunker,
     RecursiveChunker,
-    SDPMChunker,
     SemanticChunker,
     SentenceChunker,
     SlumberChunker,
+    TableChunker,
     TokenChunker,
 )
+from .cloud import chunker, refineries
 from .embeddings import (
     AutoEmbeddings,
+    AzureOpenAIEmbeddings,
     BaseEmbeddings,
     CohereEmbeddings,
     GeminiEmbeddings,
     JinaEmbeddings,
+    LiteLLMEmbeddings,
     Model2VecEmbeddings,
     OpenAIEmbeddings,
     SentenceTransformerEmbeddings,
     VoyageAIEmbeddings,
 )
-from .friends import (
+from .fetcher import BaseFetcher, FileFetcher
+from .genie import AzureOpenAIGenie, BaseGenie, CerebrasGenie, GeminiGenie, GroqGenie, OpenAIGenie
+from .handshakes import (
     BaseHandshake,
-    BasePorter,
     ChromaHandshake,
-    JSONPorter,
+    ElasticHandshake,
+    MilvusHandshake,
+    MongoDBHandshake,
+    PgvectorHandshake,
+    PineconeHandshake,
     QdrantHandshake,
     TurbopufferHandshake,
+    WeaviateHandshake,
 )
-from .genie import (
-    BaseGenie,
-    GeminiGenie,
-    OpenAIGenie,
-)
-from .refinery import (
-    BaseRefinery,
-    EmbeddingsRefinery,
-    OverlapRefinery,
-)
+from .pipeline import Pipeline
+from .porters import BasePorter, DatasetsPorter, JSONPorter
+from .refinery import BaseRefinery, EmbeddingsRefinery, OverlapRefinery
 from .tokenizer import (
+    AutoTokenizer,
+    ByteTokenizer,
     CharacterTokenizer,
+    RowTokenizer,
     Tokenizer,
+    TokenizerProtocol,
     WordTokenizer,
 )
 from .types import (
     Chunk,
-    CodeChunk,
-    Context,
-    LateChunk,
-    RecursiveChunk,
+    Document,
+    LanguageConfig,
+    MarkdownCode,
+    MarkdownDocument,
+    MarkdownImage,
+    MarkdownTable,
+    MergeRule,
     RecursiveLevel,
     RecursiveRules,
-    SemanticChunk,
-    SemanticSentence,
     Sentence,
-    SentenceChunk,
+    SplitRule,
 )
-from .utils import (
-    Hubbie,
-    Visualizer,
+from .utils import Hubbie, Visualizer
+
+__all__ = (
+    # chef
+    "BaseChef",
+    "MarkdownChef",
+    "TableChef",
+    "TextChef",
+    # chunker
+    "BaseChunker",
+    "CodeChunker",
+    "FastChunker",
+    "LateChunker",
+    "NeuralChunker",
+    "RecursiveChunker",
+    "SemanticChunker",
+    "SentenceChunker",
+    "SlumberChunker",
+    "TableChunker",
+    "TokenChunker",
+    # cloud
+    "chunker",
+    "refineries",
+    # embeddings
+    "AutoEmbeddings",
+    "AzureOpenAIEmbeddings",
+    "BaseEmbeddings",
+    "CohereEmbeddings",
+    "GeminiEmbeddings",
+    "JinaEmbeddings",
+    "LiteLLMEmbeddings",
+    "Model2VecEmbeddings",
+    "OpenAIEmbeddings",
+    "SentenceTransformerEmbeddings",
+    "VoyageAIEmbeddings",
+    # fetcher
+    "BaseFetcher",
+    "FileFetcher",
+    # genie
+    "AzureOpenAIGenie",
+    "BaseGenie",
+    "CerebrasGenie",
+    "GeminiGenie",
+    "GroqGenie",
+    "OpenAIGenie",
+    # handshakes
+    "BaseHandshake",
+    "ChromaHandshake",
+    "ElasticHandshake",
+    "MilvusHandshake",
+    "MongoDBHandshake",
+    "PgvectorHandshake",
+    "PineconeHandshake",
+    "QdrantHandshake",
+    "TurbopufferHandshake",
+    "WeaviateHandshake",
+    # pipeline
+    "Pipeline",
+    # porters
+    "BasePorter",
+    "DatasetsPorter",
+    "JSONPorter",
+    # refinery
+    "BaseRefinery",
+    "EmbeddingsRefinery",
+    "OverlapRefinery",
+    # tokenizer
+    "AutoTokenizer",
+    "ByteTokenizer",
+    "CharacterTokenizer",
+    "RowTokenizer",
+    "Tokenizer",
+    "TokenizerProtocol",
+    "WordTokenizer",
+    # types
+    "Chunk",
+    "Document",
+    "LanguageConfig",
+    "MarkdownCode",
+    "MarkdownDocument",
+    "MarkdownImage",
+    "MarkdownTable",
+    "MergeRule",
+    "RecursiveLevel",
+    "RecursiveRules",
+    "Sentence",
+    "SplitRule",
+    # utils
+    "Hubbie",
+    "Visualizer",
 )
 
 # This hippo grows with every release 🦛✨~
-__version__ = "1.0.8"
+__version__ = "1.5.3"
 __name__ = "chonkie"
 __author__ = "🦛 Chonkie Inc"
-
-# Add basic package metadata to __all__
-__all__ = [
-    "__name__",
-    "__version__",
-    "__author__",
-]
-
-# Add all data classes to __all__
-__all__ += [
-    "Context",
-    "Chunk",
-    "RecursiveChunk",
-    "RecursiveLevel",
-    "RecursiveRules",
-    "SentenceChunk",
-    "SemanticChunk",
-    "Sentence",
-    "SemanticSentence",
-    "LateChunk",
-    "CodeChunk",
-]
-
-# Add all tokenizer classes to __all__
-__all__ += [
-    "Tokenizer",
-    "CharacterTokenizer",
-    "WordTokenizer",
-]
-
-# Add all chunker classes to __all__
-__all__ += [
-    "BaseChunker",
-    "TokenChunker",
-    "SentenceChunker",
-    "SemanticChunker",
-    "SDPMChunker",
-    "RecursiveChunker",
-    "LateChunker",
-    "CodeChunker",
-    "SlumberChunker",
-    "NeuralChunker",
-]
-
-# Add all embeddings classes to __all__
-__all__ += [
-    "BaseEmbeddings",
-    "Model2VecEmbeddings",
-    "SentenceTransformerEmbeddings",
-    "OpenAIEmbeddings",
-    "CohereEmbeddings",
-    "GeminiEmbeddings",
-    "AutoEmbeddings",
-    "JinaEmbeddings",
-    "VoyageAIEmbeddings",
-]
-
-# Add all refinery classes to __all__
-__all__ += [
-    "BaseRefinery",
-    "OverlapRefinery",
-    "EmbeddingsRefinery",
-]
-
-# Add all utils classes to __all__
-__all__ += [
-    "Hubbie",
-    "Visualizer",
-]
-
-# Add all genie classes to __all__
-__all__ += [
-    "BaseGenie",
-    "GeminiGenie",
-    "OpenAIGenie",
-]
-
-# Add all friends classes to __all__
-__all__ += [
-    "BasePorter",
-    "BaseHandshake",
-    "JSONPorter",
-    "ChromaHandshake",
-    "QdrantHandshake",
-    "TurbopufferHandshake",
-]

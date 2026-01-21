@@ -1,6 +1,6 @@
 """Test the ChromaHandshake class."""
+
 import uuid
-from typing import List
 from unittest.mock import Mock, patch
 
 import pytest
@@ -18,14 +18,14 @@ try:
 except ImportError:
     chromadb = None
     # Define dummy types/exceptions if import fails
-    NotFoundError = type(None) # type: ignore
+    NotFoundError = type(None)  # type: ignore
     ChromaClientType = type(None)
     ChromaPersistentClientType = type(None)
 
 import chromadb
 
 from chonkie import ChromaHandshake
-from chonkie.friends.handshakes.chroma import ChromaEmbeddingFunction
+from chonkie.handshakes.chroma import ChromaEmbeddingFunction
 from chonkie.types import Chunk
 
 # Mark all tests in this module to be skipped if chromadb is not installed
@@ -35,31 +35,34 @@ pytestmark = pytest.mark.skipif(chromadb is None, reason="chromadb not installed
 @pytest.fixture(autouse=True)
 def mock_embeddings():
     """Mock AutoEmbeddings to avoid downloading models in CI."""
-    with patch('chonkie.embeddings.AutoEmbeddings.get_embeddings') as mock_get_embeddings:
+    with patch("chonkie.embeddings.AutoEmbeddings.get_embeddings") as mock_get_embeddings:
         # Create a mock embedding model
         mock_embedding = Mock()
-        
+
         # Mock the embed method to return consistent results
         def mock_embed_single(text):
             return [0.1] * 128
-        
+
         # Mock the embed_batch method to return the right number of embeddings
         def mock_embed_batch(texts):
             return [[0.1] * 128] * len(texts)  # Return one embedding per text
-        
+
         mock_embedding.embed.side_effect = mock_embed_single
         mock_embedding.embed_batch.side_effect = mock_embed_batch
         mock_embedding.dimension = 128
+        # Make sure __str__ returns a string, not a callable
+        mock_embedding.__str__ = Mock(return_value="MockEmbeddingModel")
         mock_get_embeddings.return_value = mock_embedding
         yield mock_get_embeddings
 
 
 # Sample Chunks for testing
-SAMPLE_CHUNKS: List[Chunk] = [
+SAMPLE_CHUNKS: list[Chunk] = [
     Chunk(text="This is the first chunk.", start_index=0, end_index=25, token_count=6),
     Chunk(text="This is the second chunk.", start_index=26, end_index=52, token_count=6),
     Chunk(text="Another chunk follows.", start_index=53, end_index=75, token_count=4),
 ]
+
 
 def test_chroma_handshake_init_default() -> None:
     """Test ChromaHandshake initialization with default settings (random collection name)."""
@@ -76,22 +79,23 @@ def test_chroma_handshake_init_default() -> None:
     # Clean up the collection
     handshake.client.delete_collection(handshake.collection_name)
 
+
 def test_chroma_handshake_init_specific_collection() -> None:
     """Test ChromaHandshake initialization with a specific collection name."""
     collection_name = "test-collection-chonkie"
     # Ensure collection doesn't exist initially
     # Need to instantiate a client locally for cleanup check
-    client = chromadb.Client() # type: ignore[name-defined]
+    client = chromadb.Client()  # type: ignore[name-defined]
     try:
         client.delete_collection(collection_name)
-    except NotFoundError: # Use the correct exception
-        pass # It's fine if it doesn't exist
+    except NotFoundError:  # Use the correct exception
+        pass  # It's fine if it doesn't exist
 
     handshake = ChromaHandshake(collection_name=collection_name)
     assert handshake.collection_name == collection_name
     # Check type name
     assert type(handshake.client).__name__ == "Client"
-    collection = client.get_collection(collection_name) # Use local client to check
+    collection = client.get_collection(collection_name)  # Use local client to check
     assert collection.name == collection_name
 
     # Test get_or_create_collection logic (initialize again with same name)
@@ -99,11 +103,12 @@ def test_chroma_handshake_init_specific_collection() -> None:
     assert handshake_again.collection_name == collection_name
     # Check type name
     assert type(handshake_again.client).__name__ == "Client"
-    collection_again = client.get_collection(collection_name) # Use local client to check
+    collection_again = client.get_collection(collection_name)  # Use local client to check
     assert collection_again.name == collection_name
 
     # Clean up using the local client instance
     client.delete_collection(collection_name)
+
 
 # def test_chroma_handshake_init_persistent_client(tmp_path: Path) -> None:
 #     """Test ChromaHandshake initialization with a persistent client path."""
@@ -141,23 +146,25 @@ def test_chroma_handshake_init_specific_collection() -> None:
 #     verify_client.delete_collection(collection_name)
 #     verify_client.reset() # Also reset the verification client
 
+
 def test_chroma_handshake_is_available() -> None:
     """Test the _is_available check."""
-    handshake = ChromaHandshake()
-    assert handshake._is_available() is True
-    # Clean up
-    handshake.client.delete_collection(handshake.collection_name)
+    assert ChromaHandshake._is_available()
+
 
 def test_chroma_handshake_generate_id() -> None:
     """Test the _generate_id method."""
     handshake = ChromaHandshake()
     chunk = SAMPLE_CHUNKS[0]
     index = 0
-    expected_id_str = str(uuid.uuid5(uuid.NAMESPACE_OID, f"{handshake.collection_name}::chunk-{index}:{chunk.text}"))
+    expected_id_str = str(
+        uuid.uuid5(uuid.NAMESPACE_OID, f"{handshake.collection_name}::chunk-{index}:{chunk.text}"),
+    )
     generated_id = handshake._generate_id(index, chunk)
     assert generated_id == expected_id_str
     # Clean up
     handshake.client.delete_collection(handshake.collection_name)
+
 
 def test_chroma_handshake_generate_metadata() -> None:
     """Test the _generate_metadata method."""
@@ -173,38 +180,40 @@ def test_chroma_handshake_generate_metadata() -> None:
     # Clean up
     handshake.client.delete_collection(handshake.collection_name)
 
+
 def test_chroma_handshake_write_single_chunk() -> None:
     """Test writing a single Chunk."""
     handshake = ChromaHandshake()
     chunk = SAMPLE_CHUNKS[0]
-    
+
     handshake.write(chunk)
-    
+
     # Verify the chunk exists in the collection
     collection = handshake.client.get_collection(handshake.collection_name)
     results = collection.get(include=["documents", "metadatas"])
-    
+
     assert len(results["ids"]) == 1
     assert results["documents"][0] == chunk.text
     assert results["metadatas"][0]["start_index"] == chunk.start_index
     assert results["metadatas"][0]["end_index"] == chunk.end_index
     assert results["metadatas"][0]["token_count"] == chunk.token_count
-    
+
     # Clean up
     handshake.client.delete_collection(handshake.collection_name)
+
 
 def test_chroma_handshake_write_multiple_chunks() -> None:
     """Test writing multiple Chunks."""
     handshake = ChromaHandshake()
-    
+
     handshake.write(SAMPLE_CHUNKS)
-    
+
     # Verify the chunks exist
     collection = handshake.client.get_collection(handshake.collection_name)
     results = collection.get(include=["documents", "metadatas"])
-    
+
     assert len(results["ids"]) == len(SAMPLE_CHUNKS)
-    
+
     # Check if documents match (order might not be guaranteed by get)
     retrieved_docs = sorted(results["documents"])
     expected_docs = sorted([c.text for c in SAMPLE_CHUNKS])
@@ -228,23 +237,24 @@ def test_chroma_handshake_write_upsert() -> None:
     """Test the upsert behavior of the write method."""
     handshake = ChromaHandshake()
     chunk = SAMPLE_CHUNKS[0]
-    
+
     # Write the chunk once
     handshake.write(chunk)
     collection = handshake.client.get_collection(handshake.collection_name)
     results_before = collection.get()
     assert len(results_before["ids"]) == 1
-    
+
     # Write the exact same chunk again
     handshake.write(chunk)
     results_after = collection.get()
-    
+
     # Count should remain the same due to upsert
     assert len(results_after["ids"]) == 1
-    assert results_before["ids"] == results_after["ids"] # IDs should be identical
-    
+    assert results_before["ids"] == results_after["ids"]  # IDs should be identical
+
     # Clean up
     handshake.client.delete_collection(handshake.collection_name)
+
 
 def test_chroma_handshake_repr() -> None:
     """Test the __repr__ method."""
@@ -254,7 +264,8 @@ def test_chroma_handshake_repr() -> None:
     # Clean up
     handshake.client.delete_collection(handshake.collection_name)
 
-# Note: Testing the embedding function directly might require significant setup 
-# or mocking, which was explicitly excluded. The write tests implicitly cover 
+
+# Note: Testing the embedding function directly might require significant setup
+# or mocking, which was explicitly excluded. The write tests implicitly cover
 # that the embedding function is called during collection creation and potentially during upsert.
 # Also, testing _import_dependencies failure case without mocking is difficult.

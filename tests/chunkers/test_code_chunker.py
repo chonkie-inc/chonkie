@@ -1,8 +1,9 @@
 """Test the CodeChunker class."""
+
 import pytest
 
 from chonkie import CodeChunker
-from chonkie.types.code import CodeChunk
+from chonkie.types import Chunk
 
 
 @pytest.fixture
@@ -54,7 +55,6 @@ def test_code_chunker_initialization() -> None:
     """Test CodeChunker initialization."""
     chunker = CodeChunker(language="python", chunk_size=128)
     assert chunker.chunk_size == 128
-    assert chunker.return_type == "chunks"
     assert chunker.parser is not None
 
 
@@ -65,12 +65,12 @@ def test_code_chunker_chunking_python(python_code: str) -> None:
 
     assert isinstance(chunks, list)
     assert len(chunks) > 0
-    assert all(isinstance(chunk, CodeChunk) for chunk in chunks)
+    assert all(isinstance(chunk, Chunk) for chunk in chunks)
     assert all(chunk.text is not None for chunk in chunks)
     assert all(chunk.start_index is not None for chunk in chunks)
     assert all(chunk.end_index is not None for chunk in chunks)
     assert all(chunk.token_count is not None for chunk in chunks)
-    assert all(chunk.nodes is not None for chunk in chunks)
+    # Note: nodes attribute is no longer part of base Chunk
 
 
 def test_code_chunker_reconstruction_python(python_code: str) -> None:
@@ -87,8 +87,10 @@ def test_code_chunker_chunk_size_python(python_code: str) -> None:
     chunker = CodeChunker(language="python", chunk_size=chunk_size)
     chunks = chunker.chunk(python_code)
     # Allow for some leeway as splitting happens at node boundaries
-    assert all(chunk.token_count < chunk_size + 20 for chunk in chunks[:-1]) # Check all but last chunk rigorously
-    assert chunks[-1].token_count > 0 # Last chunk must have content
+    assert all(
+        chunk.token_count < chunk_size + 20 for chunk in chunks[:-1]
+    )  # Check all but last chunk rigorously
+    assert chunks[-1].token_count > 0  # Last chunk must have content
 
 
 def test_code_chunker_indices_python(python_code: str) -> None:
@@ -99,19 +101,19 @@ def test_code_chunker_indices_python(python_code: str) -> None:
     for chunk in chunks:
         assert chunk.start_index == current_index
         assert chunk.end_index == current_index + len(chunk.text)
-        assert chunk.text == python_code[chunk.start_index:chunk.end_index]
+        assert chunk.text == python_code[chunk.start_index : chunk.end_index]
         current_index = chunk.end_index
     assert current_index == len(python_code)
 
 
-def test_code_chunker_return_type_texts(python_code: str) -> None:
-    """Test return_type='texts'."""
-    chunker = CodeChunker(language="python", chunk_size=50, return_type="texts")
-    texts = chunker.chunk(python_code)
-    assert isinstance(texts, list)
-    assert len(texts) > 0
-    assert all(isinstance(text, str) for text in texts)
-    reconstructed_text = "".join(texts)
+def test_code_chunker_return_type_chunks(python_code: str) -> None:
+    """Test that chunker returns Chunk objects."""
+    chunker = CodeChunker(language="python", chunk_size=50)
+    chunks = chunker.chunk(python_code)
+    assert isinstance(chunks, list)
+    assert len(chunks) > 0
+    assert all(isinstance(chunk, Chunk) for chunk in chunks)
+    reconstructed_text = "".join(chunk.text for chunk in chunks)
     assert reconstructed_text == python_code
 
 
@@ -121,10 +123,10 @@ def test_code_chunker_empty_input() -> None:
     chunks = chunker.chunk("")
     assert chunks == []
 
-    # Test return_type='texts'
-    chunker = CodeChunker(language="python", return_type="texts")
-    texts = chunker.chunk("")
-    assert texts == []
+    # Test with default chunker (returns chunks)
+    chunker_default = CodeChunker(language="python")
+    chunks_default = chunker_default.chunk("")
+    assert chunks_default == []
 
 
 def test_code_chunker_whitespace_input() -> None:
@@ -133,10 +135,10 @@ def test_code_chunker_whitespace_input() -> None:
     chunks = chunker.chunk("   \n\t\n  ")
     assert chunks == []
 
-    # Test return_type='texts'
-    chunker = CodeChunker(language="python", return_type="texts")
-    texts = chunker.chunk("   \n\t\n  ")
-    assert texts == []
+    # Test with default chunker (returns chunks)
+    chunker_default = CodeChunker(language="python")
+    chunks_default = chunker_default.chunk("   \n\t\n  ")
+    assert chunks_default == []
 
 
 def test_code_chunker_chunking_javascript(js_code: str) -> None:
@@ -146,7 +148,7 @@ def test_code_chunker_chunking_javascript(js_code: str) -> None:
 
     assert isinstance(chunks, list)
     assert len(chunks) > 0
-    assert all(isinstance(chunk, CodeChunk) for chunk in chunks)
+    assert all(isinstance(chunk, Chunk) for chunk in chunks)
     reconstructed_text = "".join(chunk.text for chunk in chunks)
     assert reconstructed_text == js_code
 
@@ -166,4 +168,4 @@ def test_code_chunker_chunk_size_javascript(js_code: str) -> None:
     chunks = chunker.chunk(js_code)
     # Allow for some leeway
     assert all(chunk.token_count < chunk_size + 15 for chunk in chunks[:-1])
-    assert chunks[-1].token_count > 0 
+    assert chunks[-1].token_count > 0

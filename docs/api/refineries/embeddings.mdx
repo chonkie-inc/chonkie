@@ -1,0 +1,98 @@
+---
+title: "Embeddings Refinery"
+api: "POST /v1/refine/embeddings"
+description: "Add vector embeddings to chunks for semantic search and RAG"
+---
+
+The Embeddings Refinery adds vector embeddings to your chunks, enabling semantic search and retrieval.
+
+## Request
+
+#### Parameters
+
+<ParamField path="chunks" type="array" required>
+  Array of chunk objects to add embeddings to. Each chunk must have `text`,
+  `start_index`, `end_index`, and `token_count` fields.
+</ParamField>
+
+<ParamField
+  path="embedding_model"
+  type="string"
+  default="minishlab/potion-retrieval-32M"
+>
+  The embedding model to use. Supports Hugging Face and OpenAI models.
+  <Info> Need another model? Reach out to us at support@chonkie.ai </Info>
+</ParamField>
+
+## Response
+
+#### Returns
+
+Array of chunks with added `embedding` field.
+
+<ResponseField name="text" type="string">
+  The original chunk text.
+</ResponseField>
+
+<ResponseField name="start_index" type="integer">
+  Starting position in original text.
+</ResponseField>
+
+<ResponseField name="end_index" type="integer">
+  Ending position in original text.
+</ResponseField>
+
+<ResponseField name="token_count" type="integer">
+  Number of tokens in the chunk.
+</ResponseField>
+
+<ResponseField name="embedding" type="array">
+  Vector embedding as array of floats.
+</ResponseField>
+
+## Examples
+
+<CodeGroup>
+
+```python Python
+from chonkie.cloud import TokenChunker, EmbeddingsRefinery
+
+chunker = TokenChunker(chunk_size=512)
+chunks = chunker.chunk("Your text here...")
+
+refinery = EmbeddingsRefinery(
+    embedding_model="minishlab/potion-retrieval-32M"
+)
+refined_chunks = refinery.refine(chunks)
+```
+
+```javascript JavaScript
+import { TokenChunker, EmbeddingsRefinery } from "@chonkiejs/cloud";
+
+const chunker = new TokenChunker({ chunkSize: 512 });
+const chunks = await chunker.chunk({ text: "Your text here..." });
+
+const refinery = new EmbeddingsRefinery({
+  embeddingModel: "minishlab/potion-retrieval-32M",
+});
+const refinedChunks = await refinery.refine(chunks);
+```
+
+```bash cURL
+curl -X POST https://api.chonkie.ai/v1/refine/embeddings \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "chunks": [
+      {
+        "text": "Your text here...",
+        "start_index": 0,
+        "end_index": 17,
+        "token_count": 4
+      }
+    ],
+    "embedding_model": "minishlab/potion-retrieval-32M"
+  }'
+```
+
+</CodeGroup>

@@ -53,3 +53,7 @@ Thumbs.db
 notebooks/*
 CLAUDE.md
 .temp/*
+chroma/*
+.chaider/*
+.chaiderignore
+test-env/*

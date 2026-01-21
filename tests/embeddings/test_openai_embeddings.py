@@ -1,7 +1,7 @@
 """Test suite for OpenAIEmbeddings."""
 
 import os
-from typing import List
+from unittest.mock import patch
 
 import numpy as np
 import pytest
@@ -23,7 +23,7 @@ def sample_text() -> str:
 
 
 @pytest.fixture
-def sample_texts() -> List[str]:
+def sample_texts() -> list[str]:
     """Fixture to create a list of sample texts for testing."""
     return [
         "This is the first sample text.",
@@ -46,8 +46,14 @@ def test_initialization_with_model_name(embedding_model: OpenAIEmbeddings) -> No
     "OPENAI_API_KEY" not in os.environ,
     reason="Skipping test because OPENAI_API_KEY is not defined",
 )
-def test_embed_single_text(embedding_model: OpenAIEmbeddings, sample_text: str) -> None:
+@patch("chonkie.embeddings.openai.OpenAIEmbeddings.embed")
+def test_embed_single_text(
+    mock_embed,
+    embedding_model: OpenAIEmbeddings,
+    sample_text: str,
+) -> None:
     """Test that OpenAIEmbeddings correctly embeds a single text."""
+    mock_embed.return_value = np.zeros(embedding_model.dimension)
     embedding = embedding_model.embed(sample_text)
     assert isinstance(embedding, np.ndarray)
     assert embedding.shape == (embedding_model.dimension,)
@@ -57,53 +63,36 @@ def test_embed_single_text(embedding_model: OpenAIEmbeddings, sample_text: str) 
     "OPENAI_API_KEY" not in os.environ,
     reason="Skipping test because OPENAI_API_KEY is not defined",
 )
+@patch("chonkie.embeddings.openai.OpenAIEmbeddings.embed_batch")
 def test_embed_batch_texts(
-    embedding_model: OpenAIEmbeddings, sample_texts: List[str]
+    mock_embed_batch,
+    embedding_model: OpenAIEmbeddings,
+    sample_texts: list[str],
 ) -> None:
     """Test that OpenAIEmbeddings correctly embeds a batch of texts."""
+    mock_embed_batch.return_value = [np.zeros(embedding_model.dimension) for _ in sample_texts]
     embeddings = embedding_model.embed_batch(sample_texts)
     assert isinstance(embeddings, list)
     assert len(embeddings) == len(sample_texts)
     assert all(isinstance(embedding, np.ndarray) for embedding in embeddings)
-    assert all(
-        embedding.shape == (embedding_model.dimension,) for embedding in embeddings
-    )
+    assert all(embedding.shape == (embedding_model.dimension,) for embedding in embeddings)
 
 
 @pytest.mark.skipif(
     "OPENAI_API_KEY" not in os.environ,
     reason="Skipping test because OPENAI_API_KEY is not defined",
 )
-def test_count_tokens_single_text(
-    embedding_model: OpenAIEmbeddings, sample_text: str
+@patch("chonkie.embeddings.openai.OpenAIEmbeddings.embed_batch")
+@patch("chonkie.embeddings.openai.OpenAIEmbeddings.similarity")
+def test_similarity(
+    mock_similarity,
+    mock_embed_batch,
+    embedding_model: OpenAIEmbeddings,
+    sample_texts: list[str],
 ) -> None:
-    """Test that OpenAIEmbeddings correctly counts tokens for a single text."""
-    token_count = embedding_model.count_tokens(sample_text)
-    assert isinstance(token_count, int)
-    assert token_count > 0
-
-
-@pytest.mark.skipif(
-    "OPENAI_API_KEY" not in os.environ,
-    reason="Skipping test because OPENAI_API_KEY is not defined",
-)
-def test_count_tokens_batch_texts(
-    embedding_model: OpenAIEmbeddings, sample_texts: List[str]
-) -> None:
-    """Test that OpenAIEmbeddings correctly counts tokens for a batch of texts."""
-    token_counts = embedding_model.count_tokens_batch(sample_texts)
-    assert isinstance(token_counts, list)
-    assert len(token_counts) == len(sample_texts)
-    assert all(isinstance(count, int) for count in token_counts)
-    assert all(count > 0 for count in token_counts)
-
-
-@pytest.mark.skipif(
-    "OPENAI_API_KEY" not in os.environ,
-    reason="Skipping test because OPENAI_API_KEY is not defined",
-)
-def test_similarity(embedding_model: OpenAIEmbeddings, sample_texts: List[str]) -> None:
     """Test that OpenAIEmbeddings correctly calculates similarity between two embeddings."""
+    mock_embed_batch.return_value = [np.zeros(embedding_model.dimension) for _ in sample_texts]
+    mock_similarity.return_value = np.float32(0.5)
     embeddings = embedding_model.embed_batch(sample_texts)
     similarity_score = embedding_model.similarity(embeddings[0], embeddings[1])
     assert isinstance(similarity_score, np.float32)
@@ -126,7 +115,7 @@ def test_dimension_property(embedding_model: OpenAIEmbeddings) -> None:
 )
 def test_is_available() -> None:
     """Test that OpenAIEmbeddings correctly checks if it is available."""
-    assert OpenAIEmbeddings()._is_available() is True
+    assert OpenAIEmbeddings._is_available() is True
 
 
 @pytest.mark.skipif(

@@ -1,0 +1,29 @@
+name: Static Type Check
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  type-check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install uv and set-up python
+        uses: astral-sh/setup-uv@v7
+        with:
+          python-version: "3.13"
+          version: latest
+          enable-cache: true
+          cache-dependency-glob: "pyproject.toml"
+
+      - name: Run mypy type checking
+        run: uv run --all-extras --dev mypy src/chonkie
+
+      - name: Run mypy on tests (optional)
+        run: |
+          uv run --all-extras --dev mypy tests/ || echo "Type checking tests is optional and may have errors"
+        continue-on-error: true

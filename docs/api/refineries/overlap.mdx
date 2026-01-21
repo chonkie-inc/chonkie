@@ -1,0 +1,112 @@
+---
+title: "Overlap Refinery"
+api: "POST v1/refine/overlap"
+description: "Add contextual overlap between chunks for better continuity"
+---
+
+The Overlap Refinery adds overlapping context between adjacent chunks for better continuity.
+
+## Request
+
+#### Parameters
+
+<ParamField path="chunks" type="array" required>
+  Array of chunk objects to add overlap to. Must be in sequential order from the
+  same document.
+</ParamField>
+
+<ParamField path="tokenizer" type="string" default="gpt2">
+  Tokenizer to use for measuring overlap.
+</ParamField>
+
+<ParamField path="context_size / contextSize" type="number" default="0.25">
+  Context size as fraction or token count. Can be a float (0.0-1.0) representing
+  a fraction of chunk size, or an integer representing exact token count.
+</ParamField>
+
+<ParamField path="mode" type="string" default="token">
+  Mode for overlap. Options: "token" or "recursive".
+</ParamField>
+
+<ParamField path="method" type="string" default="suffix">
+  Method for adding context. Options: "suffix" (add context after chunk) or
+  "prefix" (add context before chunk).
+</ParamField>
+
+<ParamField path="recipe" type="string" default="default">
+  Recipe name for recursive mode. Used when mode is set to "recursive".
+</ParamField>
+
+<ParamField path="lang" type="string" default="en">
+  Language for recipe in recursive mode.
+</ParamField>
+
+<ParamField path="merge" type="boolean" default="true">
+  Whether to merge overlapping chunks.
+</ParamField>
+
+## Response
+
+#### Returns
+
+Array of chunks with added overlapping context.
+
+<ResponseField name="text" type="string">
+  The chunk text with added overlap.
+</ResponseField>
+
+<ResponseField name="start_index" type="integer">
+  Updated starting position reflecting overlap.
+</ResponseField>
+
+<ResponseField name="end_index" type="integer">
+  Updated ending position reflecting overlap.
+</ResponseField>
+
+<ResponseField name="token_count" type="integer">
+  Updated token count including overlap.
+</ResponseField>
+
+## Examples
+
+<CodeGroup>
+
+```python Python
+from chonkie.cloud import TokenChunker, OverlapRefinery
+
+chunker = TokenChunker(chunk_size=100, chunk_overlap=0)
+chunks = chunker.chunk("Your text here...")
+
+refinery = OverlapRefinery(context_size=25, tokenizer="gpt2")
+refined_chunks = refinery.refine(chunks)
+```
+
+```javascript JavaScript
+import { TokenChunker, OverlapRefinery } from "@chonkiejs/cloud";
+
+const chunker = new TokenChunker({ chunkSize: 100, chunkOverlap: 0 });
+const chunks = await chunker.chunk({ text: "Your text here..." });
+
+const refinery = new OverlapRefinery({ contextSize: 25, tokenizer: "gpt2" });
+const refinedChunks = await refinery.refine(chunks);
+```
+
+```bash cURL
+curl -X POST https://api.chonkie.ai/v1/refine/overlap \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "chunks": [
+      {
+        "text": "Your text here...",
+        "start_index": 0,
+        "end_index": 17,
+        "token_count": 4
+      }
+    ],
+    "context_size": 5,
+    "tokenizer": "gpt2"
+  }'
+```
+
+</CodeGroup>

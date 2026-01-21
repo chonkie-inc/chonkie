@@ -6,12 +6,14 @@ from .chunker import (
     LateChunker,
     NeuralChunker,
     RecursiveChunker,
-    SDPMChunker,
     SemanticChunker,
     SentenceChunker,
     SlumberChunker,
     TokenChunker,
 )
+from .file import FileManager
+from .pipeline import Pipeline, PipelineStep
+from .refineries import EmbeddingsRefinery, OverlapRefinery
 
 __all__ = [
     "CloudChunker",
@@ -20,8 +22,12 @@ __all__ = [
     "SemanticChunker",
     "SentenceChunker",
     "LateChunker",
-    "SDPMChunker",
     "CodeChunker",
     "NeuralChunker",
     "SlumberChunker",
+    "EmbeddingsRefinery",
+    "OverlapRefinery",
+    "FileManager",
+    "Pipeline",
+    "PipelineStep",
 ]

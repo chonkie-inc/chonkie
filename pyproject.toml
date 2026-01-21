@@ -1,14 +1,15 @@
 [build-system]
-requires = ["setuptools>=45", "wheel", "cython>=3.0.0"]
+requires = ["setuptools>=45", "wheel"]
 build-backend = "setuptools.build_meta"
+
 
 [project]
 name = "chonkie"
-version = "1.0.8"
+version = "1.5.3"
 description = "🦛 CHONK your texts with Chonkie ✨ - The no-nonsense chunking library"
 readme = "README.md"
-requires-python = ">=3.9"
-license = "MIT"
+requires-python = ">=3.10"
+license = { file = "LICENSE" }
 keywords = [
     "chunking",
     "rag",
@@ -33,7 +34,6 @@ maintainers = [
 classifiers = [
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -45,67 +45,116 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Information Analysis",
     "Topic :: Text Processing :: Linguistic",
 ]
-dependencies = [
-    "pydantic[dev]>=2.11.2",
-    "together[dev]>=1.4.6",
-    "tokenizers>=0.16.0",
-    "tqdm>=4.64.0",
-]
+dependencies = ["tqdm>=4.64.0", "numpy>=2.0.0", "chonkie-core>=0.8.0"]
 
 [project.urls]
 Homepage = "https://github.com/chonkie-inc/chonkie"
 Documentation = "https://docs.chonkie.ai"
 "Bug Tracker" = "https://github.com/chonkie-inc/chonkie/issues"
 
+[project.scripts]
+chonkie = "chonkie.cli:main"
+
 [project.optional-dependencies]
 # Optional dependencies for the utils
 hub = ["huggingface-hub>=0.24.0", "jsonschema>=4.23.0"]
 viz = ["rich>=13.0.0"]
+cli = ["typer>=0.9.0"]
+
+# Optional dependencies for table chef
+table = ["pandas", "tabulate", "openpyxl"]
+
+# Optional dependencies for tokenizers
+tokenizers = ["tokenizers>=0.16.0"]
+tiktoken = ["tiktoken>=0.5.0"]
 
 # Optional dependencies for the chunkers
-code = ["tree-sitter>=0.20.0", "tree-sitter-language-pack>=0.7.0", "magika>=0.6.0, <0.7.0"]
+code = [
+    "tree-sitter>=0.20.0",
+    "tree-sitter-language-pack>=0.7.0",
+    "magika>=0.6.0, <1.1.0",
+]
 neural = ["transformers>=4.0.0", "torch>=2.0.0, <3.0"]
 
 # Optional dependencies for the embeddings
-model2vec = ["model2vec>=0.3.0", "numpy>=2.0.0, <3.0"]
-st = ["sentence-transformers>=3.0.0", "numpy>=2.0.0, <3.0", "accelerate>=1.6.0"]
-openai = ["tiktoken>=0.5.0", "openai>=1.0.0", "numpy>=2.0.0, <3.0", "pydantic>=2.0.0"]
-voyageai = ["voyageai>=0.3.2", "numpy>=2.0.0, <3.0"]
-cohere = ["cohere>=5.13.0", "numpy>=2.0.0, <3.0"]
-jina = ["numpy>=2.0.0, <3.0"]
-semantic = ["model2vec>=0.3.0", "numpy>=2.0.0, <3.0"]
-gemini = ["pydantic>=2.0.0", "google-genai>=1.0.0"]
 
-# optional dependencies for the friends
+model2vec = ["tokenizers>=0.16.0", "model2vec>=0.7.0", "numpy>=2.0.0, <3.0"]
+
+st = ["tokenizers>=0.16.0", "sentence-transformers>=3.0.0", "accelerate>=1.6.0"]
+openai = ["tiktoken>=0.5.0", "openai>=1.0.0", "pydantic>=2.0.0"]
+
+semantic = ["tokenizers>=0.16.0", "model2vec>=0.3.0"]
+
+gemini = ["pydantic>=2.0.0", "google-genai>=1.0.0"]
+azure-openai = [
+    "azure-identity>=1.23.0",
+    "tiktoken>=0.5.0",
+    "openai>=1.0.0",
+    "pydantic>=2.0.0",
+]
+groq = ["pydantic>=2.0.0", "groq>=0.4.0"]
+cerebras = ["pydantic>=2.0.0", "cerebras-cloud-sdk>=1.0.0"]
+voyageai = ["tokenizers>=0.16.0", "voyageai>=0.3.2"]
+cohere = ["tokenizers>=0.16.0", "cohere>=5.13.0"]
+jina = ["tokenizers>=0.16.0"]
+catsu = ["catsu>=0.0.1"]
+litellm = ["litellm>=1.0.0", "tiktoken>=0.5.0", "tokenizers>=0.16.0"]
+
+# Optional dependencies for the friends
 chroma = ["chromadb>=1.0.0"]
 qdrant = ["qdrant-client>=1.0.0"]
-tpuf = ["turbopuffer[fast]>=0.2.0"]
+tpuf = ["turbopuffer~=1.0"]
+pgvector = ["vecs>=0.4.0"]
+weaviate = ["weaviate-client>=4.16.7"]
+datasets = ["datasets>=4.0.0"]
+pinecone = ["pinecone"]
+mongodb = ["pymongo"]
+elastic = ["elasticsearch>=8.0.0"]
+milvus = ["pymilvus>=2.1.0"]
 
 # Optional dependencies for the genie
 genie = ["pydantic>=2.0.0", "google-genai>=1.0.0"]
 
 # All dependencies
 all = [
+    "httpx",
+    "tokenizers>=0.16.0",
+    "tiktoken>=0.5.0",
     "rich>=13.0.0",
     "tree-sitter>=0.20.0",
     "tree-sitter-language-pack>=0.7.0",
-    "magika>=0.6.0, <0.7.0",
+    "magika>=0.6.0, <1.1.0",
     "sentence-transformers>=3.0.0",
-    "numpy>=2.0.0, <3.0",
     "openai>=1.0.0",
-    "tiktoken>=0.5.0",
-    "model2vec>=0.3.0",
+    "model2vec>=0.7.0",
     "cohere>=5.13.0",
+    "voyageai>=0.3.2",
     "accelerate>=1.6.0",
     "huggingface-hub>=0.24.0",
     "jsonschema>=4.23.0",
     "pydantic>=2.0.0",
     "google-genai>=1.0.0",
+    "groq>=0.4.0",
+    "cerebras-cloud-sdk>=1.0.0",
     "transformers>=4.0.0",
     "torch>=2.0.0, <3.0",
     "chromadb>=1.0.0",
     "qdrant-client>=1.0.0",
-    "turbopuffer[fast]>=0.2.0",
+    "turbopuffer~=1.0",
+    "weaviate-client>=4.16.7",
+    "azure-identity>=1.23.0",
+    "pinecone",
+    "pymongo",
+    "voyageai>=0.3.2",
+    "vecs>=0.4.0",
+    "pandas",
+    "tabulate",
+    "openpyxl",
+    "elasticsearch>=8.0.0",
+    "pymilvus>=2.1.0",
+    "catsu>=0.0.1",
+    "litellm>=1.0.0",
+    "datasets>=1.14.0",
 ]
 dev = [
     "datasets>=1.14.0",
@@ -115,9 +164,17 @@ dev = [
     "pytest-xdist>=2.5.0",
     "pytest-asyncio>=0.26.0",
     "coverage",
-    "ruff>=0.0.265",
+    "ruff>=0.13.3",
     "mypy>=1.11.0",
-    "cython>=3.0.0",
+    "pandas",
+    "tabulate",
+    "openpyxl",
+    "uv>=0.9.18",
+]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.13.3",
 ]
 
 [tool.pytest.ini_options]
@@ -135,22 +192,25 @@ packages = [
     "chonkie.utils",
     "chonkie.refinery",
     "chonkie.genie",
-    "chonkie.friends",
-    "chonkie.friends.porters",
-    "chonkie.friends.handshakes",
+    "chonkie.handshakes",
+    "chonkie.porters",
     "chonkie.cloud",
     "chonkie.cloud.chunker",
+    "chonkie.cloud.refineries",
+    "chonkie.experimental",
+    "chonkie.fetcher",
+    "chonkie.chef",
+    "chonkie.pipeline",
+    "chonkie.cli",
 ]
 
 [tool.setuptools.package-data]
-"chonkie.chunker.c_extensions" = ["*.pyx", "*.pxd"]
-
-[tool.setuptools.dynamic]
-version = {attr = "chonkie.__version__"}
+"chonkie.chunker.c_extensions" = ["*.pyx", "*.pxd", "*.c", "*.so"]
 
 [tool.ruff]
+line-length = 99
 exclude = ["*.ipynb"]
-lint.select = ["F", "I", "D", "DOC"]
+lint.select = ["B904", "F", "I", "D"]
 lint.ignore = ["D211", "D213", "D203"]
 
 [tool.ruff.format]
@@ -163,3 +223,25 @@ ignore_missing_imports = true
 no_implicit_optional = true
 check_untyped_defs = true
 show_error_codes = true
+
+[tool.uv]
+constraint-dependencies = [
+    # This pair of grpcio + protobuf is required by a check in weaviate.proto.v1
+    "grpcio>=1.72",
+    "protobuf>=6.30",
+]
+
+[tool.coverage.report]
+exclude_also = [
+    # Don't complain about missing debug-only code:
+    "def __repr__",
+    # Don't complain if tests don't hit defensive assertion code:
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:",
+    # Don't complain about abstract methods, they aren't run:
+    "@(abc\\.)?abstractmethod",
+    # Don't complain about import error guards:
+    "except ImportError.+",
+]

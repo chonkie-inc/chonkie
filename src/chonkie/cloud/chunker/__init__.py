@@ -5,7 +5,6 @@ from .code import CodeChunker
 from .late import LateChunker
 from .neural import NeuralChunker
 from .recursive import RecursiveChunker
-from .sdpm import SDPMChunker
 from .semantic import SemanticChunker
 from .sentence import SentenceChunker
 from .slumber import SlumberChunker
@@ -18,7 +17,6 @@ __all__ = [
     "TokenChunker",
     "SentenceChunker",
     "LateChunker",
-    "SDPMChunker",
     "CodeChunker",
     "NeuralChunker",
     "SlumberChunker",
