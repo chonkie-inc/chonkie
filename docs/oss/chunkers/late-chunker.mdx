@@ -147,7 +147,7 @@ class RecursiveRules:
 class RecursiveLevel:
     delimiters: Union[None, str, list[str]]
     whitespace: bool = False
-    include_delim: Optional[Literal["prev", "next"]]  # Whether to include the delimiter at all, or in the previous chunk, or the next chunk.
+    include_delim: Optional[Literal["prev", "next"]]  # Whether to include the delimiter in the previous chunk or the next chunk.
 ```
 
 You can pass in custom rules to the LateChunker, or use the default ones.
