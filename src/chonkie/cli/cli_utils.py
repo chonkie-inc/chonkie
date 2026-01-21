@@ -59,7 +59,7 @@ def parse_params(param_list: list[str] | None) -> dict[str, Any]:
     params: dict[str, Any] = {}
     for param in param_list:
         if "=" in param:
-            key, value = param.split("=", 1)
+            key, _, value = param.partition("=")
             key = key.strip()
             value = value.strip()
 
