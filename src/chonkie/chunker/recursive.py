@@ -3,9 +3,7 @@
 Splits text into smaller chunks recursively. Express chunking logic through RecursiveLevel objects.
 """
 
-from bisect import bisect_left
 from functools import lru_cache
-from itertools import accumulate
 from typing import Optional, Union
 
 from chonkie.chunker.base import BaseChunker
@@ -174,33 +172,6 @@ class RecursiveChunker(BaseChunker):
             ]
             splits = list(self.tokenizer.decode_batch(token_splits))
             return splits
-
-    def _merge_short_segments(self, splits: list[str], min_chars: int) -> list[str]:
-        """Merge short segments to meet minimum character requirement."""
-        if not splits:
-            return splits
-
-        merged = []
-        current = ""
-
-        for split in splits:
-            if len(split) < min_chars:
-                current += split
-            elif current:
-                current += split
-                merged.append(current)
-                current = ""
-            else:
-                merged.append(split)
-
-            if len(current) >= min_chars:
-                merged.append(current)
-                current = ""
-
-        if current:
-            merged.append(current)
-
-        return merged
 
     def _make_chunks(self, text: str, token_count: int, level: int, start_offset: int) -> Chunk:
         """Create a Chunk object with indices based on the current offset.

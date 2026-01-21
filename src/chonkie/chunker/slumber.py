@@ -303,33 +303,6 @@ class SlumberChunker(BaseChunker):
         )
         return group_end_index
 
-    def _merge_short_segments(self, splits: list[str], min_chars: int) -> list[str]:
-        """Merge short segments to meet minimum character requirement."""
-        if not splits:
-            return splits
-
-        merged = []
-        current = ""
-
-        for split in splits:
-            if len(split) < min_chars:
-                current += split
-            elif current:
-                current += split
-                merged.append(current)
-                current = ""
-            else:
-                merged.append(split)
-
-            if len(current) >= min_chars:
-                merged.append(current)
-                current = ""
-
-        if current:
-            merged.append(current)
-
-        return merged
-
     def _split_text(self, text: str, recursive_level: RecursiveLevel) -> list[str]:
         """Split the text into chunks using the delimiters."""
         if recursive_level.delimiters:
@@ -384,99 +357,6 @@ class SlumberChunker(BaseChunker):
                 for i in range(0, len(encoded), self.chunk_size)
             ]
             return list(self.tokenizer.decode_batch(token_splits))
-
-    def _split_text_fallback(self, text: str, recursive_level: RecursiveLevel) -> list[str]:
-        """Pure Python fallback implementation for text splitting."""
-        # At every delimiter, replace it with the sep
-        if recursive_level.whitespace:
-            candidate_splits = text.split(" ")
-
-            # Add whitespace back; assumes that the whitespace is uniform across the text
-            # if the whitespace is not uniform, the split will not be reconstructable.
-            if recursive_level.include_delim == "prev":
-                # Attach space to end of each segment (except last)
-                splits = [
-                    split + " " if i < len(candidate_splits) - 1 else split
-                    for i, split in enumerate(candidate_splits)
-                ]
-            elif recursive_level.include_delim == "next":
-                # Attach space to start of each segment (except first)
-                splits = [
-                    " " + split if i > 0 else split for i, split in enumerate(candidate_splits)
-                ]
-            else:
-                splits = candidate_splits
-
-        elif recursive_level.delimiters:
-            if recursive_level.include_delim == "prev":
-                for delimiter in recursive_level.delimiters:
-                    text = text.replace(delimiter, delimiter + self.sep)
-            elif recursive_level.include_delim == "next":
-                for delimiter in recursive_level.delimiters:
-                    text = text.replace(delimiter, self.sep + delimiter)
-            else:
-                for delimiter in recursive_level.delimiters:
-                    text = text.replace(delimiter, self.sep)
-
-            splits = [split for split in text.split(self.sep) if split != ""]
-        else:
-            # Encode, Split, and Decode
-            encoded = self.tokenizer.encode(text)
-            token_splits = [
-                encoded[i : i + self.chunk_size] for i in range(0, len(encoded), self.chunk_size)
-            ]
-            splits = list(self.tokenizer.decode_batch(token_splits))
-
-        # Merge short splits (preserve spacing/punctuation)
-        def _safe_append(base: str, addition: str) -> str:
-            """Safely append text while preserving language-specific spacing rules."""
-            if not base:
-                return addition
-            if not addition:
-                return base
-
-            last_char = base[-1]
-            first_char = addition[0]
-
-            # If either has whitespace, concatenate directly
-            if last_char.isspace() or first_char.isspace():
-                return base + addition
-
-            # Don't add space before punctuation
-            if first_char in ",.;:?!)]}'\"":
-                return base + addition
-
-            # Don't add space after opening brackets
-            if last_char in "([{'\"":
-                return base + addition
-
-            # Otherwise, add a space
-            return base + " " + addition
-
-        current = ""
-        merged = []
-        for split in splits:
-            if len(split) < self.min_characters_per_chunk:
-                current = _safe_append(current, split)
-            elif current:
-                current = _safe_append(current, split)
-                merged.append(current)
-                current = ""
-            else:
-                merged.append(split)
-
-            if len(current) >= self.min_characters_per_chunk:
-                merged.append(current)
-                current = ""
-
-        if current:
-            merged.append(current)
-
-        splits = merged
-
-        # Some splits may not be meaningful yet.
-        # This will be handled during chunk creation.
-        return splits
 
     def _recursive_split(self, text: str, level: int = 0, offset: int = 0) -> list[Chunk]:
         """Recursively split the text into chunks."""
