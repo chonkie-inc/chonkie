@@ -20,12 +20,6 @@ from .base import BaseChunker
 
 logger = get_logger(__name__)
 
-# Import the optimized Savitzky-Golay filter (pure C implementation)
-from .c_extensions.savgol import (
-    filter_split_indices,
-    find_local_minima_interpolated,
-    windowed_cross_similarity,
-)
 
 
 @chunker("semantic")
@@ -276,13 +270,12 @@ class SemanticChunker(BaseChunker):
             # If data is too small for filter, return boundaries only
             return []
 
-        # Use optimized Cython implementation with interpolation
-        minima_indices, minima_values = find_local_minima_interpolated(
+        # Use optimized Rust implementation with interpolation
+        minima_indices, minima_values = chonkie_core.find_local_minima_interpolated(
             similarities,
             window_size=self.filter_window,
             poly_order=self.filter_polyorder,
             tolerance=self.filter_tolerance,
-            use_float32=False,  # Use float64 for consistency with embeddings
         )
 
         # Handle empty case
@@ -290,13 +283,13 @@ class SemanticChunker(BaseChunker):
             return []
 
         # Filter by percentile and minimum distance
-        filtered_indices, _ = filter_split_indices(
+        filtered_indices, _ = chonkie_core.filter_split_indices(
             minima_indices,
             minima_values,
             self.threshold,
             self.min_sentences_per_chunk,
         )
-        split_indices_list = filtered_indices  # Already a list from filter_split_indices
+        split_indices_list = filtered_indices.tolist()  # Convert numpy array to list
 
         # Add boundaries with window offset
         return (
@@ -338,12 +331,12 @@ class SemanticChunker(BaseChunker):
         """
         # Get embeddings for all sentences
         embeddings = self.embedding_model.embed_batch([s.text for s in sentences])
-        # Convert embeddings to list of lists for the C extension
-        embeddings_list = [
-            emb.tolist() if hasattr(emb, "tolist") else list(emb) for emb in embeddings
-        ]
-        result = windowed_cross_similarity(embeddings_list, self.similarity_window * 2 + 1)
-        return np.asarray(result)
+        # Stack embeddings into a 2D numpy array for the Rust extension
+        embeddings_array = np.stack(embeddings, axis=0)
+        result = chonkie_core.windowed_cross_similarity(
+            embeddings_array, self.similarity_window * 2 + 1
+        )
+        return result
 
     def _skip_and_merge(self, groups: list[list[Sentence]]) -> list[list[Sentence]]:
         """Merge similar groups considering skip window.

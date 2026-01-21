@@ -386,7 +386,7 @@ class SlumberChunker(BaseChunker):
             return list(self.tokenizer.decode_batch(token_splits))
 
     def _split_text_fallback(self, text: str, recursive_level: RecursiveLevel) -> list[str]:
-        """Fallback implementation when Cython is not available."""
+        """Pure Python fallback implementation for text splitting."""
         # At every delimiter, replace it with the sep
         if recursive_level.whitespace:
             candidate_splits = text.split(" ")

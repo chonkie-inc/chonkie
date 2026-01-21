@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=45", "wheel", "cython>=3.0.0"]
+requires = ["setuptools>=45", "wheel"]
 build-backend = "setuptools.build_meta"
 
 
@@ -168,7 +168,6 @@ dev = [
     "coverage",
     "ruff>=0.13.3",
     "mypy>=1.11.0",
-    "cython>=3.0.0",
     "pandas",
     "tabulate",
     "openpyxl",
