@@ -173,10 +173,43 @@ EmbeddingsRegistry.register_types(
     "SentenceTransformer",
     SentenceTransformerEmbeddings,
 )
-EmbeddingsRegistry.register_model("all-minilm-l6-v2", SentenceTransformerEmbeddings)
-EmbeddingsRegistry.register_model("all-mpnet-base-v2", SentenceTransformerEmbeddings)
-EmbeddingsRegistry.register_model("multi-qa-mpnet-base-dot-v1", SentenceTransformerEmbeddings)
-# TODO: Add all the other SentenceTransformer models here as well!
+
+for model in [
+    "all-minilm-l6-v2",
+    "all-mpnet-base-v2",
+    "multi-qa-mpnet-base-dot-v1",
+    "all-MiniLM-L12-v2",
+    "all-distilroberta-v1",
+    "all-roberta-large-v1",
+    "paraphrase-multilingual-MiniLM-L12-v2",
+    "paraphrase-multilingual-mpnet-base-v2",
+    "distiluse-base-multilingual-cased-v1",
+    "distiluse-base-multilingual-cased-v2",
+    "paraphrase-xlm-r-multilingual-v1",
+    "paraphrase-MiniLM-L6-v2",
+    "paraphrase-MiniLM-L3-v2",
+    "paraphrase-mpnet-base-v2",
+    "paraphrase-distilroberta-base-v2",
+    "paraphrase-albert-small-v2",
+    "paraphrase-TinyBERT-L6-v2",
+    "multi-qa-MiniLM-L6-cos-v1",
+    "multi-qa-distilbert-cos-v1",
+    "multi-qa-mpnet-base-cos-v1",
+    "msmarco-distilbert-base-v4",
+    "msmarco-roberta-base-v3",
+    "msmarco-distilbert-base-tas-b",
+    "msmarco-MiniLM-L6-cos-v5",
+    "msmarco-MiniLM-L12-cos-v5",
+    "gtr-t5-large",
+    "gtr-t5-xl",
+    "sentence-t5-large",
+    "sentence-t5-xl",
+    "LaBSE",
+    "allenai-specter",
+    "average_word_embeddings_glove.6B.300d",
+    "average_word_embeddings_komninos",
+]:
+    EmbeddingsRegistry.register_model(model, SentenceTransformerEmbeddings)
 
 # Register OpenAI embeddings with pattern
 EmbeddingsRegistry.register_provider("openai", OpenAIEmbeddings)

@@ -6,6 +6,40 @@ icon: "hippo"
 iconType: "solid"
 ---
 
+<Update label="v1.5.4">
+  # v1.5.4 Release Highlights ✨
+
+  - **New `GroqGenie`**: Fast inference on Groq hardware! Use Llama models with blazing speed via Groq's infrastructure.
+
+  ```bash
+  pip install "chonkie[groq]"
+  ```
+
+  ```python
+  from chonkie import GroqGenie
+
+  genie = GroqGenie(model="llama-3.3-70b-versatile")
+  response = genie.generate("Hello!")
+  ```
+
+  - **New `CerebrasGenie`**: Fastest inference on Cerebras hardware! Experience ultra-fast LLM inference.
+
+  ```bash
+  pip install "chonkie[cerebras]"
+  ```
+
+  ```python
+  from chonkie import CerebrasGenie
+
+  genie = CerebrasGenie(model="llama-3.3-70b")
+  response = genie.generate("Hello!")
+  ```
+
+  Both new Genies support `generate()` for text generation and `generate_json()` for structured JSON output, following the same interface as existing Genies.
+
+  **Full Changelog**: https://github.com/chonkie-inc/chonkie/compare/v1.5.3...v1.5.4
+</Update>
+
 <Update label="v1.3.0">
   # v1.3.0 Release Highlights ✨
 

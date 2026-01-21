@@ -4,20 +4,12 @@ description: "SIMD-accelerated text chunking at 100+ GB/s throughput"
 icon: "bolt"
 ---
 
-The `FastChunker` uses [memchunk](https://github.com/chonkie-inc/memchunk) for SIMD-accelerated boundary detection, enabling chunking speeds of 100+ GB/s.
+The `FastChunker` uses [chonkie-core](https://github.com/chonkie-inc/chunk) for SIMD-accelerated boundary detection, enabling chunking speeds of 100+ GB/s.
 
 <Warning>
   Unlike other chunkers, FastChunker uses **byte size** limits instead of token counts.
   This tradeoff enables extreme performance for high-throughput pipelines.
 </Warning>
-
-## Installation
-
-FastChunker requires the `memchunk` library:
-
-```bash
-pip install chonkie[fast]
-```
 
 ## Initialization
 

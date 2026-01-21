@@ -236,7 +236,7 @@ class CatsuEmbeddings(BaseEmbeddings):
                 except Exception as e:
                     raise RuntimeError(
                         f"Could not determine embedding dimension for model {self.model}: {e}",
-                    )
+                    ) from e
 
         return self._dimension
 
