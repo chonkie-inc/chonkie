@@ -193,7 +193,7 @@ class RecursiveRules:
 class RecursiveLevel:
 delimiters: Optional[Union[str, list[str]]]
 whitespace: bool = False
-include_delim: Optional[Literal["prev", "next"]]) # Whether to include the delimiter at all, or in the previous chunk, or the next chunk.
+include_delim: Optional[Literal["prev", "next"]]) # Whether to include the delimiter in the previous chunk or the next chunk.
 
 ````
 ```javascript JavaScript
@@ -204,7 +204,7 @@ class RecursiveRules {
 class RecursiveLevel {
     delimiters?: string | string[];
     whitespace: boolean;
-    includeDelim: 'prev' | 'next' | 'none';
+    includeDelim: 'prev' | 'next';
 }
 ````
 
