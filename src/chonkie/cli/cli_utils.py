@@ -58,34 +58,36 @@ def parse_params(param_list: list[str] | None) -> dict[str, Any]:
 
     params: dict[str, Any] = {}
     for param in param_list:
-        if "=" in param:
-            key, _, value = param.partition("=")
-            key = key.strip()
-            value = value.strip()
-
-            # Try to convert to appropriate type
-            if value.lower() == "true":
-                params[key] = True
-            elif value.lower() == "false":
-                params[key] = False
-            elif value.lower() == "none" or value.lower() == "null":
-                params[key] = None
-            else:
-                # Try float first, then convert to int if appropriate, or keep as string
-                try:
-                    # Try float first (handles both floats and ints in scientific notation)
-                    float_val = float(value)
-                    # If it's a whole number and no decimal point in original, keep as int
-                    if "." not in value and "e" not in value.lower() and float_val.is_integer():
-                        params[key] = int(float_val)
-                    else:
-                        params[key] = float_val
-                except ValueError:
-                    # Keep as string
-                    params[key] = value
-        else:
+        if "=" not in param:
             # Boolean flag (no =value)
             params[param.strip()] = True
+            continue
+
+        key, _, value = param.partition("=")
+        key = key.strip()
+        value = value.strip()
+
+        # Try to convert to appropriate type
+        lower_caps_value = value.lower()
+        if lower_caps_value == "true":
+            params[key] = True
+        elif lower_caps_value == "false":
+            params[key] = False
+        elif lower_caps_value == "none" or lower_caps_value == "null":
+            params[key] = None
+        else:
+            # Try float first, then convert to int if appropriate, or keep as string
+            try:
+                # Try float first (handles both floats and ints in scientific notation)
+                float_val = float(value)
+                # If it's a whole number and no decimal point in original, keep as int
+                if "." not in value and "e" not in lower_caps_value and float_val.is_integer():
+                    params[key] = int(float_val)
+                else:
+                    params[key] = float_val
+            except ValueError:
+                # Keep as string
+                params[key] = value
 
     return params
 
@@ -102,8 +104,8 @@ def merge_params(explicit_params: dict[str, Any], parsed_params: dict[str, Any])
 
     """
     return dict(
-       parsed_params,
-       **{key: value for key, value in explicit_params.items() if value is not None},
+        parsed_params,
+        **{key: value for key, value in explicit_params.items() if value is not None},
     )
 
 
@@ -142,7 +144,7 @@ def chunk(
         chunker_class = ComponentRegistry.get_chunker(chunker).component_class
     except ValueError:
         typer.echo(f"Error: Unknown chunker '{chunker}'. Available: {', '.join(CHUNKERS)}")
-        raise typer.Exit(code=1) from None
+        raise typer.Exit(code=1)
 
     # Parse and merge parameters
     explicit_params = {
@@ -169,7 +171,7 @@ def chunk(
                 content = f.read()
         except Exception as e:
             typer.echo(f"Error reading file {text}: {e}")
-            raise typer.Exit(code=1) from e
+            raise typer.Exit(code=1)
 
     # Chunk the text
     chunks = chunking_maker.chunk(content)
@@ -246,7 +248,7 @@ def chunk(
             typer.echo(
                 f"Error: Unknown handshaker '{handshaker}'. Available: {', '.join(HANDSHAKES)}"
             )
-            raise typer.Exit(code=1) from None
+            raise typer.Exit(code=1)
 
         typer.echo(f"Storing chunks in {handshaker}...")
         try:
@@ -255,7 +257,7 @@ def chunk(
             typer.echo("Chunks stored successfully.")
         except Exception as e:
             typer.echo(f"Error storing chunks: {e}")
-            raise typer.Exit(code=1) from e
+            raise typer.Exit(code=1)
 
 
 @app.command()
@@ -383,7 +385,7 @@ def pipeline(
             # typer.echo(doc) # This prints the repr, which might be too verbose or ugly
         except Exception as e:
             typer.echo(f"Error running pipeline: {e}")
-            raise typer.Exit(code=1) from e
+            raise typer.Exit(code=1)
 
         # Output results
         if handshaker:
@@ -474,7 +476,7 @@ def pipeline(
 
     except Exception as e:
         typer.echo(f"Pipeline error: {e}")
-        raise typer.Exit(code=1) from e
+        raise typer.Exit(code=1)
 
 
 if __name__ == "__main__":
