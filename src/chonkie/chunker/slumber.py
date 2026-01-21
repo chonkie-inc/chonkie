@@ -5,6 +5,7 @@ from bisect import bisect_left
 from itertools import accumulate
 from typing import Literal, Optional, Union
 
+import chonkie_core
 from tqdm import tqdm
 
 from chonkie.genie import BaseGenie, GeminiGenie
@@ -16,13 +17,6 @@ from chonkie.types import Chunk, RecursiveLevel, RecursiveRules
 from .base import BaseChunker
 
 logger = get_logger(__name__)
-
-try:
-    from .c_extensions.split import split_text
-
-    _CYTHON_AVAILABLE = True
-except ImportError:
-    _CYTHON_AVAILABLE = False
 
 
 JSON_PROMPT_TEMPLATE = """<task> You are given a set of texts between the starting tag <passages> and ending tag </passages>. Each text is labeled as 'ID `N`' where 'N' is the passage number. Your task is to find the first passage where the content clearly separates from the previous passages in topic and/or semantics. </task>
@@ -309,43 +303,87 @@ class SlumberChunker(BaseChunker):
         )
         return group_end_index
 
+    def _merge_short_segments(self, splits: list[str], min_chars: int) -> list[str]:
+        """Merge short segments to meet minimum character requirement."""
+        if not splits:
+            return splits
+
+        merged = []
+        current = ""
+
+        for split in splits:
+            if len(split) < min_chars:
+                current += split
+            elif current:
+                current += split
+                merged.append(current)
+                current = ""
+            else:
+                merged.append(split)
+
+            if len(current) >= min_chars:
+                merged.append(current)
+                current = ""
+
+        if current:
+            merged.append(current)
+
+        return merged
+
     def _split_text(self, text: str, recursive_level: RecursiveLevel) -> list[str]:
         """Split the text into chunks using the delimiters."""
-        if _CYTHON_AVAILABLE:
-            # Use the optimized Cython split function
-            if recursive_level.whitespace:
-                return list(
-                    split_text(
-                        text,
-                        delim=None,
-                        include_delim=recursive_level.include_delim,
-                        min_characters_per_segment=self.min_characters_per_chunk,
-                        whitespace_mode=True,
-                        character_fallback=False,
-                    ),
-                )
-            elif recursive_level.delimiters:
-                return list(
-                    split_text(
-                        text,
-                        delim=recursive_level.delimiters,
-                        include_delim=recursive_level.include_delim,
-                        min_characters_per_segment=self.min_characters_per_chunk,
-                        whitespace_mode=False,
-                        character_fallback=False,
-                    ),
+        if recursive_level.delimiters:
+            include_mode = recursive_level.include_delim or "prev"
+            text_bytes = text.encode("utf-8")
+
+            # Check if we have multi-byte delimiters
+            delimiters = recursive_level.delimiters
+            if isinstance(delimiters, str):
+                delimiters = [delimiters]
+
+            has_multibyte = any(len(d) > 1 for d in delimiters)
+
+            if has_multibyte:
+                # Use split_pattern_offsets for multi-byte patterns
+                patterns = [d.encode("utf-8") for d in delimiters]
+                offsets = chonkie_core.split_pattern_offsets(
+                    text_bytes,
+                    patterns=patterns,
+                    include_delim=include_mode,
+                    min_chars=self.min_characters_per_chunk,
                 )
             else:
-                # Token-based splitting - fall back to original implementation
-                encoded = self.tokenizer.encode(text)
-                token_splits = [
-                    encoded[i : i + self.chunk_size]
-                    for i in range(0, len(encoded), self.chunk_size)
-                ]
-                return list(self.tokenizer.decode_batch(token_splits))
+                # Use faster split_offsets for single-byte delimiters
+                delim_bytes = "".join(delimiters).encode("utf-8")
+                offsets = chonkie_core.split_offsets(
+                    text_bytes,
+                    delimiters=delim_bytes,
+                    include_delim=include_mode,
+                    min_chars=self.min_characters_per_chunk,
+                )
+
+            splits = [text_bytes[start:end].decode("utf-8") for start, end in offsets]
+            return [s for s in splits if s]
+        elif recursive_level.whitespace:
+            # Split on whitespace using split_offsets (preserves spaces for reconstruction)
+            text_bytes = text.encode("utf-8")
+            include_mode = recursive_level.include_delim or "prev"
+            offsets = chonkie_core.split_offsets(
+                text_bytes,
+                delimiters=b" ",
+                include_delim=include_mode,
+                min_chars=self.min_characters_per_chunk,
+            )
+            splits = [text_bytes[start:end].decode("utf-8") for start, end in offsets]
+            return [s for s in splits if s]
         else:
-            # Fallback to original implementation when Cython is not available
-            return self._split_text_fallback(text, recursive_level)
+            # Token-based splitting
+            encoded = self.tokenizer.encode(text)
+            token_splits = [
+                encoded[i : i + self.chunk_size]
+                for i in range(0, len(encoded), self.chunk_size)
+            ]
+            return list(self.tokenizer.decode_batch(token_splits))
 
     def _split_text_fallback(self, text: str, recursive_level: RecursiveLevel) -> list[str]:
         """Fallback implementation when Cython is not available."""
