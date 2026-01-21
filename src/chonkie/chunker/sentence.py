@@ -7,7 +7,6 @@ allows customization of sentence boundary delimiters and minimum sentence length
 """
 
 import warnings
-from itertools import accumulate
 from typing import Literal, Optional, Sequence, Union
 
 import chonkie_core
@@ -288,15 +287,6 @@ class SentenceChunker(BaseChunker):
             return []
 
         logger.debug(f"Prepared {len(sentences)} sentences for chunking")
-
-        # Pre-calculate cumulative token counts for bisect
-        token_sums = list(
-            accumulate(
-                [s.token_count for s in sentences],
-                lambda a, b: a + b,
-                initial=0,
-            ),
-        )
 
         chunks = []
         pos = 0
