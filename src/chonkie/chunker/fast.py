@@ -1,6 +1,8 @@
-"""Fast chunker powered by memchunk."""
+"""Fast chunker powered by chonkie-core."""
 
 from typing import Any, Dict, List, Optional, Sequence
+
+import chonkie_core
 
 from chonkie.chunker.base import BaseChunker
 from chonkie.pipeline import chunker
@@ -14,7 +16,7 @@ class FastChunker(BaseChunker):
     Unlike other chonkie chunkers that use token counts, FastChunker uses
     byte size limits for maximum performance (~100+ GB/s throughput).
 
-    This is a thin wrapper around memchunk's chunking functionality.
+    This is a thin wrapper around chonkie-core's chunking functionality.
 
     Args:
         chunk_size: Target chunk size in bytes (default: 4096)
@@ -53,16 +55,6 @@ class FastChunker(BaseChunker):
         self.prefix = prefix
         self.consecutive = consecutive
         self.forward_fallback = forward_fallback
-        # Lazy import memchunk.
-        try:
-            from memchunk import chunk_offsets
-        except ImportError as ie:
-            raise ImportError(
-                "memchunk is required for FastChunker. Install it with: pip install chonkie[fast]"
-            ) from ie
-
-        # Verify memchunk is available
-        self._chunk_offsets = chunk_offsets
 
     def __repr__(self) -> str:
         """Return a string representation of the chunker."""
@@ -85,7 +77,7 @@ class FastChunker(BaseChunker):
         if not text:
             return []
 
-        # Build kwargs for memchunk
+        # Build kwargs for chonkie-core
         kwargs: Dict[str, Any] = {
             "size": self.chunk_size,
             "prefix": self.prefix,
@@ -98,11 +90,11 @@ class FastChunker(BaseChunker):
         else:
             kwargs["delimiters"] = self.delimiters
 
-        # Encode to bytes for memchunk (which works with byte offsets)
+        # Encode to bytes for chonkie-core (which works with byte offsets)
         text_bytes = text.encode("utf-8")
 
-        # Get chunk offsets from memchunk (these are byte offsets)
-        offsets = self._chunk_offsets(text_bytes, **kwargs)
+        # Get chunk offsets from chonkie-core (these are byte offsets)
+        offsets = chonkie_core.chunk_offsets(text_bytes, **kwargs)
 
         # Convert to Chunk objects by slicing bytes and decoding
         # Track character position to convert byte offsets to char offsets
