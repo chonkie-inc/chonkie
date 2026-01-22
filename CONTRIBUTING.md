@@ -202,3 +202,11 @@ Every contribution helps make Chonkie better! We appreciate your time and effort
 
 Remember:
 > "A journey of a thousand CHONKs begins with a single commit" ~ Ancient Proverb, probably
+
+
+## PR Checklist
+
+- [ ] Branch name follows convention (feature/fix/docs: description)
+- [ ] Commit messages are descriptive
+- [ ] Tests pass locally
+- [ ] Documentation updated if needed
