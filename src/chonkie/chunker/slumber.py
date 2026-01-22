@@ -353,8 +353,7 @@ class SlumberChunker(BaseChunker):
             # Token-based splitting
             encoded = self.tokenizer.encode(text)
             token_splits = [
-                encoded[i : i + self.chunk_size]
-                for i in range(0, len(encoded), self.chunk_size)
+                encoded[i : i + self.chunk_size] for i in range(0, len(encoded), self.chunk_size)
             ]
             return list(self.tokenizer.decode_batch(token_splits))
 

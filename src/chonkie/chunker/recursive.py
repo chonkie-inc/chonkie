@@ -167,8 +167,7 @@ class RecursiveChunker(BaseChunker):
             # Encode, Split, and Decode
             encoded = self.tokenizer.encode(text)
             token_splits = [
-                encoded[i : i + self.chunk_size]
-                for i in range(0, len(encoded), self.chunk_size)
+                encoded[i : i + self.chunk_size] for i in range(0, len(encoded), self.chunk_size)
             ]
             splits = list(self.tokenizer.decode_batch(token_splits))
             return splits

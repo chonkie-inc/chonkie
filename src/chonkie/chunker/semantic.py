@@ -21,7 +21,6 @@ from .base import BaseChunker
 logger = get_logger(__name__)
 
 
-
 @chunker("semantic")
 class SemanticChunker(BaseChunker):
     """SemanticChunker uses peak detection to find split points and direct window embedding calculation.
