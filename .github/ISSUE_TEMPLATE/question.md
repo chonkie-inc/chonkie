@@ -3,7 +3,7 @@ name: Question
 about: Ask a question about the repository
 title: "Que:"
 labels: question
-assignees: chonknick
+assignees: chonknick, chonk-lain
 
 ---
 
