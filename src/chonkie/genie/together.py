@@ -2,20 +2,8 @@
 import importlib.util as importutil
 import os
 from typing import TYPE_CHECKING, Any, Dict, Optional
-import json
 
 from .base import BaseGenie
-
-if TYPE_CHECKING:
-    try:
-        from together import Together
-    except ImportError:
-        Together = Any
-    try:
-        from pydantic import BaseModel
-    except ImportError:
-        BaseModel = Any
-
 
 class TogetherGenie(BaseGenie):
     """Genie using TogetherAI's hosted models (OpenAI-compatible style)."""
@@ -44,7 +32,13 @@ class TogetherGenie(BaseGenie):
             api_key (Optional[str]): The API key to use. Defaults to the environment variable TOGETHER_API_KEY.
         """
         super().__init__()
-        self._import_dependencies()
+        try:
+            from pydantic import BaseModel
+            from together import Together
+        except ImportError as e:
+            raise ImportError(
+                "TogetherGenie requires `together` and `pydantic`. Install with `pip install chonkie[togetherai]`"
+            ) from e
 
         self.api_key = api_key or os.environ.get("TOGETHER_API_KEY")
         if not self.api_key:
@@ -67,12 +61,12 @@ class TogetherGenie(BaseGenie):
         return content
 
     def generate_json(self, prompt: str, schema: "BaseModel") -> Dict[str, Any]:
-        """
-        Generate a JSON-formatted response using Together's structured output feature.
+        """Generate a JSON-formatted response using Together's structured output feature.
 
         Note:
             This only works with Together models that support JSON mode.
             See: https://docs.together.ai/docs/json-mode
+
         """     
         if self.model not in self.SUPPORTED_JSON_MODELS:
             raise ValueError(f"Model `{self.model}` does not support JSON mode.")
@@ -102,16 +96,6 @@ class TogetherGenie(BaseGenie):
             importutil.find_spec("together") is not None
             and importutil.find_spec("pydantic") is not None
         )
-
-    def _import_dependencies(self) -> None:
-        if self._is_available():
-            global Together, BaseModel
-            from together import Together
-            from pydantic import BaseModel
-        else:
-            raise ImportError(
-                "TogetherGenie requires `together` and `pydantic`. Install with `pip install together pydantic`"
-            )
 
     def __repr__(self) -> str:
         return f"TogetherGenie(model={self.model})"
