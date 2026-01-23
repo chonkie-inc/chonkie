@@ -84,7 +84,7 @@ class CodeChunker(BaseChunker):
 
             try:
                 self.parser = get_parser(language)
-            except Exception as e:
+            except ValueError as e:
                 raise ValueError(
                     f"Unsupported language '{language}'. "
                     "Please use a language supported by tree-sitter-language-pack "
