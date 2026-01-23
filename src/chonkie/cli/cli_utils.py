@@ -144,7 +144,7 @@ def chunk(
         chunker_class = ComponentRegistry.get_chunker(chunker).component_class
     except ValueError:
         typer.echo(f"Error: Unknown chunker '{chunker}'. Available: {', '.join(CHUNKERS)}")
-        raise typer.Exit(code=1)
+        raise typer.Exit(code=1) from None
 
     # Parse and merge parameters
     explicit_params = {
@@ -160,7 +160,7 @@ def chunk(
         chunking_maker = chunker_class(**chunker_kwargs)
     except Exception as e:
         typer.echo(f"Error initializing chunker with parameters: {e}")
-        raise typer.Exit(code=1)
+        raise typer.Exit(code=1) from None
 
     viz = Visualizer()
     # Get text content
@@ -171,7 +171,7 @@ def chunk(
                 content = f.read()
         except Exception as e:
             typer.echo(f"Error reading file {text}: {e}")
-            raise typer.Exit(code=1)
+            raise typer.Exit(code=1) from None
 
     # Chunk the text
     chunks = chunking_maker.chunk(content)
@@ -248,7 +248,7 @@ def chunk(
             typer.echo(
                 f"Error: Unknown handshaker '{handshaker}'. Available: {', '.join(HANDSHAKES)}"
             )
-            raise typer.Exit(code=1)
+            raise typer.Exit(code=1) from None
 
         typer.echo(f"Storing chunks in {handshaker}...")
         try:
@@ -257,7 +257,7 @@ def chunk(
             typer.echo("Chunks stored successfully.")
         except Exception as e:
             typer.echo(f"Error storing chunks: {e}")
-            raise typer.Exit(code=1)
+            raise typer.Exit(code=1) from None
 
 
 @app.command()
@@ -385,7 +385,7 @@ def pipeline(
             # typer.echo(doc) # This prints the repr, which might be too verbose or ugly
         except Exception as e:
             typer.echo(f"Error running pipeline: {e}")
-            raise typer.Exit(code=1)
+            raise typer.Exit(code=1) from None
 
         # Output results
         if handshaker:
@@ -476,7 +476,7 @@ def pipeline(
 
     except Exception as e:
         typer.echo(f"Pipeline error: {e}")
-        raise typer.Exit(code=1)
+        raise typer.Exit(code=1) from None
 
 
 if __name__ == "__main__":
