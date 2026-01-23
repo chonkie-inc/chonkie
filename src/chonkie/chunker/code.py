@@ -62,9 +62,6 @@ class CodeChunker(BaseChunker):
         self.chunk_size = chunk_size
         self.include_nodes = include_nodes
 
-        # TODO: Figure out a way to check if the language is supported by tree-sitter-language-pack
-        #       Currently, we're just assuming that the language is supported.
-
         # NOTE: Magika is a language detection library made by Google, that uses a
         #       deep-learning model to detect the language of the code.
 
@@ -85,7 +82,14 @@ class CodeChunker(BaseChunker):
         else:
             from tree_sitter_language_pack import get_parser
 
-            self.parser = get_parser(language)  # type: ignore[arg-type]
+            try:
+                self.parser = get_parser(language)
+            except Exception as e:
+                raise ValueError(
+                    f"Unsupported language '{language}'. "
+                    "Please use a language supported by tree-sitter-language-pack "
+                    "or set language='auto'."
+                ) from e
 
         # Set the use_multiprocessing flag
         self._use_multiprocessing = False
