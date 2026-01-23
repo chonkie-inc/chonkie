@@ -80,7 +80,7 @@ class CodeChunker(BaseChunker):
             self.magika = Magika()
             self.parser = None
         else:
-            from tree_sitter_language_pack import get_parser, SupportedLanguage
+            from tree_sitter_language_pack import SupportedLanguage, get_parser
 
             try:
                 self.parser = get_parser(cast(SupportedLanguage, language))
