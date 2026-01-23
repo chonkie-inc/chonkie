@@ -1,12 +1,9 @@
 """Base class for all embeddings implementations."""
 
-import importlib.util as importutil
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Any, Callable, List, Union
+from typing import Any, Union
 
-# for type checking
-if TYPE_CHECKING:
-    import numpy as np
+import numpy as np
 
 
 class BaseEmbeddings(ABC):
@@ -29,11 +26,10 @@ class BaseEmbeddings(ABC):
             NotImplementedError: If any of the abstract methods are not implemented
 
         """
-        # Lazy import dependencies if they are not already imported
-        self._import_dependencies()
+        super().__init__()
 
     @abstractmethod
-    def embed(self, text: str) -> "np.ndarray":
+    def embed(self, text: str) -> np.ndarray:
         """Embed a text string into a vector representation.
 
         This method should be implemented for all embeddings models.
@@ -47,7 +43,7 @@ class BaseEmbeddings(ABC):
         """
         raise NotImplementedError
 
-    def embed_batch(self, texts: List[str]) -> List["np.ndarray"]:
+    def embed_batch(self, texts: list[str]) -> list[np.ndarray]:
         """Embed a list of text strings into vector representations.
 
         This method should be implemented for embeddings models that support batch processing.
@@ -55,29 +51,15 @@ class BaseEmbeddings(ABC):
         By default, it calls the embed() method for each text in the list.
 
         Args:
-            texts (List[str]): List of text strings to embed
+            texts (list[str]): List of text strings to embed
 
         Returns:
-            List[np.ndarray]: List of embedding vectors for each text in the list
+            list[np.ndarray]: List of embedding vectors for each text in the list
 
         """
         return [self.embed(text) for text in texts]
 
-    def _import_dependencies(self) -> None:
-        """Lazy import dependencies for the embeddings implementation.
-
-        This method should be implemented by all embeddings implementations that require
-        additional dependencies. It lazily imports the dependencies only when they are needed.
-        """
-        if self._is_available():
-            global np
-            import numpy as np
-        else:
-            raise ImportError(
-                "numpy is not available. Please install it via `pip install chonkie[semantic]`"
-            )
-
-    def similarity(self, u: "np.ndarray", v: "np.ndarray") -> "np.float32":
+    def similarity(self, u: np.ndarray, v: np.ndarray) -> np.float32:
         """Compute the similarity between two embeddings.
 
         Most embeddings models will use cosine similarity for this purpose. However,
@@ -93,7 +75,9 @@ class BaseEmbeddings(ABC):
             np.float32: Similarity score between the two embeddings
 
         """
-        return np.float32(np.dot(u, v.T) / (np.linalg.norm(u) * np.linalg.norm(v)))  # cosine similarity
+        return np.float32(
+            np.dot(u, v.T) / (np.linalg.norm(u) * np.linalg.norm(v)),
+        )  # cosine similarity
 
     @property
     @abstractmethod
@@ -109,33 +93,19 @@ class BaseEmbeddings(ABC):
         """
         raise NotImplementedError
 
-    def _is_available(self) -> bool:
-        """Check if this embeddings implementation is available (dependencies installed).
-
-        Override this method to add custom dependency checks.
-
-        Returns:
-            bool: True if the embeddings implementation is available, False otherwise
-
-        """
-        return importutil.find_spec("numpy") is not None
-
     @abstractmethod
-    def get_tokenizer_or_token_counter(self) -> Union[Any, Callable[[str], int]]:
-        """Return the tokenizer or token counter object.
+    def get_tokenizer(self) -> Any:
+        """Return the tokenizer object.
 
-        By default, this method returns the count_tokens() method, which should be
-        implemented for embeddings models that require tokenization before embedding.
+        By default, this method should return a tokenizer object that implements
+        the TokenizerProtocol (encode, decode, tokenize methods).
 
         Returns:
-            Union[Any, Callable[[str], int]]: Tokenizer object or token counter function
+            Any: Tokenizer object implementing TokenizerProtocol
 
         Examples:
             # Get the tokenizer object
-            tokenizer = embeddings.get_tokenizer_or_token_counter()
-
-            # Get the token counter function
-            token_counter = embeddings.get_tokenizer_or_token_counter()
+            tokenizer = embeddings.get_tokenizer()
 
         """
         raise NotImplementedError
@@ -144,9 +114,7 @@ class BaseEmbeddings(ABC):
         """Representation of the BaseEmbeddings instance."""
         return self.__class__.__name__ + "()"
 
-    def __call__(
-        self, text: Union[str, List[str]]
-    ) -> Union["np.ndarray", List["np.ndarray"]]:
+    def __call__(self, text: Union[str, list[str]]) -> Union[np.ndarray, list[np.ndarray]]:
         """Embed a text string into a vector representation.
 
         This method allows the embeddings object to be called directly with a text string
@@ -154,10 +122,10 @@ class BaseEmbeddings(ABC):
         depending on the input type.
 
         Args:
-            text (Union[str, List[str]]): Input text string or list of text strings
+            text (Union[str, list[str]]): Input text string or list of text strings
 
         Returns:
-            Union[np.ndarray, List[np.ndarray]]: Single or list of embedding vectors
+            Union[np.ndarray, list[np.ndarray]]: Single or list of embedding vectors
 
         """
         if isinstance(text, str):

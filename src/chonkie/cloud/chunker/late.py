@@ -1,10 +1,11 @@
 """Late Chunking for Chonkie API."""
 
-from typing import Dict, List, Optional, Union, cast
+import json
+from typing import Any, Optional, Union, cast
 
-import requests
+import httpx
 
-from chonkie.types import LateChunk
+from chonkie.types import Chunk
 
 from .recursive import RecursiveChunker
 
@@ -17,7 +18,7 @@ class LateChunker(RecursiveChunker):
 
     def __init__(
         self,
-        embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2",
+        embedding_model: str = "nomic-ai/modernbert-embed-base",
         chunk_size: int = 512,
         min_characters_per_chunk: int = 24,
         recipe: str = "default",
@@ -44,11 +45,16 @@ class LateChunker(RecursiveChunker):
             lang=lang,
         )
 
-    def chunk(self, text: Union[str, List[str]]) -> Union[List[LateChunk], List[List[LateChunk]]]:
-        """Chunk the text into a list of late-interaction chunks via the Chonkie API.
+    def chunk(
+        self,
+        text: Optional[Union[str, list[str]]] = None,
+        file: Optional[str] = None,
+    ) -> Union[list[Chunk], list[list[Chunk]]]:
+        """Chunk the text or file into a list of late-interaction chunks via the Chonkie API.
 
         Args:
             text: The text or list of texts to chunk.
+            file: The path to a file to chunk.
 
         Returns:
             A list of dictionaries, where each dictionary represents a chunk
@@ -59,17 +65,36 @@ class LateChunker(RecursiveChunker):
 
         """
         # Make the payload
-        payload = {
-            "text": text,
-            "embedding_model": self.embedding_model,
-            "chunk_size": self.chunk_size,
-            "min_characters_per_chunk": self.min_characters_per_chunk,
-            "recipe": self.recipe,
-            "lang": self.lang,
-        }
+        payload: dict[str, Any]
+        if text is not None:
+            payload = {
+                "text": text,
+                "embedding_model": self.embedding_model,
+                "chunk_size": self.chunk_size,
+                "min_characters_per_chunk": self.min_characters_per_chunk,
+                "recipe": self.recipe,
+                "lang": self.lang,
+            }
+        elif file is not None:
+            file_response = self.file_manager.upload(file)
+            payload = {
+                "file": {
+                    "type": "document",
+                    "content": file_response.name,
+                },
+                "embedding_model": self.embedding_model,
+                "chunk_size": self.chunk_size,
+                "min_characters_per_chunk": self.min_characters_per_chunk,
+                "recipe": self.recipe,
+                "lang": self.lang,
+            }
+        else:
+            raise ValueError(
+                "No text or file provided. Please provide either text or a file path.",
+            )
 
         # Make the request to the Chonkie API's late chunking endpoint
-        response = requests.post(
+        response = httpx.post(
             f"{self.BASE_URL}/{self.VERSION}/chunk/late",
             json=payload,
             headers={"Authorization": f"Bearer {self.api_key}"},
@@ -79,43 +104,47 @@ class LateChunker(RecursiveChunker):
         try:
             response.raise_for_status()  # Raise an exception for HTTP errors (4xx or 5xx)
             if isinstance(text, list):
-                batch_result: List[List[Dict]] = cast(List[List[Dict]], response.json())
-                batch_chunks: List[List[LateChunk]] = []
+                batch_result: list[list[dict]] = cast(list[list[dict]], response.json())
+                batch_chunks: list[list[Chunk]] = []
                 for chunk_list in batch_result:
                     curr_chunks = []
                     for chunk in chunk_list:
-                        curr_chunks.append(LateChunk.from_dict(chunk))
+                        curr_chunks.append(Chunk.from_dict(chunk))
                     batch_chunks.append(curr_chunks)
                 return batch_chunks
             else:
-                single_result: List[Dict] = cast(List[Dict], response.json())
-                single_chunks: List[LateChunk] = [LateChunk.from_dict(chunk) for chunk in single_result]
+                single_result: list[dict] = cast(list[dict], response.json())
+                single_chunks: list[Chunk] = [Chunk.from_dict(chunk) for chunk in single_result]
                 return single_chunks
-        except requests.exceptions.HTTPError as http_error:
+        except httpx.HTTPError as http_error:
             # Attempt to get more detailed error from API response if possible
             error_detail = ""
             try:
                 error_detail = response.json().get("detail", "")
-            except requests.exceptions.JSONDecodeError:
+            except (json.JSONDecodeError, httpx.HTTPError):
                 error_detail = response.text
             raise ValueError(
                 f"Oh no! Chonkie API returned an error for late chunking: {http_error}. "
                 f"Details: {error_detail}"
-                + "If the issue persists, please contact support at support@chonkie.ai."
+                + "If the issue persists, please contact support at support@chonkie.ai.",
             ) from http_error
-        except requests.exceptions.JSONDecodeError as error:
+        except json.JSONDecodeError as error:
             raise ValueError(
                 "Oh no! The Chonkie API returned an invalid JSON response for late chunking."
                 + "Please try again in a short while."
-                + "If the issue persists, please contact support at support@chonkie.ai."
+                + "If the issue persists, please contact support at support@chonkie.ai.",
             ) from error
-        except Exception as error: # Catch any other unexpected errors
+        except Exception as error:  # Catch any other unexpected errors
             raise ValueError(
                 "An unexpected error occurred while processing the response from Chonkie API for late chunking."
                 + "Please try again in a short while."
-                + "If the issue persists, please contact support at support@chonkie.ai."
+                + "If the issue persists, please contact support at support@chonkie.ai.",
             ) from error
 
-    def __call__(self, text: Union[str, List[str]]) -> Union[List[LateChunk], List[List[LateChunk]]]:
+    def __call__(
+        self,
+        text: Optional[Union[str, list[str]]] = None,
+        file: Optional[str] = None,
+    ) -> Union[list[Chunk], list[list[Chunk]]]:
         """Call the LateChunker to chunk text."""
-        return self.chunk(text)
+        return self.chunk(text=text, file=file)

@@ -5,13 +5,13 @@ import pytest
 
 from chonkie import LateChunker
 from chonkie.embeddings import SentenceTransformerEmbeddings
-from chonkie.types import LateChunk, RecursiveLevel, RecursiveRules
+from chonkie.types import Chunk, RecursiveLevel, RecursiveRules
 
 
 @pytest.fixture
 def embedding_model() -> SentenceTransformerEmbeddings:
     """Return an object of SentenceTransformerEmbeddings type."""
-    return SentenceTransformerEmbeddings("all-MiniLM-L6-v2")
+    return SentenceTransformerEmbeddings("nomic-ai/modernbert-embed-base")
 
 
 @pytest.fixture
@@ -37,7 +37,7 @@ def test_late_chunker_init_with_instance(embedding_model: SentenceTransformerEmb
 
 def test_late_chunker_init_with_string() -> None:
     """Test the initialization of the LateChunker with a model name string."""
-    model_name = "all-MiniLM-L6-v2"
+    model_name = "nomic-ai/modernbert-embed-base"
     chunker = LateChunker(
         embedding_model=model_name,
         chunk_size=512,
@@ -53,7 +53,10 @@ def test_late_chunker_init_invalid_model() -> None:
         LateChunker(embedding_model=123)  # type: ignore
 
 
-def test_late_chunker_chunk_basic(embedding_model: SentenceTransformerEmbeddings, sample_text: str) -> None:
+def test_late_chunker_chunk_basic(
+    embedding_model: SentenceTransformerEmbeddings,
+    sample_text: str,
+) -> None:
     """Test basic chunking functionality."""
     chunk_size = 512
     chunker = LateChunker(embedding_model=embedding_model, chunk_size=chunk_size)
@@ -61,7 +64,7 @@ def test_late_chunker_chunk_basic(embedding_model: SentenceTransformerEmbeddings
 
     assert isinstance(chunks, list)
     assert len(chunks) > 0
-    assert all(isinstance(chunk, LateChunk) for chunk in chunks)
+    assert all(isinstance(chunk, Chunk) for chunk in chunks)
 
     # Check attributes of each chunk
     for chunk in chunks:
@@ -97,7 +100,7 @@ def test_late_chunker_chunk_short_text(embedding_model: SentenceTransformerEmbed
 
     assert len(chunks) == 1
     chunk = chunks[0]
-    assert isinstance(chunk, LateChunk)
+    assert isinstance(chunk, Chunk)
     assert chunk.text == text
     assert chunk.start_index == 0
     assert chunk.end_index == len(text)
@@ -106,7 +109,7 @@ def test_late_chunker_chunk_short_text(embedding_model: SentenceTransformerEmbed
     assert chunk.embedding.shape == (embedding_model.dimension,)
 
 
-def verify_chunk_indices(chunks: list[LateChunk], original_text: str) -> None:
+def verify_chunk_indices(chunks: list[Chunk], original_text: str) -> None:
     """Verify that chunk indices correctly map to the original text."""
     reconstructed_text = ""
     for i, chunk in enumerate(chunks):
@@ -120,12 +123,13 @@ def verify_chunk_indices(chunks: list[LateChunk], original_text: str) -> None:
         reconstructed_text += chunk.text
 
     # Allow minor discrepancies at the very end if needed, but usually should match
-    assert reconstructed_text == original_text, (
-        "Reconstructed text does not match original"
-    )
+    assert reconstructed_text == original_text, "Reconstructed text does not match original"
 
 
-def test_late_chunker_indices(embedding_model: SentenceTransformerEmbeddings, sample_text: str) -> None:
+def test_late_chunker_indices(
+    embedding_model: SentenceTransformerEmbeddings,
+    sample_text: str,
+) -> None:
     """Test that LateChunker correctly maps chunk indices to the original text."""
     chunker = LateChunker(embedding_model=embedding_model, chunk_size=256)
     chunks = chunker.chunk(sample_text)
@@ -133,7 +137,7 @@ def test_late_chunker_indices(embedding_model: SentenceTransformerEmbeddings, sa
 
 
 def test_late_chunk_repr(embedding_model: SentenceTransformerEmbeddings) -> None:
-    """Test the string representation of LateChunk."""
+    """Test the string representation of Chunk with embedding."""
     text = "This is a short text, definitely shorter than the chunk size."
     chunker = LateChunker(embedding_model=embedding_model, chunk_size=50)
     chunks = chunker.chunk(text)
@@ -142,7 +146,8 @@ def test_late_chunk_repr(embedding_model: SentenceTransformerEmbeddings) -> None
 
     chunk = chunks[0]
     representation = repr(chunk)
-    assert f"text={chunk.text}" in representation
+    assert "Chunk(" in representation
+    assert chunk.text in representation
     assert f"start_index={chunk.start_index}" in representation
     assert f"end_index={chunk.end_index}" in representation
     assert f"token_count={chunk.token_count}" in representation
@@ -150,18 +155,20 @@ def test_late_chunk_repr(embedding_model: SentenceTransformerEmbeddings) -> None
     assert isinstance(chunk.embedding, np.ndarray)
 
 
-def test_late_chunker_custom_rules(embedding_model: SentenceTransformerEmbeddings, sample_text: str) -> None:
+def test_late_chunker_custom_rules(
+    embedding_model: SentenceTransformerEmbeddings,
+    sample_text: str,
+) -> None:
     """Test that LateChunker works even with custom rules."""
     custom_rules = RecursiveRules([RecursiveLevel([".", "!", "?", "\n"])])
-    chunker = LateChunker(
-        embedding_model=embedding_model, chunk_size=256, rules=custom_rules
-    )
+    chunker = LateChunker(embedding_model=embedding_model, chunk_size=256, rules=custom_rules)
     chunks = chunker.chunk(sample_text)
 
     # Check if the chunks are generated correctly
     assert len(chunks) > 0, "No chunks generated"
     assert chunks[0].text[-1] in custom_rules.levels[0].delimiters
     assert all([chunk.token_count for chunk in chunks]) < 256
+
 
 def test_late_chunker_from_recipe_default() -> None:
     """Test that LateChunker.from_recipe works with default parameters."""
@@ -170,7 +177,10 @@ def test_late_chunker_from_recipe_default() -> None:
     assert chunker is not None
     assert isinstance(chunker.rules, RecursiveRules)
 
-def test_late_chunker_from_recipe_custom_params(embedding_model: SentenceTransformerEmbeddings) -> None:
+
+def test_late_chunker_from_recipe_custom_params(
+    embedding_model: SentenceTransformerEmbeddings,
+) -> None:
     """Test that LateChunker.from_recipe works with custom parameters."""
     chunker = LateChunker.from_recipe(
         name="default",
@@ -185,6 +195,7 @@ def test_late_chunker_from_recipe_custom_params(embedding_model: SentenceTransfo
     assert chunker.chunk_size == 256
     assert chunker.min_characters_per_chunk == 10
 
+
 def test_late_chunker_from_recipe_nonexistent() -> None:
     """Test that LateChunker.from_recipe raises an error if the recipe does not exist."""
     with pytest.raises(ValueError):
@@ -192,6 +203,7 @@ def test_late_chunker_from_recipe_nonexistent() -> None:
 
     with pytest.raises(ValueError):
         LateChunker.from_recipe(name="default", lang="invalid")
+
 
 if __name__ == "__main__":
     pytest.main()

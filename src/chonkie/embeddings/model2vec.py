@@ -1,12 +1,13 @@
 """Model2Vec embeddings."""
 
 import importlib.util as importutil
-from typing import TYPE_CHECKING, List, Union
+from typing import TYPE_CHECKING, Union
+
+import numpy as np
 
 from .base import BaseEmbeddings
 
 if TYPE_CHECKING:
-    import numpy as np
     from model2vec import StaticModel
     from tokenizers import Tokenizer
 
@@ -22,14 +23,17 @@ class Model2VecEmbeddings(BaseEmbeddings):
 
     """
 
-    def __init__(
-        self, model: Union[str, "StaticModel"] = "minishlab/potion-base-8M"
-    ) -> None:
+    def __init__(self, model: Union[str, "StaticModel"] = "minishlab/potion-base-32M") -> None:
         """Initialize Model2VecEmbeddings with a str or StaticModel instance."""
         super().__init__()
+        self.model_name_or_path: str | None
 
-        # Lazy import dependencies if they are not already imported
-        self._import_dependencies()
+        try:
+            from model2vec import StaticModel
+        except ImportError as ie:
+            raise ImportError(
+                "model2vec is not available. Please install it via `pip install chonkie[model2vec]`",
+            ) from ie
 
         if isinstance(model, str):
             self.model_name_or_path = model
@@ -50,21 +54,19 @@ class Model2VecEmbeddings(BaseEmbeddings):
         """Dimension of the embedding vectors."""
         return self._dimension
 
-    def embed(self, text: str) -> "np.ndarray":
+    def embed(self, text: str) -> np.ndarray:
         """Embed a single text using the model2vec model."""
-        return self.model.encode(text, convert_to_numpy=True)  # type: ignore
+        return self.model.encode(text, convert_to_numpy=True)
 
-    def embed_batch(self, texts: List[str]) -> List["np.ndarray"]:
+    def embed_batch(self, texts: list[str]) -> list[np.ndarray]:
         """Embed multiple texts using the model2vec model."""
-        return self.model.encode(texts, convert_to_numpy=True)  # type: ignore
+        return self.model.encode(texts, convert_to_numpy=True)  # type: ignore[return-value]
 
-    def similarity(self, u: "np.ndarray", v: "np.ndarray") -> "np.float32":  # type: ignore
+    def similarity(self, u: np.ndarray, v: np.ndarray) -> np.float32:
         """Compute cosine similarity of two embeddings."""
-        return np.divide(
-            np.dot(u, v), np.linalg.norm(u) * np.linalg.norm(v), dtype=np.float32
-        )
+        return np.divide(np.dot(u, v), np.linalg.norm(u) * np.linalg.norm(v), dtype=np.float32)
 
-    def get_tokenizer_or_token_counter(self) -> "Tokenizer":
+    def get_tokenizer(self) -> "Tokenizer":
         """Get the tokenizer or token counter for the model."""
         return self.model.tokenizer
 
@@ -72,22 +74,6 @@ class Model2VecEmbeddings(BaseEmbeddings):
     def _is_available(cls) -> bool:
         """Check if model2vec is available."""
         return importutil.find_spec("model2vec") is not None
-
-    @classmethod
-    def _import_dependencies(cls) -> None:
-        """Lazy import dependencies for the embeddings implementation.
-
-        This method should be implemented by all embeddings implementations that require
-        additional dependencies. It lazily imports the dependencies only when they are needed.
-        """
-        if cls._is_available():
-            global np, StaticModel
-            import numpy as np
-            from model2vec import StaticModel
-        else:
-            raise ImportError(
-                "model2vec is not available. Please install it via `pip install chonkie[model2vec]`"
-            )
 
     def __repr__(self) -> str:
         """Representation of the Model2VecEmbeddings instance."""

@@ -1,7 +1,5 @@
 """Test the Model2VecEmbeddings class."""
 
-from typing import List
-
 import numpy as np
 import pytest
 from model2vec import StaticModel
@@ -12,7 +10,7 @@ from chonkie import Model2VecEmbeddings
 @pytest.fixture
 def embedding_model() -> Model2VecEmbeddings:
     """Return a Model2VecEmbeddings instance."""
-    return Model2VecEmbeddings("minishlab/potion-base-8M")
+    return Model2VecEmbeddings("minishlab/potion-base-32M")
 
 
 @pytest.fixture
@@ -22,7 +20,7 @@ def sample_text() -> str:
 
 
 @pytest.fixture
-def sample_texts() -> List[str]:
+def sample_texts() -> list[str]:
     """Return a list of sample texts for testing."""
     return [
         "This is the first sample text.",
@@ -33,7 +31,7 @@ def sample_texts() -> List[str]:
 
 def test_initialization_with_model_name(embedding_model: Model2VecEmbeddings) -> None:
     """Test that the Model2VecEmbeddings instance is initialized correctly with a model name."""
-    assert embedding_model.model_name_or_path == "minishlab/potion-base-8M"
+    assert embedding_model.model_name_or_path == "minishlab/potion-base-32M"
     assert embedding_model.model is not None
 
 
@@ -41,23 +39,20 @@ def test_initialization_with_model_instance(
     embedding_model: Model2VecEmbeddings,
 ) -> None:
     """Test that the Model2VecEmbeddings instance is initialized correctly with a model instance."""
-    model = StaticModel.from_pretrained("minishlab/potion-base-8M")
+    model = StaticModel.from_pretrained("minishlab/potion-base-32M")
     embeddings = Model2VecEmbeddings(model)
     assert embeddings.model_name_or_path == model.base_model_name
     assert embeddings.model is model
 
 
-def test_embed_single_text(
-    embedding_model: Model2VecEmbeddings, sample_text: str
-) -> None:
+def test_embed_single_text(embedding_model: Model2VecEmbeddings, sample_text: str) -> None:
     """Test that the embed method returns a numpy array of the correct shape."""
     embedding = embedding_model.embed(sample_text)
     assert isinstance(embedding, np.ndarray)
     assert embedding.shape == (embedding_model.dimension,)
 
-def test_similarity(
-    embedding_model: Model2VecEmbeddings, sample_texts: List[str]
-) -> None:
+
+def test_similarity(embedding_model: Model2VecEmbeddings, sample_texts: list[str]) -> None:
     """Test that the similarity method returns a float between 0 and 1."""
     embeddings = embedding_model.embed_batch(sample_texts)
     similarity_score = embedding_model.similarity(embeddings[0], embeddings[1])

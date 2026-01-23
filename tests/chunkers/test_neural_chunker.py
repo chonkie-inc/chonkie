@@ -3,7 +3,6 @@
 import pytest
 
 from chonkie import NeuralChunker
-from chonkie.types.base import Chunk
 
 
 @pytest.fixture
@@ -48,8 +47,8 @@ class TestNeuralChunkerInitialization:
             assert chunker.min_characters_per_chunk == 10
             assert chunker.return_type == "chunks"
             assert not chunker._use_multiprocessing
-            assert hasattr(chunker, 'model')
-            assert hasattr(chunker, 'pipe')
+            assert hasattr(chunker, "model")
+            assert hasattr(chunker, "pipe")
         except Exception:
             pytest.skip("transformers not available or model not accessible")
 
@@ -60,10 +59,9 @@ class TestNeuralChunkerInitialization:
                 model="mirth/chonky_distilbert_base_uncased_1",
                 min_characters_per_chunk=20,
                 stride=128,
-                return_type="texts"
             )
             assert chunker.min_characters_per_chunk == 20
-            assert chunker.return_type == "texts"
+            assert chunker.return_type == "chunks"
         except Exception:
             pytest.skip("transformers not available or model not accessible")
 
@@ -71,9 +69,10 @@ class TestNeuralChunkerInitialization:
         """Test initialization fails with unsupported model."""
         try:
             import importlib.util
+
             if importlib.util.find_spec("transformers") is None:
                 pytest.skip("transformers not available")
-            
+
             # Try to initialize with unsupported model, should fail during validation
             with pytest.raises(ValueError, match="Model .* is not supported"):
                 NeuralChunker(model="unsupported/model")
@@ -93,6 +92,7 @@ class TestNeuralChunkerInitialization:
         # Test availability check
         try:
             import importlib.util
+
             if importlib.util.find_spec("transformers") is not None:
                 assert chunker_class._is_available() is True
             else:
@@ -109,6 +109,7 @@ class TestNeuralChunkerAvailability:
         chunker_class = NeuralChunker.__new__(NeuralChunker)
         try:
             import importlib.util
+
             if importlib.util.find_spec("transformers") is not None:
                 assert chunker_class._is_available() is True
             else:
@@ -127,9 +128,9 @@ class TestNeuralChunkerInternalMethods:
             {"start": 10, "end": 20},
         ]
         text = "0123456789abcdefghij"
-        
+
         splits = neural_chunker._get_splits(response, text)
-        
+
         expected = ["0123456789", "abcdefghij"]
         assert splits == expected
 
@@ -137,9 +138,9 @@ class TestNeuralChunkerInternalMethods:
         """Test _get_splits method with text remainder."""
         response = [{"start": 0, "end": 10}]
         text = "0123456789remainder"
-        
+
         splits = neural_chunker._get_splits(response, text)
-        
+
         expected = ["0123456789", "remainder"]
         assert splits == expected
 
@@ -147,9 +148,9 @@ class TestNeuralChunkerInternalMethods:
         """Test _get_splits method with empty response."""
         response = []
         text = "test text"
-        
+
         splits = neural_chunker._get_splits(response, text)
-        
+
         expected = ["test text"]
         assert splits == expected
 
@@ -157,15 +158,15 @@ class TestNeuralChunkerInternalMethods:
         """Test _merge_close_spans method."""
         # Set min_characters_per_chunk for testing
         neural_chunker.min_characters_per_chunk = 5
-        
+
         response = [
             {"start": 0, "end": 10},
             {"start": 12, "end": 20},  # Too close (gap of 2 < 5)
             {"start": 30, "end": 40},  # Far enough (gap of 10 >= 5)
         ]
-        
+
         merged = neural_chunker._merge_close_spans(response)
-        
+
         expected = [
             {"start": 12, "end": 20},  # Replaced the first span
             {"start": 30, "end": 40},
@@ -187,18 +188,18 @@ class TestNeuralChunkerInternalMethods:
         """Test _get_chunks_from_splits method."""
         splits = ["Hello world", "This is a test", "Final chunk"]
         chunks = neural_chunker._get_chunks_from_splits(splits)
-        
+
         assert len(chunks) == 3
         assert chunks[0].text == "Hello world"
         assert chunks[0].start_index == 0
         assert chunks[0].end_index == 11
         assert chunks[0].token_count > 0
-        
+
         assert chunks[1].text == "This is a test"
         assert chunks[1].start_index == 11
         assert chunks[1].end_index == 25
         assert chunks[1].token_count > 0
-        
+
         assert chunks[2].text == "Final chunk"
         assert chunks[2].start_index == 25
         assert chunks[2].end_index == 36
@@ -209,36 +210,22 @@ class TestNeuralChunkerChunking:
     """Test the main chunking functionality."""
 
     def test_chunk_returns_chunks(self, neural_chunker, sample_text):
-        """Test chunking returns Chunk objects."""
-        neural_chunker.return_type = "chunks"
+        """Test chunking returns chunk objects by default."""
         result = neural_chunker.chunk(sample_text)
-        
-        assert isinstance(result, list)
-        assert len(result) > 0
-        assert all(isinstance(chunk, Chunk) for chunk in result)
-        
-        # Verify chunks reconstruct the original text
-        reconstructed = "".join(chunk.text for chunk in result)
-        assert reconstructed == sample_text
 
-    def test_chunk_returns_texts(self, neural_chunker, sample_text):
-        """Test chunking returns text strings."""
-        neural_chunker.return_type = "texts"
-        result = neural_chunker.chunk(sample_text)
-        
         assert isinstance(result, list)
         assert len(result) > 0
-        assert all(isinstance(text, str) for text in result)
-        
-        # Verify texts reconstruct the original text
-        reconstructed = "".join(result)
+        assert all(hasattr(chunk, "text") for chunk in result)
+
+        # Verify chunk texts reconstruct the original text
+        reconstructed = "".join(chunk.text for chunk in result)
         assert reconstructed == sample_text
 
     def test_chunk_consistency(self, neural_chunker, sample_text):
         """Test that chunking is consistent between calls."""
         result1 = neural_chunker.chunk(sample_text)
         result2 = neural_chunker.chunk(sample_text)
-        
+
         assert len(result1) == len(result2)
         for chunk1, chunk2 in zip(result1, result2):
             assert chunk1.text == chunk2.text
@@ -256,10 +243,10 @@ class TestNeuralChunkerEdgeCases:
     def test_chunk_short_text(self, neural_chunker, short_text):
         """Test chunking very short text."""
         result = neural_chunker.chunk(short_text)
-        
+
         assert isinstance(result, list)
         assert len(result) >= 1
-        
+
         # Verify content is preserved
         reconstructed = "".join(chunk.text for chunk in result)
         assert reconstructed == short_text
@@ -268,7 +255,7 @@ class TestNeuralChunkerEdgeCases:
         """Test chunking empty text."""
         try:
             result = neural_chunker.chunk("")
-            
+
             assert isinstance(result, list)
             assert len(result) >= 1
             # For empty text, the result should contain the empty string
@@ -284,7 +271,7 @@ class TestNeuralChunkerEdgeCases:
     def test_chunk_single_character(self, neural_chunker):
         """Test chunking single character."""
         result = neural_chunker.chunk("a")
-        
+
         assert isinstance(result, list)
         assert len(result) >= 1
         assert "".join(chunk.text for chunk in result) == "a"
@@ -293,7 +280,7 @@ class TestNeuralChunkerEdgeCases:
         """Test chunking whitespace-only text."""
         whitespace_text = "   \n\t  "
         result = neural_chunker.chunk(whitespace_text)
-        
+
         assert isinstance(result, list)
         assert len(result) >= 1
         reconstructed = "".join(chunk.text for chunk in result)
@@ -303,14 +290,14 @@ class TestNeuralChunkerEdgeCases:
         """Test that min_characters_per_chunk affects merging."""
         # Test with larger min_characters_per_chunk
         neural_chunker.min_characters_per_chunk = 50
-        
+
         short_text = "Short. Another short sentence. Third short."
         result = neural_chunker.chunk(short_text)
-        
+
         # Should result in fewer, larger chunks due to merging
         assert isinstance(result, list)
         assert len(result) >= 1
-        
+
         # Verify content preservation
         reconstructed = "".join(chunk.text for chunk in result)
         assert reconstructed == short_text
@@ -322,22 +309,18 @@ class TestNeuralChunkerRepresentation:
     def test_repr(self, neural_chunker):
         """Test the __repr__ method."""
         repr_str = repr(neural_chunker)
-        
+
         assert "NeuralChunker" in repr_str
         assert "min_characters_per_chunk" in repr_str
-        assert "return_type" in repr_str
 
     def test_repr_with_custom_params(self):
         """Test __repr__ with custom parameters."""
         try:
-            chunker = NeuralChunker(
-                min_characters_per_chunk=20, 
-                return_type="texts"
-            )
+            chunker = NeuralChunker(min_characters_per_chunk=20)
             repr_str = repr(chunker)
-            
+
             assert "min_characters_per_chunk=20" in repr_str
-            assert "return_type=texts" in repr_str
+            assert "return_type=chunks" in repr_str
         except Exception:
             pytest.skip("transformers not available or model not accessible")
 
@@ -369,29 +352,16 @@ class TestNeuralChunkerConstants:
 class TestNeuralChunkerParameterVariations:
     """Test different parameter combinations."""
 
-    def test_different_stride_values(self):
-        """Test with different stride values."""
-        try:
-            # Test with custom stride
-            chunker = NeuralChunker(stride=128)
-            assert hasattr(chunker, 'pipe')
-            
-            # Test with stride None (should use default)
-            chunker2 = NeuralChunker(stride=None)
-            assert hasattr(chunker2, 'pipe')
-        except Exception:
-            pytest.skip("transformers not available or model not accessible")
-
     def test_different_device_maps(self):
         """Test with different device maps."""
         try:
             # Test with auto device map
             chunker = NeuralChunker(device_map="auto")
-            assert hasattr(chunker, 'pipe')
-            
+            assert hasattr(chunker, "pipe")
+
             # Test with cpu device map
             chunker2 = NeuralChunker(device_map="cpu")
-            assert hasattr(chunker2, 'pipe')
+            assert hasattr(chunker2, "pipe")
         except Exception:
             pytest.skip("transformers not available or model not accessible")
 
@@ -400,7 +370,7 @@ class TestNeuralChunkerParameterVariations:
         try:
             chunker = NeuralChunker(min_characters_per_chunk=5)
             assert chunker.min_characters_per_chunk == 5
-            
+
             chunker2 = NeuralChunker(min_characters_per_chunk=100)
             assert chunker2.min_characters_per_chunk == 100
         except Exception:
@@ -414,10 +384,10 @@ class TestNeuralChunkerBehavior:
         """Test that chunk boundaries are at reasonable locations."""
         text = "First sentence. Second sentence. Third sentence. Fourth sentence."
         result = neural_chunker.chunk(text)
-        
+
         # Should have multiple chunks for this text
         assert len(result) >= 1
-        
+
         # All chunks should have reasonable length
         for chunk in result:
             assert len(chunk.text.strip()) > 0
@@ -428,7 +398,7 @@ class TestNeuralChunkerBehavior:
     def test_token_counts_are_positive(self, neural_chunker, sample_text):
         """Test that token counts are positive for non-empty chunks."""
         result = neural_chunker.chunk(sample_text)
-        
+
         for chunk in result:
             if len(chunk.text.strip()) > 0:
                 assert chunk.token_count > 0
@@ -436,7 +406,7 @@ class TestNeuralChunkerBehavior:
     def test_chunks_are_contiguous(self, neural_chunker, sample_text):
         """Test that chunks are contiguous (no gaps or overlaps)."""
         result = neural_chunker.chunk(sample_text)
-        
+
         if len(result) > 1:
             for i in range(len(result) - 1):
                 current_chunk = result[i]

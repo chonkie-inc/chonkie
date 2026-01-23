@@ -1,17 +1,22 @@
 """Embedding Refinery."""
 
-from typing import Any, Dict, List, Union
+from typing import Any, Union
 
 from chonkie.embeddings import AutoEmbeddings, BaseEmbeddings
+from chonkie.logger import get_logger
+from chonkie.pipeline import refinery
 from chonkie.types import Chunk
 
 from .base import BaseRefinery
 
+logger = get_logger(__name__)
 
+
+@refinery("embeddings")
 class EmbeddingsRefinery(BaseRefinery):
     """Embedding Refinery.
-    
-    Embeds the text of the chunks using the embedding model and 
+
+    Embeds the text of the chunks using the embedding model and
     adds the embeddings to the chunks for use in downstream tasks
     like upserting into a vector database.
 
@@ -23,8 +28,12 @@ class EmbeddingsRefinery(BaseRefinery):
 
     def __init__(
         self,
-        embedding_model: Union[str, BaseEmbeddings, AutoEmbeddings] = "minishlab/potion-retrieval-32M",
-        **kwargs: Dict[str, Any]
+        embedding_model: Union[
+            str,
+            BaseEmbeddings,
+            AutoEmbeddings,
+        ] = "minishlab/potion-retrieval-32M",
+        **kwargs: dict[str, Any],
     ) -> None:
         """Initialize the EmbeddingRefinery."""
         super().__init__()
@@ -37,16 +46,14 @@ class EmbeddingsRefinery(BaseRefinery):
         else:
             raise ValueError("Model must be a string or a BaseEmbeddings instance.")
 
-    def _is_available(self) -> bool:
-        """Check if the embedding model is available."""
-        return self.embedding_model._is_available()
-        
-    def refine(self, chunks: List[Chunk]) -> List[Chunk]:
+    def refine(self, chunks: list[Chunk]) -> list[Chunk]:
         """Refine the chunks."""
+        logger.debug(f"Starting embedding refinery for {len(chunks)} chunks")
         texts = [chunk.text for chunk in chunks]
         embeds = self.embedding_model.embed_batch(texts)
         for chunk, embed in zip(chunks, embeds):
             chunk.embedding = embed  # type: ignore[attr-defined]
+        logger.info(f"Embedding refinement complete: added embeddings to {len(chunks)} chunks")
         return chunks
 
     def __repr__(self) -> str:

@@ -1,0 +1,73 @@
+---
+title: "List Pipelines"
+api: "GET /v1/pipeline"
+description: "List all pipelines for your organization"
+---
+
+Retrieve all pipelines associated with your organization.
+
+## Examples
+
+<CodeGroup>
+
+```python Python
+from chonkie.cloud import Pipeline
+
+pipelines = Pipeline.list()
+
+for p in pipelines:
+    print(f"{p.slug}: {p.describe()}")
+```
+
+```typescript JavaScript
+import { Pipeline } from '@chonkiejs/cloud';
+
+const pipelines = await Pipeline.list();
+
+for (const p of pipelines) {
+  console.log(`${p.slug}: ${p.describe()}`);
+}
+```
+
+```bash cURL
+curl -X GET https://api.chonkie.ai/v1/pipeline \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+</CodeGroup>
+
+## Response
+
+<ResponseField name="organization_slug" type="string">
+  Organization that owns the pipelines.
+</ResponseField>
+
+<ResponseField name="pipelines" type="array">
+  Array of pipeline objects, each containing:
+
+  <Expandable>
+    <ResponseField name="id" type="string">
+      Unique identifier for the pipeline.
+    </ResponseField>
+
+    <ResponseField name="slug" type="string">
+      The pipeline slug.
+    </ResponseField>
+
+    <ResponseField name="description" type="string">
+      Pipeline description.
+    </ResponseField>
+
+    <ResponseField name="steps" type="array">
+      Array of pipeline step configurations.
+    </ResponseField>
+
+    <ResponseField name="created_at" type="string">
+      ISO 8601 timestamp of creation.
+    </ResponseField>
+
+    <ResponseField name="updated_at" type="string">
+      ISO 8601 timestamp of last update.
+    </ResponseField>
+  </Expandable>
+</ResponseField>

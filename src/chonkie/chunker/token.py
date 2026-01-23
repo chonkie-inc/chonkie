@@ -4,14 +4,20 @@ This module provides a TokenChunker class for splitting text into chunks of a sp
 
 """
 
-from typing import Any, Generator, List, Literal, Sequence, Union
+from typing import Generator, Sequence, Union
 
 from tqdm import trange
 
 from chonkie.chunker.base import BaseChunker
-from chonkie.types.base import Chunk
+from chonkie.logger import get_logger
+from chonkie.pipeline import chunker
+from chonkie.tokenizer import TokenizerProtocol
+from chonkie.types import Chunk
+
+logger = get_logger(__name__)
 
 
+@chunker("token")
 class TokenChunker(BaseChunker):
     """Chunker that splits text into chunks of a specified token size.
 
@@ -19,16 +25,14 @@ class TokenChunker(BaseChunker):
         tokenizer: The tokenizer instance to use for encoding/decoding
         chunk_size: Maximum number of tokens per chunk
         chunk_overlap: Number of tokens to overlap between chunks
-        return_type: Whether to return chunks or texts
 
     """
 
     def __init__(
         self,
-        tokenizer: Union[str, Any] = "gpt2",
-        chunk_size: int = 512,
+        tokenizer: Union[str, TokenizerProtocol] = "character",
+        chunk_size: int = 2048,
         chunk_overlap: Union[int, float] = 0,
-        return_type: Literal["chunks", "texts"] = "chunks",
     ) -> None:
         """Initialize the TokenChunker with configuration parameters.
 
@@ -36,7 +40,6 @@ class TokenChunker(BaseChunker):
             tokenizer: The tokenizer instance to use for encoding/decoding
             chunk_size: Maximum number of tokens per chunk
             chunk_overlap: Number of tokens to overlap between chunks
-            return_type: Whether to return chunks or texts
 
         Raises:
             ValueError: If chunk_size <= 0 or chunk_overlap >= chunk_size
@@ -47,16 +50,11 @@ class TokenChunker(BaseChunker):
             raise ValueError("chunk_size must be positive")
         if isinstance(chunk_overlap, int) and chunk_overlap >= chunk_size:
             raise ValueError("chunk_overlap must be less than chunk_size")
-        if return_type not in ["chunks", "texts"]:
-            raise ValueError("return_type must be either 'chunks' or 'texts'")
 
         # Assign the values if they make sense
-        self.return_type = return_type
         self.chunk_size = chunk_size
         self.chunk_overlap = (
-            chunk_overlap
-            if isinstance(chunk_overlap, int)
-            else int(chunk_overlap * chunk_size)
+            chunk_overlap if isinstance(chunk_overlap, int) else int(chunk_overlap * chunk_size)
         )
 
         self._use_multiprocessing = False
@@ -64,9 +62,9 @@ class TokenChunker(BaseChunker):
     def _create_chunks(
         self,
         chunk_texts: Sequence[str],
-        token_groups: List[List[int]],
-        token_counts: List[int],
-    ) -> Sequence[Chunk]:
+        token_groups: list[list[int]],
+        token_counts: list[int],
+    ) -> list[Chunk]:
         """Create chunks from a list of texts."""
         # Find the overlap lengths for index calculation
         if self.chunk_overlap > 0:
@@ -86,7 +84,9 @@ class TokenChunker(BaseChunker):
         chunks = []
         current_index = 0
         for chunk_text, overlap_length, token_count in zip(
-            chunk_texts, overlap_lengths, token_counts
+            chunk_texts,
+            overlap_lengths,
+            token_counts,
         ):
             start_index = current_index
             end_index = start_index + len(chunk_text)
@@ -96,15 +96,13 @@ class TokenChunker(BaseChunker):
                     start_index=start_index,
                     end_index=end_index,
                     token_count=token_count,
-                )
+                ),
             )
             current_index = end_index - overlap_length
 
         return chunks
 
-    def _token_group_generator(
-        self, tokens: Sequence[int]
-    ) -> Generator[List[int], None, None]:
+    def _token_group_generator(self, tokens: Sequence[int]) -> Generator[list[int], None, None]:
         """Generate chunks from a list of tokens."""
         for start in range(0, len(tokens), self.chunk_size - self.chunk_overlap):
             end = min(start + self.chunk_size, len(tokens))
@@ -112,7 +110,7 @@ class TokenChunker(BaseChunker):
             if end == len(tokens):
                 break
 
-    def chunk(self, text: str) -> Union[Sequence[Chunk], Sequence[str]]:
+    def chunk(self, text: str) -> list[Chunk]:
         """Split text into overlapping chunks of specified token size.
 
         Args:
@@ -125,28 +123,25 @@ class TokenChunker(BaseChunker):
         if not text.strip():
             return []
 
+        logger.debug(f"Chunking text of length {len(text)} with chunk_size={self.chunk_size}")
+
         # Encode full text
         text_tokens = self.tokenizer.encode(text)
 
         # Calculate token groups and counts
         token_groups = list(self._token_group_generator(text_tokens))
+        token_counts = [len(toks) for toks in token_groups]
 
-        # if return_type is chunks, we need to decode the token groups into the chunk texts
-        if self.return_type == "chunks":
-            token_counts = [len(toks) for toks in token_groups]
+        # decode the token groups into the chunk texts
+        chunk_texts = self.tokenizer.decode_batch(token_groups)
 
-            # decode the token groups into the chunk texts
-            chunk_texts = self.tokenizer.decode_batch(token_groups)
+        # Create the chunks from the token groups and token counts
+        chunks = self._create_chunks(chunk_texts, token_groups, token_counts)
 
-            # Create the chunks from the token groups and token counts
-            chunks = self._create_chunks(chunk_texts, token_groups, token_counts)
+        logger.info(f"Created {len(chunks)} chunks from {len(text_tokens)} tokens")
+        return chunks
 
-            return chunks
-        # if return_type is texts, we can just return the decoded token groups
-        elif self.return_type == "texts":
-            return self.tokenizer.decode_batch(token_groups)
-
-    def _process_batch(self, texts: List[str]) -> Sequence[Sequence[Chunk]]:
+    def _process_batch(self, texts: list[str]) -> list[list[Chunk]]:
         """Process a batch of texts."""
         # encode the texts into tokens in a batch
         tokens_list = self.tokenizer.encode_batch(texts)
@@ -160,31 +155,24 @@ class TokenChunker(BaseChunker):
             # get the token groups
             token_groups = list(self._token_group_generator(tokens))
 
-            if self.return_type == "chunks":
-                # get the token counts
-                token_counts = [len(token_group) for token_group in token_groups]
+            # get the token counts
+            token_counts = [len(token_group) for token_group in token_groups]
 
-                # decode the token groups into the chunk texts
-                chunk_texts = self.tokenizer.decode_batch(token_groups)
+            # decode the token groups into the chunk texts
+            chunk_texts = self.tokenizer.decode_batch(token_groups)
 
-                # create the chunks from the token groups and token counts
-                chunks = self._create_chunks(chunk_texts, token_groups, token_counts)
-                result.append(chunks)
-            elif self.return_type == "texts":
-                result.append(self.tokenizer.decode_batch(token_groups))
-            else:
-                raise ValueError(
-                    "Invalid return_type. Must be either 'chunks' or 'texts'."
-                )
+            # create the chunks from the token groups and token counts
+            chunks = self._create_chunks(chunk_texts, token_groups, token_counts)
+            result.append(chunks)
 
         return result
 
     def chunk_batch(  # type: ignore[override]
         self,
-        texts: List[str],
+        texts: list[str],
         batch_size: int = 1,
         show_progress_bar: bool = True,
-    ) -> Sequence[Sequence[Chunk]]:
+    ) -> list[list[Chunk]]:
         """Split a batch of texts into their respective chunks.
 
         Args:
@@ -213,10 +201,10 @@ class TokenChunker(BaseChunker):
 
     def __call__(  # type: ignore[override]
         self,
-        text: Union[str, List[str]],
+        text: Union[str, list[str]],
         batch_size: int = 1,
         show_progress_bar: bool = True,
-    ) -> Union[Sequence[Chunk], Sequence[Sequence[Chunk]], Sequence[str], Sequence[Sequence[str]]]:
+    ) -> Union[list[Chunk], list[list[Chunk]]]:
         """Make the TokenChunker callable directly.
 
         Args:
@@ -233,15 +221,12 @@ class TokenChunker(BaseChunker):
         elif isinstance(text, list) and isinstance(text[0], str):
             return self.chunk_batch(text, batch_size, show_progress_bar)
         else:
-            raise ValueError(
-                "Invalid input type. Expected a string or a list of strings."
-            )
+            raise ValueError("Invalid input type. Expected a string or a list of strings.")
 
     def __repr__(self) -> str:
         """Return a string representation of the TokenChunker."""
         return (
             f"TokenChunker(tokenizer={self.tokenizer}, "
             f"chunk_size={self.chunk_size}, "
-            f"chunk_overlap={self.chunk_overlap}, "
-            f"return_type={self.return_type})"
+            f"chunk_overlap={self.chunk_overlap})"
         )
