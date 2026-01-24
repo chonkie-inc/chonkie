@@ -1,5 +1,6 @@
 """OpenAI embeddings."""
 
+import asyncio
 import importlib.util as importutil
 import os
 import warnings
@@ -79,7 +80,7 @@ class OpenAIEmbeddings(BaseEmbeddings):
 
         try:
             import tiktoken
-            from openai import OpenAI
+            from openai import AsyncOpenAI, OpenAI
         except ImportError as ie:
             raise ImportError(
                 'One (or more) of the following packages is not available: openai, tiktoken. Please install it via `pip install "chonkie[openai]"`',
@@ -124,6 +125,13 @@ class OpenAIEmbeddings(BaseEmbeddings):
             max_retries=max_retries,
             **kwargs,  # type: ignore[arg-type]
         )
+        self.async_client = AsyncOpenAI(
+            api_key=api_key or os.getenv("OPENAI_API_KEY"),
+            base_url=base_url,
+            timeout=timeout,
+            max_retries=max_retries,
+            **kwargs,  # type: ignore[arg-type]
+        )
 
         if self.client.api_key is None:
             raise ValueError(
@@ -153,6 +161,22 @@ class OpenAIEmbeddings(BaseEmbeddings):
         )
         return np.array(response.data[0].embedding, dtype=np.float32)
 
+    async def embed_async(self, text: str) -> np.ndarray:
+        """Get embeddings for a single text asynchronously."""
+        text = self._truncate(text)
+        response = await self.async_client.embeddings.create(
+            model=self.model,
+            input=text,
+        )
+        return np.array(response.data[0].embedding, dtype=np.float32)
+
+    @staticmethod
+    def _process_embedding_response(response: Any) -> list[np.ndarray]:
+        """Process the response from the OpenAI API. Helper function for embed batch."""
+        # Sort embeddings by index as OpenAI might return them in different order
+        sorted_embeddings = sorted(response.data, key=lambda x: x.index)
+        return [np.array(e.embedding, dtype=np.float32) for e in sorted_embeddings]
+
     def embed_batch(self, texts: list[str]) -> list[np.ndarray]:
         """Get embeddings for multiple texts using batched API calls."""
         if not texts:
@@ -171,16 +195,46 @@ class OpenAIEmbeddings(BaseEmbeddings):
                     model=self.model,
                     input=batch,
                 )
-                # Sort embeddings by index as OpenAI might return them in different order
-                sorted_embeddings = sorted(response.data, key=lambda x: x.index)
-                embeddings = [np.array(e.embedding, dtype=np.float32) for e in sorted_embeddings]
-                all_embeddings.extend(embeddings)
+                all_embeddings.extend(self._process_embedding_response(response))
 
             except Exception as e:
                 # If the batch fails, try one by one
                 if len(batch) > 1:
                     warnings.warn(f"Batch embedding failed: {str(e)}. Trying one by one.")
                     individual_embeddings = [self.embed(text) for text in batch]
+                    all_embeddings.extend(individual_embeddings)
+                else:
+                    raise e
+
+        return all_embeddings
+
+    async def embed_batch_async(self, texts: list[str]) -> list[np.ndarray]:
+        """Get embeddings for multiple texts using batched API calls asynchronously."""
+        if not texts:
+            return []
+
+        all_embeddings = []
+
+        # Truncate all the texts
+        texts = [self._truncate(text) for text in texts]
+
+        # Process in batches
+        for i in range(0, len(texts), self._batch_size):
+            batch = texts[i : i + self._batch_size]
+            try:
+                response = await self.async_client.embeddings.create(
+                    model=self.model,
+                    input=batch,
+                )
+                all_embeddings.extend(self._process_embedding_response(response))
+
+            except Exception as e:
+                # If the batch fails, try one by one
+                if len(batch) > 1:
+                    warnings.warn(f"Batch embedding failed: {str(e)}. Trying one by one.")
+                    individual_embeddings = await asyncio.gather(*[
+                        self.embed_async(text) for text in batch
+                    ])
                     all_embeddings.extend(individual_embeddings)
                 else:
                     raise e
