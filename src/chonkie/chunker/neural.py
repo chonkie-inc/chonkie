@@ -97,7 +97,7 @@ class NeuralChunker(BaseChunker):
             raise ValueError(
                 "Invalid tokenizer provided. Please provide a string or a transformers.PreTrainedTokenizerFast object."
             )
-        
+
         if tokenizer_id is not None:
             try:
                 tokenizer = AutoTokenizer.from_pretrained(tokenizer_id)
@@ -105,7 +105,7 @@ class NeuralChunker(BaseChunker):
                 raise ValueError(
                     f"Failed to load tokenizer '{tokenizer_id}'. "
                     "Check that the tokenizer name is correct."
-                ) from e    
+                ) from e
 
         # Initialize the Parent class with the tokenizer
         super().__init__(tokenizer)  # type: ignore[arg-type]
@@ -128,16 +128,14 @@ class NeuralChunker(BaseChunker):
             raise ValueError(
                 "Invalid model provided. Please provide a string or a transformers.AutoModelForTokenClassification object."
             )
-        
+
         if model_id is not None:
             try:
                 self.model = AutoModelForTokenClassification.from_pretrained(
                     model_id, device_map=device_map
                 )
             except OSError as e:
-                raise ValueError(
-                    "The model is not compatible with token-classification."
-                ) from e
+                raise ValueError("The model is not compatible with token-classification.") from e
         # Set the attributes
         self.min_characters_per_chunk = min_characters_per_chunk
 
