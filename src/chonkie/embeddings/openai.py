@@ -210,9 +210,7 @@ class OpenAIEmbeddings(BaseEmbeddings):
         )
         # Sort embeddings by index as OpenAI might return them in different order
         sorted_embeddings = sorted(response.data, key=lambda x: x.index)
-        embeddings = [
-            np.array(e.embedding, dtype=np.float32) for e in sorted_embeddings
-        ]
+        embeddings = [np.array(e.embedding, dtype=np.float32) for e in sorted_embeddings]
         return embeddings
 
     def similarity(self, u: np.ndarray, v: np.ndarray) -> np.float32:
