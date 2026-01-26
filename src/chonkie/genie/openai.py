@@ -2,10 +2,10 @@
 
 import importlib.util as importutil
 import os
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Any, Optional, cast
 
 from openai import APIError, RateLimitError, Timeout
-from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
+from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 
 from .base import BaseGenie
 
@@ -57,7 +57,9 @@ class OpenAIGenie(BaseGenie):
     @retry(
         stop=stop_after_attempt(5),
         wait=wait_exponential(multiplier=2, max=60),
-        retry=retry_if_exception_type((RateLimitError, APIError, Timeout))
+        retry=retry_if_exception_type(
+            cast(tuple[type[BaseException], ...], (RateLimitError, APIError, Timeout))
+        ),
     )
     def generate(self, prompt: str) -> str:
         """Generate a response based on the given prompt."""
@@ -73,7 +75,9 @@ class OpenAIGenie(BaseGenie):
     @retry(
         stop=stop_after_attempt(5),
         wait=wait_exponential(multiplier=2, max=60),
-        retry=retry_if_exception_type((RateLimitError, APIError, Timeout))
+        retry=retry_if_exception_type(
+            cast(tuple[type[BaseException], ...], (RateLimitError, APIError, Timeout))
+        ),
     )
     def generate_json(self, prompt: str, schema: "BaseModel") -> dict[str, Any]:
         """Generate a JSON response based on the given prompt and schema."""

@@ -4,10 +4,9 @@ import importlib.util as importutil
 import os
 import warnings
 from functools import lru_cache
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Any, Optional, cast
 
 import numpy as np
-
 from openai import APIError, RateLimitError, Timeout
 from tenacity import (
     retry,
@@ -155,7 +154,9 @@ class OpenAIEmbeddings(BaseEmbeddings):
     @retry(
         stop=stop_after_attempt(5),
         wait=wait_exponential(multiplier=2, max=60),
-        retry=retry_if_exception_type((RateLimitError, APIError, Timeout))
+        retry=retry_if_exception_type(
+            cast(tuple[type[BaseException], ...], (RateLimitError, APIError, Timeout))
+        ),
     )
     def embed(self, text: str) -> np.ndarray:
         """Get embeddings for a single text."""
@@ -197,7 +198,9 @@ class OpenAIEmbeddings(BaseEmbeddings):
     @retry(
         stop=stop_after_attempt(5),
         wait=wait_exponential(multiplier=2, max=60),
-        retry=retry_if_exception_type((RateLimitError, APIError, Timeout))
+        retry=retry_if_exception_type(
+            cast(tuple[type[BaseException], ...], (RateLimitError, APIError, Timeout))
+        ),
     )
     def _embed_batch_with_retry(self, batch: list[str]) -> list[np.ndarray]:
         """Embed a batch with retry logic."""
