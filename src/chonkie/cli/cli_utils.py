@@ -1,7 +1,8 @@
 """CLI utilities for Chonkie using Typer."""
 
 import os
-from typing import Optional
+import sys
+from typing import Any, Optional
 
 import typer
 
@@ -38,12 +39,98 @@ HANDSHAKES = sorted(
 )
 
 
+def parse_params(param_list: list[str] | None) -> dict[str, Any]:
+    """Parse a list of key=value strings into a dictionary.
+
+    Args:
+        param_list: List of strings in format "key=value" or just "key" (for boolean flags)
+
+    Returns:
+        Dictionary of parsed parameters with type conversion
+
+    Examples:
+        >>> parse_params(["chunk_size=512", "threshold=0.8", "verbose"])
+        {'chunk_size': 512, 'threshold': 0.8, 'verbose': True}
+
+    """
+    if not param_list:
+        return {}
+
+    params: dict[str, Any] = {}
+    for param in param_list:
+        if "=" not in param:
+            # Boolean flag (no =value)
+            params[param.strip()] = True
+            continue
+
+        key, _, value = param.partition("=")
+        key = key.strip()
+        value = value.strip()
+
+        # Try to convert to appropriate type
+        lower_caps_value = value.lower()
+        if lower_caps_value == "true":
+            params[key] = True
+        elif lower_caps_value == "false":
+            params[key] = False
+        elif lower_caps_value == "none" or lower_caps_value == "null":
+            params[key] = None
+        else:
+            # Try float first, then convert to int if appropriate, or keep as string
+            try:
+                # Try float first (handles both floats and ints in scientific notation)
+                float_val = float(value)
+                # If it's a whole number and no decimal point in original, keep as int
+                if "." not in value and "e" not in lower_caps_value and float_val.is_integer():
+                    params[key] = int(float_val)
+                else:
+                    params[key] = float_val
+            except ValueError:
+                # Keep as string
+                params[key] = value
+
+    return params
+
+
+def merge_params(explicit_params: dict[str, Any], parsed_params: dict[str, Any]) -> dict[str, Any]:
+    """Merge explicit parameters with parsed parameters, with explicit taking precedence.
+
+    Args:
+        explicit_params: Parameters from explicit CLI options
+        parsed_params: Parameters from parsed key=value strings
+
+    Returns:
+        Merged dictionary
+
+    """
+    return dict(
+        parsed_params,
+        **{key: value for key, value in explicit_params.items() if value is not None},
+    )
+
+
 @app.command()
 def chunk(
     text: str = typer.Argument(..., help="Text to chunk or path to file"),
     chunker: str = typer.Option(
         "semantic",
         help=f"Chunking method to use. Options: {', '.join(CHUNKERS)}",
+    ),
+    chunk_size: Optional[int] = typer.Option(
+        None,
+        help="Maximum number of tokens per chunk",
+    ),
+    chunk_overlap: Optional[int] = typer.Option(
+        None,
+        help="Number of tokens to overlap between chunks",
+    ),
+    threshold: Optional[float] = typer.Option(
+        None,
+        help="Threshold for semantic similarity (0-1)",
+    ),
+    chunker_params: Optional[list[str]] = typer.Option(
+        None,
+        help="Additional parameters for the chunker as key=value pairs (e.g., --chunker-params tokenizer=gpt2 min_characters_per_chunk=50)",
     ),
     handshaker: Optional[str] = typer.Option(
         None,
@@ -59,7 +146,22 @@ def chunk(
         typer.echo(f"Error: Unknown chunker '{chunker}'. Available: {', '.join(CHUNKERS)}")
         raise typer.Exit(code=1) from None
 
-    chunking_maker = chunker_class()
+    # Parse and merge parameters
+    explicit_params = {
+        "chunk_size": chunk_size,
+        "chunk_overlap": chunk_overlap,
+        "threshold": threshold,
+    }
+    parsed_params = parse_params(chunker_params)
+    chunker_kwargs = merge_params(explicit_params, parsed_params)
+
+    # Create chunker instance with parameters
+    try:
+        chunking_maker = chunker_class(**chunker_kwargs)
+    except Exception as e:
+        typer.echo(f"Error initializing chunker with parameters: {e}")
+        raise typer.Exit(code=1) from None
+
     viz = Visualizer()
     # Get text content
     content = text
@@ -69,14 +171,76 @@ def chunk(
                 content = f.read()
         except Exception as e:
             typer.echo(f"Error reading file {text}: {e}")
-            raise typer.Exit(code=1) from e
+            raise typer.Exit(code=1) from None
 
     # Chunk the text
     chunks = chunking_maker.chunk(content)
 
     # Handle output
     if handshaker is None:
-        viz(chunks)
+        try:
+            # Set UTF-8 encoding for stdout on Windows if possible
+            if sys.platform == "win32":
+                try:
+                    sys.stdout.reconfigure(encoding="utf-8")
+                except (AttributeError, ValueError):
+                    pass  # Python < 3.7 or reconfigure not available
+            viz(chunks)
+        except (UnicodeEncodeError, UnicodeDecodeError, BrokenPipeError) as e:
+            # Fallback for Windows console encoding issues
+            try:
+                if chunks:
+                    typer.echo(f"Chunked into {len(chunks)} chunks:")
+                    for i, chunk in enumerate(chunks, 1):
+                        chunk_text = (
+                            getattr(chunk, "text", "")[:200] if hasattr(chunk, "text") else ""
+                        )
+                        token_count = (
+                            getattr(chunk, "token_count", 0)
+                            if hasattr(chunk, "token_count")
+                            else 0
+                        )
+                        typer.echo(f"\n--- Chunk {i} ({token_count} tokens) ---")
+                        # Truncate and escape problematic characters for display
+                        preview = chunk_text.encode("ascii", errors="replace").decode("ascii")
+                        typer.echo(preview + ("..." if len(chunk_text) > 200 else ""))
+                else:
+                    typer.echo("No chunks to display (encoding error occurred)")
+            except Exception as fallback_error:
+                # If fallback also fails, show minimal error info without masking original
+                typer.echo(
+                    f"Encoding error ({type(e).__name__}) occurred, and fallback display also failed ({type(fallback_error).__name__})"
+                )
+                typer.echo(f"Original error: {e}")
+                typer.echo(f"Fallback error: {fallback_error}")
+        except Exception as e:
+            # Catch any other visualization errors and provide basic output
+            try:
+                if chunks:
+                    typer.echo(
+                        f"Chunked into {len(chunks)} chunks (visualization error: {type(e).__name__})"
+                    )
+                    for i, chunk in enumerate(chunks, 1):
+                        chunk_text = (
+                            getattr(chunk, "text", "")[:200] if hasattr(chunk, "text") else ""
+                        )
+                        token_count = (
+                            getattr(chunk, "token_count", 0)
+                            if hasattr(chunk, "token_count")
+                            else 0
+                        )
+                        typer.echo(f"\n--- Chunk {i} ({token_count} tokens) ---")
+                        preview = chunk_text.encode("ascii", errors="replace").decode("ascii")
+                        typer.echo(preview + ("..." if len(chunk_text) > 200 else ""))
+                else:
+                    typer.echo(f"Visualization error ({type(e).__name__}): {e}")
+            except Exception as fallback_error:
+                # If fallback also fails, show minimal error info without masking original
+                typer.echo(
+                    f"Visualization error ({type(e).__name__}) occurred, and fallback display also failed ({type(fallback_error).__name__})"
+                )
+                typer.echo(f"Original error: {e}")
+                typer.echo(f"Fallback error: {fallback_error}")
     else:
         try:
             handshake_class = ComponentRegistry.get_handshake(handshaker).component_class
@@ -93,7 +257,7 @@ def chunk(
             typer.echo("Chunks stored successfully.")
         except Exception as e:
             typer.echo(f"Error storing chunks: {e}")
-            raise typer.Exit(code=1) from e
+            raise typer.Exit(code=1) from None
 
 
 @app.command()
@@ -115,17 +279,45 @@ def pipeline(
         None,
         help="Chef method to use (e.g., text, markdown)",
     ),
+    chef_params: Optional[list[str]] = typer.Option(
+        None,
+        help="Parameters for the chef as key=value pairs (e.g., --chef-params clean_whitespace=true)",
+    ),
     chunker: str = typer.Option(
         "semantic",
         help="Chunking method to use",
+    ),
+    chunk_size: Optional[int] = typer.Option(
+        None,
+        help="Maximum number of tokens per chunk",
+    ),
+    chunk_overlap: Optional[int] = typer.Option(
+        None,
+        help="Number of tokens to overlap between chunks",
+    ),
+    threshold: Optional[float] = typer.Option(
+        None,
+        help="Threshold for semantic similarity (0-1)",
+    ),
+    chunker_params: Optional[list[str]] = typer.Option(
+        None,
+        help="Additional parameters for the chunker as key=value pairs (e.g., --chunker-params tokenizer=gpt2 min_characters_per_chunk=50)",
     ),
     refiner: Optional[str] = typer.Option(
         None,
         help="Refiner method to use",
     ),
+    refiner_params: Optional[list[str]] = typer.Option(
+        None,
+        help="Parameters for the refiner as key=value pairs (e.g., --refiner-params context_size=50)",
+    ),
     handshaker: Optional[str] = typer.Option(
         None,
         help="Handshaker method to use",
+    ),
+    handshaker_params: Optional[list[str]] = typer.Option(
+        None,
+        help="Parameters for the handshaker as key=value pairs (e.g., --handshaker-params collection_name=documents)",
     ),
 ) -> None:
     """Run a processing pipeline on text or files."""
@@ -162,18 +354,28 @@ def pipeline(
 
         # 2. Chef
         if chef is not None:
-            pipe.process_with(chef)
+            chef_kwargs = parse_params(chef_params)
+            pipe.process_with(chef, **chef_kwargs)
 
         # 3. Chunker
-        pipe.chunk_with(chunker)
+        explicit_chunker_params = {
+            "chunk_size": chunk_size,
+            "chunk_overlap": chunk_overlap,
+            "threshold": threshold,
+        }
+        parsed_chunker_params = parse_params(chunker_params)
+        chunker_kwargs = merge_params(explicit_chunker_params, parsed_chunker_params)
+        pipe.chunk_with(chunker, **chunker_kwargs)
 
         # 4. Refiner
         if refiner is not None:
-            pipe.refine_with(refiner)
+            refiner_kwargs = parse_params(refiner_params)
+            pipe.refine_with(refiner, **refiner_kwargs)
 
         # 5. Handshaker
         if handshaker is not None:
-            pipe.store_in(handshaker)
+            handshaker_kwargs = parse_params(handshaker_params)
+            pipe.store_in(handshaker, **handshaker_kwargs)
 
         # Run pipeline
         typer.echo("Running pipeline...")
@@ -183,7 +385,7 @@ def pipeline(
             # typer.echo(doc) # This prints the repr, which might be too verbose or ugly
         except Exception as e:
             typer.echo(f"Error running pipeline: {e}")
-            raise typer.Exit(code=1) from e
+            raise typer.Exit(code=1) from None
 
         # Output results
         if handshaker:
@@ -196,16 +398,85 @@ def pipeline(
 
         docs: list[Document] = doc if isinstance(doc, list) else [doc]  # type: ignore
 
-        for d_obj in docs:
-            # Optional: print filename if available in metadata
-            if d_obj.metadata and "filename" in d_obj.metadata:
-                typer.echo(f"--- {d_obj.metadata['filename']} ---")
+        # Set UTF-8 encoding for stdout on Windows if possible (once, before loop)
+        if sys.platform == "win32":
+            try:
+                sys.stdout.reconfigure(encoding="utf-8")
+            except (AttributeError, ValueError):
+                pass  # Python < 3.7 or reconfigure not available
 
-            viz(d_obj.chunks)
+        # Summary for multiple files
+        if len(docs) > 1:
+            total_chunks = sum(len(d.chunks) for d in docs)
+            typer.echo(f"\nProcessed {len(docs)} files, {total_chunks} total chunks\n")
+
+        for idx, d_obj in enumerate(docs, 1):
+            # Print filename if available in metadata
+            filename = (
+                d_obj.metadata.get("filename", f"Document {idx}")
+                if d_obj.metadata
+                else f"Document {idx}"
+            )
+            if len(docs) > 1:
+                typer.echo(f"\n{'=' * 80}")
+                typer.echo(f"File {idx}/{len(docs)}: {filename} ({len(d_obj.chunks)} chunks)")
+                typer.echo(f"{'=' * 80}\n")
+
+            try:
+                viz(d_obj.chunks)
+            except (UnicodeEncodeError, UnicodeDecodeError, BrokenPipeError) as e:
+                # Fallback for Windows console encoding issues
+                try:
+                    if d_obj.chunks:
+                        typer.echo(f"Chunked into {len(d_obj.chunks)} chunks:")
+                        for i, chunk in enumerate(d_obj.chunks, 1):
+                            chunk_text = str(getattr(chunk, "text", ""))[:200]
+                            token_count = getattr(chunk, "token_count", 0)
+                            typer.echo(f"\n--- Chunk {i} ({token_count} tokens) ---")
+                            # Truncate and escape problematic characters for display
+                            preview = chunk_text.encode("ascii", errors="replace").decode("ascii")
+                            typer.echo(preview + ("..." if len(chunk_text) > 200 else ""))
+                    else:
+                        typer.echo("No chunks to display (encoding error occurred)")
+                except Exception as fallback_error:
+                    # If fallback also fails, show minimal error info without masking original
+                    typer.echo(
+                        f"Encoding error ({type(e).__name__}) occurred, and fallback display also failed ({type(fallback_error).__name__})"
+                    )
+                    typer.echo(f"Original error: {e}")
+                    typer.echo(f"Fallback error: {fallback_error}")
+            except Exception as e:
+                # Catch any other visualization errors and provide basic output
+                try:
+                    if d_obj.chunks:
+                        typer.echo(
+                            f"Chunked into {len(d_obj.chunks)} chunks (visualization error: {type(e).__name__})"
+                        )
+                        for i, chunk in enumerate(d_obj.chunks, 1):
+                            chunk_text = (
+                                getattr(chunk, "text", "")[:200] if hasattr(chunk, "text") else ""
+                            )
+                            token_count = (
+                                getattr(chunk, "token_count", 0)
+                                if hasattr(chunk, "token_count")
+                                else 0
+                            )
+                            typer.echo(f"\n--- Chunk {i} ({token_count} tokens) ---")
+                            preview = chunk_text.encode("ascii", errors="replace").decode("ascii")
+                            typer.echo(preview + ("..." if len(chunk_text) > 200 else ""))
+                    else:
+                        typer.echo(f"Visualization error ({type(e).__name__}): {e}")
+                except Exception as fallback_error:
+                    # If fallback also fails, show minimal error info without masking original
+                    typer.echo(
+                        f"Visualization error ({type(e).__name__}) occurred, and fallback display also failed ({type(fallback_error).__name__})"
+                    )
+                    typer.echo(f"Original error: {e}")
+                    typer.echo(f"Fallback error: {fallback_error}")
 
     except Exception as e:
         typer.echo(f"Pipeline error: {e}")
-        raise typer.Exit(code=1) from e
+        raise typer.Exit(code=1) from None
 
 
 if __name__ == "__main__":
