@@ -1,8 +1,6 @@
 """Test suite for OpenAIEmbeddings."""
 
 import os
-import dotenv
-dotenv.load_dotenv()
 from unittest.mock import MagicMock, patch
 
 import numpy as np
