@@ -7,7 +7,7 @@ from functools import lru_cache
 from typing import TYPE_CHECKING, Any, Optional, cast
 
 import numpy as np
-from openai import APIError, RateLimitError, Timeout
+from openai import APIError, APITimeoutError, RateLimitError
 from tenacity import (
     retry,
     retry_if_exception_type,
@@ -77,7 +77,7 @@ class OpenAIEmbeddings(BaseEmbeddings):
             base_url: The base URL to use.
             api_key: OpenAI API key (if not provided, looks for OPENAI_API_KEY env var)
             max_retries: Maximum number of retries for failed requests
-            timeout: Timeout in seconds for API requests
+            timeout: APITimeoutError in seconds for API requests
             batch_size: Maximum number of texts to embed in one API call
             **kwargs: Additional keyword arguments to pass to the OpenAI client.
 
@@ -155,7 +155,7 @@ class OpenAIEmbeddings(BaseEmbeddings):
         stop=stop_after_attempt(5),
         wait=wait_exponential(multiplier=2, max=60),
         retry=retry_if_exception_type(
-            cast(tuple[type[BaseException], ...], (RateLimitError, APIError, Timeout))
+            cast(tuple[type[BaseException], ...], (RateLimitError, APIError, APITimeoutError))
         ),
     )
     def embed(self, text: str) -> np.ndarray:
@@ -199,7 +199,7 @@ class OpenAIEmbeddings(BaseEmbeddings):
         stop=stop_after_attempt(5),
         wait=wait_exponential(multiplier=2, max=60),
         retry=retry_if_exception_type(
-            cast(tuple[type[BaseException], ...], (RateLimitError, APIError, Timeout))
+            cast(tuple[type[BaseException], ...], (RateLimitError, APIError, APITimeoutError))
         ),
     )
     def _embed_batch_with_retry(self, batch: list[str]) -> list[np.ndarray]:
