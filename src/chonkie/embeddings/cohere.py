@@ -3,16 +3,20 @@
 import importlib
 import importlib.util
 import os
-import warnings
 from typing import TYPE_CHECKING, Optional
 
 import httpx
 import numpy as np
 
+from chonkie.logger import get_logger
+
 from .base import BaseEmbeddings
 
 if TYPE_CHECKING:
     from tokenizers import Tokenizer
+
+
+logger = get_logger(__name__)
 
 
 class CohereEmbeddings(BaseEmbeddings):
@@ -128,7 +132,7 @@ class CohereEmbeddings(BaseEmbeddings):
         """Generate embeddings for a single text."""
         token_count = self.count_tokens(text)
         if token_count > 512 and self._show_warnings:  # Cohere models max_context_length
-            warnings.warn(
+            logger.warning(
                 f"Text has {token_count} tokens which exceeds the model's context length of 512."
                 "Generation may not be optimal",
             )
@@ -145,8 +149,9 @@ class CohereEmbeddings(BaseEmbeddings):
                 return np.array(response.embeddings.float_[0], dtype=np.float32)  # type: ignore[index]
             except Exception as e:
                 if self._show_warnings:
-                    warnings.warn(
-                        f"There was an exception while generating embeddings. Exception: {str(e)}. Retrying...",
+                    logger.warning(
+                        f"There was an exception while generating embeddings: {e}. Retrying...",
+                        exc_info=True,
                     )
 
         raise RuntimeError("Unable to generate embeddings through Cohere.")
@@ -167,7 +172,7 @@ class CohereEmbeddings(BaseEmbeddings):
             if self._show_warnings:
                 for _, count in zip(batch, token_counts):
                     if count > 512:
-                        warnings.warn(
+                        logger.warning(
                             f"Text has {count} tokens which exceeds the model's context length of 512."
                             "Generation may not be optimal.",
                         )
@@ -190,14 +195,17 @@ class CohereEmbeddings(BaseEmbeddings):
                         break
                     except Exception as e:
                         if self._show_warnings:
-                            warnings.warn(
-                                f"There was an exception while generating embeddings. Exception: {str(e)}. Retrying...",
+                            logger.warning(
+                                f"There was an exception while generating embeddings. Exception: {e}. Retrying...",
                             )
 
             except Exception as e:
                 # If the batch fails, try one by one
                 if len(batch) > 1:
-                    warnings.warn(f"Batch embedding failed: {str(e)}. Trying one by one.")
+                    logger.warning(
+                        f"Batch embedding failed: {e}. Trying one by one.",
+                        exc_info=True,
+                    )
                     individual_embeddings = [self.embed(text) for text in batch]
                     all_embeddings.extend(individual_embeddings)
                 else:

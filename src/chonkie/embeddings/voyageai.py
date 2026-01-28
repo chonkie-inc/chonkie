@@ -3,15 +3,18 @@
 import asyncio
 import importlib.util as importutil
 import os
-import warnings
 from typing import TYPE_CHECKING, Literal, Optional
 
 import numpy as np
+
+from chonkie.logger import get_logger
 
 from .base import BaseEmbeddings
 
 if TYPE_CHECKING:
     from tokenizers import Tokenizer
+
+logger = get_logger(__name__)
 
 
 class VoyageAIEmbeddings(BaseEmbeddings):
@@ -135,10 +138,7 @@ class VoyageAIEmbeddings(BaseEmbeddings):
         """
         tokens = self.count_tokens(text)
         if tokens > self._token_limit and self.truncation:
-            warnings.warn(
-                f"Input has {tokens} tokens (>{self._token_limit}); truncating.",
-                UserWarning,
-            )
+            logger.warning(f"Input has {tokens} tokens (>{self._token_limit}); truncating.")
         try:
             response = self._client.embed(
                 texts=[text],
@@ -169,10 +169,7 @@ class VoyageAIEmbeddings(BaseEmbeddings):
         """
         tokens = self.count_tokens(text)
         if tokens > self._token_limit and self.truncation:
-            warnings.warn(
-                f"Input has {tokens} tokens (>{self._token_limit}); truncating.",
-                UserWarning,
-            )
+            logger.warning(f"Input has {tokens} tokens (>{self._token_limit}); truncating.")
 
         try:
             response = await self._aclient.embed(
@@ -210,7 +207,7 @@ class VoyageAIEmbeddings(BaseEmbeddings):
             if self.truncation:
                 for count in token_counts:
                     if count > self._token_limit:
-                        warnings.warn(
+                        logger.warning(
                             f"Text has {count} tokens which exceeds the model's limit of {self._token_limit}. "
                             "It will be truncated.",
                         )
@@ -253,7 +250,7 @@ class VoyageAIEmbeddings(BaseEmbeddings):
         if self.truncation:
             for count in token_counts:
                 if count > self._token_limit:
-                    warnings.warn(
+                    logger.warning(
                         f"Text has {count} tokens which exceeds the model's limit of {self._token_limit}. "
                         "It will be truncated.",
                     )

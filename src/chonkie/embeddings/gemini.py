@@ -2,12 +2,15 @@
 
 import importlib.util as importutil
 import os
-import warnings
 from typing import Any, Optional
 
 import numpy as np
 
+from chonkie.logger import get_logger
+
 from .base import BaseEmbeddings
+
+logger = get_logger(__name__)
 
 
 class GeminiEmbeddings(BaseEmbeddings):
@@ -68,8 +71,10 @@ class GeminiEmbeddings(BaseEmbeddings):
             # Use default model values if model not in list
             self._dimension, self._max_tokens = self.AVAILABLE_MODELS[self.DEFAULT_MODEL]
             if show_warnings:
-                warnings.warn(
-                    f"Model {self.model} not in known models list. Using default model '{self.DEFAULT_MODEL}' with dimension {self._dimension} and max tokens {self._max_tokens}.",
+                logger.warning(
+                    f"Model {self.model} not in known models list. "
+                    f"Using default model '{self.DEFAULT_MODEL}' "
+                    f"with dimension {self._dimension} and max tokens {self._max_tokens}.",
                 )
 
         # Setup Gemini client
@@ -97,7 +102,7 @@ class GeminiEmbeddings(BaseEmbeddings):
         if self._show_warnings:
             token_count = self.count_tokens(text)
             if token_count > self._max_tokens:
-                warnings.warn(
+                logger.warning(
                     f"Text has {token_count} tokens which exceeds the model's limit of {self._max_tokens}. "
                     "Consider chunking the text.",
                 )
@@ -123,7 +128,10 @@ class GeminiEmbeddings(BaseEmbeddings):
                         f"Failed to get embeddings after {self._max_retries} attempts: {e}",
                     ) from e
                 if self._show_warnings:
-                    warnings.warn(f"Embedding attempt {attempt + 1} failed: {str(e)}. Retrying...")
+                    logger.warning(
+                        f"Embedding attempt {attempt + 1} failed: {e}. Retrying...",
+                        exc_info=True,
+                    )
 
         raise RuntimeError("Failed to get embeddings")
 
@@ -145,7 +153,7 @@ class GeminiEmbeddings(BaseEmbeddings):
                 for text in batch:
                     token_count = self.count_tokens(text)
                     if token_count > self._max_tokens:
-                        warnings.warn(
+                        logger.warning(
                             f"Text has {token_count} tokens which exceeds the model's limit of {self._max_tokens}.",
                         )
 
@@ -174,8 +182,9 @@ class GeminiEmbeddings(BaseEmbeddings):
                         if attempt == self._max_retries - 1:
                             # If the batch fails, try one by one
                             if len(batch) > 1:
-                                warnings.warn(
-                                    f"Batch embedding failed: {str(e)}. Trying one by one.",
+                                logger.warning(
+                                    f"Batch embedding failed: {e}. Trying one by one.",
+                                    exc_info=True,
                                 )
                                 individual_embeddings = [self.embed(text) for text in batch]
                                 all_embeddings.extend(individual_embeddings)
@@ -183,8 +192,9 @@ class GeminiEmbeddings(BaseEmbeddings):
                             else:
                                 raise e
                         if self._show_warnings:
-                            warnings.warn(
-                                f"Batch attempt {attempt + 1} failed: {str(e)}. Retrying...",
+                            logger.warning(
+                                f"Batch attempt {attempt + 1} failed: {e}. Retrying...",
+                                exc_info=True,
                             )
 
             except Exception as e:
