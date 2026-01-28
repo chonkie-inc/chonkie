@@ -16,9 +16,6 @@ logger = get_logger(__name__)
 # Currently, it just estimates the context size to token count
 # but it should ideally handle it on a chunk by chunk basis.
 
-# TODO: Add support for `justified` method which is the best of
-# both prefix and suffix overlap.
-
 
 @refinery("overlap")
 class OverlapRefinery(BaseRefinery):
@@ -34,7 +31,7 @@ class OverlapRefinery(BaseRefinery):
         tokenizer: Union[str, TokenizerProtocol] = "character",
         context_size: Union[int, float] = 0.25,
         mode: Literal["token", "recursive"] = "token",
-        method: Literal["suffix", "prefix"] = "suffix",
+        method: Literal["suffix", "prefix", "justified"] = "suffix",
         rules: RecursiveRules = RecursiveRules(),
         merge: bool = True,
         inplace: bool = True,
@@ -61,8 +58,8 @@ class OverlapRefinery(BaseRefinery):
             raise ValueError("Context size must be a positive integer.")
         if mode not in ["token", "recursive"]:
             raise ValueError("Mode must be one of: token, recursive.")
-        if method not in ["suffix", "prefix"]:
-            raise ValueError("Method must be one of: suffix, prefix.")
+        if method not in ["suffix", "prefix", "justified"]:
+            raise ValueError("Method must be one of: suffix, prefix, justified.")
         if not isinstance(merge, bool):
             raise ValueError("Merge must be a boolean.")
         if not isinstance(inplace, bool):
@@ -412,6 +409,52 @@ class OverlapRefinery(BaseRefinery):
 
         return chunks
 
+    def _refine_justified(self, chunks: list[Chunk], effective_context_size: int) -> list[Chunk]:
+        """Refine chunks using both prefix and suffix overlap.
+
+        Args:
+            chunks: The chunks to refine.
+            effective_context_size: The effective context size to use.
+
+        Returns:
+            The refined chunks.
+
+        """
+        # Split overlap budget evenly between prefix and suffix
+        left_size = effective_context_size // 2
+        right_size = effective_context_size - left_size
+
+        # Iterate over all chunks
+        for i, chunk in enumerate(chunks):
+            # Initialize empty context
+            prefix_context = ""
+            suffix_context = ""
+
+            # Get prefix context from the previous chunk
+            if i > 0:
+                prefix_context = self._get_prefix_overlap_context(chunks[i - 1], left_size)
+            # Get suffix context from the next chunk
+            if i < len(chunks) - 1:
+                suffix_context = self._get_suffix_overlap_context(chunks[i + 1], right_size)
+
+            # Set the combined context as a part of the chunk
+            setattr(chunk, "context", prefix_context + suffix_context)
+
+            # Merge the context if merge is True
+            if self.merge:
+                chunk.text = prefix_context + chunk.text + suffix_context
+                # Note: We don't adjust start_index/end_index when adding context
+                # because they should represent the original document positions.
+                # The context is additional information, not part of the original chunk position.
+
+                # Performance optimization: Update the token count with LRU caching
+                if self.tokenizer:
+                    chunk.token_count += self._count_tokens_cached(
+                        prefix_context
+                    ) + self._count_tokens_cached(suffix_context)
+
+        return chunks
+
     def _get_overlap_context_size(self, chunks: list[Chunk]) -> int:
         """Get the overlap context size.
 
@@ -459,8 +502,10 @@ class OverlapRefinery(BaseRefinery):
             refined_chunks = self._refine_prefix(chunks, effective_context_size)
         elif self.method == "suffix":
             refined_chunks = self._refine_suffix(chunks, effective_context_size)
+        elif self.method == "justified":
+            refined_chunks = self._refine_justified(chunks, effective_context_size)
         else:
-            raise ValueError("Method must be one of: prefix, suffix.")
+            raise ValueError("Method must be one of: prefix, suffix, justified.")
 
         logger.info(f"Overlap refinement complete: added context to {len(refined_chunks)} chunks")
         return refined_chunks
