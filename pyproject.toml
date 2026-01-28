@@ -114,6 +114,7 @@ milvus = ["pymilvus>=2.1.0"]
 
 # Optional dependencies for the genie
 genie = ["pydantic>=2.0.0", "google-genai>=1.0.0"]
+togetherai = ["pydantic>=2.0.0", "together>=0.3.0"]
 
 # All dependencies
 all = [
@@ -155,6 +156,7 @@ all = [
     "catsu>=0.0.1",
     "litellm>=1.0.0",
     "datasets>=1.14.0",
+    "together>=0.3.0",
 ]
 dev = [
     "datasets>=1.14.0",
