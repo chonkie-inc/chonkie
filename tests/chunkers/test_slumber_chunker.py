@@ -469,7 +469,7 @@ class TestSlumberChunkerEdgeCases:
 
         # Should not raise IndexError and fallback gracefully
         chunks = chunker.chunk(sample_text)
-        
+
         assert len(chunks) >= 1
         assert all(isinstance(chunk, Chunk) for chunk in chunks)
 
