@@ -37,7 +37,7 @@ class TestOpenAIGenieErrorHandling:
 
     def test_openai_genie_missing_dependencies(self) -> None:
         """Test OpenAIGenie raises error without dependencies."""
-        with patch("chonkie.genie.openai.OpenAI", None):
+        with patch.object(OpenAIGenie, "_is_available", return_value=False):
             with pytest.raises(
                 ImportError,
                 match="One or more of the required modules are not available",
@@ -112,6 +112,35 @@ class TestOpenAIGenieBasicFunctionality:
                 assert len(results) == 3
                 assert results == ["Response 0", "Response 1", "Response 2"]
                 assert mock_client.chat.completions.create.call_count == 3
+
+    def test_openai_genie_generate_json(self) -> None:
+        """Test OpenAIGenie JSON generation with mocked response."""
+        # Mock the parsed content
+        mock_parsed = Mock()
+        mock_parsed.model_dump.return_value = {"key": "value"}
+        mock_message = Mock()
+        mock_message.parsed = mock_parsed
+        mock_choice = Mock()
+        mock_choice.message = mock_message
+        mock_response = Mock()
+        mock_response.choices = [mock_choice]
+
+        # Mock the client
+        mock_client = Mock()
+        mock_client.beta.chat.completions.parse.return_value = mock_response
+        mock_openai_class = Mock(return_value=mock_client)
+        
+        # Mock schema
+        mock_schema = Mock()
+
+        with patch.object(OpenAIGenie, "_is_available", return_value=True):
+            with patch("chonkie.genie.openai.OpenAI", mock_openai_class):
+                with patch.dict(os.environ, {"OPENAI_API_KEY": "test_key"}):
+                    genie = OpenAIGenie()
+                    result = genie.generate_json("Test prompt", mock_schema)
+
+                assert result == {"key": "value"}
+                mock_client.beta.chat.completions.parse.assert_called_once()
 
 
 class TestOpenAIGenieUtilities:

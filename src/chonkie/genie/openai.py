@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Any, Optional, cast
 from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 
 try:
-    from openai import APIError, APITimeoutError, RateLimitError
+    from openai import APIError, APITimeoutError, OpenAI, RateLimitError
 except ImportError as e:  # noqa: F841
 
     class APIError(Exception):  # type: ignore
@@ -24,6 +24,8 @@ except ImportError as e:  # noqa: F841
         """Rate limit error."""
 
         pass
+
+    OpenAI = None  # type: ignore
 
 
 from .base import BaseGenie
@@ -51,13 +53,11 @@ class OpenAIGenie(BaseGenie):
         """
         super().__init__()
 
-        try:
-            from openai import OpenAI
-        except ImportError as ie:
+        if not self._is_available():
             raise ImportError(
                 "One or more of the required modules are not available: [pydantic, openai]. "
                 "Please install the dependencies via `pip install chonkie[openai]`"
-            ) from ie
+            )
 
         # Initialize the API key
         self.api_key = api_key or os.environ.get("OPENAI_API_KEY")
