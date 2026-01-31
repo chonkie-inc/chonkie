@@ -129,7 +129,7 @@ class TestOpenAIGenieBasicFunctionality:
         mock_client = Mock()
         mock_client.beta.chat.completions.parse.return_value = mock_response
         mock_openai_class = Mock(return_value=mock_client)
-        
+
         # Mock schema
         mock_schema = Mock()
 
