@@ -461,6 +461,18 @@ class TestSlumberChunkerEdgeCases:
         assert len(chunks) == 1
         assert chunks[0].text == text
 
+    def test_out_of_bounds_genie_response(self, sample_text: str) -> None:
+        """Test handling of out-of-bounds genie response."""
+        # Mock genie that returns an out-of-bounds index (e.g., 1000)
+        mock_genie = MockGenie([1000])
+        chunker = SlumberChunker(genie=mock_genie, verbose=False)
+
+        # Should not raise IndexError and fallback gracefully
+        chunks = chunker.chunk(sample_text)
+
+        assert len(chunks) >= 1
+        assert all(isinstance(chunk, Chunk) for chunk in chunks)
+
     def test_different_tokenizers(self, sample_text: str) -> None:
         """Test with different tokenizers."""
         mock_genie = MockGenie([1])
