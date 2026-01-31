@@ -4,8 +4,27 @@ import importlib.util as importutil
 import os
 from typing import TYPE_CHECKING, Any, Optional, cast
 
-from openai import APIError, APITimeoutError, RateLimitError
 from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
+
+try:
+    from openai import APIError, APITimeoutError, RateLimitError
+except ImportError as e:  # noqa: F841
+
+    class APIError(Exception):  # type: ignore
+        """API error."""
+
+        pass
+
+    class APITimeoutError(Exception):  # type: ignore
+        """API timeout error."""
+
+        pass
+
+    class RateLimitError(Exception):  # type: ignore
+        """Rate limit error."""
+
+        pass
+
 
 from .base import BaseGenie
 
