@@ -7,13 +7,24 @@ from functools import lru_cache
 from typing import TYPE_CHECKING, Any, Optional, cast
 
 import numpy as np
-from openai import APIError, APITimeoutError, RateLimitError
 from tenacity import (
     retry,
     retry_if_exception_type,
     stop_after_attempt,
     wait_exponential,
 )
+
+try:
+    from openai import APIError, APITimeoutError, RateLimitError
+except ImportError as e:  # noqa: F841
+
+    class APIError(Exception):  # type: ignore
+        """API error."""
+    class APITimeoutError(Exception):  # type: ignore
+        """API timeout error."""
+
+    class RateLimitError(Exception):  # type: ignore
+        """Rate limit error."""
 
 from .base import BaseEmbeddings
 
