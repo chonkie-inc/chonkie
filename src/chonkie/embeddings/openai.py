@@ -20,11 +20,13 @@ except ImportError as e:  # noqa: F841
 
     class APIError(Exception):  # type: ignore
         """API error."""
+
     class APITimeoutError(Exception):  # type: ignore
         """API timeout error."""
 
     class RateLimitError(Exception):  # type: ignore
         """Rate limit error."""
+
 
 from .base import BaseEmbeddings
 

@@ -19,6 +19,7 @@ except ImportError as e:  # noqa: F841
     class RateLimitError(Exception):  # type: ignore
         """Rate limit error."""
 
+
 from .base import BaseGenie
 
 if TYPE_CHECKING:
