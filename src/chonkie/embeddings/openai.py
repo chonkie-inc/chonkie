@@ -15,8 +15,9 @@ from tenacity import (
 )
 
 try:
-    from openai import APIError, APITimeoutError, RateLimitError
-except ImportError as e:  # noqa: F841
+    import tiktoken
+    from openai import APIError, APITimeoutError, OpenAI, RateLimitError
+except ImportError:
 
     class APIError(Exception):  # type: ignore
         """API error."""
@@ -26,6 +27,9 @@ except ImportError as e:  # noqa: F841
 
     class RateLimitError(Exception):  # type: ignore
         """Rate limit error."""
+
+    OpenAI = None  # type: ignore
+    tiktoken = None  # type: ignore
 
 
 from .base import BaseEmbeddings
@@ -97,13 +101,10 @@ class OpenAIEmbeddings(BaseEmbeddings):
         """
         super().__init__()
 
-        try:
-            import tiktoken
-            from openai import OpenAI
-        except ImportError as ie:
+        if not self._is_available():
             raise ImportError(
                 'One (or more) of the following packages is not available: openai, tiktoken. Please install it via `pip install "chonkie[openai]"`',
-            ) from ie
+            )
 
         # Initialize the model
         self.model = model
