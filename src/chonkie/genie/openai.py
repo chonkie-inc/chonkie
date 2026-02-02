@@ -13,17 +13,11 @@ except ImportError as e:  # noqa: F841
     class APIError(Exception):  # type: ignore
         """API error."""
 
-        pass
-
     class APITimeoutError(Exception):  # type: ignore
         """API timeout error."""
 
-        pass
-
     class RateLimitError(Exception):  # type: ignore
         """Rate limit error."""
-
-        pass
 
     OpenAI = None  # type: ignore
 
