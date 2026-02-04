@@ -26,7 +26,7 @@ class BaseChunker(ABC):
 
         """
         self._tokenizer = AutoTokenizer(tokenizer)
-        self._use_multiprocessing = True
+        self._use_multiprocessing = False
         logger.debug(
             f"Initialized {self.__class__.__name__}",
             tokenizer=str(tokenizer)[:50],
