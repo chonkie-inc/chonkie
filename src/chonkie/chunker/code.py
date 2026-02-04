@@ -103,12 +103,15 @@ class CodeChunker(BaseChunker):
         return merged_node_group
 
     def _group_child_nodes(self, node: "Node") -> tuple[list[list["Node"]], list[int]]:
-        """Group the nodes together based on their token_counts."""
-        # Some edge cases to break the recursion
+        """Group the nodes together based on their token_counts.
+
+        For leaf nodes (no children), returns the node itself as a single group.
+        """
+        # Base case: leaf nodes return themselves as a single group
         if len(node.children) == 0:
-            child_text = node.text.decode("utf-8", errors="ignore") if node.text else ""
-            leaf_token_count = self.tokenizer.count_tokens(child_text)
-            return ([[node]], [leaf_token_count])
+            node_text = node.text.decode("utf-8", errors="ignore") if node.text else ""
+            node_token_count = self.tokenizer.count_tokens(node_text)
+            return ([[node]], [node_token_count])
 
         # Initialize the node groups and group token counts
         node_groups = []
@@ -118,7 +121,7 @@ class CodeChunker(BaseChunker):
         current_token_count = 0
         current_node_group: list["Node"] = []
         for child in node.children:
-            child_text = child.text.decode() if child.text else ""
+            child_text = child.text.decode("utf-8", errors="ignore") if child.text else ""
             token_count: int = self.tokenizer.count_tokens(child_text)
             # If the child itself is larger than chunk size then we need to split and group it
             if token_count > self.chunk_size:
@@ -132,13 +135,8 @@ class CodeChunker(BaseChunker):
 
                 # Recursively, add the child groups
                 child_groups, child_token_counts = self._group_child_nodes(child)
-                if child_groups:  # Only use recursive result if it produced groups
-                    node_groups.extend(child_groups)
-                    group_token_counts.extend(child_token_counts)
-                else:
-                    # Fallback: Add the current child as is if no recursive groups
-                    node_groups.append([child])
-                    group_token_counts.append(token_count)
+                node_groups.extend(child_groups)
+                group_token_counts.extend(child_token_counts)
 
                 # Reinit current stuff
                 current_node_group = []
