@@ -3,8 +3,11 @@
 Splits text into smaller chunks recursively. Express chunking logic through RecursiveLevel objects.
 """
 
+import re
 from functools import lru_cache
 from typing import Optional, Union
+
+import chonkie_core
 
 from chonkie.chunker.base import BaseChunker
 from chonkie.logger import get_logger
@@ -17,8 +20,6 @@ from chonkie.types import (
 )
 
 logger = get_logger(__name__)
-
-import chonkie_core
 
 
 @chunker("recursive")
@@ -116,9 +117,90 @@ class RecursiveChunker(BaseChunker):
         # The estimate was only used as an optimization hint
         return self.tokenizer.count_tokens(text)
 
+    def _split_text_pattern(self, text: str, recursive_level: RecursiveLevel) -> list[str]:
+        """Split text using regex pattern.
+
+        Args:
+            text: Text to split
+            recursive_level: RecursiveLevel with pattern and pattern_mode set
+
+        Returns:
+            List of text splits
+
+        Raises:
+            ValueError: If regex pattern is invalid
+
+        """
+        if not recursive_level.pattern:
+            return []
+
+        try:
+            # Compile the pattern to validate it
+            pattern = recursive_level.pattern
+            compiled = re.compile(pattern)
+        except re.error as e:
+            raise ValueError(f"Invalid regex pattern '{recursive_level.pattern}': {e}") from e
+
+        include_mode = recursive_level.include_delim or "prev"
+        pattern_mode = recursive_level.pattern_mode or "split"
+
+        if pattern_mode == "extract":
+            # Extract pattern matches as splits
+            matches = compiled.findall(text)
+            splits = [m for m in matches if m]
+        else:
+            # Split mode: use capture group to preserve delimiters in result
+            # (pattern) creates a capturing group, keeping delimiters in the split result
+            split_pattern = f"({pattern})"
+            parts = re.split(split_pattern, text)
+
+            # Reconstruct splits based on include_delim mode
+            splits = []
+            i = 0
+            while i < len(parts):
+                part = parts[i]
+                if not part:
+                    i += 1
+                    continue
+
+                # Check if this part is a delimiter (odd indices are captured groups)
+                is_delimiter = i % 2 == 1
+
+                if is_delimiter:
+                    # This is a delimiter
+                    if include_mode == "prev" and splits:
+                        # Attach to previous split
+                        splits[-1] += part
+                    elif include_mode == "next":
+                        # Attach to next split (if there is one)
+                        if i + 1 < len(parts) and parts[i + 1]:
+                            parts[i + 1] = part + parts[i + 1]
+                        else:
+                            # No next split, keep as is
+                            splits.append(part)
+                    else:
+                        # Don't include delimiter
+                        pass
+                else:
+                    # This is regular content
+                    splits.append(part)
+
+                i += 1
+
+        # Filter splits that are too small
+        if self.min_characters_per_chunk > 0:
+            splits = [s for s in splits if len(s) >= self.min_characters_per_chunk]
+
+        return splits
+
     def _split_text(self, text: str, recursive_level: RecursiveLevel) -> list[str]:
-        """Split the text into chunks using the delimiters."""
-        if recursive_level.delimiters:
+        """Split the text into chunks using the delimiters or pattern."""
+        # Handle regex pattern first
+        if recursive_level.pattern:
+            return self._split_text_pattern(text, recursive_level)
+
+        # Handle delimiters
+        elif recursive_level.delimiters:
             include_mode = recursive_level.include_delim or "prev"
             text_bytes = text.encode("utf-8")
 
@@ -232,16 +314,20 @@ class RecursiveChunker(BaseChunker):
         splits = self._split_text(text, curr_rule)
         token_counts = [self._estimate_token_count(split) for split in splits]
 
-        if curr_rule.delimiters is None and not curr_rule.whitespace:
-            merged, combined_token_counts = splits, token_counts
+        # Determine if we should merge splits
+        # Merge for: pattern-based, delimiters, or whitespace splitting
+        # No merge for: token-level fallback (when none of the above are set)
+        should_merge = (
+            curr_rule.pattern is not None
+            or curr_rule.delimiters is not None
+            or curr_rule.whitespace
+        )
 
-        elif curr_rule.delimiters is None and curr_rule.whitespace:
-            # With split_offsets using include_delim="prev", splits already contain trailing spaces
-            # e.g., ["Hello ", "World ", "Test"] - so we just concatenate them
+        if should_merge:
             merged, combined_token_counts = self._merge_splits(splits, token_counts)
-
         else:
-            merged, combined_token_counts = self._merge_splits(splits, token_counts)
+            # Token-level fallback: no merging needed
+            merged, combined_token_counts = splits, token_counts
 
         # Chunk long merged splits
         chunks: list[Chunk] = []
