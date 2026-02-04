@@ -7,13 +7,30 @@ from functools import lru_cache
 from typing import TYPE_CHECKING, Any, Optional, cast
 
 import numpy as np
-from openai import APIError, APITimeoutError, RateLimitError
 from tenacity import (
     retry,
     retry_if_exception_type,
     stop_after_attempt,
     wait_exponential,
 )
+
+try:
+    import tiktoken
+    from openai import APIError, APITimeoutError, OpenAI, RateLimitError
+except ImportError:
+
+    class APIError(Exception):  # type: ignore
+        """API error."""
+
+    class APITimeoutError(Exception):  # type: ignore
+        """API timeout error."""
+
+    class RateLimitError(Exception):  # type: ignore
+        """Rate limit error."""
+
+    OpenAI = None  # type: ignore
+    tiktoken = None  # type: ignore
+
 
 from .base import BaseEmbeddings
 
@@ -84,13 +101,10 @@ class OpenAIEmbeddings(BaseEmbeddings):
         """
         super().__init__()
 
-        try:
-            import tiktoken
-            from openai import OpenAI
-        except ImportError as ie:
+        if not self._is_available():
             raise ImportError(
                 'One (or more) of the following packages is not available: openai, tiktoken. Please install it via `pip install "chonkie[openai]"`',
-            ) from ie
+            )
 
         # Initialize the model
         self.model = model
