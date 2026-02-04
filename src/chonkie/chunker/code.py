@@ -106,7 +106,9 @@ class CodeChunker(BaseChunker):
         """Group the nodes together based on their token_counts."""
         # Some edge cases to break the recursion
         if len(node.children) == 0:
-            return ([], [])  # TODO: Think more about this case!
+            child_text = node.text.decode("utf-8", errors="ignore") if node.text else ""
+            leaf_token_count = self.tokenizer.count_tokens(child_text)
+            return ([[node]], [leaf_token_count])
 
         # Initialize the node groups and group token counts
         node_groups = []
