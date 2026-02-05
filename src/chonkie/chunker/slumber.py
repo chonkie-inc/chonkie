@@ -262,13 +262,13 @@ class SlumberChunker(BaseChunker):
                 raise
             except Exception as e:
                 last_error = e
-                logger.warning(
+                logger.debug(
                     f"JSON extraction attempt {attempt + 1}/{self.max_retries} failed: {e}"
                 )
                 continue
 
         # All retries failed - keep passages together by returning group end
-        logger.warning(
+        logger.debug(
             f"JSON extraction failed after {self.max_retries} attempts. "
             f"Last error: {last_error}. Keeping passages together. Using fallback index {group_end_index}."
         )
@@ -300,13 +300,13 @@ class SlumberChunker(BaseChunker):
                 raise
             except Exception as e:
                 last_error = e
-                logger.warning(
+                logger.debug(
                     f"Text extraction attempt {attempt + 1}/{self.max_retries} failed: {e}"
                 )
                 continue
 
         # All retries failed - keep passages together by returning group end
-        logger.warning(
+        logger.debug(
             f"Text extraction failed after {self.max_retries} attempts. "
             f"Last error: {last_error}. Keeping passages together. Using fallback index {group_end_index}."
         )
