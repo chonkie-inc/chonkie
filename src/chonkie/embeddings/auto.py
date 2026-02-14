@@ -1,10 +1,13 @@
 """AutoEmbeddings is a factory class for automatically loading embeddings."""
 
-import warnings
 from typing import Any, Union
+
+from chonkie.logger import get_logger
 
 from .base import BaseEmbeddings
 from .registry import EmbeddingsRegistry
+
+logger = get_logger(__name__)
 
 
 class AutoEmbeddings:
@@ -92,17 +95,19 @@ class AutoEmbeddings:
                         # Try instantiating with the model identifier
                         embeddings_instance = embeddings_cls(model, **kwargs)  # type: ignore
                     except Exception as error:
-                        warnings.warn(
+                        logger.warning(
                             f"Failed to load {model} with {embeddings_cls.__name__}: {error}\n"
-                            f"Falling back to loading default provider model.",
+                            "Falling back to loading default provider model.",
+                            exc_info=True,
                         )
                         try:
                             # Try instantiating with the default provider model without the model identifier
                             embeddings_instance = embeddings_cls(**kwargs)
                         except Exception as error:
-                            warnings.warn(
+                            logger.warning(
                                 f"Failed to load the default model for {embeddings_cls.__name__}: {error}\n"
-                                f"Falling back to SentenceTransformerEmbeddings.",
+                                "Falling back to SentenceTransformerEmbeddings.",
+                                exc_info=True,
                             )
 
             # If registry lookup and instantiation succeeded, return the instance
