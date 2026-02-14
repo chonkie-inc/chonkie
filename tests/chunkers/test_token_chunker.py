@@ -252,13 +252,10 @@ def verify_chunk_indices(chunks: list[Chunk], original_text: str):
     for i, chunk in enumerate(chunks):
         # Extract text using the indices
         extracted_text = original_text[chunk.start_index : chunk.end_index]
-        # Remove any leading/trailing whitespace from both texts for comparison
-        chunk_text = chunk.text.strip()
-        extracted_text = extracted_text.strip()
-
-        assert chunk_text == extracted_text, (
+        # Exact match without stripping to catch whitespace issues
+        assert chunk.text == extracted_text, (
             f"Chunk {i} text mismatch:\n"
-            f"Chunk text: '{chunk_text}'\n"
+            f"Chunk text: '{chunk.text}'\n"
             f"Extracted text: '{extracted_text}'\n"
             f"Indices: [{chunk.start_index}:{chunk.end_index}]"
         )
