@@ -648,9 +648,9 @@ class AutoTokenizer:
         """
         if self._backend == "chonkie":
             return self.tokenizer.decode_batch(token_sequences)  # type: ignore[union-attr]
-        elif self._backend in "tiktoken":
+        elif self._backend == "tiktoken":
             return self.tokenizer.decode_batch(token_sequences)  # type: ignore[union-attr]
-        elif self._backend in "tokenizers":
+        elif self._backend == "tokenizers":
             return self.tokenizer.decode_batch(token_sequences)  # type: ignore[union-attr]
         elif self._backend == "transformers":
             return self.tokenizer.batch_decode(token_sequences, skip_special_tokens=True)  # type: ignore[union-attr]
