@@ -6,6 +6,7 @@ from .cerebras import CerebrasGenie
 from .gemini import GeminiGenie
 from .groq import GroqGenie
 from .openai import OpenAIGenie
+from .together import TogetherGenie
 
 # Add all genie classes to __all__
 __all__ = [
@@ -15,4 +16,5 @@ __all__ = [
     "GeminiGenie",
     "GroqGenie",
     "OpenAIGenie",
+    "TogetherGenie",
 ]
