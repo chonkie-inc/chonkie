@@ -4,7 +4,7 @@ import base64
 import html
 import os
 import warnings
-from typing import Optional, Union, cast
+from typing import Optional, Sequence, Union
 
 from chonkie.logger import get_logger
 from chonkie.types import Chunk
@@ -193,7 +193,7 @@ class Visualizer:
         """Cycles through the appropriate color list."""
         return self.theme[index % len(self.theme)]
 
-    def _reconstruct_text_from_chunks(self, chunks: list[Chunk]) -> str:
+    def _reconstruct_text_from_chunks(self, chunks: Sequence[Chunk]) -> str:
         """Reconstruct the full text from a list of chunks, handling overlaps."""
         # Sort chunks by start_index to handle overlaps correctly
         sorted_chunks = sorted(chunks, key=lambda x: x.start_index)
@@ -247,20 +247,22 @@ class Visualizer:
             logger.warning(f"Could not darken color {hex_color}: {e}")
             return "#808080"
 
-    def print(self, chunks: list[Chunk | str], full_text: Optional[str] = None) -> None:
+    def print(self, chunks: Sequence[Union[Chunk, str]], full_text: Optional[str] = None) -> None:
         """Print the chunks to the terminal, with rich highlights."""
         # Check if there are any chunks to visualize
         if not chunks:
             self.console.print("No chunks to visualize.")
             return
         if all(isinstance(chunk, str) for chunk in chunks):
-            full_text = "".join(chunks)
+            full_text = "".join(chunk for chunk in chunks if isinstance(chunk, str))
 
         processed_chunks: list[Chunk] = []
         current_pos = 0
         for chunk in chunks:
             if isinstance(chunk, str):
-                chunk_obj = Chunk(text=chunk, start_index=current_pos, end_index=current_pos + len(chunk))
+                chunk_obj = Chunk(
+                    text=chunk, start_index=current_pos, end_index=current_pos + len(chunk)
+                )
                 processed_chunks.append(chunk_obj)
                 current_pos += len(chunk)
             else:
@@ -316,7 +318,7 @@ class Visualizer:
     def save(
         self,
         filename: str,
-        chunks: list[Chunk],
+        chunks: Sequence[Chunk],
         full_text: Optional[str] = None,
         title: str = "Chunk Visualization",
         # Removed embed_hippo_favicon parameter
@@ -505,7 +507,7 @@ class Visualizer:
         except Exception as e:
             raise Exception(f"An unexpected error occurred during file saving: {e}") from e
 
-    def __call__(self, chunks: list[Chunk], full_text: Optional[str] = None) -> None:
+    def __call__(self, chunks: Sequence[Chunk], full_text: Optional[str] = None) -> None:
         """Call the visualizer as a function.
 
         Prints the chunks to the terminal, with rich highlights.
