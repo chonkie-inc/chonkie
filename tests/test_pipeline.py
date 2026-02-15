@@ -527,9 +527,7 @@ class TestPipelineEdgeCases:
 
     def test_empty_list_input(self) -> None:
         """Test pipeline with empty list of texts (Issue #460)."""
-        result = (Pipeline()
-            .chunk_with("recursive", chunk_size=512)
-            .run(texts=[]))
+        result = Pipeline().chunk_with("recursive", chunk_size=512).run(texts=[])
 
         assert isinstance(result, list)
         assert len(result) == 0
