@@ -16,17 +16,6 @@ from .base import BaseChunker
 
 logger = get_logger(__name__)
 
-# TODO: Add a check to see if the model is supported
-
-# TODO: Add try/except block to catch if the model is not loaded correctly
-
-# TODO: Add a list of supported models to choose from
-
-# TODO: Allow for loading a custom model by passing in the model + tokenizer directly
-
-# TODO: Add stride parameters for the pipeline (also does the pipeline do it sequentially or in parallel?)
-# If they do it sequentially, then we are making a huge mistake by not batching and processing multiple texts at once.
-
 
 @chunker("neural")
 class NeuralChunker(BaseChunker):

@@ -6,6 +6,92 @@ icon: "laptop"
 
 The `CodeChunker` splits code into chunks based on its structure, leveraging Abstract Syntax Trees (ASTs) to create contextually relevant segments.
 
+## Overview
+- Supports 165+ languages
+- Powered by [tree-sitter-language-pack](https://github.com/Goldziher/tree-sitter-language-pack)
+- Auto language detection via [Magika](https://github.com/google/magika), a language detection library made by Google
+
+## Supported Languages
+
+<Accordion title="Show all supported languages">
+
+Each language is identified by the **key** used with `get_language(key)` and `get_parser(key)`.
+
+ ### General-Purpose Programming Languages
+
+| Language | Key | License |
+|---------|-----|--------|
+| ActionScript | `actionscript` | MIT |
+| Ada | `ada` | MIT |
+| Agda | `agda` | MIT |
+| C | `c` | MIT |
+| C++ | `cpp` | MIT |
+| C# | `csharp` | MIT |
+| Dart | `dart` | MIT |
+| Go | `go` | MIT |
+| Java | `java` | MIT |
+| JavaScript | `javascript` | MIT |
+| Julia | `julia` | MIT |
+| Kotlin | `kotlin` | MIT |
+| Nim | `nim` | MPL-2.0 |
+| OCaml | `ocaml/ocaml_interface` | MIT |
+| Perl | `perl` | Artistic-2.0 |
+| Python | `python` | MIT |
+| R | `r` | MIT |
+| Ruby | `ruby` | MIT |
+| Rust | `rust` | MIT |
+| Scala | `scala` | MIT |
+| Swift | `swift` | MIT |
+| TypeScript | `typescript` | MIT |
+| Zig | `zig` | MIT |
+
+###  Web, UI & Markup
+
+| Language | Key | License |
+|---------|-----|--------|
+| HTML | `html` | MIT |
+| CSS | `css` | MIT |
+| SCSS | `scss` | MIT |
+| Astro | `astro` | MIT |
+| Vue | `vue` | MIT |
+| Svelte | `svelte` | MIT |
+| TSX | `tsx` | MIT |
+| Markdown | `markdown` | MIT |
+| Markdown Inline | `markdown_inline` | MIT |
+| Mermaid | `mermaid` | MIT |
+| XML | `xml` | MIT |
+| YAML | `yaml` | MIT |
+
+ ### Config, Build & DevOps
+
+| Language | Key | License |
+|---------|-----|--------|
+| Bash | `bash` | MIT |
+| Dockerfile | `dockerfile` | MIT |
+| Git Ignore | `gitignore` | MIT |
+| Git Commit | `gitcommit` | WTFPL |
+| Make | `make` | MIT |
+| Ninja | `ninja` | MIT |
+| Meson | `meson` | MIT |
+| Prisma | `prisma` | MIT |
+| Requirements | `requirements` | MIT |
+
+### Systems, GPU & Low-level
+
+| Language | Key | License |
+|---------|-----|--------|
+| ASM | `asm` | MIT |
+| CUDA | `cuda` | MIT |
+| GLSL | `glsl` | MIT |
+| HLSL | `hlsl` | MIT |
+| LLVM | `llvm` | MIT |
+| Verilog | `verilog` | MIT |
+| VHDL | `vhdl` | MIT |
+| WGSL | `wgsl` | MIT |
+| WAST / WAT | `wasm` | Apache-2.0 + LLVM |
+
+</Accordion>
+
 ## API Reference
 
 To use the `CodeChunker` via the API, check out the [API reference documentation](../../api/chunkers/code-chunker).
@@ -24,20 +110,33 @@ pip install "chonkie[code]"
 </Info>
 
 ## Initialization
+<CodeGroup>
 
-```python
+```python Basic initialization
 from chonkie import CodeChunker
 
-# Basic initialization with default parameters
 chunker = CodeChunker(
     language="python",      # Specify the programming language
     tokenizer="character",  # Default tokenizer (or use "gpt2", etc.)
     chunk_size=2048,        # Maximum tokens per chunk
     include_nodes=False     # Optionally include AST nodes in output
 )
+```
+```python Auto 
+from chonkie import CodeChunker
 
-# Using a custom tokenizer
+chunker = CodeChunker(
+    language="auto",        # Auto detects programming language via Magika
+    tokenizer="character",  # Default tokenizer (or use "gpt2", etc.)
+    chunk_size=2048,        # Maximum tokens per chunk
+    include_nodes=False     # Optionally include AST nodes in output
+)
+```
+
+```python Custom tokenizer
+from chonkie import CodeChunker
 from tokenizers import Tokenizer
+
 custom_tokenizer = Tokenizer.from_pretrained("your-tokenizer")
 chunker = CodeChunker(
     language="javascript",
@@ -45,6 +144,12 @@ chunker = CodeChunker(
     chunk_size=2048
 )
 ```
+
+</CodeGroup>
+
+<Note>
+Automatic language detection using Magika can impact performance. For best results, specify the language directly via the `language` parameter.
+</Note>
 
 ## Parameters
 
