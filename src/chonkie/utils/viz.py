@@ -4,7 +4,7 @@ import base64
 import html
 import os
 import warnings
-from typing import Optional, Union
+from typing import Optional, Sequence, Union
 
 from chonkie.logger import get_logger
 from chonkie.types import Chunk
@@ -193,7 +193,51 @@ class Visualizer:
         """Cycles through the appropriate color list."""
         return self.theme[index % len(self.theme)]
 
-    def _reconstruct_text_from_chunks(self, chunks: list[Chunk]) -> str:
+    def _preprocess_chunks(
+        self, chunks: Sequence[Union[Chunk, str]], full_text: Optional[str] = None
+    ) -> tuple[list[Chunk], Optional[str]]:
+        """Convert a mixed list of Chunk/str into a uniform list of Chunks.
+
+        When all items are strings and full_text is not provided, full_text is
+        auto-constructed by joining the strings. String items are converted to
+        Chunk objects with indices derived from full_text (if available) or by
+        assuming contiguous layout.
+
+        Args:
+            chunks: Input sequence of Chunk objects and/or plain strings.
+            full_text: Optional explicit full text. Preserved when provided.
+
+        Returns:
+            A tuple of (processed_chunks, full_text).
+
+        """
+        if full_text is None and all(isinstance(chunk, str) for chunk in chunks):
+            full_text = "".join(chunk for chunk in chunks if isinstance(chunk, str))
+
+        processed_chunks: list[Chunk] = []
+        current_pos = 0
+        for chunk in chunks:
+            if isinstance(chunk, str):
+                if full_text is not None:
+                    try:
+                        start_idx = full_text.index(chunk, current_pos)
+                    except ValueError:
+                        start_idx = current_pos
+                else:
+                    start_idx = current_pos
+                end_idx = start_idx + len(chunk)
+                processed_chunks.append(
+                    Chunk(text=chunk, start_index=start_idx, end_index=end_idx)
+                )
+                current_pos = end_idx
+            else:
+                processed_chunks.append(chunk)
+                if hasattr(chunk, "end_index") and isinstance(chunk.end_index, (int, float)):
+                    current_pos = int(chunk.end_index)
+
+        return processed_chunks, full_text
+
+    def _reconstruct_text_from_chunks(self, chunks: Sequence[Chunk]) -> str:
         """Reconstruct the full text from a list of chunks, handling overlaps."""
         # Sort chunks by start_index to handle overlaps correctly
         sorted_chunks = sorted(chunks, key=lambda x: x.start_index)
@@ -247,16 +291,17 @@ class Visualizer:
             logger.warning(f"Could not darken color {hex_color}: {e}")
             return "#808080"
 
-    def print(self, chunks: list[Chunk], full_text: Optional[str] = None) -> None:
+    def print(self, chunks: Sequence[Union[Chunk, str]], full_text: Optional[str] = None) -> None:
         """Print the chunks to the terminal, with rich highlights."""
         # Check if there are any chunks to visualize
         if not chunks:
             self.console.print("No chunks to visualize.")
             return
-        # If the full text is not provided, we'll try to reconstruct it (assuming the chunks are reconstructable)
+        processed_chunks, full_text = self._preprocess_chunks(chunks, full_text)
+
         if full_text is None:
             try:
-                full_text = self._reconstruct_text_from_chunks(chunks)
+                full_text = self._reconstruct_text_from_chunks(processed_chunks)
             except AttributeError as e:
                 raise ValueError(
                     "Error: Chunks must have 'text', 'start_index', and 'end_index' attributes for automatic text reconstruction.",
@@ -270,7 +315,7 @@ class Visualizer:
         text = Text(full_text)
         text_length = len(full_text)
         spans = []
-        for i, chunk in enumerate(chunks):
+        for i, chunk in enumerate(processed_chunks):
             try:
                 spans.append({
                     "id": i,
@@ -301,7 +346,7 @@ class Visualizer:
     def save(
         self,
         filename: str,
-        chunks: list[Chunk],
+        chunks: Sequence[Union[Chunk, str]],
         full_text: Optional[str] = None,
         title: str = "Chunk Visualization",
         # Removed embed_hippo_favicon parameter
@@ -321,10 +366,12 @@ class Visualizer:
         if not chunks:
             logger.info("No chunks to visualize. HTML file not saved.")
             return
-        # If the full text is not provided, we'll try to reconstruct it (assuming the chunks are reconstructable)
+
+        processed_chunks, full_text = self._preprocess_chunks(chunks, full_text)
+
         if full_text is None:
             try:
-                full_text = self._reconstruct_text_from_chunks(chunks)
+                full_text = self._reconstruct_text_from_chunks(processed_chunks)
             except AttributeError as e:
                 raise AttributeError(
                     "Error: Chunks must have 'text', 'start_index', and 'end_index' attributes for automatic text reconstruction. HTML not saved.",
@@ -339,7 +386,7 @@ class Visualizer:
         # --- 1. Validate Spans and Prepare Data ---
         validated_spans = []
         text_length = len(full_text)
-        for i, chunk in enumerate(chunks):
+        for i, chunk in enumerate(processed_chunks):
             try:
                 start, end = int(chunk.start_index), int(chunk.end_index)
                 start = max(0, start)
@@ -490,7 +537,9 @@ class Visualizer:
         except Exception as e:
             raise Exception(f"An unexpected error occurred during file saving: {e}") from e
 
-    def __call__(self, chunks: list[Chunk], full_text: Optional[str] = None) -> None:
+    def __call__(
+        self, chunks: Sequence[Union[Chunk, str]], full_text: Optional[str] = None
+    ) -> None:
         """Call the visualizer as a function.
 
         Prints the chunks to the terminal, with rich highlights.
