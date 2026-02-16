@@ -525,6 +525,13 @@ class TestPipelineChaining:
 class TestPipelineEdgeCases:
     """Test edge cases and error conditions."""
 
+    def test_empty_list_input(self) -> None:
+        """Test pipeline with empty list of texts (Issue #460)."""
+        result = Pipeline().chunk_with("recursive", chunk_size=512).run(texts=[])
+
+        assert isinstance(result, list)
+        assert len(result) == 0
+
     def test_empty_text_input(self) -> None:
         """Test pipeline with empty text."""
         doc = Pipeline().chunk_with("recursive", chunk_size=512).run(texts="")

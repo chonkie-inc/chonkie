@@ -398,6 +398,10 @@ class Pipeline:
         # Validate after reordering (when we know the final structure)
         self._validate_pipeline(ordered_steps, has_text_input=(texts is not None))
 
+        # Handle empty list input gracefully (Issue #460)
+        if isinstance(texts, list) and len(texts) == 0:
+            return []
+
         # Execute pipeline steps
         data = texts  # Start with input texts (or None for fetcher-based pipelines)
         for i, step in enumerate(ordered_steps):
