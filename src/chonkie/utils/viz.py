@@ -507,7 +507,7 @@ class Visualizer:
         except Exception as e:
             raise Exception(f"An unexpected error occurred during file saving: {e}") from e
 
-    def __call__(self, chunks: Sequence[Chunk], full_text: Optional[str] = None) -> None:
+    def __call__(self, chunks: Sequence[Union[Chunk, str]], full_text: Optional[str] = None) -> None:
         """Call the visualizer as a function.
 
         Prints the chunks to the terminal, with rich highlights.
