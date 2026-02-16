@@ -86,8 +86,8 @@ class CodeChunker(BaseChunker):
         else:
             from tree_sitter_language_pack import get_parser
             self.parser = get_parser(language)  # type: ignore[arg-type]
-            self._cached_language = None
-            self._cached_parser = None
+            self._cached_language = language
+            self._cached_parser = self.parser
 
         # Set the use_multiprocessing flag
         self._use_multiprocessing = False
