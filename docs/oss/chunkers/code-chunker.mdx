@@ -110,28 +110,33 @@ pip install "chonkie[code]"
 </Info>
 
 ## Initialization
+<CodeGroup>
 
-```python
+```python Basic initialization
 from chonkie import CodeChunker
 
-# Basic initialization with default parameters
 chunker = CodeChunker(
     language="python",      # Specify the programming language
     tokenizer="character",  # Default tokenizer (or use "gpt2", etc.)
     chunk_size=2048,        # Maximum tokens per chunk
     include_nodes=False     # Optionally include AST nodes in output
 )
+```
+```python Auto 
+from chonkie import CodeChunker
 
-# Auto language detection
 chunker = CodeChunker(
     language="auto",        # Auto detects programming language via Magika
     tokenizer="character",  # Default tokenizer (or use "gpt2", etc.)
     chunk_size=2048,        # Maximum tokens per chunk
     include_nodes=False     # Optionally include AST nodes in output
 )
+```
 
-# Using a custom tokenizer
+```python Custom tokenizer
+from chonkie import CodeChunker
 from tokenizers import Tokenizer
+
 custom_tokenizer = Tokenizer.from_pretrained("your-tokenizer")
 chunker = CodeChunker(
     language="javascript",
@@ -139,6 +144,8 @@ chunker = CodeChunker(
     chunk_size=2048
 )
 ```
+
+</CodeGroup>
 
 <Note>
 Automatic language detection using Magika can impact performance. For best results, specify the language directly via the `language` parameter.
