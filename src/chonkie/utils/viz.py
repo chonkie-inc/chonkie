@@ -318,7 +318,7 @@ class Visualizer:
     def save(
         self,
         filename: str,
-        chunks: Sequence[Chunk],
+        chunks: Sequence[Union[Chunk, str]],
         full_text: Optional[str] = None,
         title: str = "Chunk Visualization",
         # Removed embed_hippo_favicon parameter
