@@ -55,7 +55,10 @@ def mock_cohere_dependencies():
 @pytest.fixture
 def embedding_model() -> CohereEmbeddings:
     """Fixture to create a CohereEmbeddings instance."""
-    api_key = os.environ.get("COHERE_API_KEY", "test_key")  # Use test key if no real key
+    api_key = (
+        # Use test key if no real key (even if envvar is set but empty)
+        os.environ.get("COHERE_API_KEY") or "test_key"
+    )
     return CohereEmbeddings(model="embed-english-light-v3.0", api_key=api_key)
 
 
