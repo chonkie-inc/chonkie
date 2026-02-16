@@ -79,21 +79,9 @@ class CohereEmbeddings(BaseEmbeddings):
                 f"Model {model} is not available. Choose from: {list(self.AVAILABLE_MODELS.keys())}",
             )
 
-        self.model = model
-        self._dimension = self.AVAILABLE_MODELS[model][1]
-        tokenizer_url = (
-            self.TOKENIZER_BASE_URL
-            + (model if self.AVAILABLE_MODELS[model][0] else self.DEFAULT_MODEL)
-            + ".json"
-        )
-        response = httpx.get(tokenizer_url)
-        self._tokenizer = tokenizers.Tokenizer.from_str(response.text)
-        self._batch_size = min(batch_size, 96)  # max batch size for cohere is 96
-        self._show_warnings = show_warnings
-        self._max_retries = max_retries
-        self._api_key = api_key or os.getenv("COHERE_API_KEY")
+        api_key = api_key or os.getenv("COHERE_API_KEY")
 
-        if self._api_key is None:
+        if not api_key:
             raise ValueError(
                 "Cohere API key not found. Either pass it as api_key or set COHERE_API_KEY environment variable.",
             )
@@ -110,16 +98,10 @@ class CohereEmbeddings(BaseEmbeddings):
         self._batch_size = min(batch_size, 96)  # max batch size for cohere is 96
         self._show_warnings = show_warnings
         self._max_retries = max_retries
-        self._api_key = api_key or os.getenv("COHERE_API_KEY")
-
-        if self._api_key is None:
-            raise ValueError(
-                "Cohere API key not found. Either pass it as api_key or set COHERE_API_KEY environment variable.",
-            )
 
         # setup Cohere client
         self.client = ClientV2(
-            api_key=api_key or os.getenv("COHERE_API_KEY"),
+            api_key=api_key,
             client_name=client_name,
             timeout=timeout,
         )
