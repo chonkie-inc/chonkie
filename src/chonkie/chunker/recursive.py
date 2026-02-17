@@ -117,6 +117,21 @@ class RecursiveChunker(BaseChunker):
         # The estimate was only used as an optimization hint
         return self.tokenizer.count_tokens(text)
 
+    def _validate_regex_safety(self, pattern: str) -> None:
+        """Apply conservative safety checks for user-provided regex patterns."""
+        if len(pattern) > 1024:
+            raise ValueError("Regex pattern is too long (max 1024 characters)")
+
+        # Backreferences can be expensive and are not required for chunk splitting.
+        if re.search(r"\\[1-9]", pattern):
+            raise ValueError("Regex backreferences are not supported for safety reasons")
+
+        # Heuristic guard against catastrophic backtracking like (a+)+ or (.*)+.
+        if re.search(r"\((?:[^()\\]|\\.)*[+*](?:[^()\\]|\\.)*\)[+*{]", pattern):
+            raise ValueError(
+                "Regex pattern appears to use nested quantifiers that may cause excessive backtracking",
+            )
+
     def _split_text_pattern(self, text: str, recursive_level: RecursiveLevel) -> list[str]:
         """Split text using regex pattern.
 
@@ -137,6 +152,7 @@ class RecursiveChunker(BaseChunker):
         try:
             # Compile the pattern to validate it
             pattern = recursive_level.pattern
+            self._validate_regex_safety(pattern)
             compiled = re.compile(pattern)
         except re.error as e:
             raise ValueError(f"Invalid regex pattern '{recursive_level.pattern}': {e}") from e
@@ -145,56 +161,46 @@ class RecursiveChunker(BaseChunker):
         pattern_mode = recursive_level.pattern_mode or "split"
 
         if pattern_mode == "extract":
-            # Extract pattern matches as splits
-            matches = compiled.findall(text)
-            splits = [m for m in matches if m]
+            # Extract full matches to avoid tuple outputs with capturing groups.
+            splits = [m.group(0) for m in compiled.finditer(text) if m.group(0)]
         else:
-            # Split mode: use capture group to preserve delimiters in result
-            # (pattern) creates a capturing group, keeping delimiters in the split result
-            split_pattern = f"({pattern})"
-            parts = re.split(split_pattern, text)
-
-            # Reconstruct splits based on include_delim mode
+            # Split mode: reconstruct from match spans to avoid captured-group index shifts.
             splits = []
-            i = 0
-            while i < len(parts):
-                part = parts[i]
-                if not part:
-                    i += 1
+            cursor = 0
+            carry_next_delim = ""
+            for match in compiled.finditer(text):
+                start, end = match.span()
+                if start < cursor:
                     continue
 
-                # Check if this part is a delimiter (odd indices are captured groups)
-                is_delimiter = i % 2 == 1
+                content = text[cursor:start]
+                delim = text[start:end]
 
-                if is_delimiter:
-                    # This is a delimiter
-                    if include_mode == "prev":
-                        if splits:
-                            # Attach to previous split
-                            splits[-1] += part
-                        else:
-                            # No previous split, keep as is
-                            splits.append(part)
-                    elif include_mode == "next":
-
-                        # Attach to next split (if there is one)
-                        if i + 1 < len(parts) and parts[i + 1]:
-                            parts[i + 1] = part + parts[i + 1]
-                        else:
-                            # No next split, keep as is
-                            splits.append(part)
-                    else:
-                        # Don't include delimiter
-                        pass
+                if include_mode == "prev":
+                    if content:
+                        splits.append(content + delim)
+                    elif splits:
+                        splits[-1] += delim
+                    elif delim:
+                        splits.append(delim)
+                elif include_mode == "next":
+                    if content or carry_next_delim:
+                        splits.append(carry_next_delim + content)
+                    carry_next_delim = delim
                 else:
-                    # This is regular content
-                    splits.append(part)
+                    if content:
+                        splits.append(content)
 
-                i += 1
+                cursor = end
 
-        # Filter splits that are too small
-        if self.min_characters_per_chunk > 0:
-            splits = [s for s in splits if len(s) >= self.min_characters_per_chunk]
+            tail = text[cursor:]
+            if include_mode == "next":
+                if tail or carry_next_delim:
+                    splits.append(carry_next_delim + tail)
+            elif tail:
+                splits.append(tail)
+
+        # Keep all splits; tiny segments are merged later to preserve full reconstruction.
 
         return splits
 

@@ -516,6 +516,38 @@ def test_recursive_chunker_regex_extract_mode() -> None:
     assert "another@test.org" in texts
 
 
+def test_recursive_chunker_regex_split_with_capturing_groups_reconstructs() -> None:
+    """Split mode should handle user capturing groups without corrupting text."""
+    text = "One! Two? Three."
+    rules = RecursiveRules(levels=[
+        RecursiveLevel(
+            pattern=r"([!?]\s+)",  # User pattern with an internal capturing group
+            pattern_mode="split",
+            include_delim="prev",
+        )
+    ])
+    chunker = RecursiveChunker(rules=rules, chunk_size=2048, min_characters_per_chunk=1)
+    chunks = chunker.chunk(text)
+
+    assert "".join(chunk.text for chunk in chunks) == text
+
+
+def test_recursive_chunker_regex_extract_mode_with_capturing_groups() -> None:
+    """Extract mode should return full matches, not tuple fragments from capture groups."""
+    text = "Order #123 and #456 are done."
+    rules = RecursiveRules(levels=[
+        RecursiveLevel(
+            pattern=r"#(\d+)",
+            pattern_mode="extract",
+        )
+    ])
+    # Keep chunk_size tiny so extracted matches are not merged together.
+    chunker = RecursiveChunker(rules=rules, chunk_size=1, min_characters_per_chunk=1)
+    chunks = chunker.chunk(text)
+
+    assert [c.text for c in chunks] == ["#123", "#456"]
+
+
 def test_recursive_chunker_regex_paragraph_reconstruction(
     sample_text: str,
     regex_paragraph_rules: RecursiveRules,
@@ -529,6 +561,22 @@ def test_recursive_chunker_regex_paragraph_reconstruction(
     chunks = chunker.chunk(sample_text)
     assert len(chunks) > 0
     assert sample_text == "".join(chunk.text for chunk in chunks)
+
+
+def test_recursive_chunker_regex_split_does_not_drop_small_splits() -> None:
+    """Small regex splits should be preserved and merged later, not filtered out."""
+    text = "A\n\nB"
+    rules = RecursiveRules(levels=[
+        RecursiveLevel(
+            pattern=r"\n\n",
+            pattern_mode="split",
+            include_delim="prev",
+        )
+    ])
+    chunker = RecursiveChunker(rules=rules, chunk_size=2048, min_characters_per_chunk=3)
+    chunks = chunker.chunk(text)
+
+    assert "".join(chunk.text for chunk in chunks) == text
 
 
 def test_recursive_chunker_regex_indices(sample_text: str) -> None:
@@ -573,6 +621,22 @@ def test_recursive_chunker_regex_invalid_pattern() -> None:
             pattern=r"[invalid",  # Unclosed bracket
             pattern_mode="split",
         )
+
+
+def test_recursive_chunker_regex_nested_quantifier_rejected() -> None:
+    """Potentially catastrophic nested quantifiers should be rejected."""
+    text = "aaaaaaaaaaaaaaaaaaaa"
+    rules = RecursiveRules(levels=[
+        RecursiveLevel(
+            pattern=r"(a+)+",
+            pattern_mode="split",
+            include_delim="prev",
+        )
+    ])
+    chunker = RecursiveChunker(rules=rules, chunk_size=128, min_characters_per_chunk=1)
+
+    with pytest.raises(ValueError, match="nested quantifiers"):
+        chunker.chunk(text)
 
 
 def test_recursive_chunker_regex_and_delimiters_mutually_exclusive() -> None:
