@@ -727,6 +727,7 @@ def test_table_chunker_row_tokenizer(sample_table: str) -> None:
     original_rows = sample_table.strip().split("\n")[2:]
     assert set(all_chunked_rows) == set(original_rows)
 
+
 @pytest.fixture
 def html_table() -> str:
     """Fixture that returns an HTML table string."""
