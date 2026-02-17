@@ -168,10 +168,15 @@ class RecursiveChunker(BaseChunker):
 
                 if is_delimiter:
                     # This is a delimiter
-                    if include_mode == "prev" and splits:
-                        # Attach to previous split
-                        splits[-1] += part
+                    if include_mode == "prev":
+                        if splits:
+                            # Attach to previous split
+                            splits[-1] += part
+                        else:
+                            # No previous split, keep as is
+                            splits.append(part)
                     elif include_mode == "next":
+
                         # Attach to next split (if there is one)
                         if i + 1 < len(parts) and parts[i + 1]:
                             parts[i + 1] = part + parts[i + 1]
