@@ -727,6 +727,22 @@ def test_table_chunker_row_tokenizer(sample_table: str) -> None:
     original_rows = sample_table.strip().split("\n")[2:]
     assert set(all_chunked_rows) == set(original_rows)
 
+@pytest.fixture
+def html_table() -> str:
+    """Fixture that returns an HTML table string."""
+    return """<table>
+  <thead>
+    <tr><th>ID</th><th>Name</th><th>Role</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>1</td><td>Alice</td><td>Admin</td></tr>
+    <tr><td>2</td><td>Bob</td><td>User</td></tr>
+    <tr><td>3</td><td>Charlie</td><td>Guest</td></tr>
+    <tr><td>4</td><td>David</td><td>User</td></tr>
+    <tr><td>5</td><td>Eve</td><td>Admin</td></tr>
+  </tbody>
+</table>"""
+
 
 def test_table_chunker_html_table(html_table: str) -> None:
     """Test chunking an HTML table."""
@@ -744,6 +760,3 @@ def test_table_chunker_html_table(html_table: str) -> None:
     all_content = "".join(chunks[i].text for i in range(len(chunks)))
     assert "Alice" in all_content
     assert "Eve" in all_content
-
-
-# Test TableChunker with row tokenizer
