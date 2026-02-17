@@ -17,8 +17,9 @@ class TableChef(BaseChef):
     """TableChef processes CSV files and returns pandas DataFrames."""
 
     def __init__(self) -> None:
-        """Initialize TableChef with a regex pattern for markdown tables."""
+        """Initialize TableChef with regex patterns for markdown and HTML tables."""
         self.table_pattern = re.compile(r"(\|.*?\n(?:\|[-: ]+\|.*?\n)?(?:\|.*?\n)+)")
+        self.html_table_pattern = re.compile(r"(<table.*?>.*?</table>)", re.DOTALL | re.IGNORECASE)
 
     def parse(self, text: str) -> Document:
         """Parse raw markdown text and extract tables into a MarkdownDocument.
@@ -119,23 +120,37 @@ class TableChef(BaseChef):
             raise TypeError(f"Unsupported type: {type(path)}")
 
     def extract_tables_from_markdown(self, markdown: str) -> list[MarkdownTable]:
-        """Extract markdown tables from a markdown string.
+        """Extract markdown and HTML tables from a markdown string.
 
         Args:
             markdown (str): The markdown text containing tables.
 
         Returns:
-            list[MarkdownTable]: A list of MarkdownTable objects, each representing a markdown table found in the input.
+            list[MarkdownTable]: A list of MarkdownTable objects, each representing a table found in the input.
 
         """
         tables: list[MarkdownTable] = []
+
+        # Find markdown pipe tables
         for match in self.table_pattern.finditer(markdown):
             table_content = match.group(0)
             start_index = match.start()
             end_index = match.end()
             tables.append(
-                MarkdownTable(content=table_content, start_index=start_index, end_index=end_index),
+                MarkdownTable(content=table_content, start_index=start_index, end_index=end_index)
             )
+
+        # Find HTML tables
+        for match in self.html_table_pattern.finditer(markdown):
+            table_content = match.group(0)
+            start_index = match.start()
+            end_index = match.end()
+            tables.append(
+                MarkdownTable(content=table_content, start_index=start_index, end_index=end_index)
+            )
+
+        # Sort tables by their appearance in the text
+        tables.sort(key=lambda x: x.start_index)
         return tables
 
     def __repr__(self) -> str:

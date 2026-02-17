@@ -3,7 +3,7 @@ title: TableChef
 sidebarTitle: TableChef
 icon: table
 iconType: solid
-description: Extract tables from markdown text and prepare them for future usage.
+description: Extract tables from markdown text (including HTML tables) and prepare them for future usage.
 ---
 
 The `TableChef` is a versatile chef that extracts and processes tables from multiple sources. It can read CSV and Excel files, convert them to markdown format, or extract tables from markdown text. The parsed tables are returned in a structured format ready for downstream processing.
@@ -67,50 +67,77 @@ Process multiple files or markdown strings at once.
 
 <CodeGroup>
 
-```python CSV Files
+```python Files (CSV/Excel)
 from chonkie import TableChef
 
 # Initialize the chef
 chef = TableChef()
 
 # Process a CSV file
-markdown_table = chef.process("data.csv")
-print(markdown_table)
+doc = chef.process("data.csv")
+print(f"Extracted {len(doc.tables)} table from CSV")
+
+# Process an Excel file (all sheets)
+doc = chef.process("spreadsheet.xlsx")
+print(f"Extracted {len(doc.tables)} tables from Excel")
 ```
 
-```python Excel Files
-from chonkie import TableChef
-
-chef = TableChef()
-
-# Process an Excel file
-markdown_table = chef.process("spreadsheet.xlsx")
-print(markdown_table)
-```
-
-```python Markdown Text
+```python Markdown Tables
 from chonkie import TableChef
 
 chef = TableChef()
 
 markdown = """
-# My Table
+# Data Analysis
 
 | Name | Age | City |
 |------|-----|------|
 | Alice | 25 | New York |
 | Bob | 30 | Paris |
+
+Some text between tables...
+
+| Product | Price |
+|---------|-------|
+| Apple | $1.50 |
+| Banana | $0.75 |
 """
 
-# Extract tables from markdown
-tables = chef.process(markdown)
-print(f"Found {len(tables)} table(s)")
+# Extract all markdown tables
+doc = chef.process(markdown)
+for i, table in enumerate(doc.tables):
+    print(f"Table {i+1} content:\n{table.content}\n")
 ```
 
+```python HTML Tables
+from chonkie import TableChef
+
+chef = TableChef()
+
+html_content = """
+<h2>Employee List</h2>
+<table>
+  <thead>
+    <tr><th>ID</th><th>Status</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>1</td><td>Active</td></tr>
+    <tr><td>2</td><td>Pending</td></tr>
+    <tr><td>3</td><td>Inactive</td></tr>
+    <tr><td>4</td><td>Active</td></tr>
+  </tbody>
+</table>
+"""
+
+# Extract all html tables
+doc = chef.process(html_content)
+for i, table in enumerate(doc.tables):
+    print(f"Table {i+1} content:\n{table.content}\n")
+```
 </CodeGroup>
 
 ## Supported File Formats
 
 - **CSV files** (`.csv`) - Comma-separated values
 - **Excel files** (`.xls`, `.xlsx`) - Microsoft Excel spreadsheets
-- **Markdown strings** - Text containing pipe-separated tables
+- **Markdown strings** - Text containing pipe-separated tables or HTML tables (`<table>`)
