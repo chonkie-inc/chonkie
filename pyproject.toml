@@ -61,6 +61,9 @@ hub = ["huggingface-hub>=0.24.0", "jsonschema>=4.23.0"]
 viz = ["rich>=13.0.0"]
 cli = ["typer>=0.9.0"]
 
+# Optional dependencies for the API server
+api = ["fastapi>=0.115.0", "uvicorn[standard]>=0.30.0"]
+
 # Optional dependencies for table chef
 table = ["pandas", "tabulate", "openpyxl"]
 

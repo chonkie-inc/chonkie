@@ -16,15 +16,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy only the requirements file first for better layer caching
-COPY requirements-api.txt .
+# Copy pyproject.toml and src/ for installation
+COPY pyproject.toml .
+COPY src/ ./src/
 
-# Create a virtual environment and install Python dependencies
+# Create a virtual environment and install Chonkie with API dependencies
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
 RUN pip install --upgrade pip && \
-    pip install --no-cache-dir -r requirements-api.txt
+    pip install --no-cache-dir .[api,semantic,code,openai]
 
 # ---------------------------------------------------------------------------
 # Stage 2 – runtime

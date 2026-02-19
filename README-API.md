@@ -32,7 +32,10 @@ docker run -p 8000:8000 chonkie-oss-api
 ### Local Development
 
 ```bash
-pip install -r requirements-api.txt
+# Install Chonkie with API dependencies
+pip install -e .[api,semantic,code,openai]
+
+# Run the server
 uvicorn api.main:app --reload --port 8000
 ```
 
