@@ -13,7 +13,6 @@ WORKDIR /build
 # Install build dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
-    git \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy pyproject.toml and src/ for installation
@@ -46,8 +45,8 @@ ENV PATH="/opt/venv/bin:$PATH"
 # Copy the application source
 COPY api/ ./api/
 
-# Non-root user for security
-RUN useradd --create-home --shell /bin/bash chonkie
+# Non-root user for security (no home dir, no shell for reduced attack surface)
+RUN useradd --no-create-home --shell /sbin/nologin chonkie
 USER chonkie
 
 # Expose the default API port

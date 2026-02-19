@@ -122,7 +122,7 @@ class Timer:
 # Text helpers
 # ---------------------------------------------------------------------------
 
-def fix_escaped_text(text: "str | list[str]") -> "str | list[str]":
+def fix_escaped_text(text: str | list[str]) -> str | list[str]:
     """Unescape common escape sequences that arrive double-escaped over JSON.
 
     Args:
