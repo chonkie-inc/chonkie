@@ -1,7 +1,6 @@
 """Test the utils module."""
 
 import json
-import os
 
 import pytest
 

@@ -5,13 +5,13 @@ import pytest
 from chonkie import Chunk
 from chonkie.porters.base import BasePorter
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
 
 
 def make_chunk(text: str = "hello") -> Chunk:
+    """Create a simple Chunk for testing."""
     return Chunk(text=text, start_index=0, end_index=len(text), token_count=1)
 
 

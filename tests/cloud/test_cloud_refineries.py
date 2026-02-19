@@ -9,7 +9,6 @@ from chonkie.cloud.refineries.base import BaseRefinery
 from chonkie.cloud.refineries.embeddings import EmbeddingsRefinery
 from chonkie.cloud.refineries.overlap import OverlapRefinery
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
@@ -138,7 +137,7 @@ def test_overlap_refinery_refine_posts_correct_payload(monkeypatch):
     mock_response.json.return_value = response_data
 
     with patch("chonkie.cloud.refineries.overlap.httpx.post", return_value=mock_response) as mock_post:
-        result = refinery.refine(chunks)
+        refinery.refine(chunks)
 
     mock_post.assert_called_once()
     call_kwargs = mock_post.call_args
