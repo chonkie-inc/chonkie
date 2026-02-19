@@ -1,7 +1,7 @@
 """Test Cohere embeddings."""
 
+import importlib.util as importutil
 import os
-from importlib.util import find_spec
 from unittest.mock import MagicMock, patch
 
 import numpy as np
@@ -136,7 +136,7 @@ def test_dimension_property(embedding_model: CohereEmbeddings) -> None:
 
 def test_is_available() -> None:
     """Test _is_available method."""
-    if find_spec("cohere") is not None:
+    if importutil.find_spec("cohere") is not None:
         assert CohereEmbeddings._is_available() is True
     else:
         assert CohereEmbeddings._is_available() is False

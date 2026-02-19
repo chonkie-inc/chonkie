@@ -1,7 +1,6 @@
 """Embeddings implementation using Cohere's API."""
 
-import importlib
-import importlib.util
+import importlib.util as importutil
 import os
 import warnings
 from typing import TYPE_CHECKING, Optional
@@ -212,7 +211,7 @@ class CohereEmbeddings(BaseEmbeddings):
     @classmethod
     def _is_available(cls) -> bool:
         """Check if the Cohere package is available."""
-        return importlib.util.find_spec("cohere") is not None
+        return importutil.find_spec("cohere") is not None
 
     def __repr__(self) -> str:
         """Return a string representation of the CohereEmbeddings object."""
