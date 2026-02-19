@@ -1,5 +1,7 @@
 """Test the NeuralChunker class."""
 
+import importlib.util as importutil
+
 import pytest
 
 from chonkie import NeuralChunker
@@ -68,9 +70,7 @@ class TestNeuralChunkerInitialization:
     def test_init_with_unsupported_model(self):
         """Test initialization fails with unsupported model."""
         try:
-            import importlib.util
-
-            if importlib.util.find_spec("transformers") is None:
+            if importutil.find_spec("transformers") is None:
                 pytest.skip("transformers not available")
 
             # Try to initialize with unsupported model, should fail during validation
@@ -91,9 +91,7 @@ class TestNeuralChunkerInitialization:
         chunker_class = NeuralChunker.__new__(NeuralChunker)
         # Test availability check
         try:
-            import importlib.util
-
-            if importlib.util.find_spec("transformers") is not None:
+            if importutil.find_spec("transformers") is not None:
                 assert chunker_class._is_available() is True
             else:
                 assert chunker_class._is_available() is False
@@ -108,9 +106,7 @@ class TestNeuralChunkerAvailability:
         """Test _is_available method."""
         chunker_class = NeuralChunker.__new__(NeuralChunker)
         try:
-            import importlib.util
-
-            if importlib.util.find_spec("transformers") is not None:
+            if importutil.find_spec("transformers") is not None:
                 assert chunker_class._is_available() is True
             else:
                 assert chunker_class._is_available() is False
