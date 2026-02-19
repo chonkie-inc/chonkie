@@ -1,0 +1,24 @@
+services:
+  chonkie-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: chonkie-oss-api:latest
+    container_name: chonkie-api
+    ports:
+      - "8000:8000"
+    environment:
+      # Log verbosity: DEBUG | INFO | WARNING | ERROR
+      LOG_LEVEL: "${LOG_LEVEL:-INFO}"
+      # Comma-separated CORS origins; use * to allow all (default)
+      CORS_ORIGINS: "${CORS_ORIGINS:-*}"
+      # Required only for /v1/refine/embeddings (OpenAI models)
+      OPENAI_API_KEY: "${OPENAI_API_KEY:-}"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c",
+             "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
