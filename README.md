@@ -128,7 +128,13 @@ Run Chonkie as a self-hosted REST API for easy integration into any application:
 # Install with API dependencies
 pip install "chonkie[api,semantic,code,openai]"
 
-# Start the server
+# Start the server using the CLI
+chonkie serve
+
+# Or with custom options
+chonkie serve --port 3000 --reload --log-level debug
+
+# Or directly with uvicorn
 uvicorn api.main:app --host 0.0.0.0 --port 8000
 ```
 
