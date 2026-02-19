@@ -272,10 +272,12 @@ FastChunker returns chunks as `Chunk` objects:
 ```python
 @dataclass
 class Chunk:
-    text: str           # The chunk text
-    start_index: int    # Starting byte position in original text
-    end_index: int      # Ending byte position in original text
-    token_count: int    # Always 0 (not computed for speed)
+    text: str                                           # The chunk text
+    start_index: int                                    # Starting character position in original text
+    end_index: int                                      # Ending character position in original text
+    token_count: int                                    # Always 0 (not computed for speed)
+    context: Optional[str] = None                       # Optional overlap context text
+    embedding: Union[list[float], "np.ndarray", None] = None  # Optional embedding vector
 ```
 
 <Note>
