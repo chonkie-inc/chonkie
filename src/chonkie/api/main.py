@@ -2,7 +2,11 @@
 
 Run locally::
 
-    uvicorn api.main:app --reload --port 8000
+    chonkie serve
+
+Or with uvicorn directly::
+
+    uvicorn chonkie.api.main:app --reload --port 8000
 
 Or via Docker::
 
@@ -15,9 +19,9 @@ from importlib.metadata import version, PackageNotFoundError
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from api.routes.chunking import router as chunking_router
-from api.routes.refineries import router as refineries_router
-from api.utils import configure_logging
+from chonkie.api.routes.chunking import router as chunking_router
+from chonkie.api.routes.refineries import router as refineries_router
+from chonkie.api.utils import configure_logging
 
 # ---------------------------------------------------------------------------
 # Logging

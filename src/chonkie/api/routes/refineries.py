@@ -12,8 +12,8 @@ from chonkie.embeddings import OpenAIEmbeddings
 from chonkie.types import Chunk
 from fastapi import APIRouter, HTTPException
 
-from api.schemas import EmbeddingsRefineryRequest, OverlapRefineryRequest
-from api.utils import Timer, get_logger
+from chonkie.api.schemas import EmbeddingsRefineryRequest, OverlapRefineryRequest
+from chonkie.api.utils import Timer, get_logger
 
 router = APIRouter(prefix="/refine", tags=["Refineries"])
 log = get_logger("api.routes.refineries")

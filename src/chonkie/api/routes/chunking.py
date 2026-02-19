@@ -15,7 +15,7 @@ from chonkie import (
 )
 from fastapi import APIRouter, HTTPException
 
-from api.schemas import (
+from chonkie.api.schemas import (
     ChunkingResponse,
     CodeChunkerRequest,
     RecursiveChunkerRequest,
@@ -23,7 +23,7 @@ from api.schemas import (
     SentenceChunkerRequest,
     TokenChunkerRequest,
 )
-from api.utils import Timer, fix_escaped_text, get_logger, sanitize_text_encoding
+from chonkie.api.utils import Timer, fix_escaped_text, get_logger, sanitize_text_encoding
 
 router = APIRouter(prefix="/chunk", tags=["Chunking"])
 log = get_logger("api.routes.chunking")

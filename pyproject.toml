@@ -206,6 +206,8 @@ packages = [
     "chonkie.chef",
     "chonkie.pipeline",
     "chonkie.cli",
+    "chonkie.api",
+    "chonkie.api.routes",
 ]
 
 [tool.setuptools.package-data]

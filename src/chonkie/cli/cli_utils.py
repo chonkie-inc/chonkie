@@ -515,11 +515,11 @@ def serve(
     
     # Check if api module exists
     try:
-        from api.main import app as fastapi_app  # noqa: F401
+        from chonkie.api.main import app as fastapi_app  # noqa: F401
     except ImportError:
         typer.echo(
             "❌ API module not found.\n"
-            "Make sure you're running from the chonkie repository root directory."
+            "Install chonkie with API support: pip install 'chonkie[api]'"
         )
         raise typer.Exit(code=1)
     
@@ -537,7 +537,7 @@ def serve(
     import uvicorn
     
     uvicorn.run(
-        "api.main:app",
+        "chonkie.api.main:app",
         host=host,
         port=port,
         reload=reload,

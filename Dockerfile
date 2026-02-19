@@ -42,8 +42,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY --from=builder /opt/venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
-# Copy the application source
-COPY api/ ./api/
+# Note: API is now included in the chonkie package installation from builder stage
+# No separate COPY needed - chonkie.api is part of the installed package
 
 # Non-root user for security (no home dir, no shell for reduced attack surface)
 RUN useradd --no-create-home --shell /sbin/nologin chonkie
@@ -66,4 +66,4 @@ ENV CORS_ORIGINS="*"
 # ---------------------------------------------------------------------------
 # Start the server
 # ---------------------------------------------------------------------------
-CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "chonkie.api.main:app", "--host", "0.0.0.0", "--port", "8000"]

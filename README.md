@@ -135,7 +135,7 @@ chonkie serve
 chonkie serve --port 3000 --reload --log-level debug
 
 # Or directly with uvicorn
-uvicorn api.main:app --host 0.0.0.0 --port 8000
+uvicorn chonkie.api.main:app --host 0.0.0.0 --port 8000
 ```
 
 Or use Docker:
