@@ -6,6 +6,8 @@ dicts (or a list-of-lists when the caller submits a list of texts).
 
 from typing import Any, Dict, List, Union
 
+from fastapi import APIRouter, HTTPException
+
 from chonkie import (
     CodeChunker,
     RecursiveChunker,
@@ -13,8 +15,6 @@ from chonkie import (
     SentenceChunker,
     TokenChunker,
 )
-from fastapi import APIRouter, HTTPException
-
 from chonkie.api.schemas import (
     ChunkingResponse,
     CodeChunkerRequest,
@@ -44,6 +44,7 @@ def _chunks_to_response(chunks: Any) -> ChunkingResponse:
 
     Returns:
         List of dicts or list-of-lists of dicts.
+
     """
     if not chunks:
         return []
@@ -215,6 +216,7 @@ def _get_recursive_chunker(recipe: str, lang: str, tokenizer: str) -> RecursiveC
 
     Returns:
         A :class:`RecursiveChunker` instance (potentially from cache).
+
     """
     key = f"{recipe}:{lang}:{tokenizer}"
     if key not in _recursive_cache:
@@ -394,6 +396,7 @@ def _get_code_chunker(tokenizer: str, language: str) -> CodeChunker:
 
     Returns:
         A :class:`CodeChunker` instance (potentially from cache).
+
     """
     key = f"{tokenizer}:{language}"
     if key not in _code_cache:

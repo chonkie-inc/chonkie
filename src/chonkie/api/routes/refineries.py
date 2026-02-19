@@ -7,13 +7,13 @@ of chunk dicts.
 
 from typing import Any, Dict, List
 
-from chonkie import EmbeddingsRefinery, OverlapRefinery
-from chonkie.embeddings import OpenAIEmbeddings
-from chonkie.types import Chunk
 from fastapi import APIRouter, HTTPException
 
+from chonkie import EmbeddingsRefinery, OverlapRefinery
 from chonkie.api.schemas import EmbeddingsRefineryRequest, OverlapRefineryRequest
 from chonkie.api.utils import Timer, get_logger
+from chonkie.embeddings import OpenAIEmbeddings
+from chonkie.types import Chunk
 
 router = APIRouter(prefix="/refine", tags=["Refineries"])
 log = get_logger("api.routes.refineries")
@@ -37,6 +37,7 @@ def _dicts_to_chunks(chunk_dicts: List[Dict[str, Any]]) -> List[Chunk]:
 
     Raises:
         HTTPException: 400 if any dict is missing required fields.
+
     """
     try:
         return [Chunk(**d) for d in chunk_dicts]

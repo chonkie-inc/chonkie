@@ -494,7 +494,6 @@ def serve(
         pip install "chonkie[api,semantic,code,openai]"
     
     Examples:
-    
         # Start server on default port (8000)
         chonkie serve
         
@@ -503,6 +502,7 @@ def serve(
         
         # Start with debug logging
         chonkie serve --log-level debug
+
     """
     try:
         import uvicorn  # noqa: F401
@@ -511,7 +511,7 @@ def serve(
             "❌ FastAPI and Uvicorn are required to run the server.\n"
             "Install with: pip install 'chonkie[api]'"
         )
-        raise typer.Exit(code=1)
+        raise typer.Exit(code=1) from None
     
     # Check if api module exists
     try:
@@ -521,7 +521,7 @@ def serve(
             "❌ API module not found.\n"
             "Install chonkie with API support: pip install 'chonkie[api]'"
         )
-        raise typer.Exit(code=1)
+        raise typer.Exit(code=1) from None
     
     typer.echo(f"🦛 Starting Chonkie API server on http://{host}:{port}")
     typer.echo(f"📚 API docs available at http://{host}:{port}/docs")

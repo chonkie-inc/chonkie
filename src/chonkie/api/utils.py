@@ -6,8 +6,6 @@ that follows the same conventions as the cloud API.
 
 import logging
 import time
-from typing import Optional
-
 
 # ---------------------------------------------------------------------------
 # Logger
@@ -43,6 +41,7 @@ def get_logger(name: str) -> _StructuredLogger:
 
     Returns:
         A :class:`_StructuredLogger` instance.
+
     """
     base = logging.getLogger(name)
     return _StructuredLogger(base, {})
@@ -53,6 +52,7 @@ def configure_logging(level: str = "INFO") -> None:
 
     Args:
         level: Log level string (``"DEBUG"``, ``"INFO"``, etc.).
+
     """
     fmt = "%(asctime)s  %(levelname)-8s  %(name)s  %(message)s"
     logging.basicConfig(level=getattr(logging, level.upper(), logging.INFO), format=fmt)
@@ -78,6 +78,7 @@ class Timer:
     """
 
     def __init__(self) -> None:
+        """Initialize the Timer with an empty starts dictionary."""
         self._starts: dict[str, float] = {}
 
     def start(self, name: str = "_global") -> None:
@@ -85,6 +86,7 @@ class Timer:
 
         Args:
             name: Timer name.  Defaults to the global timer.
+
         """
         self._starts[name] = time.perf_counter()
 
@@ -97,6 +99,7 @@ class Timer:
         Returns:
             Elapsed time in milliseconds, or ``0.0`` if the timer was never
             started.
+
         """
         start = self._starts.pop(name, None)
         if start is None:
@@ -111,6 +114,7 @@ class Timer:
 
         Returns:
             Elapsed time in milliseconds, or ``0.0`` if not started.
+
         """
         start = self._starts.get(name)
         if start is None:
@@ -130,6 +134,7 @@ def fix_escaped_text(text: str | list[str]) -> str | list[str]:
 
     Returns:
         The fixed string or list of strings.
+
     """
     if isinstance(text, list):
         return [_fix_single(t) for t in text]
@@ -156,5 +161,6 @@ def sanitize_text_encoding(text: str) -> str:
 
     Returns:
         Sanitized string safe for processing.
+
     """
     return text.encode("utf-8", errors="replace").decode("utf-8", errors="replace")
