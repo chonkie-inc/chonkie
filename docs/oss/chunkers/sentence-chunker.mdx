@@ -95,7 +95,6 @@ chunks = chunker.chunk(text)
 for chunk in chunks:
     print(f"Chunk text: {chunk.text}")
     print(f"Token count: {chunk.token_count}")
-    print(f"Number of sentences: {len(chunk.sentences)}")
 ```
 
 ### Batch Chunking
@@ -160,8 +159,10 @@ SentenceChunker returns chunks as `Chunk` objects:
 ```python
 @dataclass
 class Chunk:
-    text: str           # The chunk text
-    start_index: int    # Starting position in original text
-    end_index: int      # Ending position in original text
-    token_count: int    # Number of tokens in chunk
+    text: str                                           # The chunk text
+    start_index: int                                    # Starting position in original text
+    end_index: int                                      # Ending position in original text
+    token_count: int                                    # Number of tokens in chunk
+    context: Optional[str] = None                       # Optional overlap context text
+    embedding: Union[list[float], "np.ndarray", None] = None  # Optional embedding vector
 ```

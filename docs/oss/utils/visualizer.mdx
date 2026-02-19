@@ -31,16 +31,19 @@ viz = Visualizer()
 
 The `Visualizer` has two main methods: `print` and `save`.
 
-The `print` method will print the chunks to the terminal.
+The `print` method will print the chunks to the terminal. It accepts a list of `Chunk` objects or plain strings.
 
 ```python
 viz.print(chunks)
 
 # Or you can directly call the Visualizer object
 viz(chunks)
+
+# You can also pass a list of plain strings
+viz(["First text segment", "Second text segment", "Third text segment"])
 ```
 
-The `save` method will save the chunks to a HTML file.
+The `save` method will save the chunks to a HTML file. Like `print`, it accepts `Chunk` objects or strings.
 
 ```python
 viz.save("chonkie.html", chunks)
