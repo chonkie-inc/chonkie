@@ -452,46 +452,54 @@ _chonkie_tokenizer_classes = {
 }
 
 
+class InvalidTokenizerError(ValueError):
+    """Error raised when a tokenizer can't be loaded."""
+
+    def __init__(self, message: str, *, backend_errors: dict[str, str]) -> None:  # noqa: D107
+        super().__init__(message)
+        self.backend_errors = backend_errors
+
+
 def _create_auto_tokenizer_from_string(tokenizer: str) -> "AutoTokenizer":
     if tokenizer_cls := _chonkie_tokenizer_classes.get(tokenizer):
         return ChonkieAutoTokenizer(tokenizer_cls())  # type: ignore[abstract]
 
-    # Try tokenizers first
+    backend_errors = {}
+
     if importutil.find_spec("tokenizers") is not None:
         try:
             from tokenizers import Tokenizer as HFTokenizer
 
             return TokenizersAutoTokenizer(HFTokenizer.from_pretrained(tokenizer))
-        except Exception:
-            logger.warning(
-                "Could not load tokenizer with 'tokenizers'. Falling back to 'tiktoken'.",
-            )
+        except Exception as e:
+            backend_errors["tokenizers"] = str(e)
     else:
-        logger.warning("'tokenizers' library not found. Falling back to 'tiktoken'.")
+        backend_errors["tokenizers"] = "'tokenizers' library not found."
 
-    # Try tiktoken
     if importutil.find_spec("tiktoken") is not None:
         try:
             from tiktoken import get_encoding
 
             return TiktokenAutoTokenizer(get_encoding(tokenizer))
-        except Exception:
-            logger.warning(
-                "Could not load tokenizer with 'tiktoken'. Falling back to 'transformers'.",
-            )
+        except Exception as e:
+            backend_errors["tiktoken"] = str(e)
     else:
-        logger.warning("'tiktoken' library not found. Falling back to 'transformers'.")
+        backend_errors["tiktoken"] = "'tiktoken' library not found."
 
-    # Try transformers as last resort
     if importutil.find_spec("transformers") is not None:
         try:
             from transformers import AutoTokenizer as HFAutoTokenizer
 
             return TransformersAutoTokenizer(HFAutoTokenizer.from_pretrained(tokenizer))
-        except Exception:
-            logger.warning("Could not load tokenizer with 'transformers'.")
+        except Exception as e:
+            backend_errors["transformers"] = str(e)
+    else:
+        backend_errors["transformers"] = "'transformers' library not found."
 
-    raise ValueError(f"Tokenizer {tokenizer!r} not found in transformers, tokenizers, or tiktoken")
+    raise InvalidTokenizerError(
+        f"Tokenizer {tokenizer!r} could not be loaded: {backend_errors}",
+        backend_errors=backend_errors,
+    )
 
 
 class AutoTokenizer:

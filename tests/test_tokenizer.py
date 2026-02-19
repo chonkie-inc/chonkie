@@ -1149,7 +1149,7 @@ def test_tokenizer_chonkie_backend_paths() -> None:
 def test_tokenizer_error_paths_comprehensive() -> None:
     """Test various error paths in tokenizer methods."""
     # Test invalid tokenizer creation with non-existent model
-    with pytest.raises(ValueError, match="Tokenizer.+not found"):
+    with pytest.raises(ValueError, match="Tokenizer.+could not be loaded"):
         # This should try all backends and fail
         AutoTokenizer("definitely_not_a_real_model_name_12345_xyz")
 
