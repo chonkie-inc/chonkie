@@ -125,8 +125,8 @@ Check out more usage examples in the [docs](https://docs.chonkie.ai)!
 Run Chonkie as a self-hosted REST API for easy integration into any application:
 
 ```bash
-# Install with API dependencies
-pip install "chonkie[api,semantic,code,openai]"
+# Install with API dependencies (includes catsu for multi-provider embeddings)
+pip install "chonkie[api,semantic,code,catsu]"
 
 # Start the server using the CLI
 chonkie serve
@@ -144,7 +144,25 @@ Or use Docker:
 docker compose up
 ```
 
-The API provides endpoints for all chunkers and refineries. Interactive documentation is available at `/docs` when the server is running.
+The API provides endpoints for all chunkers, refineries, and **pipelines** — reusable workflow configurations stored in a local SQLite database.
+
+```bash
+# Create a reusable pipeline
+curl -X POST http://localhost:8000/v1/pipelines \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "rag-chunker",
+    "steps": [
+      {"type": "chunk", "chunker": "semantic", "config": {"chunk_size": 512}},
+      {"type": "refine", "refinery": "embeddings", "config": {"embedding_model": "text-embedding-3-small"}}
+    ]
+  }'
+
+# List your pipelines
+curl http://localhost:8000/v1/pipelines
+```
+
+Interactive documentation is available at `/docs` when the server is running.
 
 📚 **Full API documentation**: [docs.chonkie.ai/api](https://docs.chonkie.ai/api)
 

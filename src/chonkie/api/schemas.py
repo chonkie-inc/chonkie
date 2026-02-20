@@ -10,6 +10,53 @@ from typing import Any, Dict, List, Literal, Optional, Union
 from pydantic import BaseModel, Field
 
 # ---------------------------------------------------------------------------
+# Pipeline schemas
+# ---------------------------------------------------------------------------
+
+
+class PipelineStepRequest(BaseModel):
+    """A single step in a pipeline."""
+
+    type: Literal["chunk", "refine"]
+    chunker: Optional[str] = None
+    refinery: Optional[str] = None
+    config: Dict[str, Any] = Field(default_factory=dict)
+
+
+class PipelineCreateRequest(BaseModel):
+    """Request to create a pipeline."""
+
+    name: str = Field(..., description="Unique pipeline name")
+    description: Optional[str] = Field(None, description="Pipeline description")
+    steps: List[PipelineStepRequest] = Field(..., description="Pipeline steps")
+
+
+class PipelineUpdateRequest(BaseModel):
+    """Request to update a pipeline."""
+
+    name: Optional[str] = None
+    description: Optional[str] = None
+    steps: Optional[List[PipelineStepRequest]] = None
+
+
+class PipelineExecuteRequest(BaseModel):
+    """Request to execute a pipeline."""
+
+    text: Union[str, List[str]] = Field(..., description="Text to process")
+
+
+class PipelineResponse(BaseModel):
+    """Pipeline metadata response."""
+
+    id: str
+    name: str
+    description: Optional[str]
+    config: Dict[str, Any]
+    created_at: str
+    updated_at: str
+
+
+# ---------------------------------------------------------------------------
 # Response types
 # ---------------------------------------------------------------------------
 
@@ -180,8 +227,11 @@ class EmbeddingsRefineryRequest(BaseRefineryRequest):
     embedding_model: str = Field(
         default="text-embedding-3-small",
         description=(
-            "OpenAI embedding model to use.  "
-            "Supported: 'text-embedding-3-small', 'text-embedding-3-large'."
+            "Embedding model to use via Catsu.  "
+            "Supports any provider auto-detected from the model name "
+            "(e.g. 'text-embedding-3-small' for OpenAI, 'embed-english-v3.0' "
+            "for Cohere, 'voyage-large-2' for Voyage AI).  "
+            "Set the appropriate API key environment variable for your provider."
         ),
     )
 

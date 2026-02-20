@@ -47,6 +47,7 @@
               "oss/api/overview",
               "oss/api/quickstart",
               "oss/api/endpoints",
+              "oss/api/pipelines",
               "oss/api/docker"
             ]
           },

@@ -27,10 +27,16 @@ services:
     container_name: chonkie-api
     ports:
       - "8000:8000"
+    volumes:
+      - ./data:/app/data
     environment:
       LOG_LEVEL: "${LOG_LEVEL:-INFO}"
       CORS_ORIGINS: "${CORS_ORIGINS:-*}"
+      DATABASE_URL: "sqlite+aiosqlite:////app/data/chonkie.db"
       OPENAI_API_KEY: "${OPENAI_API_KEY:-}"
+      COHERE_API_KEY: "${COHERE_API_KEY:-}"
+      VOYAGE_API_KEY: "${VOYAGE_API_KEY:-}"
+      MISTRAL_API_KEY: "${MISTRAL_API_KEY:-}"
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "python", "-c",
@@ -41,13 +47,19 @@ services:
       start_period: 15s
 ```
 
+The `./data` volume mount persists the SQLite database (`chonkie.db`) across container restarts.
+
 ## Environment Variables
 
 | Variable | Default | Description |
 |---|---|---|
 | `LOG_LEVEL` | `INFO` | Log verbosity: `DEBUG`, `INFO`, `WARNING`, `ERROR` |
 | `CORS_ORIGINS` | `*` | Comma-separated allowed origins. Use `*` to allow all. |
-| `OPENAI_API_KEY` | _(empty)_ | Required only for `POST /v1/refine/embeddings` |
+| `DATABASE_URL` | `sqlite+aiosqlite:///./data/chonkie.db` | SQLite database path. Override for custom locations. |
+| `OPENAI_API_KEY` | _(empty)_ | For OpenAI embeddings (`text-embedding-3-small`, etc.) |
+| `COHERE_API_KEY` | _(empty)_ | For Cohere embeddings (`embed-english-v3.0`, etc.) |
+| `VOYAGE_API_KEY` | _(empty)_ | For Voyage AI embeddings (`voyage-large-2`, etc.) |
+| `MISTRAL_API_KEY` | _(empty)_ | For Mistral embeddings (`mistral-embed`) |
 
 Pass them inline:
 
@@ -60,7 +72,10 @@ Or create a `.env` file in the project root:
 ```bash
 LOG_LEVEL=INFO
 CORS_ORIGINS=https://myapp.com,https://api.myapp.com
+# Set your preferred embedding provider key:
 OPENAI_API_KEY=sk-...
+# COHERE_API_KEY=...
+# VOYAGE_API_KEY=...
 ```
 
 ## Build and Run Without Compose

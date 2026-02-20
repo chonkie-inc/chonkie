@@ -7,13 +7,20 @@ services:
     container_name: chonkie-api
     ports:
       - "8000:8000"
+    volumes:
+      - ./data:/app/data
     environment:
       # Log verbosity: DEBUG | INFO | WARNING | ERROR
       LOG_LEVEL: "${LOG_LEVEL:-INFO}"
       # Comma-separated CORS origins; use * to allow all (default)
       CORS_ORIGINS: "${CORS_ORIGINS:-*}"
-      # Required only for /v1/refine/embeddings (OpenAI models)
+      # SQLite database location (persisted via ./data volume mount)
+      DATABASE_URL: "sqlite+aiosqlite:////app/data/chonkie.db"
+      # Optional: embedding provider API keys for /v1/refine/embeddings
       OPENAI_API_KEY: "${OPENAI_API_KEY:-}"
+      COHERE_API_KEY: "${COHERE_API_KEY:-}"
+      VOYAGE_API_KEY: "${VOYAGE_API_KEY:-}"
+      MISTRAL_API_KEY: "${MISTRAL_API_KEY:-}"
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "python", "-c",

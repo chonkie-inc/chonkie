@@ -24,7 +24,7 @@ RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
 RUN pip install --upgrade pip && \
-    pip install --no-cache-dir .[api,semantic,code,openai]
+    pip install --no-cache-dir .[api,semantic,code,openai,catsu]
 
 # ---------------------------------------------------------------------------
 # Stage 2 – runtime
@@ -45,8 +45,12 @@ ENV PATH="/opt/venv/bin:$PATH"
 # Note: API is now included in the chonkie package installation from builder stage
 # No separate COPY needed - chonkie.api is part of the installed package
 
+# Create data directory for SQLite database
+RUN mkdir -p /app/data
+
 # Non-root user for security (no home dir, no shell for reduced attack surface)
-RUN useradd --no-create-home --shell /sbin/nologin chonkie
+RUN useradd --no-create-home --shell /sbin/nologin chonkie && \
+    chown -R chonkie:chonkie /app/data
 USER chonkie
 
 # Expose the default API port

@@ -12,14 +12,10 @@ from fastapi import APIRouter, HTTPException
 from chonkie import EmbeddingsRefinery, OverlapRefinery
 from chonkie.api.schemas import EmbeddingsRefineryRequest, OverlapRefineryRequest
 from chonkie.api.utils import Timer, get_logger
-from chonkie.embeddings import OpenAIEmbeddings
 from chonkie.types import Chunk
 
 router = APIRouter(prefix="/refine", tags=["Refineries"])
 log = get_logger("api.routes.refineries")
-
-# OpenAI models that are supported by this endpoint
-_ALLOWED_OPENAI_MODELS = ("text-embedding-3-small", "text-embedding-3-large")
 
 
 # ---------------------------------------------------------------------------
@@ -61,21 +57,20 @@ def _dicts_to_chunks(chunk_dicts: List[Dict[str, Any]]) -> List[Chunk]:
 @router.post(
     "/embeddings",
     response_model=None,
-    summary="Add OpenAI embeddings to chunks",
+    summary="Add embeddings to chunks",
 )
 async def embeddings_refine(
     request: EmbeddingsRefineryRequest,
 ) -> List[Dict[str, Any]]:
-    """Compute and attach OpenAI embeddings to a list of chunks.
+    """Compute and attach embeddings to a list of chunks via Catsu.
 
     Each chunk in the response will include an ``embedding`` field containing a
     list of floats.
 
-    Supported models:
-    - ``text-embedding-3-small``
-    - ``text-embedding-3-large``
-
-    An ``OPENAI_API_KEY`` environment variable must be set.
+    Catsu automatically selects the embedding provider based on the model name
+    and available environment variables.  Set the appropriate API key for your
+    chosen provider (e.g. ``OPENAI_API_KEY``, ``COHERE_API_KEY``,
+    ``VOYAGE_API_KEY``).
     """
     timer = Timer()
     timer.start()
@@ -90,31 +85,20 @@ async def embeddings_refine(
     if not request.chunks:
         return []
 
-    # Normalise model name (strip provider prefix if present)
-    actual_model = request.embedding_model.replace("openai/", "").replace("OpenAI/", "")
-
-    if actual_model not in _ALLOWED_OPENAI_MODELS:
-        log.error(
-            "Unsupported embedding model",
-            embedding_model=request.embedding_model,
-            allowed=_ALLOWED_OPENAI_MODELS,
-        )
-        raise HTTPException(
-            status_code=400,
-            detail=(
-                f"Only OpenAI models are supported: "
-                f"{', '.join(_ALLOWED_OPENAI_MODELS)}.  "
-                f"Got: {actual_model!r}"
-            ),
-        )
-
     try:
+        try:
+            from catsu import Embeddings
+        except ImportError as exc:
+            msg = "Embeddings require catsu.  Install it with: pip install 'chonkie[catsu]'"
+            log.error(msg, error=str(exc))
+            raise HTTPException(status_code=500, detail=msg) from exc
+
         timer.start("embedding_init")
-        embedding = OpenAIEmbeddings(model=actual_model)
+        embedding = Embeddings(model=request.embedding_model)
         log.info(
             "Embedding model ready",
             endpoint="POST /v1/refine/embeddings",
-            model=actual_model,
+            model=request.embedding_model,
             duration_ms=round(timer.end("embedding_init"), 2),
         )
 
@@ -146,13 +130,6 @@ async def embeddings_refine(
 
     except HTTPException:
         raise
-    except ImportError as exc:
-        msg = (
-            "EmbeddingsRefinery requires the 'openai' extra.  "
-            "Install it with: pip install 'chonkie[openai]'"
-        )
-        log.error(msg, error=str(exc))
-        raise HTTPException(status_code=500, detail=msg) from exc
     except Exception as exc:
         log.error(
             "Embeddings refinery failed",

@@ -19,7 +19,9 @@ from importlib.metadata import PackageNotFoundError, version
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from chonkie.api.database import init_db
 from chonkie.api.routes.chunking import router as chunking_router
+from chonkie.api.routes.pipelines import router as pipelines_router
 from chonkie.api.routes.refineries import router as refineries_router
 from chonkie.api.utils import configure_logging
 
@@ -70,10 +72,22 @@ app.add_middleware(
 )
 
 # ---------------------------------------------------------------------------
+# Startup
+# ---------------------------------------------------------------------------
+
+
+@app.on_event("startup")
+async def startup_event() -> None:
+    """Initialize database on startup."""
+    await init_db()
+
+
+# ---------------------------------------------------------------------------
 # Routers
 # ---------------------------------------------------------------------------
 app.include_router(chunking_router, prefix="/v1")
 app.include_router(refineries_router, prefix="/v1")
+app.include_router(pipelines_router, prefix="/v1")
 
 
 # ---------------------------------------------------------------------------
@@ -109,4 +123,5 @@ async def root() -> dict:
             "/v1/refine/embeddings",
             "/v1/refine/overlap",
         ],
+        "pipelines": "/v1/pipelines",
     }
