@@ -212,6 +212,54 @@ class CatsuEmbeddings(BaseEmbeddings):
 
         return all_embeddings
 
+    async def aembed(self, text: str) -> np.ndarray:
+        """Embed a single text string asynchronously.
+
+        Args:
+            text: Text string to embed
+
+        Returns:
+            np.ndarray: Embedding vector for the text (1D array)
+
+        Raises:
+            Various Catsu exceptions for API errors, auth failures, etc.
+
+        """
+        response = await self.client.aembed(
+            model=self.model,
+            input=text,
+            provider=self.provider,
+        )
+        return response.to_numpy()[0]
+
+    async def aembed_batch(self, texts: List[str]) -> List[np.ndarray]:
+        """Embed multiple texts asynchronously using batched API calls.
+
+        Args:
+            texts: List of text strings to embed
+
+        Returns:
+            List[np.ndarray]: List of embedding vectors (1D arrays)
+
+        Raises:
+            Various Catsu exceptions for API errors, auth failures, etc.
+
+        """
+        if not texts:
+            return []
+
+        all_embeddings = []
+        for i in range(0, len(texts), self._batch_size):
+            batch = texts[i : i + self._batch_size]
+            response = await self.client.aembed(
+                model=self.model,
+                input=batch,
+                provider=self.provider,
+            )
+            arr = response.to_numpy()
+            all_embeddings.extend([arr[j] for j in range(len(batch))])
+        return all_embeddings
+
     @property
     def dimension(self) -> int:
         """Return the dimension of the embedding vectors.
