@@ -26,6 +26,7 @@ _ALLOWED_OPENAI_MODELS = ("text-embedding-3-small", "text-embedding-3-large")
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _dicts_to_chunks(chunk_dicts: List[Dict[str, Any]]) -> List[Chunk]:
     """Convert a list of chunk dicts to :class:`~chonkie.types.Chunk` objects.
 
@@ -55,6 +56,7 @@ def _dicts_to_chunks(chunk_dicts: List[Dict[str, Any]]) -> List[Chunk]:
 # ---------------------------------------------------------------------------
 # Embeddings refinery
 # ---------------------------------------------------------------------------
+
 
 @router.post(
     "/embeddings",
@@ -89,11 +91,7 @@ async def embeddings_refine(
         return []
 
     # Normalise model name (strip provider prefix if present)
-    actual_model = (
-        request.embedding_model
-        .replace("openai/", "")
-        .replace("OpenAI/", "")
-    )
+    actual_model = request.embedding_model.replace("openai/", "").replace("OpenAI/", "")
 
     if actual_model not in _ALLOWED_OPENAI_MODELS:
         log.error(
@@ -162,14 +160,13 @@ async def embeddings_refine(
             error=str(exc),
             error_type=type(exc).__name__,
         )
-        raise HTTPException(
-            status_code=500, detail=f"Embeddings refinery failed: {exc}"
-        ) from exc
+        raise HTTPException(status_code=500, detail=f"Embeddings refinery failed: {exc}") from exc
 
 
 # ---------------------------------------------------------------------------
 # Overlap refinery
 # ---------------------------------------------------------------------------
+
 
 @router.post(
     "/overlap",
@@ -242,6 +239,4 @@ async def overlap_refine(
             error=str(exc),
             error_type=type(exc).__name__,
         )
-        raise HTTPException(
-            status_code=500, detail=f"Overlap refinery failed: {exc}"
-        ) from exc
+        raise HTTPException(status_code=500, detail=f"Overlap refinery failed: {exc}") from exc

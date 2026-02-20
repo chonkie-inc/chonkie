@@ -80,6 +80,7 @@ app.include_router(refineries_router, prefix="/v1")
 # Health / info endpoints
 # ---------------------------------------------------------------------------
 
+
 @app.get("/health", tags=["Meta"], summary="Health check")
 async def health() -> dict:
     """Return a simple alive signal.

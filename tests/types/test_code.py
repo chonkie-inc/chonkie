@@ -1,6 +1,5 @@
 """Tests for code configuration types (MergeRule, SplitRule, LanguageConfig)."""
 
-
 from chonkie.types.code import LanguageConfig, MergeRule, SplitRule
 
 # ---------------------------------------------------------------------------

@@ -33,6 +33,7 @@ log = get_logger("api.routes.chunking")
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _chunks_to_response(chunks: Any) -> ChunkingResponse:
     """Convert chunker output to a JSON-serialisable response.
 
@@ -65,6 +66,7 @@ def _chunk_count(chunks: Any) -> int:
 # ---------------------------------------------------------------------------
 # Token chunker
 # ---------------------------------------------------------------------------
+
 
 @router.post("/token", response_model=None, summary="Chunk text by token count")
 async def token_chunk(request: TokenChunkerRequest) -> ChunkingResponse:
@@ -123,14 +125,13 @@ async def token_chunk(request: TokenChunkerRequest) -> ChunkingResponse:
             error=str(exc),
             error_type=type(exc).__name__,
         )
-        raise HTTPException(
-            status_code=500, detail=f"Token chunking failed: {exc}"
-        ) from exc
+        raise HTTPException(status_code=500, detail=f"Token chunking failed: {exc}") from exc
 
 
 # ---------------------------------------------------------------------------
 # Sentence chunker
 # ---------------------------------------------------------------------------
+
 
 @router.post("/sentence", response_model=None, summary="Chunk text at sentence boundaries")
 async def sentence_chunk(request: SentenceChunkerRequest) -> ChunkingResponse:
@@ -192,9 +193,7 @@ async def sentence_chunk(request: SentenceChunkerRequest) -> ChunkingResponse:
             error=str(exc),
             error_type=type(exc).__name__,
         )
-        raise HTTPException(
-            status_code=500, detail=f"Sentence chunking failed: {exc}"
-        ) from exc
+        raise HTTPException(status_code=500, detail=f"Sentence chunking failed: {exc}") from exc
 
 
 # ---------------------------------------------------------------------------
@@ -226,7 +225,9 @@ def _get_recursive_chunker(recipe: str, lang: str, tokenizer: str) -> RecursiveC
     return _recursive_cache[key]
 
 
-@router.post("/recursive", response_model=None, summary="Recursively chunk text using structural separators")
+@router.post(
+    "/recursive", response_model=None, summary="Recursively chunk text using structural separators"
+)
 async def recursive_chunk(request: RecursiveChunkerRequest) -> ChunkingResponse:
     """Chunk text recursively using a hierarchy of separators defined by ``recipe``.
 
@@ -291,14 +292,13 @@ async def recursive_chunk(request: RecursiveChunkerRequest) -> ChunkingResponse:
             error=str(exc),
             error_type=type(exc).__name__,
         )
-        raise HTTPException(
-            status_code=500, detail=f"Recursive chunking failed: {exc}"
-        ) from exc
+        raise HTTPException(status_code=500, detail=f"Recursive chunking failed: {exc}") from exc
 
 
 # ---------------------------------------------------------------------------
 # Semantic chunker
 # ---------------------------------------------------------------------------
+
 
 @router.post("/semantic", response_model=None, summary="Chunk text by semantic similarity")
 async def semantic_chunk(request: SemanticChunkerRequest) -> ChunkingResponse:
@@ -375,9 +375,7 @@ async def semantic_chunk(request: SemanticChunkerRequest) -> ChunkingResponse:
             error=str(exc),
             error_type=type(exc).__name__,
         )
-        raise HTTPException(
-            status_code=500, detail=f"Semantic chunking failed: {exc}"
-        ) from exc
+        raise HTTPException(status_code=500, detail=f"Semantic chunking failed: {exc}") from exc
 
 
 # ---------------------------------------------------------------------------
@@ -456,8 +454,7 @@ async def code_chunk(request: CodeChunkerRequest) -> ChunkingResponse:
 
     except ImportError as exc:
         msg = (
-            "CodeChunker requires the 'code' extra.  "
-            "Install it with: pip install 'chonkie[code]'"
+            "CodeChunker requires the 'code' extra.  Install it with: pip install 'chonkie[code]'"
         )
         log.error(msg, error=str(exc))
         raise HTTPException(status_code=500, detail=msg) from exc
@@ -470,6 +467,4 @@ async def code_chunk(request: CodeChunkerRequest) -> ChunkingResponse:
             error=str(exc),
             error_type=type(exc).__name__,
         )
-        raise HTTPException(
-            status_code=500, detail=f"Code chunking failed: {exc}"
-        ) from exc
+        raise HTTPException(status_code=500, detail=f"Code chunking failed: {exc}") from exc

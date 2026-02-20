@@ -11,6 +11,7 @@ import time
 # Logger
 # ---------------------------------------------------------------------------
 
+
 class _StructuredLogger(logging.LoggerAdapter):
     """Logger adapter that supports keyword-argument structured fields.
 
@@ -23,7 +24,9 @@ class _StructuredLogger(logging.LoggerAdapter):
     def process(self, msg: str, kwargs: dict) -> tuple[str, dict]:  # type: ignore[override]
         extra = kwargs.pop("extra", {})
         # Pull any remaining kwargs out and append them as key=value pairs
-        fields = {k: v for k, v in kwargs.items() if k not in {"exc_info", "stack_info", "stacklevel"}}
+        fields = {
+            k: v for k, v in kwargs.items() if k not in {"exc_info", "stack_info", "stacklevel"}
+        }
         for key in fields:
             kwargs.pop(key)
         if fields:
@@ -61,6 +64,7 @@ def configure_logging(level: str = "INFO") -> None:
 # ---------------------------------------------------------------------------
 # Timer
 # ---------------------------------------------------------------------------
+
 
 class Timer:
     """Lightweight wall-clock timer with named sub-timers.
@@ -125,6 +129,7 @@ class Timer:
 # ---------------------------------------------------------------------------
 # Text helpers
 # ---------------------------------------------------------------------------
+
 
 def fix_escaped_text(text: str | list[str]) -> str | list[str]:
     """Unescape common escape sequences that arrive double-escaped over JSON.

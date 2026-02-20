@@ -487,19 +487,19 @@ def serve(
     log_level: str = typer.Option("info", help="Log level (debug, info, warning, error)"),
 ) -> None:
     """Start the Chonkie API server.
-    
+
     Runs a FastAPI server that exposes all Chonkie chunkers and refineries
     over HTTP. Requires the [api] extras to be installed:
-    
+
         pip install "chonkie[api,semantic,code,openai]"
-    
+
     Examples:
         # Start server on default port (8000)
         chonkie serve
-        
+
         # Start on custom port with auto-reload
         chonkie serve --port 3000 --reload
-        
+
         # Start with debug logging
         chonkie serve --log-level debug
 
@@ -512,7 +512,7 @@ def serve(
             "Install with: pip install 'chonkie[api]'"
         )
         raise typer.Exit(code=1) from None
-    
+
     # Check if api module exists
     try:
         from chonkie.api.main import app as fastapi_app  # noqa: F401
@@ -522,20 +522,20 @@ def serve(
             "Install chonkie with API support: pip install 'chonkie[api]'"
         )
         raise typer.Exit(code=1) from None
-    
+
     typer.echo(f"🦛 Starting Chonkie API server on http://{host}:{port}")
     typer.echo(f"📚 API docs available at http://{host}:{port}/docs")
     typer.echo(f"🔍 Log level: {log_level}")
     if reload:
         typer.echo("🔄 Auto-reload enabled (development mode)")
     typer.echo("\nPress CTRL+C to stop the server\n")
-    
+
     # Set log level environment variable
     os.environ["LOG_LEVEL"] = log_level.upper()
-    
+
     # Import and run uvicorn
     import uvicorn
-    
+
     uvicorn.run(
         "chonkie.api.main:app",
         host=host,

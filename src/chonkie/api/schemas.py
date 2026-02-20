@@ -13,6 +13,7 @@ from pydantic import BaseModel, Field
 # Response types
 # ---------------------------------------------------------------------------
 
+
 class ChunkResponse(BaseModel):
     """A single chunk returned by any chunker endpoint."""
 
@@ -30,12 +31,11 @@ ChunkingResponse = Union[List[Dict[str, Any]], List[List[Dict[str, Any]]]]
 # Chunker request schemas
 # ---------------------------------------------------------------------------
 
+
 class TokenChunkerRequest(BaseModel):
     """Request model for ``POST /v1/chunk/token``."""
 
-    text: Union[str, List[str]] = Field(
-        ..., description="Text or list of texts to chunk"
-    )
+    text: Union[str, List[str]] = Field(..., description="Text or list of texts to chunk")
     tokenizer: str = Field(
         default="character",
         description="Tokenizer to use (e.g. 'character', 'gpt2', 'cl100k_base')",
@@ -47,9 +47,7 @@ class TokenChunkerRequest(BaseModel):
 class SentenceChunkerRequest(BaseModel):
     """Request model for ``POST /v1/chunk/sentence``."""
 
-    text: Union[str, List[str]] = Field(
-        ..., description="Text or list of texts to chunk"
-    )
+    text: Union[str, List[str]] = Field(..., description="Text or list of texts to chunk")
     tokenizer: str = Field(
         default="character",
         description="Tokenizer to use",
@@ -78,9 +76,7 @@ class SentenceChunkerRequest(BaseModel):
 class RecursiveChunkerRequest(BaseModel):
     """Request model for ``POST /v1/chunk/recursive``."""
 
-    text: Union[str, List[str]] = Field(
-        ..., description="Text or list of texts to chunk"
-    )
+    text: Union[str, List[str]] = Field(..., description="Text or list of texts to chunk")
     tokenizer: str = Field(
         default="character",
         description="Tokenizer to use",
@@ -99,20 +95,21 @@ class RecursiveChunkerRequest(BaseModel):
 class SemanticChunkerRequest(BaseModel):
     """Request model for ``POST /v1/chunk/semantic``."""
 
-    text: Union[str, List[str]] = Field(
-        ..., description="Text or list of texts to chunk"
-    )
+    text: Union[str, List[str]] = Field(..., description="Text or list of texts to chunk")
     embedding_model: str = Field(
         default="minishlab/potion-base-8M",
         description="Sentence-embedding model used to compute semantic similarity",
     )
     threshold: float = Field(
-        default=0.5, ge=0.0, le=1.0,
+        default=0.5,
+        ge=0.0,
+        le=1.0,
         description="Cosine-similarity threshold for splitting",
     )
     chunk_size: int = Field(default=512, ge=1, description="Maximum tokens per chunk")
     similarity_window: int = Field(
-        default=3, ge=1,
+        default=3,
+        ge=1,
         description="Number of surrounding sentences to consider for similarity",
     )
     min_sentences_per_chunk: int = Field(
@@ -130,14 +127,11 @@ class SemanticChunkerRequest(BaseModel):
         description="Attach delimiter to previous or next sentence",
     )
     skip_window: int = Field(default=0, ge=0, description="Skip window for similarity")
-    filter_window: int = Field(
-        default=5, ge=1, description="Savitzky-Golay filter window size"
-    )
-    filter_polyorder: int = Field(
-        default=3, ge=1, description="Savitzky-Golay polynomial order"
-    )
+    filter_window: int = Field(default=5, ge=1, description="Savitzky-Golay filter window size")
+    filter_polyorder: int = Field(default=3, ge=1, description="Savitzky-Golay polynomial order")
     filter_tolerance: float = Field(
-        default=0.2, ge=0.0,
+        default=0.2,
+        ge=0.0,
         description="Tolerance for detecting peaks in the similarity signal",
     )
 
@@ -166,6 +160,7 @@ class CodeChunkerRequest(BaseModel):
 # ---------------------------------------------------------------------------
 # Refinery request schemas
 # ---------------------------------------------------------------------------
+
 
 class BaseRefineryRequest(BaseModel):
     """Shared base for refinery requests."""

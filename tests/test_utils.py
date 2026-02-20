@@ -211,6 +211,7 @@ def test_load_token_raises_when_no_config(tmp_path, monkeypatch):
     chonkie_dir = tmp_path / ".chonkie"
     if chonkie_dir.exists():
         import shutil
+
         shutil.rmtree(str(chonkie_dir))
     with pytest.raises(ValueError):
         load_token()
