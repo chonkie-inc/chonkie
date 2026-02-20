@@ -107,7 +107,9 @@ def test_sentence_to_dict_with_list_embedding():
 def test_sentence_to_dict_converts_numpy_embedding():
     """Test that to_dict converts a numpy embedding to a list."""
     embedding = np.array([0.4, 0.5, 0.6])
-    sentence = Sentence(text="hello", start_index=0, end_index=5, token_count=1, embedding=embedding)
+    sentence = Sentence(
+        text="hello", start_index=0, end_index=5, token_count=1, embedding=embedding
+    )
     d = sentence.to_dict()
     assert isinstance(d["embedding"], list)
     assert d["embedding"] == pytest.approx([0.4, 0.5, 0.6])

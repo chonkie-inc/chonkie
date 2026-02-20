@@ -479,5 +479,72 @@ def pipeline(
         raise typer.Exit(code=1) from None
 
 
+@app.command()
+def serve(
+    host: str = typer.Option("0.0.0.0", help="Host to bind the server to"),
+    port: int = typer.Option(8000, help="Port to bind the server to"),
+    reload: bool = typer.Option(False, help="Enable auto-reload for development"),
+    log_level: str = typer.Option("info", help="Log level (debug, info, warning, error)"),
+) -> None:
+    """Start the Chonkie API server.
+
+    Runs a FastAPI server that exposes all Chonkie chunkers and refineries
+    over HTTP. Requires the [api] extras to be installed:
+
+        pip install "chonkie[api,semantic,code,openai]"
+
+    Examples:
+        # Start server on default port (8000)
+        chonkie serve
+
+        # Start on custom port with auto-reload
+        chonkie serve --port 3000 --reload
+
+        # Start with debug logging
+        chonkie serve --log-level debug
+
+    """
+    try:
+        import uvicorn  # noqa: F401
+    except ImportError:
+        typer.echo(
+            "❌ FastAPI and Uvicorn are required to run the server.\n"
+            "Install with: pip install 'chonkie[api]'"
+        )
+        raise typer.Exit(code=1) from None
+
+    # Check if api module exists
+    try:
+        from chonkie.api.main import app as fastapi_app  # noqa: F401
+    except ImportError:
+        typer.echo(
+            "❌ API module not found.\n"
+            "Install chonkie with API support: pip install 'chonkie[api]'"
+        )
+        raise typer.Exit(code=1) from None
+
+    typer.echo(f"🦛 Starting Chonkie API server on http://{host}:{port}")
+    typer.echo(f"📚 API docs available at http://{host}:{port}/docs")
+    typer.echo(f"🔍 Log level: {log_level}")
+    if reload:
+        typer.echo("🔄 Auto-reload enabled (development mode)")
+    typer.echo("\nPress CTRL+C to stop the server\n")
+
+    # Set log level environment variable
+    os.environ["LOG_LEVEL"] = log_level.upper()
+
+    # Import and run uvicorn
+    import uvicorn
+
+    uvicorn.run(
+        "chonkie.api.main:app",
+        host=host,
+        port=port,
+        reload=reload,
+        log_level=log_level,
+        access_log=False,  # API has its own logging middleware
+    )
+
+
 if __name__ == "__main__":
     app()

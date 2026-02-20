@@ -61,6 +61,15 @@ hub = ["huggingface-hub>=0.24.0", "jsonschema>=4.23.0"]
 viz = ["rich>=13.0.0"]
 cli = ["typer>=0.9.0"]
 
+# Optional dependencies for the API server
+api = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.30.0",
+    "sqlalchemy>=2.0.0",
+    "alembic>=1.13.0",
+    "aiosqlite>=0.20.0",
+]
+
 # Optional dependencies for table chef
 table = ["pandas", "tabulate", "openpyxl"]
 
@@ -203,6 +212,9 @@ packages = [
     "chonkie.chef",
     "chonkie.pipeline",
     "chonkie.cli",
+    "chonkie.api",
+    "chonkie.api.routes",
+    "chonkie.api.models",
 ]
 
 [tool.setuptools.package-data]
