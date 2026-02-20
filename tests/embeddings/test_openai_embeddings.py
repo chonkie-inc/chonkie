@@ -1,32 +1,49 @@
-"""Test suite for OpenAIEmbeddings."""
+"""Test suite for OpenAIEmbeddings (CatsuEmbeddings wrapper)."""
 
 import os
 from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pytest
-from openai import APIError, APITimeoutError, RateLimitError
-from tenacity import RetryError
 
 from chonkie.embeddings.openai import OpenAIEmbeddings
 
 
 @pytest.fixture
-def embedding_model() -> OpenAIEmbeddings:
+def mock_catsu_client():
+    """Mock Catsu client for testing."""
+    mock_client = MagicMock()
+
+    mock_embed_response = MagicMock()
+    mock_embed_response.to_numpy.return_value = np.random.rand(1, 1536).astype(np.float32)
+    mock_client.embed.return_value = mock_embed_response
+
+    mock_model_info = MagicMock()
+    mock_model_info.name = "text-embedding-3-small"
+    mock_model_info.dimensions = 1536
+    mock_client.list_models.return_value = [mock_model_info]
+
+    mock_tokenize_response = MagicMock()
+    mock_tokenize_response.token_count = 10
+    mock_client.tokenize.return_value = mock_tokenize_response
+
+    return mock_client
+
+
+@pytest.fixture
+def embedding_model(mock_catsu_client):
     """Fixture to create an OpenAIEmbeddings instance."""
-    api_key = os.environ.get("OPENAI_API_KEY")
-    return OpenAIEmbeddings(model="text-embedding-3-small", api_key=api_key)
+    with patch("catsu.Client", return_value=mock_catsu_client):
+        return OpenAIEmbeddings(model="text-embedding-3-small", api_key="test-key")
 
 
 @pytest.fixture
 def sample_text() -> str:
-    """Fixture to create a sample text for testing."""
     return "This is a sample text for testing."
 
 
 @pytest.fixture
-def sample_texts() -> list[str]:
-    """Fixture to create a list of sample texts for testing."""
+def sample_texts() -> list:
     return [
         "This is the first sample text.",
         "Here is another example sentence.",
@@ -34,92 +51,88 @@ def sample_texts() -> list[str]:
     ]
 
 
-@pytest.mark.skipif(
-    "OPENAI_API_KEY" not in os.environ,
-    reason="Skipping test because OPENAI_API_KEY is not defined",
-)
-def test_initialization_with_model_name(embedding_model: OpenAIEmbeddings) -> None:
-    """Test that OpenAIEmbeddings initializes with a model name."""
+def test_initialization(embedding_model: OpenAIEmbeddings) -> None:
+    """Test that OpenAIEmbeddings initializes correctly."""
     assert embedding_model.model == "text-embedding-3-small"
-    assert embedding_model.client is not None
+    assert embedding_model._catsu is not None
 
 
-@pytest.mark.skipif(
-    "OPENAI_API_KEY" not in os.environ,
-    reason="Skipping test because OPENAI_API_KEY is not defined",
-)
-@patch("chonkie.embeddings.openai.OpenAIEmbeddings.embed")
-def test_embed_single_text(
-    mock_embed,
-    embedding_model: OpenAIEmbeddings,
-    sample_text: str,
-) -> None:
-    """Test that OpenAIEmbeddings correctly embeds a single text."""
-    mock_embed.return_value = np.zeros(embedding_model.dimension)
-    embedding = embedding_model.embed(sample_text)
-    assert isinstance(embedding, np.ndarray)
-    assert embedding.shape == (embedding_model.dimension,)
+def test_initialization_with_env_var(mock_catsu_client) -> None:
+    """Test initialization using environment variable for API key."""
+    with patch("catsu.Client", return_value=mock_catsu_client):
+        with patch.dict(os.environ, {"OPENAI_API_KEY": "env-test-key"}):
+            embeddings = OpenAIEmbeddings()
+            assert embeddings.model == "text-embedding-3-small"
 
 
-@pytest.mark.skipif(
-    "OPENAI_API_KEY" not in os.environ,
-    reason="Skipping test because OPENAI_API_KEY is not defined",
-)
-@patch("chonkie.embeddings.openai.OpenAIEmbeddings.embed_batch")
-def test_embed_batch_texts(
-    mock_embed_batch,
-    embedding_model: OpenAIEmbeddings,
-    sample_texts: list[str],
-) -> None:
-    """Test that OpenAIEmbeddings correctly embeds a batch of texts."""
-    mock_embed_batch.return_value = [np.zeros(embedding_model.dimension) for _ in sample_texts]
-    embeddings = embedding_model.embed_batch(sample_texts)
-    assert isinstance(embeddings, list)
-    assert len(embeddings) == len(sample_texts)
-    assert all(isinstance(embedding, np.ndarray) for embedding in embeddings)
-    assert all(embedding.shape == (embedding_model.dimension,) for embedding in embeddings)
+def test_default_model() -> None:
+    """Test that OpenAIEmbeddings has the correct default model."""
+    assert OpenAIEmbeddings.DEFAULT_MODEL == "text-embedding-3-small"
 
 
-@pytest.mark.skipif(
-    "OPENAI_API_KEY" not in os.environ,
-    reason="Skipping test because OPENAI_API_KEY is not defined",
-)
-@patch("chonkie.embeddings.openai.OpenAIEmbeddings.embed_batch")
-@patch("chonkie.embeddings.openai.OpenAIEmbeddings.similarity")
-def test_similarity(
-    mock_similarity,
-    mock_embed_batch,
-    embedding_model: OpenAIEmbeddings,
-    sample_texts: list[str],
-) -> None:
-    """Test that OpenAIEmbeddings correctly calculates similarity between two embeddings."""
-    mock_embed_batch.return_value = [np.zeros(embedding_model.dimension) for _ in sample_texts]
-    mock_similarity.return_value = np.float32(0.5)
-    embeddings = embedding_model.embed_batch(sample_texts)
-    similarity_score = embedding_model.similarity(embeddings[0], embeddings[1])
-    assert isinstance(similarity_score, np.float32)
-    assert 0.0 <= similarity_score <= 1.0
+def test_embed_single_text(embedding_model: OpenAIEmbeddings, sample_text: str, mock_catsu_client) -> None:
+    """Test that embed delegates to CatsuEmbeddings."""
+    mock_response = MagicMock()
+    mock_response.to_numpy.return_value = np.random.rand(1, 1536).astype(np.float32)
+    mock_catsu_client.embed.return_value = mock_response
+
+    result = embedding_model.embed(sample_text)
+    assert isinstance(result, np.ndarray)
+    assert result.ndim == 1
 
 
-@pytest.mark.skipif(
-    "OPENAI_API_KEY" not in os.environ,
-    reason="Skipping test because OPENAI_API_KEY is not defined",
-)
+def test_embed_batch_texts(embedding_model: OpenAIEmbeddings, sample_texts: list, mock_catsu_client) -> None:
+    """Test that embed_batch delegates to CatsuEmbeddings."""
+    mock_response = MagicMock()
+    mock_response.to_numpy.return_value = np.random.rand(len(sample_texts), 1536).astype(np.float32)
+    mock_catsu_client.embed.return_value = mock_response
+
+    results = embedding_model.embed_batch(sample_texts)
+    assert isinstance(results, list)
+    assert len(results) == len(sample_texts)
+
+
+def test_embed_batch_empty(embedding_model: OpenAIEmbeddings) -> None:
+    """Test embed_batch with empty list."""
+    results = embedding_model.embed_batch([])
+    assert results == []
+
+
 def test_dimension_property(embedding_model: OpenAIEmbeddings) -> None:
-    """Test that OpenAIEmbeddings correctly calculates the dimension property."""
+    """Test that dimension property works."""
     assert isinstance(embedding_model.dimension, int)
-    assert embedding_model.dimension > 0
+    assert embedding_model.dimension == 1536
+
+
+def test_get_tokenizer(embedding_model: OpenAIEmbeddings) -> None:
+    """Test that get_tokenizer returns a tokenizer."""
+    tokenizer = embedding_model.get_tokenizer()
+    assert tokenizer is not None
+
+
+def test_similarity(embedding_model: OpenAIEmbeddings) -> None:
+    """Test similarity calculation."""
+    v1 = np.array([1.0, 0.0, 0.0], dtype=np.float32)
+    v2 = np.array([1.0, 0.0, 0.0], dtype=np.float32)
+    sim = embedding_model.similarity(v1, v2)
+    assert isinstance(sim, np.float32)
+    assert abs(sim - 1.0) < 1e-6
+
+
+def test_repr(embedding_model: OpenAIEmbeddings) -> None:
+    """Test string representation."""
+    repr_str = repr(embedding_model)
+    assert "OpenAIEmbeddings" in repr_str
+    assert "text-embedding-3-small" in repr_str
 
 
 def test_is_available() -> None:
-    """Test that OpenAIEmbeddings correctly checks if it is available."""
-    # This might fail if dependencies are NOT installed, but in the test environment they usually are
-    # Using patch to test both cases is better, but here we just check if it returns a bool
+    """Test _is_available method returns a bool."""
     assert isinstance(OpenAIEmbeddings._is_available(), bool)
 
 
 def test_openai_embeddings_missing_dependencies() -> None:
-    """Test that OpenAIEmbeddings raises ImportError when dependencies are missing."""
+    """Test that ImportError is raised when catsu is not available."""
     with patch.object(OpenAIEmbeddings, "_is_available", return_value=False):
         with pytest.raises(
             ImportError, match=r"One \(or more\) of the following packages is not available"
@@ -127,233 +140,45 @@ def test_openai_embeddings_missing_dependencies() -> None:
             OpenAIEmbeddings(api_key="test-key")
 
 
-@pytest.mark.skipif(
-    "OPENAI_API_KEY" not in os.environ,
-    reason="Skipping test because OPENAI_API_KEY is not defined",
-)
-def test_repr(embedding_model: OpenAIEmbeddings) -> None:
-    """Test that OpenAIEmbeddings correctly returns a string representation."""
-    repr_str = repr(embedding_model)
-    assert isinstance(repr_str, str)
-    assert repr_str.startswith("OpenAIEmbeddings")
+def test_catsu_initialized_with_correct_provider(mock_catsu_client) -> None:
+    """Test that CatsuEmbeddings is initialized with openai provider."""
+    with patch("catsu.Client", return_value=mock_catsu_client) as mock_client_class:
+        embeddings = OpenAIEmbeddings(model="text-embedding-3-small", api_key="my-key")
+        call_kwargs = mock_client_class.call_args[1]
+        assert call_kwargs.get("api_keys") == {"openai": "my-key"}
+
+
+def test_backward_compat_signature(mock_catsu_client) -> None:
+    """Test that old __init__ signature parameters are accepted."""
+    with patch("catsu.Client", return_value=mock_catsu_client):
+        # These old params should be accepted without error
+        embeddings = OpenAIEmbeddings(
+            model="text-embedding-3-small",
+            tokenizer=None,
+            dimension=None,
+            max_tokens=None,
+            base_url=None,
+            api_key="test-key",
+            organization=None,
+            max_retries=3,
+            timeout=60.0,
+            batch_size=128,
+        )
+        assert embeddings.model == "text-embedding-3-small"
 
 
 @pytest.mark.skipif(
     "OPENAI_API_KEY" not in os.environ,
-    reason="Skipping test because OPENAI_API_KEY is not defined",
+    reason="Skipping integration test - requires OPENAI_API_KEY",
 )
-def test_retry_on_rate_limit_error(embedding_model: OpenAIEmbeddings, sample_text: str) -> None:
-    """Test that embed retries on RateLimitError and eventually succeeds."""
-    mock_response = MagicMock()
-    mock_response.data = [MagicMock(embedding=[0.1] * embedding_model.dimension)]
-
-    call_count = 0
-
-    def side_effect_rate_limit(*args, **kwargs):
-        nonlocal call_count
-        call_count += 1
-        if call_count < 3:
-            raise RateLimitError(
-                message="Rate limit exceeded",
-                response=MagicMock(status_code=429),
-                body=None,
-            )
-        return mock_response
-
-    with patch.object(
-        embedding_model.client.embeddings,
-        "create",
-        side_effect=side_effect_rate_limit,
-    ):
-        result = embedding_model.embed(sample_text)
-        assert isinstance(result, np.ndarray)
-        assert result.shape == (embedding_model.dimension,)
-        assert call_count == 3  # Failed twice, succeeded on third attempt
-
-
-@pytest.mark.skipif(
-    "OPENAI_API_KEY" not in os.environ,
-    reason="Skipping test because OPENAI_API_KEY is not defined",
-)
-def test_retry_on_api_error(embedding_model: OpenAIEmbeddings, sample_text: str) -> None:
-    """Test that embed retries on APIError and eventually succeeds."""
-    mock_response = MagicMock()
-    mock_response.data = [MagicMock(embedding=[0.1] * embedding_model.dimension)]
-
-    call_count = 0
-
-    def side_effect_api_error(*args, **kwargs):
-        nonlocal call_count
-        call_count += 1
-        if call_count < 2:
-            raise APIError(
-                message="Internal server error",
-                request=MagicMock(),
-                body=None,
-            )
-        return mock_response
-
-    with patch.object(
-        embedding_model.client.embeddings,
-        "create",
-        side_effect=side_effect_api_error,
-    ):
-        result = embedding_model.embed(sample_text)
-        assert isinstance(result, np.ndarray)
-        assert result.shape == (embedding_model.dimension,)
-        assert call_count == 2  # Failed once, succeeded on second attempt
-
-
-@pytest.mark.skipif(
-    "OPENAI_API_KEY" not in os.environ,
-    reason="Skipping test because OPENAI_API_KEY is not defined",
-)
-def test_retry_on_timeout(embedding_model: OpenAIEmbeddings, sample_text: str) -> None:
-    """Test that embed retries on APITimeoutError and eventually succeeds."""
-    mock_response = MagicMock()
-    mock_response.data = [MagicMock(embedding=[0.1] * embedding_model.dimension)]
-
-    call_count = 0
-
-    def side_effect_timeout(*args, **kwargs):
-        nonlocal call_count
-        call_count += 1
-        if call_count < 2:
-            raise APITimeoutError(request=MagicMock())
-        return mock_response
-
-    with patch.object(
-        embedding_model.client.embeddings,
-        "create",
-        side_effect=side_effect_timeout,
-    ):
-        result = embedding_model.embed(sample_text)
-        assert isinstance(result, np.ndarray)
-        assert result.shape == (embedding_model.dimension,)
-        assert call_count == 2  # Failed once, succeeded on second attempt
-
-
-@pytest.mark.skipif(
-    "OPENAI_API_KEY" not in os.environ,
-    reason="Skipping test because OPENAI_API_KEY is not defined",
-)
-def test_retry_exceeds_max_attempts(embedding_model: OpenAIEmbeddings, sample_text: str) -> None:
-    """Test that embed raises RetryError after maximum retry attempts."""
-    with patch.object(
-        embedding_model.client.embeddings,
-        "create",
-        side_effect=RateLimitError(
-            message="Rate limit exceeded",
-            response=MagicMock(status_code=429),
-            body=None,
-        ),
-    ):
-        with pytest.raises(RetryError):
-            embedding_model.embed(sample_text)
-
-
-@pytest.mark.skipif(
-    "OPENAI_API_KEY" not in os.environ,
-    reason="Skipping test because OPENAI_API_KEY is not defined",
-)
-def test_no_retry_on_other_exceptions(embedding_model: OpenAIEmbeddings, sample_text: str) -> None:
-    """Test that embed does not retry on non-retryable exceptions."""
-    call_count = 0
-
-    def side_effect_value_error(*args, **kwargs):
-        nonlocal call_count
-        call_count += 1
-        raise ValueError("Invalid input")
-
-    with patch.object(
-        embedding_model.client.embeddings,
-        "create",
-        side_effect=side_effect_value_error,
-    ):
-        with pytest.raises(ValueError):
-            embedding_model.embed(sample_text)
-        assert call_count == 1  # Should not retry on ValueError
-
-
-@pytest.mark.skipif(
-    "OPENAI_API_KEY" not in os.environ,
-    reason="Skipping test because OPENAI_API_KEY is not defined",
-)
-def test_batch_retry_on_rate_limit_error(
-    embedding_model: OpenAIEmbeddings,
-    sample_texts: list[str],
-) -> None:
-    """Test that _embed_batch_with_retry retries on RateLimitError and eventually succeeds."""
-    mock_response = MagicMock()
-    mock_response.data = [
-        MagicMock(embedding=[0.1] * embedding_model.dimension, index=i)
-        for i in range(len(sample_texts))
-    ]
-
-    call_count = 0
-
-    def side_effect_rate_limit(*args, **kwargs):
-        nonlocal call_count
-        call_count += 1
-        if call_count < 3:
-            raise RateLimitError(
-                message="Rate limit exceeded",
-                response=MagicMock(status_code=429),
-                body=None,
-            )
-        return mock_response
-
-    with patch.object(
-        embedding_model.client.embeddings,
-        "create",
-        side_effect=side_effect_rate_limit,
-    ):
-        result = embedding_model.embed_batch(sample_texts)
-        assert isinstance(result, list)
-        assert len(result) == len(sample_texts)
-        assert call_count == 3  # Failed twice, succeeded on third attempt
-
-
-@pytest.mark.skipif(
-    "OPENAI_API_KEY" not in os.environ,
-    reason="Skipping test because OPENAI_API_KEY is not defined",
-)
-def test_batch_fallback_to_individual_on_persistent_error(
-    embedding_model: OpenAIEmbeddings,
-    sample_texts: list[str],
-) -> None:
-    """Test that embed_batch falls back to individual embeds when batch fails persistently."""
-    mock_individual_response = MagicMock()
-    mock_individual_response.data = [MagicMock(embedding=[0.1] * embedding_model.dimension)]
-
-    batch_call_count = 0
-    individual_call_count = 0
-
-    def side_effect_batch(*args, **kwargs):
-        nonlocal batch_call_count, individual_call_count
-        # Check if it's a batch or individual call based on input
-        if isinstance(kwargs.get("input"), list) and len(kwargs["input"]) > 1:
-            batch_call_count += 1
-            raise APIError(
-                message="Batch processing error",
-                request=MagicMock(),
-                body=None,
-            )
-        else:
-            individual_call_count += 1
-            return mock_individual_response
-
-    with patch.object(
-        embedding_model.client.embeddings,
-        "create",
-        side_effect=side_effect_batch,
-    ):
-        result = embedding_model.embed_batch(sample_texts)
-        assert isinstance(result, list)
-        assert len(result) == len(sample_texts)
-        # Should try batch 5 times (max retries), then fall back to individual embeds
-        assert batch_call_count == 5
-        assert individual_call_count == len(sample_texts)
+def test_real_embed_integration():
+    """Integration test with real API (requires OPENAI_API_KEY)."""
+    embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
+    text = "This is a real integration test."
+    embedding = embeddings.embed(text)
+    assert isinstance(embedding, np.ndarray)
+    assert embedding.ndim == 1
+    assert len(embedding) > 0
 
 
 if __name__ == "__main__":
