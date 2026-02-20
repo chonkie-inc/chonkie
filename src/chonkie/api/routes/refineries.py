@@ -15,7 +15,7 @@ from chonkie.api.utils import Timer, get_logger
 from chonkie.types import Chunk
 
 router = APIRouter(prefix="/refine", tags=["Refineries"])
-log = get_logger("api.routes.refineries")
+log = get_logger("chonkie.api.routes.refineries")
 
 
 # ---------------------------------------------------------------------------

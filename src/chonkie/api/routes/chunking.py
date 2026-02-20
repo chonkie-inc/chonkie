@@ -26,7 +26,7 @@ from chonkie.api.schemas import (
 from chonkie.api.utils import Timer, fix_escaped_text, get_logger, sanitize_text_encoding
 
 router = APIRouter(prefix="/chunk", tags=["Chunking"])
-log = get_logger("api.routes.chunking")
+log = get_logger("chonkie.api.routes.chunking")
 
 
 # ---------------------------------------------------------------------------

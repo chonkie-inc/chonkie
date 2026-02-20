@@ -23,12 +23,14 @@ from chonkie.api.database import init_db
 from chonkie.api.routes.chunking import router as chunking_router
 from chonkie.api.routes.pipelines import router as pipelines_router
 from chonkie.api.routes.refineries import router as refineries_router
-from chonkie.api.utils import configure_logging
+from chonkie.logger import configure
 
 # ---------------------------------------------------------------------------
 # Logging
 # ---------------------------------------------------------------------------
-configure_logging(level=os.getenv("LOG_LEVEL", "INFO"))
+# Configure chonkie logger for API
+# Respects CHONKIE_LOG env var, defaults to INFO for API
+configure(level=os.getenv("LOG_LEVEL", "INFO"))
 
 # ---------------------------------------------------------------------------
 # Version

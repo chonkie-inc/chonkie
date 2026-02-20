@@ -1,64 +1,15 @@
 """Utility helpers for the Chonkie OSS API.
 
-Provides a simple Timer for performance logging and a structured logger
-that follows the same conventions as the cloud API.
+Provides a simple Timer for performance logging and re-exports the Chonkie
+logger for consistent logging across the entire package.
 """
 
-import logging
 import time
 
-# ---------------------------------------------------------------------------
-# Logger
-# ---------------------------------------------------------------------------
+# Re-export chonkie's logger for API use
+from chonkie.logger import get_logger
 
-
-class _StructuredLogger(logging.LoggerAdapter):
-    """Logger adapter that supports keyword-argument structured fields.
-
-    Usage::
-
-        log = get_logger("api.routes.chunking")
-        log.info("Request received", endpoint="/v1/chunk/token", chunk_size=512)
-    """
-
-    def process(self, msg: str, kwargs: dict) -> tuple[str, dict]:  # type: ignore[override]
-        extra = kwargs.pop("extra", {})
-        # Pull any remaining kwargs out and append them as key=value pairs
-        fields = {
-            k: v for k, v in kwargs.items() if k not in {"exc_info", "stack_info", "stacklevel"}
-        }
-        for key in fields:
-            kwargs.pop(key)
-        if fields:
-            field_str = "  " + "  ".join(f"{k}={v!r}" for k, v in fields.items())
-            msg = msg + field_str
-        kwargs["extra"] = extra
-        return msg, kwargs
-
-
-def get_logger(name: str) -> _StructuredLogger:
-    """Return a structured logger for the given module name.
-
-    Args:
-        name: Module name (e.g. ``"api.routes.chunking"``).
-
-    Returns:
-        A :class:`_StructuredLogger` instance.
-
-    """
-    base = logging.getLogger(name)
-    return _StructuredLogger(base, {})
-
-
-def configure_logging(level: str = "INFO") -> None:
-    """Configure root logging with a human-readable format.
-
-    Args:
-        level: Log level string (``"DEBUG"``, ``"INFO"``, etc.).
-
-    """
-    fmt = "%(asctime)s  %(levelname)-8s  %(name)s  %(message)s"
-    logging.basicConfig(level=getattr(logging, level.upper(), logging.INFO), format=fmt)
+__all__ = ["get_logger", "Timer", "fix_escaped_text", "sanitize_text_encoding"]
 
 
 # ---------------------------------------------------------------------------
