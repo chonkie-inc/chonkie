@@ -1,6 +1,6 @@
 """Jina AI embeddings - backward-compatible wrapper around CatsuEmbeddings.
 
-Note: Consider using CatsuEmbeddings(model=..., provider="jina") directly.
+Note: Consider using CatsuEmbeddings(model=..., provider="jinaai") directly.
 """
 
 import importlib.util as importutil
@@ -17,7 +17,7 @@ class JinaEmbeddings(BaseEmbeddings):
     """Jina AI embeddings via CatsuEmbeddings.
 
     This is a backward-compatible wrapper around CatsuEmbeddings.
-    Consider using CatsuEmbeddings(model=..., provider="jina") directly.
+    Consider using CatsuEmbeddings(model=..., provider="jinaai") directly.
 
     Args:
         model: Jina embedding model name (default: "jina-embeddings-v4").
@@ -77,7 +77,7 @@ class JinaEmbeddings(BaseEmbeddings):
 
         self._catsu = CatsuEmbeddings(
             model=model,
-            provider="jina",
+            provider="jinaai",
             api_keys=api_keys,
             max_retries=max_retries,
             batch_size=batch_size,

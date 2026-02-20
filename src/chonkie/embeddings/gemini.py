@@ -20,7 +20,7 @@ class GeminiEmbeddings(BaseEmbeddings):
     Consider using CatsuEmbeddings(model=..., provider="gemini") directly.
 
     Args:
-        model: Gemini embedding model name (default: "gemini-embedding-exp-03-07").
+        model: Gemini embedding model name (default: "gemini-embedding-001").
         api_key: Gemini API key (or set GEMINI_API_KEY env var).
         task_type: Ignored; kept for backward compatibility.
         max_retries: Maximum retry attempts (default: 3).
@@ -29,12 +29,12 @@ class GeminiEmbeddings(BaseEmbeddings):
 
     """
 
-    DEFAULT_MODEL = "gemini-embedding-exp-03-07"
+    DEFAULT_MODEL = "gemini-embedding-001"
 
     AVAILABLE_MODELS = {
         "text-embedding-004": (768, 2048),
         "embedding-001": (768, 2048),
-        "gemini-embedding-exp-03-07": (3072, 8192),
+        "gemini-embedding-001": (3072, 8192),
     }
 
     def __init__(

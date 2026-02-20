@@ -90,11 +90,30 @@ class CohereEmbeddings(BaseEmbeddings):
 
     def embed(self, text: str) -> np.ndarray:
         """Embed a single text string."""
-        return self._catsu.embed(text)
+        response = self._catsu.client.embed(
+            model=self._catsu.model,
+            input=text,
+            provider=self._catsu.provider,
+            input_type="document",
+        )
+        return response.to_numpy()[0]
 
     def embed_batch(self, texts: list) -> list:
         """Embed multiple texts using batched API calls."""
-        return self._catsu.embed_batch(texts)
+        if not texts:
+            return []
+        all_embeddings = []
+        for i in range(0, len(texts), self._catsu._batch_size):
+            batch = texts[i : i + self._catsu._batch_size]
+            response = self._catsu.client.embed(
+                model=self._catsu.model,
+                input=batch,
+                provider=self._catsu.provider,
+                input_type="document",
+            )
+            arr = response.to_numpy()
+            all_embeddings.extend([arr[j] for j in range(len(batch))])
+        return all_embeddings
 
     @property
     def dimension(self) -> int:
