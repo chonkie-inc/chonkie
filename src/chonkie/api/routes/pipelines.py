@@ -71,8 +71,7 @@ def _run_chunk_step(chunker_name: str, config: dict, text: Any) -> Any:
     chunker_cls = chunker_cls_map.get(key)
     if chunker_cls is None:
         raise ValueError(
-            f"Unknown chunker '{chunker_name}'. "
-            f"Valid options: {sorted(chunker_cls_map.keys())}"
+            f"Unknown chunker '{chunker_name}'. Valid options: {sorted(chunker_cls_map.keys())}"
         )
 
     cfg = dict(config)
@@ -124,8 +123,7 @@ def _run_refine_step(refinery_name: str, config: dict, chunks: list) -> list:
     refinery_cls = refinery_cls_map.get(key)
     if refinery_cls is None:
         raise ValueError(
-            f"Unknown refinery '{refinery_name}'. "
-            f"Valid options: {sorted(refinery_cls_map.keys())}"
+            f"Unknown refinery '{refinery_name}'. Valid options: {sorted(refinery_cls_map.keys())}"
         )
 
     cfg = dict(config)
@@ -386,9 +384,7 @@ async def execute_pipeline(
                         refined.append(r)
                     state = refined
                 else:
-                    state = await asyncio.to_thread(
-                        _run_refine_step, refinery_name, config, state
-                    )
+                    state = await asyncio.to_thread(_run_refine_step, refinery_name, config, state)
             except ValueError as exc:
                 raise HTTPException(
                     status_code=400,
@@ -417,8 +413,7 @@ async def execute_pipeline(
             raise HTTPException(
                 status_code=400,
                 detail=(
-                    f"Step {i}: unknown step type '{step_type}'. "
-                    "Valid types: 'chunk', 'refine'."
+                    f"Step {i}: unknown step type '{step_type}'. Valid types: 'chunk', 'refine'."
                 ),
             )
 
