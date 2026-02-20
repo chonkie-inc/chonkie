@@ -151,7 +151,7 @@ def test_import_dependencies_failure() -> None:
 def test_catsu_initialized_with_correct_provider(mock_catsu_client) -> None:
     """Test that CatsuEmbeddings is initialized with jina provider."""
     with patch("catsu.Client", return_value=mock_catsu_client) as mock_client_class:
-        embeddings = JinaEmbeddings(api_key="my-key")
+        embeddings = JinaEmbeddings(api_key="my-key") # noqa: F841
         call_kwargs = mock_client_class.call_args[1]
         assert call_kwargs.get("api_keys") == {"jina": "my-key"}
 

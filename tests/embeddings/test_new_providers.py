@@ -6,12 +6,12 @@ from unittest.mock import MagicMock, patch
 import numpy as np
 import pytest
 
+from chonkie.embeddings.cloudflare import CloudflareEmbeddings
+from chonkie.embeddings.deepinfra import DeepInfraEmbeddings
 from chonkie.embeddings.mistral import MistralEmbeddings
-from chonkie.embeddings.together import TogetherEmbeddings
 from chonkie.embeddings.mixedbread import MixedbreadEmbeddings
 from chonkie.embeddings.nomic import NomicEmbeddings
-from chonkie.embeddings.deepinfra import DeepInfraEmbeddings
-from chonkie.embeddings.cloudflare import CloudflareEmbeddings
+from chonkie.embeddings.together import TogetherEmbeddings
 
 
 def make_mock_catsu_client(dimension: int = 1024, model_name: str = "default-model"):
