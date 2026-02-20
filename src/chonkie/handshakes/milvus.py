@@ -1,6 +1,6 @@
 """Milvus Handshake to export Chonkie's Chunks into a Milvus collection."""
 
-import importlib.util
+import importlib.util as importutil
 from typing import (
     Any,
     Literal,
@@ -133,7 +133,7 @@ class MilvusHandshake(BaseHandshake):
     @classmethod
     def _is_available(cls) -> bool:
         """Check if the dependencies are installed."""
-        return importlib.util.find_spec("pymilvus") is not None
+        return importutil.find_spec("pymilvus") is not None
 
     def _create_collection_with_schema(self) -> None:
         """Create a new collection with a predefined schema and index."""
