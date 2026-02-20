@@ -27,6 +27,7 @@ class Timer:
     """
 
     def __init__(self) -> None:
+        """Initialize Timer with empty start times."""
         self._starts: dict[str, float] = {}
 
     def start(self, name: str = "_global") -> None:

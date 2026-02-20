@@ -111,6 +111,8 @@ def _run_refine_step(refinery_name: str, config: dict, chunks: list) -> list:
         ValueError: For unknown refinery names or bad config.
 
     """
+    from typing import Union
+
     from chonkie import EmbeddingsRefinery, OverlapRefinery
 
     refinery_cls_map = {
@@ -128,6 +130,7 @@ def _run_refine_step(refinery_name: str, config: dict, chunks: list) -> list:
 
     cfg = dict(config)
 
+    ref: Union[EmbeddingsRefinery, OverlapRefinery]
     if refinery_cls is EmbeddingsRefinery:
         embedding_model = cfg.pop("embedding_model", "text-embedding-3-small")
         try:
@@ -217,13 +220,13 @@ async def update_pipeline(
                 status_code=400,
                 detail=f"Pipeline name '{request.name}' already exists",
             )
-        pipeline.name = request.name
+        pipeline.name = request.name  # type: ignore[assignment]
 
     if request.description is not None:
-        pipeline.description = request.description
+        pipeline.description = request.description  # type: ignore[assignment]
 
     if request.steps is not None:
-        pipeline.config = {"steps": [step.model_dump() for step in request.steps]}
+        pipeline.config = {"steps": [step.model_dump() for step in request.steps]}  # type: ignore[assignment]
 
     await db.commit()
     await db.refresh(pipeline)

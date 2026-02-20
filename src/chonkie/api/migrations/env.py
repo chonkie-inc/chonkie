@@ -3,6 +3,7 @@
 import asyncio
 import os
 from logging.config import fileConfig
+from typing import Any
 
 from alembic import context
 from sqlalchemy.ext.asyncio import create_async_engine
@@ -48,7 +49,7 @@ def run_migrations_offline() -> None:
         context.run_migrations()
 
 
-def do_run_migrations(connection):
+def do_run_migrations(connection: Any) -> None:
     """Run migrations with a live connection."""
     context.configure(connection=connection, target_metadata=target_metadata)
 
