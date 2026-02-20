@@ -19,7 +19,7 @@ def mock_catsu_client():
     mock_client.embed.return_value = mock_embed_response
 
     mock_model_info = MagicMock()
-    mock_model_info.name = "gemini-embedding-exp-03-07"
+    mock_model_info.name = "gemini-embedding-001"
     mock_model_info.dimensions = 3072
     mock_client.list_models.return_value = [mock_model_info]
 
@@ -53,7 +53,7 @@ def sample_texts() -> list:
 
 def test_initialization(embedding_model: GeminiEmbeddings) -> None:
     """Test that GeminiEmbeddings initializes correctly."""
-    assert embedding_model.model == "gemini-embedding-exp-03-07"
+    assert embedding_model.model == "gemini-embedding-001"
     assert embedding_model.task_type == "SEMANTIC_SIMILARITY"
     assert embedding_model._catsu is not None
 
@@ -63,7 +63,7 @@ def test_initialization_with_env_var(mock_catsu_client) -> None:
     with patch("catsu.Client", return_value=mock_catsu_client):
         with patch.dict(os.environ, {"GEMINI_API_KEY": "env-test-key"}):
             embeddings = GeminiEmbeddings()
-            assert embeddings.model == "gemini-embedding-exp-03-07"
+            assert embeddings.model == "gemini-embedding-001"
 
 
 def test_initialization_without_api_key(mock_catsu_client) -> None:
@@ -72,7 +72,7 @@ def test_initialization_without_api_key(mock_catsu_client) -> None:
         with patch.dict(os.environ, {}, clear=True):
             # With catsu wrapper, API key validation is deferred to the actual API call
             embeddings = GeminiEmbeddings()
-            assert embeddings.model == "gemini-embedding-exp-03-07"
+            assert embeddings.model == "gemini-embedding-001"
 
 
 def test_initialization_with_custom_model(mock_catsu_client) -> None:
@@ -84,7 +84,7 @@ def test_initialization_with_custom_model(mock_catsu_client) -> None:
 
 def test_default_model() -> None:
     """Test that GeminiEmbeddings has the correct default model."""
-    assert GeminiEmbeddings.DEFAULT_MODEL == "gemini-embedding-exp-03-07"
+    assert GeminiEmbeddings.DEFAULT_MODEL == "gemini-embedding-001"
 
 
 def test_embed_single_text(embedding_model: GeminiEmbeddings, sample_text: str, mock_catsu_client) -> None:
@@ -140,7 +140,7 @@ def test_repr(embedding_model: GeminiEmbeddings) -> None:
     """Test string representation."""
     repr_str = repr(embedding_model)
     assert "GeminiEmbeddings" in repr_str
-    assert "gemini-embedding-exp-03-07" in repr_str
+    assert "gemini-embedding-001" in repr_str
     assert "SEMANTIC_SIMILARITY" in repr_str
 
 

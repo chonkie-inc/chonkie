@@ -73,7 +73,7 @@ class JinaEmbeddings(BaseEmbeddings):
         self.model = model
         self.task = task
         api_key = api_key or os.getenv("JINA_API_KEY")
-        api_keys = {"jina": api_key} if api_key else None
+        api_keys = {"jinaai": api_key} if api_key else None
 
         self._catsu = CatsuEmbeddings(
             model=model,
