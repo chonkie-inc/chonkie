@@ -5,6 +5,7 @@ Note: Consider using CatsuEmbeddings(model=..., provider="openai") directly.
 
 import importlib.util as importutil
 import os
+import warnings
 from typing import Any, Optional
 
 import numpy as np
@@ -83,6 +84,37 @@ class OpenAIEmbeddings(BaseEmbeddings):
                 'Please install it via `pip install "chonkie[catsu]"`',
             )
 
+        if tokenizer is not None:
+            warnings.warn(
+                "The `tokenizer` parameter is not supported in this version and will be ignored.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+        if dimension is not None:
+            warnings.warn(
+                "The `dimension` parameter is not supported in this version and will be ignored.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+        if max_tokens is not None:
+            warnings.warn(
+                "The `max_tokens` parameter is not supported in this version and will be ignored.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+        if base_url is not None:
+            warnings.warn(
+                "The `base_url` parameter is not supported in this version and will be ignored.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+        if organization is not None:
+            warnings.warn(
+                "The `organization` parameter is not supported in this version and will be ignored.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+
         self.model = model
         api_key = api_key or os.getenv("OPENAI_API_KEY")
         api_keys = {"openai": api_key} if api_key else None
@@ -92,7 +124,7 @@ class OpenAIEmbeddings(BaseEmbeddings):
             provider="openai",
             api_keys=api_keys,
             max_retries=max_retries,
-            timeout=int(timeout),
+            timeout=round(timeout),
             batch_size=batch_size,
         )
 
@@ -103,6 +135,14 @@ class OpenAIEmbeddings(BaseEmbeddings):
     def embed_batch(self, texts: list) -> list:
         """Embed multiple texts using batched API calls."""
         return self._catsu.embed_batch(texts)
+
+    async def aembed(self, text: str) -> np.ndarray:
+        """Embed a single text string asynchronously."""
+        return await self._catsu.aembed(text)
+
+    async def aembed_batch(self, texts: list) -> list:
+        """Embed multiple texts asynchronously using batched API calls."""
+        return await self._catsu.aembed_batch(texts)
 
     @property
     def dimension(self) -> int:

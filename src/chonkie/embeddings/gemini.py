@@ -5,6 +5,7 @@ Note: Consider using CatsuEmbeddings(model=..., provider="gemini") directly.
 
 import importlib.util as importutil
 import os
+import warnings
 from typing import Any, Optional
 
 import numpy as np
@@ -68,6 +69,19 @@ class GeminiEmbeddings(BaseEmbeddings):
                 'Please install it via `pip install "chonkie[catsu]"`',
             )
 
+        if task_type != "SEMANTIC_SIMILARITY":
+            warnings.warn(
+                "The `task_type` parameter is not supported in this version and will be ignored.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+        if show_warnings is not True:
+            warnings.warn(
+                "The `show_warnings` parameter is not supported in this version and will be ignored.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+
         self.model = model if model else self.DEFAULT_MODEL
         self.task_type = task_type
         api_key = api_key or os.getenv("GEMINI_API_KEY")
@@ -88,6 +102,14 @@ class GeminiEmbeddings(BaseEmbeddings):
     def embed_batch(self, texts: list) -> list:
         """Embed multiple texts using batched API calls."""
         return self._catsu.embed_batch(texts)
+
+    async def aembed(self, text: str) -> np.ndarray:
+        """Embed a single text string asynchronously."""
+        return await self._catsu.aembed(text)
+
+    async def aembed_batch(self, texts: list) -> list:
+        """Embed multiple texts asynchronously using batched API calls."""
+        return await self._catsu.aembed_batch(texts)
 
     @property
     def dimension(self) -> int:

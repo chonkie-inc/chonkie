@@ -5,6 +5,7 @@ Note: Consider using CatsuEmbeddings(model=..., provider="voyageai") directly.
 
 import importlib.util as importutil
 import os
+import warnings
 from typing import Any, Literal, Optional
 
 import numpy as np
@@ -21,7 +22,7 @@ class VoyageAIEmbeddings(BaseEmbeddings):
 
     Args:
         model: VoyageAI embedding model name (default: "voyage-3").
-        api_key: VoyageAI API key (or set VOYAGE_API_KEY env var).
+        api_key: VoyageAI API key (falls back to VOYAGE_API_KEY or VOYAGEAI_API_KEY env var).
         max_retries: Maximum retry attempts (default: 3).
         timeout: Request timeout in seconds (default: 60).
         output_dimension: Ignored; kept for backward compatibility.
@@ -56,7 +57,7 @@ class VoyageAIEmbeddings(BaseEmbeddings):
 
         Args:
             model: VoyageAI embedding model name.
-            api_key: VoyageAI API key (falls back to VOYAGE_API_KEY env var).
+            api_key: VoyageAI API key (falls back to VOYAGE_API_KEY or VOYAGEAI_API_KEY env var).
             max_retries: Maximum retry attempts.
             timeout: Request timeout in seconds.
             output_dimension: Ignored; kept for backward compatibility.
@@ -75,6 +76,19 @@ class VoyageAIEmbeddings(BaseEmbeddings):
                 'Please install it via `pip install "chonkie[catsu]"`',
             )
 
+        if output_dimension is not None:
+            warnings.warn(
+                "The `output_dimension` parameter is not supported in this version and will be ignored.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+        if truncation is not True:
+            warnings.warn(
+                "The `truncation` parameter is not supported in this version and will be ignored.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+
         self.model = model
         api_key = api_key or os.getenv("VOYAGE_API_KEY") or os.getenv("VOYAGEAI_API_KEY")
         api_keys = {"voyageai": api_key} if api_key else None
@@ -84,7 +98,7 @@ class VoyageAIEmbeddings(BaseEmbeddings):
             provider="voyageai",
             api_keys=api_keys,
             max_retries=max_retries,
-            timeout=int(timeout),
+            timeout=round(timeout),
             batch_size=min(batch_size, 128),
         )
 
@@ -95,6 +109,14 @@ class VoyageAIEmbeddings(BaseEmbeddings):
     def embed_batch(self, texts: list) -> list:
         """Embed multiple texts using batched API calls."""
         return self._catsu.embed_batch(texts)
+
+    async def aembed(self, text: str) -> np.ndarray:
+        """Embed a single text string asynchronously."""
+        return await self._catsu.aembed(text)
+
+    async def aembed_batch(self, texts: list) -> list:
+        """Embed multiple texts asynchronously using batched API calls."""
+        return await self._catsu.aembed_batch(texts)
 
     @property
     def dimension(self) -> int:

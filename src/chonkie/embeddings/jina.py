@@ -5,6 +5,7 @@ Note: Consider using CatsuEmbeddings(model=..., provider="jinaai") directly.
 
 import importlib.util as importutil
 import os
+import warnings
 from typing import Any, Optional
 
 import numpy as np
@@ -70,6 +71,13 @@ class JinaEmbeddings(BaseEmbeddings):
                 'Please install it via `pip install "chonkie[catsu]"`',
             )
 
+        if task != "text-matching":
+            warnings.warn(
+                "The `task` parameter is not supported in this version and will be ignored.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+
         self.model = model
         self.task = task
         api_key = api_key or os.getenv("JINA_API_KEY")
@@ -90,6 +98,14 @@ class JinaEmbeddings(BaseEmbeddings):
     def embed_batch(self, texts: list) -> list:
         """Embed multiple texts using batched API calls."""
         return self._catsu.embed_batch(texts)
+
+    async def aembed(self, text: str) -> np.ndarray:
+        """Embed a single text string asynchronously."""
+        return await self._catsu.aembed(text)
+
+    async def aembed_batch(self, texts: list) -> list:
+        """Embed multiple texts asynchronously using batched API calls."""
+        return await self._catsu.aembed_batch(texts)
 
     @property
     def dimension(self) -> int:

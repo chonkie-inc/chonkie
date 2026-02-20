@@ -5,6 +5,7 @@ Note: Consider using CatsuEmbeddings(model=..., provider="cohere") directly.
 
 import importlib.util as importutil
 import os
+import warnings
 from typing import Any, Optional
 
 import numpy as np
@@ -75,6 +76,19 @@ class CohereEmbeddings(BaseEmbeddings):
                 'Please install it via `pip install "chonkie[catsu]"`',
             )
 
+        if client_name is not None:
+            warnings.warn(
+                "The `client_name` parameter is not supported in this version and will be ignored.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+        if show_warnings is not True:
+            warnings.warn(
+                "The `show_warnings` parameter is not supported in this version and will be ignored.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+
         self.model = model
         api_key = api_key or os.getenv("COHERE_API_KEY")
         api_keys = {"cohere": api_key} if api_key else None
@@ -84,7 +98,7 @@ class CohereEmbeddings(BaseEmbeddings):
             provider="cohere",
             api_keys=api_keys,
             max_retries=max_retries,
-            timeout=int(timeout),
+            timeout=round(timeout),
             batch_size=min(batch_size, 96),
         )
 
@@ -106,6 +120,33 @@ class CohereEmbeddings(BaseEmbeddings):
         for i in range(0, len(texts), self._catsu._batch_size):
             batch = texts[i : i + self._catsu._batch_size]
             response = self._catsu.client.embed(
+                model=self._catsu.model,
+                input=batch,
+                provider=self._catsu.provider,
+                input_type="document",
+            )
+            arr = response.to_numpy()
+            all_embeddings.extend([arr[j] for j in range(len(batch))])
+        return all_embeddings
+
+    async def aembed(self, text: str) -> np.ndarray:
+        """Embed a single text string asynchronously."""
+        response = await self._catsu.client.aembed(
+            model=self._catsu.model,
+            input=text,
+            provider=self._catsu.provider,
+            input_type="document",
+        )
+        return response.to_numpy()[0]
+
+    async def aembed_batch(self, texts: list) -> list:
+        """Embed multiple texts asynchronously using batched API calls."""
+        if not texts:
+            return []
+        all_embeddings = []
+        for i in range(0, len(texts), self._catsu._batch_size):
+            batch = texts[i : i + self._catsu._batch_size]
+            response = await self._catsu.client.aembed(
                 model=self._catsu.model,
                 input=batch,
                 provider=self._catsu.provider,
