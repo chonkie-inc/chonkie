@@ -340,32 +340,24 @@ def test_import_dependencies_failure() -> None:
             GeminiEmbeddings(api_key="test-key")
 
 
-def test_unknown_model_warning() -> None:
+def test_unknown_model_warning(caplog) -> None:
     """Test that unknown model warning uses dynamic default model values."""
-    import warnings
-
     with patch("google.genai.Client"):
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
+        # Create embeddings with unknown model
+        embeddings = GeminiEmbeddings(model="unknown-future-model", api_key="test-key")
 
-            # Create embeddings with unknown model
-            embeddings = GeminiEmbeddings(model="unknown-future-model", api_key="test-key")
+        # Check that warning was issued
+        warning_message = caplog.text
+        assert "unknown-future-model" in warning_message
 
-            # Check that warning was issued
-            assert len(w) == 1
-            warning_message = str(w[0].message)
+        # Verify warning contains the default model name and its specs
+        default_dimension, default_max_tokens = GeminiEmbeddings.AVAILABLE_MODELS[
+            GeminiEmbeddings.DEFAULT_MODEL
+        ]
+        assert GeminiEmbeddings.DEFAULT_MODEL in warning_message
+        assert str(default_dimension) in warning_message
+        assert str(default_max_tokens) in warning_message
 
-            # Verify warning contains the unknown model name
-            assert "unknown-future-model" in warning_message
-
-            # Verify warning contains the default model name and its specs
-            default_dimension, default_max_tokens = GeminiEmbeddings.AVAILABLE_MODELS[
-                GeminiEmbeddings.DEFAULT_MODEL
-            ]
-            assert GeminiEmbeddings.DEFAULT_MODEL in warning_message
-            assert str(default_dimension) in warning_message
-            assert str(default_max_tokens) in warning_message
-
-            # Verify the embeddings instance uses the default model's specs
-            assert embeddings.dimension == default_dimension
-            assert embeddings._max_tokens == default_max_tokens
+        # Verify the embeddings instance uses the default model's specs
+        assert embeddings.dimension == default_dimension
+        assert embeddings._max_tokens == default_max_tokens
