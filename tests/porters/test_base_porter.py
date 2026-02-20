@@ -11,6 +11,7 @@ from chonkie.porters.base import BasePorter
 
 
 def make_chunk(text: str = "hello") -> Chunk:
+    """Make a Chunk object."""
     return Chunk(text=text, start_index=0, end_index=len(text), token_count=1)
 
 

@@ -97,7 +97,7 @@ cerebras = ["pydantic>=2.0.0", "cerebras-cloud-sdk>=1.0.0"]
 voyageai = ["tokenizers>=0.16.0", "voyageai>=0.3.2"]
 cohere = ["tokenizers>=0.16.0", "cohere>=5.13.0"]
 jina = ["tokenizers>=0.16.0"]
-catsu = ["catsu>=0.1.8"]
+catsu = ["catsu>=0.0.1"]
 litellm = ["litellm>=1.0.0", "tiktoken>=0.5.0", "tokenizers>=0.16.0"]
 
 # Optional dependencies for the friends
@@ -152,7 +152,7 @@ all = [
     "openpyxl",
     "elasticsearch>=8.0.0",
     "pymilvus>=2.1.0",
-    "catsu>=0.1.8",
+    "catsu>=0.0.1",
     "litellm>=1.0.0",
     "datasets>=1.14.0",
 ]

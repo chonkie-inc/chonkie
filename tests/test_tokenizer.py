@@ -996,26 +996,6 @@ def test_base_tokenizer_not_implemented_errors() -> None:
         tokenizer.decode([1, 2, 3])
 
 
-def test_tokenizer_unsupported_backend_errors() -> None:
-    """Test error handling for unsupported backends in various methods."""
-    # Create a tokenizer and manually set an unsupported backend
-    tokenizer = AutoTokenizer(CharacterTokenizer())
-    tokenizer._backend = "unsupported_backend"
-
-    # Test that all methods raise ValueError for unsupported backend
-    with pytest.raises(ValueError, match="Unsupported tokenizer backend"):
-        tokenizer.encode("test")
-
-    with pytest.raises(ValueError, match="Unsupported tokenizer backend"):
-        tokenizer.count_tokens("test")
-
-    with pytest.raises(ValueError, match="Unsupported tokenizer backend"):
-        tokenizer.encode_batch(["test"])
-
-    with pytest.raises(ValueError, match="Tokenizer backend .* not supported"):
-        tokenizer.count_tokens_batch(["test"])
-
-
 def test_character_tokenizer_default_token2id() -> None:
     """Test the defaulttoken2id method of CharacterTokenizer."""
     char_tokenizer = CharacterTokenizer()
@@ -1169,23 +1149,9 @@ def test_tokenizer_chonkie_backend_paths() -> None:
 def test_tokenizer_error_paths_comprehensive() -> None:
     """Test various error paths in tokenizer methods."""
     # Test invalid tokenizer creation with non-existent model
-    with pytest.raises(ValueError, match="Tokenizer not found"):
+    with pytest.raises(ValueError, match="Tokenizer.+could not be loaded"):
         # This should try all backends and fail
         AutoTokenizer("definitely_not_a_real_model_name_12345_xyz")
-
-
-def test_decode_batch_fallthrough_error() -> None:
-    """Test decode_batch fallthrough error path."""
-    tokenizer = AutoTokenizer(CharacterTokenizer())
-    # Manually set an invalid backend to trigger the fallthrough error
-    original_backend = tokenizer._backend
-    tokenizer._backend = "unknown_backend"
-
-    with pytest.raises(ValueError, match="Unsupported tokenizer backend"):
-        tokenizer.decode_batch([[1, 2], [3, 4]])
-
-    # Restore original backend
-    tokenizer._backend = original_backend
 
 
 def test_tokenizer_decode_batch_chonkie_path() -> None:

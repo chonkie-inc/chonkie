@@ -138,7 +138,7 @@ def test_overlap_refinery_refine_posts_correct_payload(monkeypatch):
     with patch(
         "chonkie.cloud.refineries.overlap.httpx.post", return_value=mock_response
     ) as mock_post:
-        result = refinery.refine(chunks)  # noqa: F841
+        refinery.refine(chunks)
 
     mock_post.assert_called_once()
     call_kwargs = mock_post.call_args
