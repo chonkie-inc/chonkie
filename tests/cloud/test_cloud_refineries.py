@@ -18,8 +18,7 @@ def make_chunks(n: int = 3) -> list[Chunk]:
     """Return a list of n simple Chunk objects."""
     text = "The hippo chunked the river."
     return [
-        Chunk(text=text, start_index=i, end_index=i + len(text), token_count=5)
-        for i in range(n)
+        Chunk(text=text, start_index=i, end_index=i + len(text), token_count=5) for i in range(n)
     ]
 
 
@@ -136,7 +135,9 @@ def test_overlap_refinery_refine_posts_correct_payload(monkeypatch):
     mock_response = MagicMock()
     mock_response.json.return_value = response_data
 
-    with patch("chonkie.cloud.refineries.overlap.httpx.post", return_value=mock_response) as mock_post:
+    with patch(
+        "chonkie.cloud.refineries.overlap.httpx.post", return_value=mock_response
+    ) as mock_post:
         result = refinery.refine(chunks)  # noqa: F841
 
     mock_post.assert_called_once()

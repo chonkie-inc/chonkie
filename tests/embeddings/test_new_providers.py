@@ -38,6 +38,7 @@ def make_mock_catsu_client(dimension: int = 1024, model_name: str = "default-mod
 # MistralEmbeddings Tests
 # ============================================================================
 
+
 class TestMistralEmbeddings:
     """Test MistralEmbeddings wrapper."""
 
@@ -111,12 +112,15 @@ class TestMistralEmbeddings:
 # TogetherEmbeddings Tests
 # ============================================================================
 
+
 class TestTogetherEmbeddings:
     """Test TogetherEmbeddings wrapper."""
 
     @pytest.fixture
     def mock_client(self):
-        return make_mock_catsu_client(dimension=768, model_name="togethercomputer/m2-bert-80M-8k-retrieval")
+        return make_mock_catsu_client(
+            dimension=768, model_name="togethercomputer/m2-bert-80M-8k-retrieval"
+        )
 
     @pytest.fixture
     def embeddings(self, mock_client):
@@ -167,6 +171,7 @@ class TestTogetherEmbeddings:
 # MixedbreadEmbeddings Tests
 # ============================================================================
 
+
 class TestMixedbreadEmbeddings:
     """Test MixedbreadEmbeddings wrapper."""
 
@@ -215,6 +220,7 @@ class TestMixedbreadEmbeddings:
 # ============================================================================
 # NomicEmbeddings Tests
 # ============================================================================
+
 
 class TestNomicEmbeddings:
     """Test NomicEmbeddings wrapper."""
@@ -265,6 +271,7 @@ class TestNomicEmbeddings:
 # DeepInfraEmbeddings Tests
 # ============================================================================
 
+
 class TestDeepInfraEmbeddings:
     """Test DeepInfraEmbeddings wrapper."""
 
@@ -313,6 +320,7 @@ class TestDeepInfraEmbeddings:
 # ============================================================================
 # CloudflareEmbeddings Tests
 # ============================================================================
+
 
 class TestCloudflareEmbeddings:
     """Test CloudflareEmbeddings wrapper."""

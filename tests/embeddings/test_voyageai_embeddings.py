@@ -77,7 +77,9 @@ def test_default_model() -> None:
     assert VoyageAIEmbeddings.DEFAULT_MODEL == "voyage-3"
 
 
-def test_embed_single_text(embedding_model: VoyageAIEmbeddings, sample_text: str, mock_catsu_client) -> None:
+def test_embed_single_text(
+    embedding_model: VoyageAIEmbeddings, sample_text: str, mock_catsu_client
+) -> None:
     """Test that embed delegates to CatsuEmbeddings."""
     mock_response = MagicMock()
     mock_response.to_numpy.return_value = np.random.rand(1, 1024).astype(np.float32)
@@ -88,10 +90,14 @@ def test_embed_single_text(embedding_model: VoyageAIEmbeddings, sample_text: str
     assert result.ndim == 1
 
 
-def test_embed_batch_texts(embedding_model: VoyageAIEmbeddings, sample_texts: list, mock_catsu_client) -> None:
+def test_embed_batch_texts(
+    embedding_model: VoyageAIEmbeddings, sample_texts: list, mock_catsu_client
+) -> None:
     """Test that embed_batch delegates to CatsuEmbeddings."""
     mock_response = MagicMock()
-    mock_response.to_numpy.return_value = np.random.rand(len(sample_texts), 1024).astype(np.float32)
+    mock_response.to_numpy.return_value = np.random.rand(len(sample_texts), 1024).astype(
+        np.float32
+    )
     mock_catsu_client.embed.return_value = mock_response
 
     results = embedding_model.embed_batch(sample_texts)
@@ -150,7 +156,7 @@ def test_voyageai_embeddings_missing_dependencies() -> None:
 def test_catsu_initialized_with_correct_provider(mock_catsu_client) -> None:
     """Test that CatsuEmbeddings is initialized with voyageai provider."""
     with patch("catsu.Client", return_value=mock_catsu_client) as mock_client_class:
-        embeddings = VoyageAIEmbeddings(api_key="my-key") # noqa: F841
+        embeddings = VoyageAIEmbeddings(api_key="my-key")  # noqa: F841
         call_kwargs = mock_client_class.call_args[1]
         assert call_kwargs.get("api_keys") == {"voyageai": "my-key"}
 
