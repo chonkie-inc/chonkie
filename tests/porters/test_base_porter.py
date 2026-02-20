@@ -5,7 +5,6 @@ import pytest
 from chonkie import Chunk
 from chonkie.porters.base import BasePorter
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------

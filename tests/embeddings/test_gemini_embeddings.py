@@ -170,6 +170,10 @@ def test_catsu_initialized_with_correct_provider(mock_catsu_client) -> None:
     "GEMINI_API_KEY" not in os.environ,
     reason="Skipping integration test - requires GEMINI_API_KEY",
 )
+@pytest.mark.xfail(
+    reason="Known catsu upstream bug: Gemini batch embed endpoint does not pass model name correctly in published catsu<=0.1.7",
+    strict=False,
+)
 def test_real_embed_integration():
     """Integration test with real API (requires GEMINI_API_KEY)."""
     embeddings = GeminiEmbeddings()
