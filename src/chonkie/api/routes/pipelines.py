@@ -25,34 +25,6 @@ router = APIRouter(prefix="/pipelines", tags=["Pipelines"])
 log = get_logger(__name__)
 
 
-# ---------------------------------------------------------------------------
-# Chunker / refinery name → class mappings
-# ---------------------------------------------------------------------------
-
-_CHUNKER_MAP: dict[str, str] = {
-    "token": "TokenChunker",
-    "sentence": "SentenceChunker",
-    "recursive": "RecursiveChunker",
-    "semantic": "SemanticChunker",
-    "code": "CodeChunker",
-    "late": "LateChunker",
-    "neural": "NeuralChunker",
-    "slumber": "SlumberChunker",
-    "table": "TableChunker",
-    "fast": "FastChunker",
-}
-
-_REFINERY_MAP: dict[str, str] = {
-    "overlap": "OverlapRefinery",
-    "embeddings": "EmbeddingsRefinery",
-}
-
-
-# ---------------------------------------------------------------------------
-# Synchronous step executors (run in a thread via asyncio.to_thread)
-# ---------------------------------------------------------------------------
-
-
 def _run_chunk_step(chunker_name: str, config: dict, text: Any) -> Any:
     """Instantiate a chunker and run it on *text*.
 
@@ -103,7 +75,7 @@ def _run_chunk_step(chunker_name: str, config: dict, text: Any) -> Any:
             f"Valid options: {sorted(chunker_cls_map.keys())}"
         )
 
-    cfg = dict(config)  # copy so we don't mutate the caller's dict
+    cfg = dict(config)
 
     # RecursiveChunker supports a named recipe via a class-method constructor.
     if chunker_cls is RecursiveChunker and "recipe" in cfg:
@@ -154,7 +126,7 @@ def _run_refine_step(refinery_name: str, config: dict, chunks: list) -> list:
             f"Valid options: {sorted(refinery_cls_map.keys())}"
         )
 
-    cfg = dict(config)  # copy
+    cfg = dict(config)
 
     if refinery_cls is EmbeddingsRefinery:
         embedding_model = cfg.pop("embedding_model", "text-embedding-3-small")
@@ -182,11 +154,6 @@ def _run_refine_step(refinery_name: str, config: dict, chunks: list) -> list:
     return ref.refine(chunks)
 
 
-# ---------------------------------------------------------------------------
-# CRUD endpoints
-# ---------------------------------------------------------------------------
-
-
 @router.post("", response_model=PipelineResponse, status_code=201)
 async def create_pipeline(
     request: PipelineCreateRequest,
@@ -212,7 +179,7 @@ async def create_pipeline(
 
 @router.get("", response_model=List[PipelineResponse])
 async def list_pipelines(db: AsyncSession = Depends(get_db)) -> list:
-    """List all pipelines."""
+    """List all pipelines, ordered by most recently created."""
     result = await db.execute(select(Pipeline).order_by(Pipeline.created_at.desc()))
     pipelines = result.scalars().all()
     return [p.to_dict() for p in pipelines]
@@ -223,7 +190,7 @@ async def get_pipeline(
     pipeline_id: str,
     db: AsyncSession = Depends(get_db),
 ) -> dict:
-    """Get a pipeline by ID."""
+    """Fetch a single pipeline by ID."""
     result = await db.execute(select(Pipeline).where(Pipeline.id == pipeline_id))
     pipeline = result.scalar_one_or_none()
     if not pipeline:
@@ -237,7 +204,7 @@ async def update_pipeline(
     request: PipelineUpdateRequest,
     db: AsyncSession = Depends(get_db),
 ) -> dict:
-    """Update a pipeline."""
+    """Update a pipeline's name, description, or steps."""
     result = await db.execute(select(Pipeline).where(Pipeline.id == pipeline_id))
     pipeline = result.scalar_one_or_none()
     if not pipeline:
@@ -269,7 +236,7 @@ async def delete_pipeline(
     pipeline_id: str,
     db: AsyncSession = Depends(get_db),
 ) -> None:
-    """Delete a pipeline."""
+    """Delete a pipeline by ID."""
     result = await db.execute(select(Pipeline).where(Pipeline.id == pipeline_id))
     pipeline = result.scalar_one_or_none()
     if not pipeline:
@@ -278,11 +245,6 @@ async def delete_pipeline(
     await db.delete(pipeline)
     await db.commit()
     log.info("Pipeline deleted", pipeline_id=pipeline_id)
-
-
-# ---------------------------------------------------------------------------
-# Execution endpoint
-# ---------------------------------------------------------------------------
 
 
 @router.post("/{pipeline_id}/execute", response_model=ChunkingResponse)
@@ -471,7 +433,6 @@ async def execute_pipeline(
             detail="Pipeline produced no chunks. Ensure it contains at least one chunk step.",
         )
 
-    # Serialise Chunk objects to dicts for the response.
     if is_batch:
         response = [[c.to_dict() for c in chunk_list] for chunk_list in state]
     else:

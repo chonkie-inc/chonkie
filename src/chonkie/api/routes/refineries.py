@@ -18,11 +18,6 @@ router = APIRouter(prefix="/refine", tags=["Refineries"])
 log = get_logger("chonkie.api.routes.refineries")
 
 
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
-
-
 def _dicts_to_chunks(chunk_dicts: List[Dict[str, Any]]) -> List[Chunk]:
     """Convert a list of chunk dicts to :class:`~chonkie.types.Chunk` objects.
 
@@ -47,11 +42,6 @@ def _dicts_to_chunks(chunk_dicts: List[Dict[str, Any]]) -> List[Chunk]:
                 f"Error: {exc}"
             ),
         ) from exc
-
-
-# ---------------------------------------------------------------------------
-# Embeddings refinery
-# ---------------------------------------------------------------------------
 
 
 @router.post(
@@ -138,11 +128,6 @@ async def embeddings_refine(
             error_type=type(exc).__name__,
         )
         raise HTTPException(status_code=500, detail=f"Embeddings refinery failed: {exc}") from exc
-
-
-# ---------------------------------------------------------------------------
-# Overlap refinery
-# ---------------------------------------------------------------------------
 
 
 @router.post(

@@ -29,11 +29,6 @@ router = APIRouter(prefix="/chunk", tags=["Chunking"])
 log = get_logger("chonkie.api.routes.chunking")
 
 
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
-
-
 def _chunks_to_response(chunks: Any) -> ChunkingResponse:
     """Convert chunker output to a JSON-serialisable response.
 
@@ -61,11 +56,6 @@ def _chunk_count(chunks: Any) -> int:
     if isinstance(chunks[0], list):
         return sum(len(cl) for cl in chunks)
     return len(chunks)
-
-
-# ---------------------------------------------------------------------------
-# Token chunker
-# ---------------------------------------------------------------------------
 
 
 @router.post("/token", response_model=None, summary="Chunk text by token count")
@@ -126,11 +116,6 @@ async def token_chunk(request: TokenChunkerRequest) -> ChunkingResponse:
             error_type=type(exc).__name__,
         )
         raise HTTPException(status_code=500, detail=f"Token chunking failed: {exc}") from exc
-
-
-# ---------------------------------------------------------------------------
-# Sentence chunker
-# ---------------------------------------------------------------------------
 
 
 @router.post("/sentence", response_model=None, summary="Chunk text at sentence boundaries")
@@ -196,12 +181,7 @@ async def sentence_chunk(request: SentenceChunkerRequest) -> ChunkingResponse:
         raise HTTPException(status_code=500, detail=f"Sentence chunking failed: {exc}") from exc
 
 
-# ---------------------------------------------------------------------------
-# Recursive chunker
-# ---------------------------------------------------------------------------
-
-# In-process cache so that the same (recipe, lang, tokenizer) combination
-# reuses the already-initialised chunker across requests.
+# In-process cache: reuses initialised chunkers for the same (recipe, lang, tokenizer) combo.
 _recursive_cache: Dict[str, RecursiveChunker] = {}
 
 
@@ -246,7 +226,6 @@ async def recursive_chunk(request: RecursiveChunkerRequest) -> ChunkingResponse:
         lang=request.lang,
     )
 
-    # Sanitise then fix escapes
     if isinstance(request.text, list):
         text: Union[str, List[str]] = [sanitize_text_encoding(t) for t in request.text]
     else:
@@ -295,11 +274,6 @@ async def recursive_chunk(request: RecursiveChunkerRequest) -> ChunkingResponse:
         raise HTTPException(status_code=500, detail=f"Recursive chunking failed: {exc}") from exc
 
 
-# ---------------------------------------------------------------------------
-# Semantic chunker
-# ---------------------------------------------------------------------------
-
-
 @router.post("/semantic", response_model=None, summary="Chunk text by semantic similarity")
 async def semantic_chunk(request: SemanticChunkerRequest) -> ChunkingResponse:
     """Chunk text using sentence-embedding cosine similarity.
@@ -322,8 +296,8 @@ async def semantic_chunk(request: SemanticChunkerRequest) -> ChunkingResponse:
     text = fix_escaped_text(request.text)
 
     try:
-        # SemanticChunker is intentionally not cached because the embedding
-        # model is heavyweight and request parameters vary widely.
+        # SemanticChunker is intentionally not cached: the embedding model is
+        # heavyweight and request parameters (model, threshold) vary widely.
         timer.start("init")
         chunker = SemanticChunker(
             embedding_model=request.embedding_model,
@@ -377,10 +351,6 @@ async def semantic_chunk(request: SemanticChunkerRequest) -> ChunkingResponse:
         )
         raise HTTPException(status_code=500, detail=f"Semantic chunking failed: {exc}") from exc
 
-
-# ---------------------------------------------------------------------------
-# Code chunker
-# ---------------------------------------------------------------------------
 
 _code_cache: Dict[str, CodeChunker] = {}
 

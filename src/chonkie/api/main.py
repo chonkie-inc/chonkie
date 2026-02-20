@@ -25,24 +25,13 @@ from chonkie.api.routes.pipelines import router as pipelines_router
 from chonkie.api.routes.refineries import router as refineries_router
 from chonkie.logger import configure
 
-# ---------------------------------------------------------------------------
-# Logging
-# ---------------------------------------------------------------------------
-# Configure chonkie logger for API
-# Respects CHONKIE_LOG env var, defaults to INFO for API
 configure(level=os.getenv("LOG_LEVEL", "INFO"))
 
-# ---------------------------------------------------------------------------
-# Version
-# ---------------------------------------------------------------------------
 try:
     _chonkie_version = version("chonkie")
 except PackageNotFoundError:
     _chonkie_version = "unknown"
 
-# ---------------------------------------------------------------------------
-# App
-# ---------------------------------------------------------------------------
 app = FastAPI(
     title="Chonkie OSS API",
     description=(
@@ -58,10 +47,8 @@ app = FastAPI(
     openapi_url="/openapi.json",
 )
 
-# ---------------------------------------------------------------------------
-# CORS – permissive by default for local development.
+# CORS is permissive by default for local development.
 # Override with the CORS_ORIGINS env var (comma-separated list of origins).
-# ---------------------------------------------------------------------------
 _raw_origins = os.getenv("CORS_ORIGINS", "*")
 _origins = [o.strip() for o in _raw_origins.split(",") if o.strip()]
 
@@ -73,10 +60,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ---------------------------------------------------------------------------
-# Startup
-# ---------------------------------------------------------------------------
-
 
 @app.on_event("startup")
 async def startup_event() -> None:
@@ -84,17 +67,9 @@ async def startup_event() -> None:
     await init_db()
 
 
-# ---------------------------------------------------------------------------
-# Routers
-# ---------------------------------------------------------------------------
 app.include_router(chunking_router, prefix="/v1")
 app.include_router(refineries_router, prefix="/v1")
 app.include_router(pipelines_router, prefix="/v1")
-
-
-# ---------------------------------------------------------------------------
-# Health / info endpoints
-# ---------------------------------------------------------------------------
 
 
 @app.get("/health", tags=["Meta"], summary="Health check")

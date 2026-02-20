@@ -9,10 +9,6 @@ from typing import Any, Dict, List, Literal, Optional, Union
 
 from pydantic import BaseModel, Field
 
-# ---------------------------------------------------------------------------
-# Pipeline schemas
-# ---------------------------------------------------------------------------
-
 
 class PipelineStepRequest(BaseModel):
     """A single step in a pipeline."""
@@ -32,7 +28,7 @@ class PipelineCreateRequest(BaseModel):
 
 
 class PipelineUpdateRequest(BaseModel):
-    """Request to update a pipeline."""
+    """Request to partially update a pipeline's name, description, or steps."""
 
     name: Optional[str] = None
     description: Optional[str] = None
@@ -40,13 +36,13 @@ class PipelineUpdateRequest(BaseModel):
 
 
 class PipelineExecuteRequest(BaseModel):
-    """Request to execute a pipeline."""
+    """Request to execute a pipeline on one or more texts."""
 
     text: Union[str, List[str]] = Field(..., description="Text to process")
 
 
 class PipelineResponse(BaseModel):
-    """Pipeline metadata response."""
+    """Pipeline metadata returned by create, get, update, and list endpoints."""
 
     id: str
     name: str
@@ -54,11 +50,6 @@ class PipelineResponse(BaseModel):
     config: Dict[str, Any]
     created_at: str
     updated_at: str
-
-
-# ---------------------------------------------------------------------------
-# Response types
-# ---------------------------------------------------------------------------
 
 
 class ChunkResponse(BaseModel):
@@ -70,13 +61,8 @@ class ChunkResponse(BaseModel):
     token_count: int = Field(..., description="Number of tokens in this chunk")
 
 
-# Generic chunking response — list of chunk dicts or list-of-lists for batch input
+# Flat list for single-text input; list-of-lists for batch input.
 ChunkingResponse = Union[List[Dict[str, Any]], List[List[Dict[str, Any]]]]
-
-
-# ---------------------------------------------------------------------------
-# Chunker request schemas
-# ---------------------------------------------------------------------------
 
 
 class TokenChunkerRequest(BaseModel):
@@ -202,11 +188,6 @@ class CodeChunkerRequest(BaseModel):
         default=False,
         description="Include AST node metadata in chunk output",
     )
-
-
-# ---------------------------------------------------------------------------
-# Refinery request schemas
-# ---------------------------------------------------------------------------
 
 
 class BaseRefineryRequest(BaseModel):

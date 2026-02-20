@@ -6,15 +6,9 @@ logger for consistent logging across the entire package.
 
 import time
 
-# Re-export chonkie's logger for API use
 from chonkie.logger import get_logger
 
 __all__ = ["get_logger", "Timer", "fix_escaped_text", "sanitize_text_encoding"]
-
-
-# ---------------------------------------------------------------------------
-# Timer
-# ---------------------------------------------------------------------------
 
 
 class Timer:
@@ -33,7 +27,6 @@ class Timer:
     """
 
     def __init__(self) -> None:
-        """Initialize the Timer with an empty starts dictionary."""
         self._starts: dict[str, float] = {}
 
     def start(self, name: str = "_global") -> None:
@@ -75,11 +68,6 @@ class Timer:
         if start is None:
             return 0.0
         return (time.perf_counter() - start) * 1000.0
-
-
-# ---------------------------------------------------------------------------
-# Text helpers
-# ---------------------------------------------------------------------------
 
 
 def fix_escaped_text(text: str | list[str]) -> str | list[str]:

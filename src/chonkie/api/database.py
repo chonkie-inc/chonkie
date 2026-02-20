@@ -15,12 +15,12 @@ Base = declarative_base()
 
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
-    """Dependency for FastAPI endpoints."""
+    """Yield an async database session, for use as a FastAPI dependency."""
     async with async_session_maker() as session:
         yield session
 
 
 async def init_db() -> None:
-    """Initialize database tables."""
+    """Create all SQLAlchemy-mapped tables if they do not already exist."""
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
