@@ -177,6 +177,10 @@ def test_backward_compat_signature(mock_catsu_client) -> None:
     "OPENAI_API_KEY" not in os.environ,
     reason="Skipping integration test - requires OPENAI_API_KEY",
 )
+@pytest.mark.xfail(
+    reason="CI OpenAI key may be rate-limited (429); xfail to avoid flaky failures",
+    strict=False,
+)
 def test_real_embed_integration():
     """Integration test with real API (requires OPENAI_API_KEY)."""
     embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
