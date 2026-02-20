@@ -1,5 +1,6 @@
 """Module containing the LateChunker class."""
 
+import os
 from typing import Any, Optional, Union
 
 import numpy as np
@@ -80,7 +81,7 @@ class LateChunker(RecursiveChunker):
         cls,
         name: Optional[str] = "default",
         lang: Optional[str] = "en",
-        path: Optional[str] = None,
+        path: str | os.PathLike | None = None,
         embedding_model: Union[
             str,
             SentenceTransformerEmbeddings,

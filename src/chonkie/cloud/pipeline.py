@@ -459,7 +459,7 @@ class Pipeline:
     def run(
         self,
         text: Optional[Union[str, builtins.list[str]]] = None,
-        file: Optional[str] = None,
+        file: str | os.PathLike | None = None,
     ) -> builtins.list[Chunk]:
         """Execute the pipeline via the cloud API.
 

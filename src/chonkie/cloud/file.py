@@ -34,7 +34,7 @@ class FileManager:
                 "No API key provided. Please set the CHONKIE_API_KEY environment variable or pass an API key to the FileManager constructor.",
             )
 
-    def upload(self, path: str) -> File:
+    def upload(self, path: str | os.PathLike) -> File:
         """Upload a file to the Chonkie API."""
         with open(path, "rb") as file:
             response = httpx.post(

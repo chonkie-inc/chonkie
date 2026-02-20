@@ -119,7 +119,7 @@ class SemanticChunker(CloudChunker):
     def chunk(
         self,
         text: Optional[Union[str, list[str]]] = None,
-        file: Optional[str] = None,
+        file: str | os.PathLike | None = None,
     ) -> Union[list[Chunk], list[list[Chunk]]]:
         """Chunk the text or file into a list of chunks."""
         # Make the payload
@@ -197,7 +197,7 @@ class SemanticChunker(CloudChunker):
     def __call__(
         self,
         text: Optional[Union[str, list[str]]] = None,
-        file: Optional[str] = None,
+        file: str | os.PathLike | None = None,
     ) -> Union[list[Chunk], list[list[Chunk]]]:
         """Call the chunker."""
         return self.chunk(text=text, file=file)

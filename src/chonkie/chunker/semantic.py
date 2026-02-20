@@ -5,6 +5,7 @@ and calculates window embeddings directly rather than approximating them from se
 It uses Savitzky-Golay filtering for smoother boundary detection.
 """
 
+import os
 from typing import Any, Literal, Optional, Union
 
 import chonkie_core
@@ -116,7 +117,7 @@ class SemanticChunker(BaseChunker):
         cls,
         name: str = "default",
         lang: Optional[str] = "en",
-        path: Optional[str] = None,
+        path: str | os.PathLike | None = None,
         embedding_model: Union[str, BaseEmbeddings] = "minishlab/potion-base-32M",
         threshold: float = 0.8,
         chunk_size: int = 2048,
