@@ -588,8 +588,6 @@ class TestPipelineReturnTypes:
             temp_path = Path(temp_dir)
             (temp_path / "file.txt").write_text("Content")
 
-            result = (
-                Pipeline().fetch_from("file", dir=temp_path).chunk_with("recursive").run()
-            )
+            result = Pipeline().fetch_from("file", dir=temp_path).chunk_with("recursive").run()
 
             assert isinstance(result, list)
