@@ -77,7 +77,7 @@ class SlumberChunker(CloudChunker):
     def chunk(
         self,
         text: Optional[Union[str, list[str]]] = None,
-        file: Optional[str] = None,
+        file: str | os.PathLike | None = None,
     ) -> Union[list[Chunk], list[list[Chunk]]]:
         """Chunk the text or file into a list of chunks using the Slumber strategy via API.
 
@@ -178,7 +178,7 @@ class SlumberChunker(CloudChunker):
     def __call__(
         self,
         text: Optional[Union[str, list[str]]] = None,
-        file: Optional[str] = None,
+        file: str | os.PathLike | None = None,
     ) -> Union[list[Chunk], list[list[Chunk]]]:
         """Call the SlumberChunker."""
         return self.chunk(text=text, file=file)

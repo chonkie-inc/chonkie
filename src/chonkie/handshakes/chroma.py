@@ -1,6 +1,7 @@
 """Chroma Handshake to export Chonkie's Chunks into a Chroma collection."""
 
 import importlib.util as importutil
+import os
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -99,7 +100,7 @@ class ChromaHandshake(BaseHandshake):
         client: Optional[Any] = None,  # chromadb.Client
         collection_name: Union[str, Literal["random"]] = "random",
         embedding_model: Union[str, BaseEmbeddings] = "minishlab/potion-retrieval-32M",
-        path: Optional[str] = None,
+        path: str | os.PathLike | None = None,
     ) -> None:
         """Initialize the Chroma Handshake.
 
@@ -123,7 +124,7 @@ class ChromaHandshake(BaseHandshake):
         if client is None and path is None:
             self.client = chromadb.Client()
         elif client is None and path is not None:
-            self.client = chromadb.PersistentClient(path=path)
+            self.client = chromadb.PersistentClient(path=str(path))
         else:
             self.client = client  # type: ignore[assignment]
 

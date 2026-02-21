@@ -1,6 +1,7 @@
 """Late Chunking for Chonkie API."""
 
 import json
+import os
 from typing import Any, Optional, Union, cast
 
 import httpx
@@ -48,7 +49,7 @@ class LateChunker(RecursiveChunker):
     def chunk(
         self,
         text: Optional[Union[str, list[str]]] = None,
-        file: Optional[str] = None,
+        file: str | os.PathLike | None = None,
     ) -> Union[list[Chunk], list[list[Chunk]]]:
         """Chunk the text or file into a list of late-interaction chunks via the Chonkie API.
 
@@ -144,7 +145,7 @@ class LateChunker(RecursiveChunker):
     def __call__(
         self,
         text: Optional[Union[str, list[str]]] = None,
-        file: Optional[str] = None,
+        file: str | os.PathLike | None = None,
     ) -> Union[list[Chunk], list[list[Chunk]]]:
         """Call the LateChunker to chunk text."""
         return self.chunk(text=text, file=file)

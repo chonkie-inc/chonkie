@@ -6,6 +6,7 @@ specified token count limits for each chunk. It also handles overlapping chunks 
 allows customization of sentence boundary delimiters and minimum sentence lengths.
 """
 
+import os
 import warnings
 from typing import Literal, Optional, Sequence, Union
 
@@ -104,7 +105,7 @@ class SentenceChunker(BaseChunker):
         cls,
         name: Optional[str] = "default",
         lang: Optional[str] = "en",
-        path: Optional[str] = None,
+        path: str | os.PathLike | None = None,
         tokenizer: Union[str, TokenizerProtocol] = "character",
         chunk_size: int = 2048,
         chunk_overlap: int = 0,

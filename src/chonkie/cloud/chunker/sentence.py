@@ -77,7 +77,7 @@ class SentenceChunker(CloudChunker):
     def chunk(
         self,
         text: Optional[Union[str, list[str]]] = None,
-        file: Optional[str] = None,
+        file: str | os.PathLike | None = None,
     ) -> Union[list[Chunk], list[list[Chunk]]]:
         """Chunk the text or file via sentence boundaries."""
         # Define the payload for the request
@@ -147,7 +147,7 @@ class SentenceChunker(CloudChunker):
     def __call__(
         self,
         text: Optional[Union[str, list[str]]] = None,
-        file: Optional[str] = None,
+        file: str | os.PathLike | None = None,
     ) -> Union[list[Chunk], list[list[Chunk]]]:
         """Call the SentenceChunker."""
         return self.chunk(text=text, file=file)

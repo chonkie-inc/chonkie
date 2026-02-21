@@ -3,6 +3,7 @@
 Splits text into smaller chunks recursively. Express chunking logic through RecursiveLevel objects.
 """
 
+import os
 from functools import lru_cache
 from typing import Optional, Union
 
@@ -75,7 +76,7 @@ class RecursiveChunker(BaseChunker):
         cls,
         name: Optional[str] = "default",
         lang: Optional[str] = "en",
-        path: Optional[str] = None,
+        path: str | os.PathLike | None = None,
         tokenizer: Union[str, TokenizerProtocol] = "character",
         chunk_size: int = 2048,
         min_characters_per_chunk: int = 24,

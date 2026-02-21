@@ -364,7 +364,7 @@ def test_json_porter_path_object_support(sample_chunks: list[Chunk], temp_dir: s
     output_file = Path(temp_dir) / "path_chunks.json"
 
     # Export using Path object
-    porter.export(sample_chunks, str(output_file))
+    porter.export(sample_chunks, output_file)
 
     # Verify file exists
     assert output_file.exists()
