@@ -1,11 +1,11 @@
 ---
 title: "Table Chunker"
-description: "Split markdown tables into manageable chunks by row, preserving headers."
+description: "Split markdown or HTML tables into manageable chunks by row, preserving headers."
 icon: "table-cells"
 iconType: "solid"
 ---
 
-The `TableChunker` splits large markdown tables into smaller, manageable chunks by row, always preserving the header. This is especially useful for processing, indexing, or embedding tabular data in LLM and RAG pipelines.
+The `TableChunker` splits large markdown or HTML tables into smaller, manageable chunks by row, always preserving the header. This is especially useful for processing, indexing, or embedding tabular data in LLM and RAG pipelines.
 
 ## API Reference
 
@@ -65,7 +65,7 @@ chunker = TableChunker(
 
 ## Usage
 <CodeGroup>
-```python row chunker
+```python Markdown (Row-Based)
 from chonkie import TableChunker
 
 table = """
@@ -95,7 +95,7 @@ for chunk in chunks:
 # | Dave   | 35  | Berlin   |
 ```
 
-```python token chunker
+```python Markdown (Token-Based)
 from chonkie import TableChunker
 
 table = """
@@ -124,6 +124,31 @@ for chunk in chunks:
 # | Carol | 28  | Paris  |
 # | Dave  | 35  | Berlin |
 ```
+
+```python HTML Tables
+from chonkie import TableChunker
+
+html_table = """
+<table>
+  <thead>
+    <tr><th>ID</th><th>Status</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>1</td><td>Active</td></tr>
+    <tr><td>2</td><td>Pending</td></tr>
+    <tr><td>3</td><td>Inactive</td></tr>
+    <tr><td>4</td><td>Active</td></tr>
+  </tbody>
+</table>
+"""
+
+# HTML tables are chunked while preserving <table>, <thead>, and <tbody> tags
+chunker = TableChunker(tokenizer="row", chunk_size=2)
+chunks = chunker.chunk(html_table)
+
+for chunk in chunks:
+    print(f"--- HTML Chunk ---\n{chunk.text}\n")
+```
 </CodeGroup>
 ## Methods
 
@@ -132,7 +157,8 @@ for chunk in chunks:
 
 ## Notes
 
-- Requires at least a header, separator, and one data row.
+- Supports both standard Markdown pipe tables and HTML `<table>` elements.
+- Requires at least a header, separator, and one data row (for Markdown) or `<thead>` and `<tbody>` (for HTML).
 - If the table fits within the chunk size, it is returned as a single chunk.
 - For advanced use, pass a custom tokenizer for token-based chunking.
 
