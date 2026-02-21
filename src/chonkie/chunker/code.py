@@ -72,20 +72,22 @@ class CodeChunker(BaseChunker):
         self.language = language
         if language == "auto":
             # Set a warning to the user that the language is auto and this might
-            # effect the performance of the chunker.
+            # affect the performance of the chunker.
             warnings.warn(
                 "The language is set to `auto`. This would adversely affect the performance of the chunker. "
                 + "Consider setting the `language` parameter to a specific language to improve performance.",
             )
             from magika import Magika
 
-            # Set the language to auto and initialize the Magika instance
             self.magika = Magika()
             self.parser = None
+            self._cached_language = None
+            self._cached_parser = None
         else:
             from tree_sitter_language_pack import get_parser
-
             self.parser = get_parser(language)  # type: ignore[arg-type]
+            self._cached_language = language
+            self._cached_parser = self.parser
 
         # Set the use_multiprocessing flag
         self._use_multiprocessing = False
@@ -341,9 +343,11 @@ class CodeChunker(BaseChunker):
         if self.language == "auto":
             language = self._detect_language(original_text_bytes)
             logger.info(f"Auto-detected code language: {language}")
-            from tree_sitter_language_pack import get_parser
-
-            self.parser = get_parser(language)
+            if self._cached_language != language or self._cached_parser is None:
+                from tree_sitter_language_pack import get_parser
+                self._cached_parser = get_parser(language)
+                self._cached_language = language
+            self.parser = self._cached_parser
         else:
             logger.debug(f"Using configured language: {self.language}")
 
