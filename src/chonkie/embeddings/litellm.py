@@ -1,12 +1,15 @@
 """LiteLLM embeddings implementation for unified access to 100+ providers."""
 
 import importlib.util as importutil
-import warnings
 from typing import Any, Dict, List, Optional
 
 import numpy as np
 
+from chonkie.logger import get_logger
+
 from .base import BaseEmbeddings
+
+logger = get_logger(__name__)
 
 
 class LiteLLMEmbeddings(BaseEmbeddings):
@@ -132,10 +135,9 @@ class LiteLLMEmbeddings(BaseEmbeddings):
             test_embedding = self.embed("test")
             return len(test_embedding)
         except Exception as e:
-            warnings.warn(
-                f"Failed to auto-detect embedding dimension: {e}. "
-                "Please provide dimension explicitly.",
-                UserWarning,
+            logger.warning(
+                f"Failed to auto-detect embedding dimension: {e}. Please provide dimension explicitly.",
+                exc_info=True,
             )
             # Default fallback
             return 1536
@@ -166,7 +168,11 @@ class LiteLLMEmbeddings(BaseEmbeddings):
 
                     model_name = self.model.split("/")[-1]
                     return Tokenizer.from_pretrained(f"voyageai/{model_name}")
-                except Exception:
+                except Exception as e:
+                    logger.warning(
+                        f"Failed to initialize VoyageAI tokenizer: {e}. Using cl100k_base fallback.",
+                        exc_info=True,
+                    )
                     # Fallback to cl100k_base for token estimation
                     return tiktoken.get_encoding("cl100k_base")
 
@@ -175,9 +181,9 @@ class LiteLLMEmbeddings(BaseEmbeddings):
                 return tiktoken.get_encoding("cl100k_base")
 
         except Exception as e:
-            warnings.warn(
+            logger.warning(
                 f"Failed to initialize tokenizer: {e}. Using cl100k_base fallback.",
-                UserWarning,
+                exc_info=True,
             )
             return tiktoken.get_encoding("cl100k_base")
 
@@ -284,7 +290,10 @@ class LiteLLMEmbeddings(BaseEmbeddings):
             except Exception as e:
                 # If the batch fails, try one by one
                 if len(batch) > 1:
-                    warnings.warn(f"Batch embedding failed: {str(e)}. Trying one by one.")
+                    logger.warning(
+                        f"Batch embedding failed: {e}. Trying one by one.",
+                        exc_info=True,
+                    )
                     individual_embeddings = [self.embed(text) for text in batch]
                     all_embeddings.extend(individual_embeddings)
                 else:

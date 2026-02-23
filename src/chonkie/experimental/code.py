@@ -4,10 +4,10 @@ This module provides an experimental CodeChunker class that uses tree-sitter
 for advanced code analysis and language-specific chunking strategies.
 """
 
-import warnings
 from typing import TYPE_CHECKING, Any, Optional
 
 from chonkie.chunker.base import BaseChunker
+from chonkie.logger import get_logger
 from chonkie.types import Chunk
 from chonkie.types.code import SplitRule
 
@@ -15,6 +15,9 @@ from .code_registry import CodeLanguageRegistry
 
 if TYPE_CHECKING:
     from tree_sitter import Node
+
+
+logger = get_logger(__name__)
 
 
 class CodeChunker(BaseChunker):
@@ -75,9 +78,9 @@ class CodeChunker(BaseChunker):
         if language == "auto":
             # Set a warning to the user that the language is auto and this might
             # affect the performance of the chunker.
-            warnings.warn(
+            logger.warning(
                 "The language is set to `auto`. This would adversely affect the performance of the chunker. "
-                + "Consider setting the `language` parameter to a specific language to improve performance.",
+                "Consider setting the `language` parameter to a specific language to improve performance.",
             )
 
             from magika import Magika

@@ -88,6 +88,7 @@ class SentenceChunker(BaseChunker):
         if approximate:
             warnings.warn(
                 "Approximate has been deprecated and will be removed from next version onwards!",
+                DeprecationWarning,
             )
 
         # Assign the values if they make sense
@@ -311,10 +312,10 @@ class SentenceChunker(BaseChunker):
                 if pos + self.min_sentences_per_chunk <= len(sentences):
                     split_idx = pos + self.min_sentences_per_chunk
                 else:
-                    warnings.warn(
+                    logger.warning(
                         f"Minimum sentences per chunk as {self.min_sentences_per_chunk} could not be met for all chunks. "
-                        + f"Last chunk of the text will have only {len(sentences) - pos} sentences. "
-                        + "Consider increasing the chunk_size or decreasing the min_sentences_per_chunk.",
+                        f"Last chunk of the text will have only {len(sentences) - pos} sentences. "
+                        "Consider increasing the chunk_size or decreasing the min_sentences_per_chunk.",
                     )
                     split_idx = len(sentences)
 
