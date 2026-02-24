@@ -752,3 +752,95 @@ def test_table_chunker_html_table(html_table: str) -> None:
     all_content = "".join(chunks[i].text for i in range(len(chunks)))
     assert "Alice" in all_content
     assert "Eve" in all_content
+
+
+def test_table_chunker_html_table_no_tbody() -> None:
+    """Test chunking an HTML table without tbody tags (exercises _split_html_table else branch)."""
+    table = """<table>
+  <tr><th>ID</th><th>Name</th><th>Role</th></tr>
+  <tr><td>1</td><td>Alice</td><td>Admin</td></tr>
+  <tr><td>2</td><td>Bob</td><td>User</td></tr>
+  <tr><td>3</td><td>Charlie</td><td>Guest</td></tr>
+  <tr><td>4</td><td>David</td><td>User</td></tr>
+  <tr><td>5</td><td>Eve</td><td>Admin</td></tr>
+</table>"""
+    chunker = TableChunker(tokenizer="character", chunk_size=100)
+    chunks = chunker.chunk(table)
+
+    assert len(chunks) > 1
+    for chunk in chunks:
+        assert "<table>" in chunk.text
+        assert "</table>" in chunk.text
+    all_content = "".join(c.text for c in chunks)
+    assert "Alice" in all_content
+    assert "Eve" in all_content
+
+
+def test_table_chunker_html_table_row_based(html_table: str) -> None:
+    """Test row-based chunking for HTML tables."""
+    chunker = TableChunker(tokenizer="row", chunk_size=2)
+    chunks = chunker.chunk(html_table)
+
+    # 5 data rows with chunk_size=2 → 3 chunks (2, 2, 1)
+    assert len(chunks) == 3
+    for chunk in chunks:
+        assert "<table>" in chunk.text
+        assert "</table>" in chunk.text
+        assert "<thead>" in chunk.text
+        assert chunk.token_count <= 2
+    all_content = "".join(c.text for c in chunks)
+    assert "Alice" in all_content
+    assert "Eve" in all_content
+
+
+def test_table_chunker_html_table_fits_single_chunk_character(html_table: str) -> None:
+    """Test that an HTML table smaller than chunk_size is returned as a single chunk (character tokenizer)."""
+    chunker = TableChunker(tokenizer="character", chunk_size=10_000)
+    chunks = chunker.chunk(html_table)
+
+    assert len(chunks) == 1
+    assert chunks[0].text == html_table
+
+
+def test_table_chunker_html_table_fits_single_chunk_row_based(html_table: str) -> None:
+    """Test that an HTML table with fewer rows than chunk_size is returned as a single chunk (row tokenizer)."""
+    chunker = TableChunker(tokenizer="row", chunk_size=10)
+    chunks = chunker.chunk(html_table)
+
+    assert len(chunks) == 1
+    assert chunks[0].token_count == 5  # html_table has 5 data rows in tbody
+    assert chunks[0].text == html_table
+
+
+def test_table_chunker_html_table_empty_tbody() -> None:
+    """Test that an HTML table with an empty tbody returns an empty chunk list."""
+    table = """<table>
+  <thead>
+    <tr><th>ID</th><th>Name</th></tr>
+  </thead>
+  <tbody>
+  </tbody>
+</table>"""
+    chunker = TableChunker(tokenizer="row", chunk_size=3)
+    chunks = chunker.chunk(table)
+
+    assert chunks == []
+
+
+def test_table_chunker_html_table_malformed_no_closing_tag() -> None:
+    """Test that an HTML table missing the closing </table> tag is handled without crashing."""
+    table = """<table>
+  <tbody>
+    <tr><td>1</td><td>Alice</td></tr>
+    <tr><td>2</td><td>Bob</td></tr>
+    <tr><td>3</td><td>Charlie</td></tr>
+  </tbody>"""
+    chunker = TableChunker(tokenizer="row", chunk_size=2)
+    # Should not crash; <table> tag is enough for HTML detection
+    chunks = chunker.chunk(table)
+
+    assert isinstance(chunks, list)
+    assert len(chunks) > 0
+    all_content = "".join(c.text for c in chunks)
+    assert "Alice" in all_content
+    assert "Charlie" in all_content
