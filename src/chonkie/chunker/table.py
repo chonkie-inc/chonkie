@@ -176,7 +176,7 @@ class TableChunker(BaseChunker):
                         chunk = Chunk(
                             text=chunk_text,
                             start_index=current_index,
-                            end_index=current_index + len(chunk_text),
+                        end_index=current_index + len("".join(current_chunk)),
                             token_count=current_token_count,
                         )
                         chunks.append(chunk)
