@@ -5,11 +5,62 @@ from typing import Sequence, Union
 
 from tqdm import tqdm
 
+import chonkie_core
+
 from chonkie.logger import get_logger
 from chonkie.tokenizer import AutoTokenizer, TokenizerProtocol
 from chonkie.types import Chunk, Document
 
 logger = get_logger(__name__)
+
+
+def split_text_by_delimiters(
+    text: str,
+    delimiters: Union[str, list[str]],
+    include_delim: str = "prev",
+    min_chars: int = 1,
+) -> list[str]:
+    """Split text at delimiter boundaries using chonkie-core.
+
+    This is the shared implementation used by SentenceChunker,
+    SemanticChunker, RecursiveChunker, and SlumberChunker.
+
+    Args:
+        text: Input text to be split.
+        delimiters: Delimiter(s) to split on. Can be a single string or list of strings.
+        include_delim: Whether to include delimiters in the current chunk ("prev")
+            or the next chunk ("next").
+        min_chars: Minimum number of characters per split.
+
+    Returns:
+        List of non-empty text splits.
+
+    """
+    if isinstance(delimiters, str):
+        delimiters = [delimiters]
+
+    text_bytes = text.encode("utf-8")
+    has_multibyte = any(len(d) > 1 for d in delimiters)
+
+    if has_multibyte:
+        patterns = [d.encode("utf-8") for d in delimiters]
+        offsets = chonkie_core.split_pattern_offsets(
+            text_bytes,
+            patterns=patterns,
+            include_delim=include_delim,
+            min_chars=min_chars,
+        )
+    else:
+        delim_bytes = "".join(delimiters).encode("utf-8")
+        offsets = chonkie_core.split_offsets(
+            text_bytes,
+            delimiters=delim_bytes,
+            include_delim=include_delim,
+            min_chars=min_chars,
+        )
+
+    splits = [text_bytes[start:end].decode("utf-8") for start, end in offsets]
+    return [s for s in splits if s]
 
 
 class BaseChunker(ABC):
