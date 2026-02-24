@@ -158,7 +158,7 @@ for chunk in chunks:
 ## Notes
 
 - Supports both standard Markdown pipe tables and HTML `<table>` elements.
-- Requires at least a header, separator, and one data row (for Markdown) or `<thead>` and `<tbody>` (for HTML).
+- Requires at least a header, separator, and one data row (for Markdown) or at least one `<tr>` data row for HTML tables (with optional `<thead>` and `<tbody>` structure).
 - If the table fits within the chunk size, it is returned as a single chunk.
 - For advanced use, pass a custom tokenizer for token-based chunking.
 
