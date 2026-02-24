@@ -20,7 +20,9 @@ class TableChef(BaseChef):
     def __init__(self) -> None:
         """Initialize TableChef with regex patterns for markdown and HTML tables."""
         self.table_pattern = re.compile(r"(\|.*?\n(?:\|[-: ]+\|.*?\n)?(?:\|.*?\n)+)")
-        self.html_table_pattern = re.compile(r"(<table.*?>.*?</table>)", re.DOTALL | re.IGNORECASE)
+        # Matches individual opening/closing <table> tags only — no DOTALL, no .*?
+        # Depth tracking in _find_html_table_spans handles nesting and avoids ReDoS.
+        self._html_table_tag_pattern = re.compile(r"<(/?)table\b[^>]*>", re.IGNORECASE)
 
     def parse(self, text: str) -> Document:
         """Parse raw markdown text and extract tables into a MarkdownDocument.
@@ -120,6 +122,29 @@ class TableChef(BaseChef):
         else:
             raise TypeError(f"Unsupported type: {type(path)}")
 
+    def _find_html_table_spans(self, text: str) -> list[tuple[int, int]]:
+        """Return (start, end) character spans for each top-level HTML table.
+
+        Uses depth tracking so nested <table> elements are included in their
+        enclosing table's span rather than being returned as separate tables.
+        The tag pattern [^>]* has a hard stop character and cannot backtrack
+        catastrophically regardless of input length.
+        """
+        spans: list[tuple[int, int]] = []
+        depth = 0
+        start = -1
+        for m in self._html_table_tag_pattern.finditer(text):
+            if m.group(1):  # closing </table>
+                if depth > 0:
+                    depth -= 1
+                    if depth == 0:
+                        spans.append((start, m.end()))
+            else:  # opening <table …>
+                if depth == 0:
+                    start = m.start()
+                depth += 1
+        return spans
+
     def extract_tables_from_markdown(self, markdown: str) -> list[MarkdownTable]:
         """Extract markdown and HTML tables from a markdown string.
 
@@ -134,12 +159,12 @@ class TableChef(BaseChef):
 
         # Find HTML tables first; they take priority when spans overlap
         html_tables: list[MarkdownTable] = []
-        for match in self.html_table_pattern.finditer(markdown):
+        for start, end in self._find_html_table_spans(markdown):
             html_tables.append(
                 MarkdownTable(
-                    content=match.group(0),
-                    start_index=match.start(),
-                    end_index=match.end(),
+                    content=markdown[start:end],
+                    start_index=start,
+                    end_index=end,
                 )
             )
 
