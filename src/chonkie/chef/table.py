@@ -132,24 +132,28 @@ class TableChef(BaseChef):
         """
         tables: list[MarkdownTable] = []
 
-        # Find markdown pipe tables
-        for match in self.table_pattern.finditer(markdown):
-            table_content = match.group(0)
-            start_index = match.start()
-            end_index = match.end()
-            tables.append(
-                MarkdownTable(content=table_content, start_index=start_index, end_index=end_index)
-            )
-
-        # Find HTML tables
+        # Find HTML tables first; they take priority when spans overlap
+        html_tables: list[MarkdownTable] = []
         for match in self.html_table_pattern.finditer(markdown):
-            table_content = match.group(0)
-            start_index = match.start()
-            end_index = match.end()
-            tables.append(
-                MarkdownTable(content=table_content, start_index=start_index, end_index=end_index)
+            html_tables.append(
+                MarkdownTable(
+                    content=match.group(0),
+                    start_index=match.start(),
+                    end_index=match.end(),
+                )
             )
 
+        # Find markdown pipe tables, skipping any that overlap with an HTML match
+        for match in self.table_pattern.finditer(markdown):
+            start_index = match.start()
+            end_index = match.end()
+            if any(start_index < ht.end_index and ht.start_index < end_index for ht in html_tables):
+                continue
+            tables.append(
+                MarkdownTable(content=match.group(0), start_index=start_index, end_index=end_index)
+            )
+
+        tables.extend(html_tables)
         # Sort tables by their appearance in the text
         tables.sort(key=lambda x: x.start_index)
         return tables
