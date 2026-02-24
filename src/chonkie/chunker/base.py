@@ -17,7 +17,7 @@ logger = get_logger(__name__)
 def split_text_by_delimiters(
     text: str,
     delimiters: Union[str, list[str]],
-    include_delim: str = "prev",
+    include_delim: Optional[str] = "prev",
     min_chars: int = 1,
 ) -> list[str]:
     """Split text at delimiter boundaries using chonkie-core.
