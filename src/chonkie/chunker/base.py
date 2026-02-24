@@ -40,9 +40,9 @@ def split_text_by_delimiters(
         delimiters = [delimiters]
 
     text_bytes = text.encode("utf-8")
-    has_multibyte = any(len(d) > 1 for d in delimiters)
+    has_complex_delimiters = any(len(d) > 1 or len(d.encode("utf-8")) > 1 for d in delimiters)
 
-    if has_multibyte:
+    if has_complex_delimiters:
         patterns = [d.encode("utf-8") for d in delimiters]
         offsets = chonkie_core.split_pattern_offsets(
             text_bytes,
