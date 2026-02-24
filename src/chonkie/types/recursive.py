@@ -1,5 +1,6 @@
 """Custom types for recursive chunking."""
 
+import os
 import re
 from dataclasses import dataclass
 from typing import Iterator, Literal, Optional, Union
@@ -194,7 +195,7 @@ class RecursiveRules:
         cls,
         name: Optional[str] = "default",
         lang: Optional[str] = "en",
-        path: Optional[str] = None,
+        path: str | os.PathLike | None = None,
     ) -> "RecursiveRules":
         """Create a RecursiveRules object from a recipe.
 

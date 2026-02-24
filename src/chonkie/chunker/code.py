@@ -4,7 +4,6 @@ This module provides a CodeChunker class for splitting code into chunks of a spe
 
 """
 
-import warnings
 from bisect import bisect_left
 from itertools import accumulate
 from typing import TYPE_CHECKING, Any, Literal, Union
@@ -73,9 +72,9 @@ class CodeChunker(BaseChunker):
         if language == "auto":
             # Set a warning to the user that the language is auto and this might
             # effect the performance of the chunker.
-            warnings.warn(
+            logger.warning(
                 "The language is set to `auto`. This would adversely affect the performance of the chunker. "
-                + "Consider setting the `language` parameter to a specific language to improve performance.",
+                "Consider setting the `language` parameter to a specific language to improve performance.",
             )
             from magika import Magika
 
@@ -256,13 +255,13 @@ class CodeChunker(BaseChunker):
 
             # Basic validation for byte offsets
             if start_byte > end_byte:
-                warnings.warn(
-                    f"Warning: Skipping group due to invalid byte order. Start: {start_byte}, End: {end_byte}",
+                logger.warning(
+                    f"Skipping group due to invalid byte order. Start: {start_byte}, End: {end_byte}",
                 )
                 continue
             if start_byte < 0 or end_byte > len(original_text_bytes):
-                warnings.warn(
-                    f"Warning: Skipping group due to out-of-bounds byte offsets. Start: {start_byte}, End: {end_byte}, Text Length: {len(original_text_bytes)}",
+                logger.warning(
+                    f"Skipping group due to out-of-bounds byte offsets. Start: {start_byte}, End: {end_byte}, Text Length: {len(original_text_bytes)}",
                 )
                 continue
 
@@ -278,8 +277,9 @@ class CodeChunker(BaseChunker):
                 text = chunk_bytes.decode("utf-8", errors="ignore")  # Or 'replace'
                 chunk_texts.append(text)
             except Exception as e:
-                warnings.warn(
-                    f"Warning: Error decoding bytes for chunk ({start_byte}-{end_byte}): {e}",
+                logger.warning(
+                    f"Error decoding bytes for chunk ({start_byte}-{end_byte}): {e}",
+                    exc_info=True,
                 )
                 # Append an empty string or placeholder if decoding fails
                 chunk_texts.append("")

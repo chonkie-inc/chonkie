@@ -4,6 +4,15 @@ import pytest
 
 from chonkie import RecursiveLevel, RecursiveRules
 
+try:
+    import huggingface_hub  # noqa: F401
+
+    HF_HUB_AVAILABLE = True
+except ImportError:
+    HF_HUB_AVAILABLE = False
+
+requires_hf_hub = pytest.mark.skipif(not HF_HUB_AVAILABLE, reason="huggingface_hub not installed")
+
 
 def test_recursive_level_init() -> None:
     """Test RecursiveLevel initialization."""
@@ -70,6 +79,7 @@ def test_recursive_rules_serialization() -> None:
     assert all(isinstance(level, RecursiveLevel) for level in reconstructed.levels)
 
 
+@requires_hf_hub
 def test_recursive_level_from_recipe() -> None:
     """Test RecursiveLevel from recipe."""
     level = RecursiveLevel.from_recipe("default", lang="en")
@@ -79,6 +89,7 @@ def test_recursive_level_from_recipe() -> None:
     assert level.include_delim == "prev"
 
 
+@requires_hf_hub
 def test_recursive_rules_from_recipe() -> None:
     """Test RecursiveRules from recipe."""
     rules = RecursiveRules.from_recipe("default", lang="en")
@@ -87,6 +98,7 @@ def test_recursive_rules_from_recipe() -> None:
     assert all(isinstance(level, RecursiveLevel) for level in rules.levels)
 
 
+@requires_hf_hub
 def test_recursive_rules_from_recipe_nonexistent() -> None:
     """Test RecursiveRules from recipe with nonexistent recipe."""
     with pytest.raises(ValueError):

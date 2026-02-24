@@ -472,12 +472,7 @@ def test_overlap_refinery_context_larger_than_chunk() -> None:
     refinery = OverlapRefinery(context_size=10, mode="token", method="suffix")
 
     # Should handle gracefully (with warnings)
-    import warnings
-
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        refined_chunks = refinery.refine(chunks)
-
+    refined_chunks = refinery.refine(chunks)
     assert len(refined_chunks) == 2
 
 
@@ -704,10 +699,8 @@ def test_overlap_refinery_empty_text_recursive() -> None:
     assert len(refined_chunks2) == 2
 
 
-def test_overlap_refinery_context_size_warnings() -> None:
+def test_overlap_refinery_context_size_warnings(caplog) -> None:
     """Test warnings when context size is larger than chunk."""
-    import warnings
-
     chunks = [
         Chunk(text="A", start_index=0, end_index=0, token_count=1),
         Chunk(text="B", start_index=1, end_index=1, token_count=1),
@@ -716,15 +709,14 @@ def test_overlap_refinery_context_size_warnings() -> None:
     # Test suffix overlap with very large context size to trigger warnings
     refinery_suffix = OverlapRefinery(context_size=100, mode="token", method="suffix")
 
-    with warnings.catch_warnings(record=True) as w:
-        warnings.simplefilter("always")
-        refined_chunks = refinery_suffix.refine(chunks)
+    refined_chunks = refinery_suffix.refine(chunks)
 
-        # Should have warnings about context size being too large
-        assert len(w) > 0
-        assert "Context size is greater than the chunk size" in str(w[0].message)
+    # Should have warnings about context size being too large
+    assert "Context size is greater than the chunk size" in caplog.text
 
     assert len(refined_chunks) == 2
+
+    caplog.clear()
 
     # Test prefix overlap with very large context size to trigger warnings
     # Use fresh chunks since the previous test may have modified them
@@ -734,13 +726,10 @@ def test_overlap_refinery_context_size_warnings() -> None:
     ]
     refinery_prefix = OverlapRefinery(context_size=100, mode="token", method="prefix")
 
-    with warnings.catch_warnings(record=True) as w:
-        warnings.simplefilter("always")
-        refined_chunks = refinery_prefix.refine(fresh_chunks)
+    refined_chunks = refinery_prefix.refine(fresh_chunks)
 
-        # Should have warnings about context size being too large
-        assert len(w) > 0
-        assert "Context size is greater than the chunk size" in str(w[0].message)
+    # Should have warnings about context size being too large
+    assert "Context size is greater than the chunk size" in caplog.text
 
     assert len(refined_chunks) == 2
 

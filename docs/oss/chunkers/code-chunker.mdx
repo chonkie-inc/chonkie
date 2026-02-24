@@ -193,9 +193,6 @@ chunks = chunker.chunk(code)
 for chunk in chunks:
     print(f"Chunk text: {chunk.text}")
     print(f"Token count: {chunk.token_count}")
-    print(f"Language: {chunk.lang}")
-    if chunk.nodes:
-        print(f"Node count: {len(chunk.nodes)}")
 ```
 
 ### Batch Chunking

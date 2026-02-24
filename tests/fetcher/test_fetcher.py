@@ -243,7 +243,7 @@ class TestFileFetcher:
         temp_path = Path(temp_dir_with_files)
         file_path = temp_path / "file1.txt"
 
-        result = file_fetcher.fetch(path=str(file_path))
+        result = file_fetcher.fetch(path=file_path)
 
         assert isinstance(result, Path)
         assert result.name == "file1.txt"
@@ -256,7 +256,7 @@ class TestFileFetcher:
         file_path = temp_path / "nonexistent.txt"
 
         with pytest.raises(FileNotFoundError, match="File not found"):
-            file_fetcher.fetch(path=str(file_path))
+            file_fetcher.fetch(path=file_path)
 
     def test_fetch_both_path_and_dir_raises_error(self, file_fetcher, temp_dir_with_files):
         """Test that providing both path and dir raises ValueError."""
@@ -274,7 +274,7 @@ class TestFileFetcher:
         file_path = temp_path / "file2.py"
 
         # ext should be ignored when path is provided
-        result = file_fetcher.fetch(path=str(file_path), ext=[".txt"])
+        result = file_fetcher.fetch(path=file_path, ext=[".txt"])
 
         assert isinstance(result, Path)
         assert result.name == "file2.py"
@@ -285,7 +285,7 @@ class TestFileFetcher:
         temp_path = Path(temp_dir_with_files)
         file_path = temp_path / "file1.txt"
 
-        result = file_fetcher(path=str(file_path))
+        result = file_fetcher(path=file_path)
 
         assert isinstance(result, Path)
         assert result.name == "file1.txt"

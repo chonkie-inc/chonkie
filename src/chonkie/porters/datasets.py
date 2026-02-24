@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import importlib.util as importutil
+from os import PathLike
 from typing import TYPE_CHECKING, Any
 
 from chonkie.logger import get_logger
@@ -34,7 +35,7 @@ class DatasetsPorter(BasePorter):
         self,
         chunks: list[Chunk],
         save_to_disk: bool = True,
-        path: str = "chunks",
+        path: str | PathLike = "chunks",
         **kwargs: Any,
     ) -> Dataset:
         """Export a list of Chunk objects into a Hugging Face Dataset.
@@ -43,7 +44,7 @@ class DatasetsPorter(BasePorter):
             chunks (list[Chunk]): The list of Chunk objects to export.
             save_to_disk (bool, optional): If True, saves the dataset to disk.
                 Defaults to True.
-            path (str, optional): The path to save the dataset.
+            path: The path to save the dataset.
                 Defaults to "chunks".
             **kwargs: Additional arguments to pass to `save_to_disk`.
 
@@ -71,7 +72,7 @@ class DatasetsPorter(BasePorter):
         self,
         chunks: list[Chunk],
         save_to_disk: bool = True,
-        path: str = "chunks",
+        path: str | PathLike = "chunks",
         **kwargs: Any,
     ) -> Dataset:
         """Export a list of Chunk objects into a Hugging Face Dataset.
@@ -82,7 +83,7 @@ class DatasetsPorter(BasePorter):
             chunks (list[Chunk]): The list of Chunk objects to export.
             save_to_disk (bool, optional): If True, saves the dataset to disk.
                 Defaults to True.
-            path (str, optional): The path to save the dataset.
+            path: The path to save the dataset.
                 Defaults to "chunks".
             **kwargs: Additional arguments to pass to `save_to_disk`.
 

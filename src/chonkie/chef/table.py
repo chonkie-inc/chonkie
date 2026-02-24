@@ -1,5 +1,6 @@
 """TableChef is a chef that processes tabular data from files (e.g., CSV, Excel) and markdown strings."""
 
+import os
 import re
 from pathlib import Path
 from typing import Union
@@ -36,11 +37,11 @@ class TableChef(BaseChef):
         logger.info(f"Markdown table extraction complete: found {len(tables)} tables")
         return MarkdownDocument(content=text, tables=tables)
 
-    def process(self, path: Union[str, Path]) -> Document:
+    def process(self, path: str | os.PathLike) -> Document:
         """Process a CSV/Excel file or markdown text into a MarkdownDocument.
 
         Args:
-            path (Union[str, Path]): Path to the CSV/Excel file, or markdown text string.
+            path: Path to the CSV/Excel file, or markdown text string.
 
         Returns:
             Document: MarkdownDocument with extracted tables.
@@ -84,11 +85,11 @@ class TableChef(BaseChef):
         logger.debug("Extracting tables from markdown string")
         return self.parse(str(path))
 
-    def process_batch(self, paths: Union[list[str], list[Path]]) -> list[Document]:
+    def process_batch(self, paths: list[str | os.PathLike]) -> list[Document]:
         """Process multiple CSV/Excel files or markdown texts.
 
         Args:
-            paths (Union[list[str], list[Path]]): Paths to files or markdown text strings.
+            paths: Paths to files or markdown text strings.
 
         Returns:
             list[Document]: List of MarkdownDocuments with extracted tables.
@@ -101,7 +102,7 @@ class TableChef(BaseChef):
 
     def __call__(  # type: ignore[override]
         self,
-        path: Union[str, Path, list[str], list[Path]],
+        path: str | os.PathLike | list[str | os.PathLike],
     ) -> Union[Document, list[Document]]:
         """Process a single file/text or a batch of files/texts.
 

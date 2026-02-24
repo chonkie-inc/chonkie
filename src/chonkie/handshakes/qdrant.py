@@ -1,6 +1,7 @@
 """Qdrant Handshake to export Chonkie's Chunks into a Qdrant collection."""
 
 import importlib.util as importutil
+import os
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -37,7 +38,7 @@ class QdrantHandshake(BaseHandshake):
         embedding_model: Union[str, BaseEmbeddings]: The embedding model to use.
         url: Optional[str]: The URL to the Qdrant Server.
         api_key: Optional[str]: The API key to the Qdrant Server. Only needed for Qdrant Cloud.
-        path: Optional[str]: The path to the Qdrant collection locally. If not provided, will create an ephemeral collection.
+        path: The path to the Qdrant collection locally. If not provided, will create an ephemeral collection.
 
     """
 
@@ -47,7 +48,7 @@ class QdrantHandshake(BaseHandshake):
         collection_name: Union[str, Literal["random"]] = "random",
         embedding_model: Union[str, BaseEmbeddings] = "minishlab/potion-retrieval-32M",
         url: Optional[str] = None,
-        path: Optional[str] = None,
+        path: str | os.PathLike | None = None,
         api_key: Optional[str] = None,
         **kwargs: dict[str, Any],
     ) -> None:
@@ -83,7 +84,7 @@ class QdrantHandshake(BaseHandshake):
             elif url is not None:
                 self.client = qdrant_client.QdrantClient(url=url, **kwargs)  # type: ignore[arg-type]
             elif path is not None:
-                self.client = qdrant_client.QdrantClient(path=path, **kwargs)  # type: ignore[arg-type]
+                self.client = qdrant_client.QdrantClient(path=str(path), **kwargs)  # type: ignore[arg-type]
             else:
                 # If no client is provided, create an ephemeral collection
                 self.client = qdrant_client.QdrantClient(":memory:", **kwargs)  # type: ignore[arg-type]
