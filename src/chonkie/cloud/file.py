@@ -4,7 +4,7 @@ import os
 from dataclasses import dataclass
 from typing import Optional
 
-import requests
+import httpx
 
 BASE_URL = "https://api.chonkie.ai"
 VERSION = "v1"
@@ -34,10 +34,10 @@ class FileManager:
                 "No API key provided. Please set the CHONKIE_API_KEY environment variable or pass an API key to the FileManager constructor.",
             )
 
-    def upload(self, path: str) -> File:
+    def upload(self, path: str | os.PathLike) -> File:
         """Upload a file to the Chonkie API."""
         with open(path, "rb") as file:
-            response = requests.post(
+            response = httpx.post(
                 f"{BASE_URL}/{VERSION}/files",
                 files={"file": file},
                 headers={"Authorization": f"Bearer {self.api_key}"},
@@ -47,4 +47,4 @@ class FileManager:
         try:
             return File.from_dict(response.json())
         except Exception as e:
-            raise ValueError(f"Error uploading file: {e}")
+            raise ValueError(f"Error uploading file: {e}") from e

@@ -127,10 +127,9 @@ def test_weaviate_handshake_init_specific_collection(mock_weaviate_client) -> No
     mock_weaviate_client.collections.create.assert_not_called()
 
 
-def test_weaviate_handshake_is_available(mock_weaviate_client) -> None:
+def test_weaviate_handshake_is_available() -> None:
     """Test the _is_available check."""
-    handshake = WeaviateHandshake(client=mock_weaviate_client)
-    assert handshake._is_available() is True
+    assert WeaviateHandshake._is_available() is True
 
 
 def test_weaviate_handshake_custom_connection_params(mock_weaviate_client) -> None:

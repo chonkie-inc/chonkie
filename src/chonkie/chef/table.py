@@ -1,8 +1,9 @@
 """TableChef is a chef that processes tabular data from files (e.g., CSV, Excel) and markdown strings."""
 
+import os
 import re
 from pathlib import Path
-from typing import TYPE_CHECKING, Union
+from typing import Union
 
 from chonkie.chef.base import BaseChef
 from chonkie.logger import get_logger
@@ -10,9 +11,6 @@ from chonkie.pipeline import chef
 from chonkie.types import Document, MarkdownDocument, MarkdownTable
 
 logger = get_logger(__name__)
-
-if TYPE_CHECKING:
-    import pandas as pd
 
 
 @chef("table")
@@ -22,15 +20,6 @@ class TableChef(BaseChef):
     def __init__(self) -> None:
         """Initialize TableChef with a regex pattern for markdown tables."""
         self.table_pattern = re.compile(r"(\|.*?\n(?:\|[-: ]+\|.*?\n)?(?:\|.*?\n)+)")
-
-    def _lazy_import_pandas(self) -> None:
-        try:
-            global pd
-            import pandas as pd
-        except ImportError as e:
-            raise ImportError(
-                "Pandas is required to use TableChef. Please install it with `pip install chonkie[table]`.",
-            ) from e
 
     def parse(self, text: str) -> Document:
         """Parse raw markdown text and extract tables into a MarkdownDocument.
@@ -47,18 +36,23 @@ class TableChef(BaseChef):
         logger.info(f"Markdown table extraction complete: found {len(tables)} tables")
         return MarkdownDocument(content=text, tables=tables)
 
-    def process(self, path: Union[str, Path]) -> Document:
+    def process(self, path: str | os.PathLike) -> Document:
         """Process a CSV/Excel file or markdown text into a MarkdownDocument.
 
         Args:
-            path (Union[str, Path]): Path to the CSV/Excel file, or markdown text string.
+            path: Path to the CSV/Excel file, or markdown text string.
 
         Returns:
             Document: MarkdownDocument with extracted tables.
 
         """
         logger.debug(f"Processing table file/string: {path}")
-        self._lazy_import_pandas()
+        try:
+            import pandas as pd
+        except ImportError as e:
+            raise ImportError(
+                "Pandas is required to use TableChef. Please install it with `pip install chonkie[table]`.",
+            ) from e
         # if file exists
         path_obj = Path(path)
         if path_obj.is_file():
@@ -90,11 +84,11 @@ class TableChef(BaseChef):
         logger.debug("Extracting tables from markdown string")
         return self.parse(str(path))
 
-    def process_batch(self, paths: Union[list[str], list[Path]]) -> list[Document]:
+    def process_batch(self, paths: list[str | os.PathLike]) -> list[Document]:
         """Process multiple CSV/Excel files or markdown texts.
 
         Args:
-            paths (Union[list[str], list[Path]]): Paths to files or markdown text strings.
+            paths: Paths to files or markdown text strings.
 
         Returns:
             list[Document]: List of MarkdownDocuments with extracted tables.
@@ -107,7 +101,7 @@ class TableChef(BaseChef):
 
     def __call__(  # type: ignore[override]
         self,
-        path: Union[str, Path, list[str], list[Path]],
+        path: str | os.PathLike | list[str | os.PathLike],
     ) -> Union[Document, list[Document]]:
         """Process a single file/text or a batch of files/texts.
 

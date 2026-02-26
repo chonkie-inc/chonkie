@@ -1,5 +1,7 @@
 """Test the NeuralChunker class."""
 
+import importlib.util as importutil
+
 import pytest
 
 from chonkie import NeuralChunker
@@ -68,9 +70,7 @@ class TestNeuralChunkerInitialization:
     def test_init_with_unsupported_model(self):
         """Test initialization fails with unsupported model."""
         try:
-            import importlib.util
-
-            if importlib.util.find_spec("transformers") is None:
+            if importutil.find_spec("transformers") is None:
                 pytest.skip("transformers not available")
 
             # Try to initialize with unsupported model, should fail during validation
@@ -91,9 +91,7 @@ class TestNeuralChunkerInitialization:
         chunker_class = NeuralChunker.__new__(NeuralChunker)
         # Test availability check
         try:
-            import importlib.util
-
-            if importlib.util.find_spec("transformers") is not None:
+            if importutil.find_spec("transformers") is not None:
                 assert chunker_class._is_available() is True
             else:
                 assert chunker_class._is_available() is False
@@ -108,9 +106,7 @@ class TestNeuralChunkerAvailability:
         """Test _is_available method."""
         chunker_class = NeuralChunker.__new__(NeuralChunker)
         try:
-            import importlib.util
-
-            if importlib.util.find_spec("transformers") is not None:
+            if importutil.find_spec("transformers") is not None:
                 assert chunker_class._is_available() is True
             else:
                 assert chunker_class._is_available() is False
@@ -253,20 +249,9 @@ class TestNeuralChunkerEdgeCases:
 
     def test_chunk_empty_text(self, neural_chunker):
         """Test chunking empty text."""
-        try:
-            result = neural_chunker.chunk("")
-
-            assert isinstance(result, list)
-            assert len(result) >= 1
-            # For empty text, the result should contain the empty string
-            reconstructed = "".join(chunk.text for chunk in result)
-            assert reconstructed == ""
-        except Exception as e:
-            # Some tokenizers may not handle empty strings well
-            if "index out of range" in str(e).lower():
-                pytest.skip("Tokenizer does not handle empty text well")
-            else:
-                raise
+        result = neural_chunker.chunk("")
+        assert isinstance(result, list)
+        assert not result
 
     def test_chunk_single_character(self, neural_chunker):
         """Test chunking single character."""

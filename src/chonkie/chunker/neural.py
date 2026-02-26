@@ -6,7 +6,7 @@ It trains an encoder style model on the task of token-classification (think: NER
 """
 
 import importlib.util as importutil
-from typing import TYPE_CHECKING, Any, Optional, Union
+from typing import Any, Optional, Union
 
 from chonkie.logger import get_logger
 from chonkie.pipeline import chunker
@@ -15,31 +15,6 @@ from chonkie.types import Chunk
 from .base import BaseChunker
 
 logger = get_logger(__name__)
-
-if TYPE_CHECKING:
-    try:
-        from transformers import PreTrainedTokenizerFast, pipeline
-    except ImportError:
-
-        class PreTrainedTokenizerFast:  # type: ignore
-            """Stub class for transformers PreTrainedTokenizerFast when not available."""
-
-            pass
-
-        def pipeline(*args, **kwargs):  # type: ignore
-            """Stub function for transformers pipeline when not available."""
-            pass
-
-# TODO: Add a check to see if the model is supported
-
-# TODO: Add try/except block to catch if the model is not loaded correctly
-
-# TODO: Add a list of supported models to choose from
-
-# TODO: Allow for loading a custom model by passing in the model + tokenizer directly
-
-# TODO: Add stride parameters for the pipeline (also does the pipeline do it sequentially or in parallel?)
-# If they do it sequentially, then we are making a huge mistake by not batching and processing multiple texts at once.
 
 
 @chunker("neural")
@@ -89,15 +64,23 @@ class NeuralChunker(BaseChunker):
           stride: The stride to use for the chunker.
 
         """
-        # Lazily load the dependencies
-        self._import_dependencies()
-
+        try:
+            from transformers import (
+                AutoModelForTokenClassification,
+                AutoTokenizer,
+                PreTrainedTokenizerFast,
+                pipeline,
+            )
+        except ImportError as e:
+            raise ImportError(
+                "transformers is not installed. Please install it with `pip install chonkie[neural]`.",
+            ) from e
         # Initialize the tokenizer to pass in to the parent class
         try:
             if isinstance(tokenizer, str):
-                tokenizer = AutoTokenizer.from_pretrained(tokenizer)  # type: ignore
+                tokenizer = AutoTokenizer.from_pretrained(tokenizer)
             elif tokenizer is None and isinstance(model, str):
-                tokenizer = AutoTokenizer.from_pretrained(model)  # type: ignore
+                tokenizer = AutoTokenizer.from_pretrained(model)
             elif isinstance(tokenizer, PreTrainedTokenizerFast):
                 tokenizer = tokenizer
             else:
@@ -105,7 +88,7 @@ class NeuralChunker(BaseChunker):
                     "Invalid tokenizer provided. Please provide a string or a transformers.PreTrainedTokenizerFast object.",
                 )
         except Exception as e:
-            raise ValueError(f"Error initializing tokenizer: {e}")
+            raise ValueError(f"Error initializing tokenizer: {e}") from e
 
         # Initialize the Parent class with the tokenizer
         super().__init__(tokenizer)  # type: ignore[arg-type]
@@ -120,9 +103,8 @@ class NeuralChunker(BaseChunker):
                     )
                 # Initialize the model
                 self.model = AutoModelForTokenClassification.from_pretrained(
-                    model,
-                    device_map=device_map,
-                )  # type: ignore
+                    model, device_map=device_map
+                )
                 # Set the stride
                 stride = self.SUPPORTED_MODEL_STRIDES[model] if stride is None else stride
             elif model is not None and "transformers" in str(type(model)):
@@ -135,7 +117,7 @@ class NeuralChunker(BaseChunker):
                     "Invalid model provided. Please provide a string or a transformers.AutoModelForTokenClassification object.",
                 )
         except Exception as e:
-            raise ValueError(f"Error initializing model: {e}")
+            raise ValueError(f"Error initializing model: {e}") from e
 
         # Set the attributes
         self.min_characters_per_chunk = min_characters_per_chunk
@@ -149,35 +131,17 @@ class NeuralChunker(BaseChunker):
                 device_map=device_map,
                 aggregation_strategy="simple",
                 stride=stride,
-            )  # type: ignore
+            )
         except Exception as e:
-            raise ValueError(f"Error initializing pipeline: {e}")
+            raise ValueError(f"Error initializing pipeline: {e}") from e
 
         # Set the _use_multiprocessing value to be False
         self._use_multiprocessing = False
 
-    def _is_available(self) -> bool:
+    @classmethod
+    def _is_available(cls) -> bool:
         """Check if the dependencies are installed."""
         return importutil.find_spec("transformers") is not None
-
-    def _import_dependencies(self) -> None:
-        """Import the dependencies."""
-        if self._is_available():
-            global \
-                AutoTokenizer, \
-                AutoModelForTokenClassification, \
-                pipeline, \
-                PreTrainedTokenizerFast
-            from transformers import (
-                AutoModelForTokenClassification,
-                AutoTokenizer,
-                PreTrainedTokenizerFast,
-                pipeline,
-            )
-        else:
-            raise ImportError(
-                "transformers is not installed. Please install it with `pip install chonkie[neural]`.",
-            )
 
     def _get_splits(self, response: list[dict[str, Any]], text: str) -> list[str]:
         """Get the text splits from the model."""

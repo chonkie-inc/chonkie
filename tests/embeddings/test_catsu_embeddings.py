@@ -66,21 +66,6 @@ def sample_texts() -> List[str]:
     ]
 
 
-@pytest.mark.skipif(
-    not CATSU_AVAILABLE,
-    reason="Skipping test because Catsu is not installed",
-)
-def test_catsu_not_available_error():
-    """Test that proper error is raised when Catsu is not available."""
-    with patch("chonkie.embeddings.catsu.importutil.find_spec", return_value=None):
-        with pytest.raises(ImportError, match="catsu package is not available"):
-            CatsuEmbeddings(model="voyage-3")
-
-
-@pytest.mark.skipif(
-    not CATSU_AVAILABLE,
-    reason="Skipping test because Catsu is not installed",
-)
 def test_initialization_with_model_name(embedding_model: CatsuEmbeddings) -> None:
     """Test that CatsuEmbeddings initializes with a model name."""
     assert embedding_model.model == "voyage-3"
@@ -105,10 +90,6 @@ def test_initialization_with_api_keys(mock_catsu_client) -> None:
         assert call_kwargs["api_keys"] == api_keys
 
 
-@pytest.mark.skipif(
-    not CATSU_AVAILABLE,
-    reason="Skipping test because Catsu is not installed",
-)
 def test_initialization_with_config_params(mock_catsu_client) -> None:
     """Test that CatsuEmbeddings initializes with custom config parameters."""
     with patch("catsu.Client", return_value=mock_catsu_client) as mock_client_class:
@@ -128,10 +109,6 @@ def test_initialization_with_config_params(mock_catsu_client) -> None:
         assert embeddings._batch_size == 64
 
 
-@pytest.mark.skipif(
-    not CATSU_AVAILABLE,
-    reason="Skipping test because Catsu is not installed",
-)
 def test_embed_single_text(embedding_model: CatsuEmbeddings, sample_text: str) -> None:
     """Test that CatsuEmbeddings correctly embeds a single text."""
     embedding = embedding_model.embed(sample_text)
@@ -163,10 +140,6 @@ def test_embed_batch_texts(embedding_model: CatsuEmbeddings, sample_texts: List[
     assert all(len(embedding) == 1024 for embedding in embeddings)
 
 
-@pytest.mark.skipif(
-    not CATSU_AVAILABLE,
-    reason="Skipping test because Catsu is not installed",
-)
 def test_embed_batch_empty_list(embedding_model: CatsuEmbeddings) -> None:
     """Test that CatsuEmbeddings handles empty batch correctly."""
     embeddings = embedding_model.embed_batch([])
@@ -174,10 +147,6 @@ def test_embed_batch_empty_list(embedding_model: CatsuEmbeddings) -> None:
     assert len(embeddings) == 0
 
 
-@pytest.mark.skipif(
-    not CATSU_AVAILABLE,
-    reason="Skipping test because Catsu is not installed",
-)
 def test_embed_batch_with_batching(embedding_model: CatsuEmbeddings) -> None:
     """Test that CatsuEmbeddings correctly handles batching."""
     # Set small batch size
@@ -203,13 +172,10 @@ def test_embed_batch_with_batching(embedding_model: CatsuEmbeddings) -> None:
     assert embedding_model.client.embed.call_count >= 3
 
 
-@pytest.mark.skipif(
-    not CATSU_AVAILABLE,
-    reason="Skipping test because Catsu is not installed",
-)
 def test_embed_batch_fallback_on_error(
     embedding_model: CatsuEmbeddings,
     sample_texts: List[str],
+    caplog,
 ) -> None:
     """Test that CatsuEmbeddings falls back to individual embeds on batch failure."""
     # Mock batch embed to fail, individual embeds to succeed
@@ -231,16 +197,11 @@ def test_embed_batch_fallback_on_error(
 
     embedding_model.client.embed.side_effect = mock_embed_side_effect
 
-    with pytest.warns(UserWarning, match="Batch embedding failed"):
-        embeddings = embedding_model.embed_batch(sample_texts)
-
+    embeddings = embedding_model.embed_batch(sample_texts)
+    assert "Batch embedding failed" in caplog.text
     assert len(embeddings) == len(sample_texts)
 
 
-@pytest.mark.skipif(
-    not CATSU_AVAILABLE,
-    reason="Skipping test because Catsu is not installed",
-)
 def test_similarity(embedding_model: CatsuEmbeddings, sample_texts: List[str]) -> None:
     """Test that CatsuEmbeddings correctly calculates similarity between two embeddings."""
     # Create two embeddings
@@ -253,20 +214,12 @@ def test_similarity(embedding_model: CatsuEmbeddings, sample_texts: List[str]) -
     assert -1.0 <= similarity_score <= 1.0  # Cosine similarity range
 
 
-@pytest.mark.skipif(
-    not CATSU_AVAILABLE,
-    reason="Skipping test because Catsu is not installed",
-)
 def test_dimension_property(embedding_model: CatsuEmbeddings) -> None:
     """Test that CatsuEmbeddings correctly returns the dimension property."""
     assert isinstance(embedding_model.dimension, int)
     assert embedding_model.dimension == 1024
 
 
-@pytest.mark.skipif(
-    not CATSU_AVAILABLE,
-    reason="Skipping test because Catsu is not installed",
-)
 def test_dimension_property_fallback(mock_catsu_client) -> None:
     """Test that dimension property falls back to test embedding if not in catalog."""
     # Mock list_models to return empty list
@@ -284,10 +237,6 @@ def test_dimension_property_fallback(mock_catsu_client) -> None:
         assert embeddings.dimension == 512
 
 
-@pytest.mark.skipif(
-    not CATSU_AVAILABLE,
-    reason="Skipping test because Catsu is not installed",
-)
 def test_get_tokenizer(embedding_model: CatsuEmbeddings) -> None:
     """Test that CatsuEmbeddings returns a tokenizer wrapper."""
     tokenizer = embedding_model.get_tokenizer()
@@ -297,10 +246,6 @@ def test_get_tokenizer(embedding_model: CatsuEmbeddings) -> None:
     assert tokenizer.provider == "voyageai"
 
 
-@pytest.mark.skipif(
-    not CATSU_AVAILABLE,
-    reason="Skipping test because Catsu is not installed",
-)
 def test_tokenizer_count(embedding_model: CatsuEmbeddings, sample_text: str) -> None:
     """Test that tokenizer wrapper correctly counts tokens."""
     tokenizer = embedding_model.get_tokenizer()
@@ -310,24 +255,15 @@ def test_tokenizer_count(embedding_model: CatsuEmbeddings, sample_text: str) -> 
     assert token_count == 10  # From mock
 
 
-@pytest.mark.skipif(
-    not CATSU_AVAILABLE,
-    reason="Skipping test because Catsu is not installed",
-)
-def test_tokenizer_encode_warning(embedding_model: CatsuEmbeddings) -> None:
+def test_tokenizer_encode_warning(embedding_model: CatsuEmbeddings, caplog) -> None:
     """Test that tokenizer encode method warns about unsupported functionality."""
     tokenizer = embedding_model.get_tokenizer()
 
-    with pytest.warns(UserWarning, match="Token encoding not supported"):
-        tokens = tokenizer.encode("test text")
-
+    tokens = tokenizer.encode("test text")
     assert tokens == []
+    assert "Token encoding not supported" in caplog.text
 
 
-@pytest.mark.skipif(
-    not CATSU_AVAILABLE,
-    reason="Skipping test because Catsu is not installed",
-)
 def test_repr(embedding_model: CatsuEmbeddings) -> None:
     """Test that CatsuEmbeddings has a proper string representation."""
     repr_str = repr(embedding_model)
@@ -349,10 +285,6 @@ def test_repr_without_provider(mock_catsu_client) -> None:
         assert "voyage-3" in repr_str
 
 
-@pytest.mark.skipif(
-    not CATSU_AVAILABLE,
-    reason="Skipping test because Catsu is not installed",
-)
 def test_call_method_single_text(embedding_model: CatsuEmbeddings, sample_text: str) -> None:
     """Test that CatsuEmbeddings can be called directly with a single text."""
     embedding = embedding_model(sample_text)
@@ -360,10 +292,6 @@ def test_call_method_single_text(embedding_model: CatsuEmbeddings, sample_text: 
     assert embedding.ndim == 1
 
 
-@pytest.mark.skipif(
-    not CATSU_AVAILABLE,
-    reason="Skipping test because Catsu is not installed",
-)
 def test_call_method_batch(embedding_model: CatsuEmbeddings, sample_texts: List[str]) -> None:
     """Test that CatsuEmbeddings can be called directly with a list of texts."""
     # Mock the client to return correct number of embeddings

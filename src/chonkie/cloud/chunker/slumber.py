@@ -3,7 +3,7 @@
 import os
 from typing import Any, Optional, Union, cast
 
-import requests
+import httpx
 
 from chonkie.cloud.file import FileManager
 from chonkie.types import Chunk
@@ -62,9 +62,9 @@ class SlumberChunker(CloudChunker):
 
         # Check if the API is up
         try:
-            response = requests.get(f"{self.BASE_URL}/")
-            response.raise_for_status()  # Raises an HTTPError for bad responses (4XX or 5XX)
-        except requests.exceptions.RequestException as error:
+            response = httpx.get(f"{self.BASE_URL}/")
+            response.raise_for_status()  # Raises an HTTPStatusError for bad responses (4XX or 5XX)
+        except httpx.HTTPError as error:
             raise ValueError(
                 "Oh no! You caught Chonkie at a bad time. It seems to be down or unreachable."
                 + " Please try again in a short while."
@@ -77,7 +77,7 @@ class SlumberChunker(CloudChunker):
     def chunk(
         self,
         text: Optional[Union[str, list[str]]] = None,
-        file: Optional[str] = None,
+        file: str | os.PathLike | None = None,
     ) -> Union[list[Chunk], list[list[Chunk]]]:
         """Chunk the text or file into a list of chunks using the Slumber strategy via API.
 
@@ -120,13 +120,13 @@ class SlumberChunker(CloudChunker):
             )
 
         try:
-            response = requests.post(
+            response = httpx.post(
                 f"{self.BASE_URL}/{self.VERSION}/chunk/slumber",
                 json=payload,
                 headers={"Authorization": f"Bearer {self.api_key}"},
             )
-            response.raise_for_status()  # Raises an HTTPError for bad responses
-        except requests.exceptions.RequestException as e:
+            response.raise_for_status()  # Raises an HTTPStatusError for bad responses
+        except httpx.HTTPError as e:
             # More specific error message including potential response text for debugging
             error_message = (
                 "Oh no! The Chonkie API returned an error while trying to chunk with Slumber."
@@ -178,7 +178,7 @@ class SlumberChunker(CloudChunker):
     def __call__(
         self,
         text: Optional[Union[str, list[str]]] = None,
-        file: Optional[str] = None,
+        file: str | os.PathLike | None = None,
     ) -> Union[list[Chunk], list[list[Chunk]]]:
         """Call the SlumberChunker."""
         return self.chunk(text=text, file=file)

@@ -156,10 +156,12 @@ The RecursiveChunker returns chunks as `Chunk` objects:
 ```python Python
 @dataclass
 class Chunk:
-    text: str           # The chunk text
-    start_index: int    # Starting position in original text
-    end_index: int      # Ending position in original text
-    token_count: int    # Number of tokens in Chunk
+    text: str                                           # The chunk text
+    start_index: int                                    # Starting position in original text
+    end_index: int                                      # Ending position in original text
+    token_count: int                                    # Number of tokens in chunk
+    context: Optional[str] = None                       # Optional overlap context text
+    embedding: Union[list[float], "np.ndarray", None] = None  # Optional embedding vector
 ```
 ```javascript JavaScript
 class Chunk {
@@ -193,7 +195,7 @@ class RecursiveRules:
 class RecursiveLevel:
 delimiters: Optional[Union[str, list[str]]]
 whitespace: bool = False
-include_delim: Optional[Literal["prev", "next"]]) # Whether to include the delimiter at all, or in the previous chunk, or the next chunk.
+include_delim: Optional[Literal["prev", "next"]]) # Whether to include the delimiter in the previous chunk or the next chunk.
 
 ````
 ```javascript JavaScript
@@ -204,7 +206,7 @@ class RecursiveRules {
 class RecursiveLevel {
     delimiters?: string | string[];
     whitespace: boolean;
-    includeDelim: 'prev' | 'next' | 'none';
+    includeDelim: 'prev' | 'next';
 }
 ````
 

@@ -3,7 +3,7 @@
 import os
 from typing import Any, Literal, Optional, Union, cast
 
-import requests
+import httpx
 
 from .base import BaseRefinery
 
@@ -30,7 +30,7 @@ class OverlapRefinery(BaseRefinery):
             mode: The mode to use.
             method: The method to use.
             recipe: The name of the recursive rules recipe to use. Find all available recipes at https://hf.co/datasets/chonkie-ai/recipes
-            lang: The language of the recipe. Please make sure a valide recipe with the given `recipe` value and `lang` values exists on https://hf.co/datasets/chonkie-ai/recipes
+            lang: The language of the recipe. Please make sure a valid recipe with the given `recipe` value and `lang` values exists on https://hf.co/datasets/chonkie-ai/recipes
             merge: Whether to merge the chunks.
             api_key: Your Chonkie Cloud API Key.
 
@@ -81,7 +81,7 @@ class OverlapRefinery(BaseRefinery):
         }
 
         # Make the request to the Chonkie API
-        response = requests.post(
+        response = httpx.post(
             f"{self.BASE_URL}/{self.VERSION}/refine/overlap",
             json=payload,
             headers={"Authorization": f"Bearer {self.api_key}"},

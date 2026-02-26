@@ -391,7 +391,7 @@ There are two main strategies for chunking:
 1. **Window Strategy**: This strategy compares each sentence to the previous one (or within a small window) to determine if they are semantically similar. If they are, they are grouped together. Since it only compares a pre-defined window of sentences every time, it is easy to batch embed the (window, sentence) pairs and compare their similarity values.
 2. **Cumulative Strategy**: This strategy compares each sentence to the mean embedding of the current group. If the sentence is more similar to the mean than the threshold, it is added to the group. Otherwise, a new group is started. This is much more computationally expensive than the window strategy, but can at times result in better chunks.
 
-For both of the above strategies, in `auto` mode, we determine the `threshold` value based on a binary search over the range of values that keeps the median `chunk_size` below the `chunk_size` paramater and above the `min_chunk_size` parameter. While this may not always result in the ideal chunks, it does provide a good starting point. Hopefully, this will be improved in future versions of Chonkie.
+For both of the above strategies, in `auto` mode, we determine the `threshold` value based on a binary search over the range of values that keeps the median `chunk_size` below the `chunk_size` parameter and above the `min_chunk_size` parameter. While this may not always result in the ideal chunks, it does provide a good starting point. Hopefully, this will be improved in future versions of Chonkie.
 
 **Parameters:**
 

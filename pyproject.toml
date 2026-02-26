@@ -1,11 +1,11 @@
 [build-system]
-requires = ["setuptools>=45", "wheel", "cython>=3.0.0"]
+requires = ["setuptools>=45", "wheel"]
 build-backend = "setuptools.build_meta"
 
 
 [project]
 name = "chonkie"
-version = "1.5.0"
+version = "1.5.6"
 description = "🦛 CHONK your texts with Chonkie ✨ - The no-nonsense chunking library"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -45,20 +45,24 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Information Analysis",
     "Topic :: Text Processing :: Linguistic",
 ]
-dependencies = ["tqdm>=4.64.0", "numpy>=2.0.0"]
+dependencies = ["tqdm>=4.64.0", "numpy>=2.0.0", "chonkie-core>=0.8.0", "tenacity>=8.0.0"]
 
 [project.urls]
 Homepage = "https://github.com/chonkie-inc/chonkie"
 Documentation = "https://docs.chonkie.ai"
 "Bug Tracker" = "https://github.com/chonkie-inc/chonkie/issues"
 
+[project.scripts]
+chonkie = "chonkie.cli:main"
+
 [project.optional-dependencies]
 # Optional dependencies for the utils
 hub = ["huggingface-hub>=0.24.0", "jsonschema>=4.23.0"]
 viz = ["rich>=13.0.0"]
+cli = ["typer>=0.9.0"]
 
 # Optional dependencies for table chef
-table  = ["pandas", "tabulate", "openpyxl"]
+table = ["pandas", "tabulate", "openpyxl"]
 
 # Optional dependencies for tokenizers
 tokenizers = ["tokenizers>=0.16.0"]
@@ -76,16 +80,8 @@ neural = ["transformers>=4.0.0", "torch>=2.0.0, <3.0"]
 
 model2vec = ["tokenizers>=0.16.0", "model2vec>=0.7.0", "numpy>=2.0.0, <3.0"]
 
-st = [
-    "tokenizers>=0.16.0",
-    "sentence-transformers>=3.0.0",
-    "accelerate>=1.6.0",
-]
-openai = [
-    "tiktoken>=0.5.0",
-    "openai>=1.0.0",
-    "pydantic>=2.0.0",
-]
+st = ["tokenizers>=0.16.0", "sentence-transformers>=3.0.0", "accelerate>=1.6.0"]
+openai = ["tiktoken>=0.5.0", "openai>=1.0.0", "pydantic>=2.0.0"]
 
 semantic = ["tokenizers>=0.16.0", "model2vec>=0.3.0"]
 
@@ -96,6 +92,8 @@ azure-openai = [
     "openai>=1.0.0",
     "pydantic>=2.0.0",
 ]
+groq = ["pydantic>=2.0.0", "groq>=0.4.0"]
+cerebras = ["pydantic>=2.0.0", "cerebras-cloud-sdk>=1.0.0"]
 voyageai = ["tokenizers>=0.16.0", "voyageai>=0.3.2"]
 cohere = ["tokenizers>=0.16.0", "cohere>=5.13.0"]
 jina = ["tokenizers>=0.16.0"]
@@ -105,7 +103,7 @@ litellm = ["litellm>=1.0.0", "tiktoken>=0.5.0", "tokenizers>=0.16.0"]
 # Optional dependencies for the friends
 chroma = ["chromadb>=1.0.0"]
 qdrant = ["qdrant-client>=1.0.0"]
-tpuf = ["turbopuffer[fast]>=0.2.0"]
+tpuf = ["turbopuffer~=1.0"]
 pgvector = ["vecs>=0.4.0"]
 weaviate = ["weaviate-client>=4.16.7"]
 datasets = ["datasets>=4.0.0"]
@@ -119,6 +117,7 @@ genie = ["pydantic>=2.0.0", "google-genai>=1.0.0"]
 
 # All dependencies
 all = [
+    "httpx",
     "tokenizers>=0.16.0",
     "tiktoken>=0.5.0",
     "rich>=13.0.0",
@@ -135,11 +134,13 @@ all = [
     "jsonschema>=4.23.0",
     "pydantic>=2.0.0",
     "google-genai>=1.0.0",
+    "groq>=0.4.0",
+    "cerebras-cloud-sdk>=1.0.0",
     "transformers>=4.0.0",
     "torch>=2.0.0, <3.0",
     "chromadb>=1.0.0",
     "qdrant-client>=1.0.0",
-    "turbopuffer[fast]>=0.2.0",
+    "turbopuffer~=1.0",
     "weaviate-client>=4.16.7",
     "azure-identity>=1.23.0",
     "pinecone",
@@ -151,7 +152,9 @@ all = [
     "openpyxl",
     "elasticsearch>=8.0.0",
     "pymilvus>=2.1.0",
-    "catsu>=0.0.1"
+    "catsu>=0.0.1",
+    "litellm>=1.0.0",
+    "datasets>=1.14.0",
 ]
 dev = [
     "datasets>=1.14.0",
@@ -161,12 +164,18 @@ dev = [
     "pytest-xdist>=2.5.0",
     "pytest-asyncio>=0.26.0",
     "coverage",
-    "ruff>=0.0.265",
+    "ruff>=0.13.3",
     "ty",
-    "cython>=3.0.0",
     "pandas",
     "tabulate",
     "openpyxl",
+    "uv>=0.9.18",
+    "requests-cache>=1.2.1",
+]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.13.3",
 ]
 
 [tool.pytest.ini_options]
@@ -192,30 +201,27 @@ packages = [
     "chonkie.experimental",
     "chonkie.fetcher",
     "chonkie.chef",
-    "chonkie.pipeline"
+    "chonkie.pipeline",
+    "chonkie.cli",
 ]
 
 [tool.setuptools.package-data]
 "chonkie.chunker.c_extensions" = ["*.pyx", "*.pxd", "*.c", "*.so"]
 
-[[tool.setuptools.ext-modules]]
-name = "chonkie.chunker.c_extensions.split"
-sources = ["src/chonkie/chunker/c_extensions/split.pyx"]
-
-[[tool.setuptools.ext-modules]]
-name = "chonkie.chunker.c_extensions.merge"
-sources = ["src/chonkie/chunker/c_extensions/merge.pyx"]
-
-[[tool.setuptools.ext-modules]]
-name = "chonkie.chunker.c_extensions.savgol"
-sources = ["src/chonkie/chunker/c_extensions/savgol.pyx"]
-
 [tool.ruff]
 line-length = 99
 exclude = ["*.ipynb"]
-lint.select = ["F", "I", "D"]
+lint.select = ["B904", "F", "I", "D"]
 lint.ignore = ["D211", "D213", "D203"]
+lint.per-file-ignores = {"tests/**" = ["D102", "D103"]}
 
 [tool.ruff.format]
 preview = true
 indent-style = "space"
+
+[tool.mypy]
+disallow_untyped_defs = true
+ignore_missing_imports = true
+no_implicit_optional = true
+check_untyped_defs = true
+show_error_codes = true

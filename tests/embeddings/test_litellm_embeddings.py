@@ -1,6 +1,7 @@
 """Test suite for LiteLLMEmbeddings."""
 
 import os
+import sys
 from typing import List
 from unittest.mock import MagicMock, patch
 
@@ -167,8 +168,7 @@ def test_is_available() -> None:
     """Test that LiteLLMEmbeddings correctly checks if it is available."""
     with patch.object(LiteLLMEmbeddings, "_detect_dimension", return_value=1536):
         with patch.object(LiteLLMEmbeddings, "_initialize_tokenizer", return_value=MagicMock()):
-            embeddings = LiteLLMEmbeddings()
-            assert embeddings._is_available() is True
+            assert LiteLLMEmbeddings._is_available() is True
 
 
 @pytest.mark.skipif(
@@ -228,7 +228,7 @@ def test_cohere_model(mock_embed) -> None:
 
 def test_import_error_when_litellm_not_available() -> None:
     """Test that appropriate error is raised when litellm is not available."""
-    with patch("importlib.util.find_spec", return_value=None):
+    with patch.dict(sys.modules, litellm=None):
         with pytest.raises(ImportError, match="litellm package is not available"):
             LiteLLMEmbeddings()
 

@@ -5,8 +5,10 @@ and calculates window embeddings directly rather than approximating them from se
 It uses Savitzky-Golay filtering for smoother boundary detection.
 """
 
+import os
 from typing import Any, Literal, Optional, Union
 
+import chonkie_core
 import numpy as np
 
 from chonkie.embeddings import AutoEmbeddings, BaseEmbeddings
@@ -18,21 +20,6 @@ from chonkie.utils import Hubbie
 from .base import BaseChunker
 
 logger = get_logger(__name__)
-
-# Import the unified split function
-try:
-    from .c_extensions.split import split_text
-
-    SPLIT_AVAILABLE = True
-except ImportError:
-    SPLIT_AVAILABLE = False
-
-# Import the optimized Savitzky-Golay filter (pure C implementation)
-from .c_extensions.savgol import (
-    filter_split_indices,
-    find_local_minima_interpolated,
-    windowed_cross_similarity,
-)
 
 
 @chunker("semantic")
@@ -130,7 +117,7 @@ class SemanticChunker(BaseChunker):
         cls,
         name: str = "default",
         lang: Optional[str] = "en",
-        path: Optional[str] = None,
+        path: str | os.PathLike | None = None,
         embedding_model: Union[str, BaseEmbeddings] = "minishlab/potion-base-32M",
         threshold: float = 0.8,
         chunk_size: int = 2048,
@@ -185,7 +172,7 @@ class SemanticChunker(BaseChunker):
         )
 
     def _split_sentences(self, text: str) -> list[str]:
-        """Fast sentence splitting using unified split function when available.
+        """Fast sentence splitting using chonkie-core.
 
         This method is faster than using regex for sentence splitting and is more accurate than using the spaCy sentence tokenizer.
 
@@ -196,57 +183,40 @@ class SemanticChunker(BaseChunker):
             List of sentences
 
         """
-        if SPLIT_AVAILABLE:
-            # Use optimized Cython split function
-            return list(
-                split_text(
-                    text=text,
-                    delim=self.delim,
-                    include_delim=self.include_delim,
-                    min_characters_per_segment=self.min_characters_per_sentence,
-                    whitespace_mode=False,
-                    character_fallback=True,
-                ),
+        # Normalize delimiters to a list
+        if isinstance(self.delim, str):
+            delimiters = [self.delim]
+        else:
+            delimiters = self.delim
+
+        text_bytes = text.encode("utf-8")
+        include_mode = self.include_delim or "prev"
+
+        # Check if we have multi-byte delimiters
+        has_multibyte = any(len(d) > 1 for d in delimiters)
+
+        if has_multibyte:
+            # Use split_pattern_offsets for multi-byte patterns
+            patterns = [d.encode("utf-8") for d in delimiters]
+            offsets = chonkie_core.split_pattern_offsets(
+                text_bytes,
+                patterns=patterns,
+                include_delim=include_mode,
+                min_chars=self.min_characters_per_sentence,
             )
         else:
-            # Fallback to original Python implementation
-            t = text
-            for c in self.delim:
-                if self.include_delim == "prev":
-                    t = t.replace(c, c + self.sep)
-                elif self.include_delim == "next":
-                    t = t.replace(c, self.sep + c)
-                else:
-                    t = t.replace(c, self.sep)
+            # Use faster split_offsets for single-byte delimiters
+            delim_bytes = "".join(delimiters).encode("utf-8")
+            offsets = chonkie_core.split_offsets(
+                text_bytes,
+                delimiters=delim_bytes,
+                include_delim=include_mode,
+                min_chars=self.min_characters_per_sentence,
+            )
 
-            # Initial split
-            splits = [s for s in t.split(self.sep) if s != ""]
-
-            # Combine short splits with previous sentence
-            current = ""
-            sentences = []
-            for s in splits:
-                # If the split is short, add to current and if long add to sentences
-                if len(s) < self.min_characters_per_sentence:
-                    current += s
-                elif current:
-                    current += s
-                    sentences.append(current)
-                    current = ""
-                else:
-                    sentences.append(s)
-
-                # At any point if the current sentence is longer than the min_characters_per_sentence,
-                # add it to the sentences
-                if len(current) >= self.min_characters_per_sentence:
-                    sentences.append(current)
-                    current = ""
-
-            # If there is a current split, add it to the sentences
-            if current:
-                sentences.append(current)
-
-            return sentences
+        # Convert byte offsets to strings
+        splits = [text_bytes[start:end].decode("utf-8") for start, end in offsets]
+        return [s for s in splits if s]
 
     def _prepare_sentences(self, text: str) -> list[Sentence]:
         """Prepare the sentences for chunking."""
@@ -300,13 +270,12 @@ class SemanticChunker(BaseChunker):
             # If data is too small for filter, return boundaries only
             return []
 
-        # Use optimized Cython implementation with interpolation
-        minima_indices, minima_values = find_local_minima_interpolated(
+        # Use optimized Rust implementation with interpolation
+        minima_indices, minima_values = chonkie_core.find_local_minima_interpolated(
             similarities,
             window_size=self.filter_window,
             poly_order=self.filter_polyorder,
             tolerance=self.filter_tolerance,
-            use_float32=False,  # Use float64 for consistency with embeddings
         )
 
         # Handle empty case
@@ -314,13 +283,13 @@ class SemanticChunker(BaseChunker):
             return []
 
         # Filter by percentile and minimum distance
-        filtered_indices, _ = filter_split_indices(
+        filtered_indices, _ = chonkie_core.filter_split_indices(
             minima_indices,
             minima_values,
             self.threshold,
             self.min_sentences_per_chunk,
         )
-        split_indices_list = filtered_indices  # Already a list from filter_split_indices
+        split_indices_list = filtered_indices.tolist()  # Convert numpy array to list
 
         # Add boundaries with window offset
         return (
@@ -362,12 +331,12 @@ class SemanticChunker(BaseChunker):
         """
         # Get embeddings for all sentences
         embeddings = self.embedding_model.embed_batch([s.text for s in sentences])
-        # Convert embeddings to list of lists for the C extension
-        embeddings_list = [
-            emb.tolist() if hasattr(emb, "tolist") else list(emb) for emb in embeddings
-        ]
-        result = windowed_cross_similarity(embeddings_list, self.similarity_window * 2 + 1)
-        return np.asarray(result)
+        # Stack embeddings into a 2D numpy array for the Rust extension
+        embeddings_array = np.stack(embeddings, axis=0)
+        result = chonkie_core.windowed_cross_similarity(
+            embeddings_array, self.similarity_window * 2 + 1
+        )
+        return result
 
     def _skip_and_merge(self, groups: list[list[Sentence]]) -> list[list[Sentence]]:
         """Merge similar groups considering skip window.

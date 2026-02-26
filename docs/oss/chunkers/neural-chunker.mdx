@@ -65,7 +65,7 @@ chunker = NeuralChunker(
 </ParamField>
 
 <ParamField path="stride" type="Optional[int]" default="None">
-  Stride to use for the chunker. Will automcatically select appropriate stride
+  Stride to use for the chunker. Will automatically select appropriate stride
   for the model if not specified.
 </ParamField>
 
@@ -118,21 +118,14 @@ NeuralChunker returns chunks as `Chunk` objects.
 
 ```python
 from dataclasses import dataclass
-from typing import Optional
-
-# Definition similar to TokenChunker's return type
-@dataclass
-class Context:
-    text: str
-    token_count: int
-    start_index: Optional[int] = None
-    end_index: Optional[int] = None
+from typing import Optional, Union
 
 @dataclass
 class Chunk:
-    text: str           # The chunk text
-    start_index: int    # Starting position in original text
-    end_index: int      # Ending position in original text
-    token_count: int    # Number of tokens in chunk (calculated based on the tokenizer used)
-    context: Optional[Context] = None # Contextual information (if any)
+    text: str                                           # The chunk text
+    start_index: int                                    # Starting position in original text
+    end_index: int                                      # Ending position in original text
+    token_count: int                                    # Number of tokens in chunk
+    context: Optional[str] = None                       # Optional overlap context text
+    embedding: Union[list[float], "np.ndarray", None] = None  # Optional embedding vector
 ```

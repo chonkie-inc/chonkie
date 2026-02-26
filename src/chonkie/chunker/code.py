@@ -4,7 +4,6 @@ This module provides a CodeChunker class for splitting code into chunks of a spe
 
 """
 
-import warnings
 from bisect import bisect_left
 from itertools import accumulate
 from typing import TYPE_CHECKING, Any, Literal, Union
@@ -20,14 +19,7 @@ logger = get_logger(__name__)
 if TYPE_CHECKING:
     from typing import Any
 
-    try:
-        from tree_sitter import Node
-    except ImportError:
-
-        class Node:  # type: ignore
-            """Stub class for tree_sitter Node when not available."""
-
-            pass
+    from tree_sitter import Node, Tree
 
 
 @chunker("code")
@@ -62,9 +54,6 @@ class CodeChunker(BaseChunker):
             ValueError: If the language is not supported.
 
         """
-        # Lazy import dependencies to avoid importing them when not needed
-        self._import_dependencies()
-
         # Initialize the base chunker
         super().__init__(tokenizer=tokenizer)
 
@@ -83,43 +72,27 @@ class CodeChunker(BaseChunker):
         if language == "auto":
             # Set a warning to the user that the language is auto and this might
             # effect the performance of the chunker.
-            warnings.warn(
+            logger.warning(
                 "The language is set to `auto`. This would adversely affect the performance of the chunker. "
-                + "Consider setting the `language` parameter to a specific language to improve performance.",
+                "Consider setting the `language` parameter to a specific language to improve performance.",
             )
+            from magika import Magika
 
             # Set the language to auto and initialize the Magika instance
-            self.magika = Magika()  # type: ignore
+            self.magika = Magika()
             self.parser = None
         else:
-            self.parser = get_parser(language)  # type: ignore
+            from tree_sitter_language_pack import get_parser
+
+            self.parser = get_parser(language)  # type: ignore[arg-type]
 
         # Set the use_multiprocessing flag
         self._use_multiprocessing = False
 
-    def _import_dependencies(self) -> None:
-        """Import the dependencies for the CodeChunker."""
-        # Lazy import dependencies to avoid importing them when not needed
-        try:
-            # Set the global variables
-            global Node, Parser, Tree
-            global get_parser, SupportedLanguage, Magika
-
-            # Import the dependencies
-            from magika import Magika
-            from tree_sitter import Node, Parser, Tree
-            from tree_sitter_language_pack import SupportedLanguage, get_parser
-        except ImportError:
-            raise ImportError(
-                "One or more of the following dependencies are not installed: "
-                + "[ tree-sitter, tree-sitter-language-pack, magika ]"
-                + " Please install them using `pip install chonkie[code]`.",
-            )
-
     def _detect_language(self, bytes_text: bytes) -> Any:
         """Detect the language of the code."""
         response = self.magika.identify_bytes(bytes_text)
-        return response.output.label  # type: ignore
+        return response.output.label
 
     def _merge_node_groups(self, node_groups: list[list["Node"]]) -> list["Node"]:
         """Merge the node groups together."""
@@ -129,10 +102,15 @@ class CodeChunker(BaseChunker):
         return merged_node_group
 
     def _group_child_nodes(self, node: "Node") -> tuple[list[list["Node"]], list[int]]:
-        """Group the nodes together based on their token_counts."""
-        # Some edge cases to break the recursion
+        """Group the nodes together based on their token_counts.
+
+        For leaf nodes (no children), returns the node itself as a single group.
+        """
+        # Base case: leaf nodes return themselves as a single group
         if len(node.children) == 0:
-            return ([], [])  # TODO: Think more about this case!
+            node_text = node.text.decode("utf-8", errors="ignore") if node.text else ""
+            node_token_count = self.tokenizer.count_tokens(node_text)
+            return ([[node]], [node_token_count])
 
         # Initialize the node groups and group token counts
         node_groups = []
@@ -142,7 +120,7 @@ class CodeChunker(BaseChunker):
         current_token_count = 0
         current_node_group: list["Node"] = []
         for child in node.children:
-            child_text = child.text.decode() if child.text else ""
+            child_text = child.text.decode("utf-8", errors="ignore") if child.text else ""
             token_count: int = self.tokenizer.count_tokens(child_text)
             # If the child itself is larger than chunk size then we need to split and group it
             if token_count > self.chunk_size:
@@ -156,13 +134,8 @@ class CodeChunker(BaseChunker):
 
                 # Recursively, add the child groups
                 child_groups, child_token_counts = self._group_child_nodes(child)
-                if child_groups:  # Only use recursive result if it produced groups
-                    node_groups.extend(child_groups)
-                    group_token_counts.extend(child_token_counts)
-                else:
-                    # Fallback: Add the current child as is if no recursive groups
-                    node_groups.append([child])
-                    group_token_counts.append(token_count)
+                node_groups.extend(child_groups)
+                group_token_counts.extend(child_token_counts)
 
                 # Reinit current stuff
                 current_node_group = []
@@ -282,13 +255,13 @@ class CodeChunker(BaseChunker):
 
             # Basic validation for byte offsets
             if start_byte > end_byte:
-                warnings.warn(
-                    f"Warning: Skipping group due to invalid byte order. Start: {start_byte}, End: {end_byte}",
+                logger.warning(
+                    f"Skipping group due to invalid byte order. Start: {start_byte}, End: {end_byte}",
                 )
                 continue
             if start_byte < 0 or end_byte > len(original_text_bytes):
-                warnings.warn(
-                    f"Warning: Skipping group due to out-of-bounds byte offsets. Start: {start_byte}, End: {end_byte}, Text Length: {len(original_text_bytes)}",
+                logger.warning(
+                    f"Skipping group due to out-of-bounds byte offsets. Start: {start_byte}, End: {end_byte}, Text Length: {len(original_text_bytes)}",
                 )
                 continue
 
@@ -304,8 +277,9 @@ class CodeChunker(BaseChunker):
                 text = chunk_bytes.decode("utf-8", errors="ignore")  # Or 'replace'
                 chunk_texts.append(text)
             except Exception as e:
-                warnings.warn(
-                    f"Warning: Error decoding bytes for chunk ({start_byte}-{end_byte}): {e}",
+                logger.warning(
+                    f"Error decoding bytes for chunk ({start_byte}-{end_byte}): {e}",
+                    exc_info=True,
                 )
                 # Append an empty string or placeholder if decoding fails
                 chunk_texts.append("")
@@ -367,14 +341,17 @@ class CodeChunker(BaseChunker):
         if self.language == "auto":
             language = self._detect_language(original_text_bytes)
             logger.info(f"Auto-detected code language: {language}")
-            self.parser = get_parser(language)  # type: ignore
+            from tree_sitter_language_pack import get_parser
+
+            self.parser = get_parser(language)
         else:
             logger.debug(f"Using configured language: {self.language}")
 
         try:
+            assert self.parser is not None, "Parser is not initialized."
             # Create the parsing tree for the current code
-            tree: Tree = self.parser.parse(original_text_bytes)  # type: ignore
-            root_node: Node = tree.root_node  # type: ignore
+            tree: Tree = self.parser.parse(original_text_bytes)
+            root_node: Node = tree.root_node
 
             # Get the node_groups
             node_groups, token_counts = self._group_child_nodes(root_node)

@@ -448,10 +448,12 @@ TokenChunker returns chunks as `Chunk` objects.
 ```python Python
 @dataclass
 class Chunk:
-    text: str           # The chunk text
-    start_index: int    # Starting position in original text
-    end_index: int      # Ending position in original text
-    token_count: int    # Number of tokens in chunk
+    text: str                                           # The chunk text
+    start_index: int                                    # Starting position in original text
+    end_index: int                                      # Ending position in original text
+    token_count: int                                    # Number of tokens in chunk
+    context: Optional[str] = None                       # Optional overlap context text
+    embedding: Union[list[float], "np.ndarray", None] = None  # Optional embedding vector
 ```
 
 ```javascript JavaScript
@@ -471,4 +473,3 @@ class Chunk {
 }
 ```
 </CodeGroup>
-````

@@ -2,12 +2,29 @@
 
 import importlib.util as importutil
 import os
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Any, Optional, cast
+
+from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
+
+try:
+    from openai import APIError, APITimeoutError, OpenAI, RateLimitError
+except ImportError:
+
+    class APIError(Exception):  # type: ignore
+        """API error."""
+
+    class APITimeoutError(Exception):  # type: ignore
+        """API timeout error."""
+
+    class RateLimitError(Exception):  # type: ignore
+        """Rate limit error."""
+
+    OpenAI = None  # type: ignore
+
 
 from .base import BaseGenie
 
 if TYPE_CHECKING:
-    from openai import OpenAI
     from pydantic import BaseModel
 
 
@@ -30,8 +47,11 @@ class OpenAIGenie(BaseGenie):
         """
         super().__init__()
 
-        # Lazily import the dependencies
-        self._import_dependencies()
+        if not self._is_available():
+            raise ImportError(
+                "One or more of the required modules are not available: [pydantic, openai]. "
+                "Please install the dependencies via `pip install chonkie[openai]`"
+            )
 
         # Initialize the API key
         self.api_key = api_key or os.environ.get("OPENAI_API_KEY")
@@ -47,6 +67,13 @@ class OpenAIGenie(BaseGenie):
             self.client = OpenAI(api_key=self.api_key, base_url=base_url)
         self.model = model
 
+    @retry(
+        stop=stop_after_attempt(5),
+        wait=wait_exponential(multiplier=2, max=60),
+        retry=retry_if_exception_type(
+            cast(tuple[type[BaseException], ...], (RateLimitError, APIError, APITimeoutError))
+        ),
+    )
     def generate(self, prompt: str) -> str:
         """Generate a response based on the given prompt."""
         response = self.client.chat.completions.create(
@@ -58,6 +85,13 @@ class OpenAIGenie(BaseGenie):
             raise ValueError("OpenAI response content is None")
         return content
 
+    @retry(
+        stop=stop_after_attempt(5),
+        wait=wait_exponential(multiplier=2, max=60),
+        retry=retry_if_exception_type(
+            cast(tuple[type[BaseException], ...], (RateLimitError, APIError, APITimeoutError))
+        ),
+    )
     def generate_json(self, prompt: str, schema: "BaseModel") -> dict[str, Any]:
         """Generate a JSON response based on the given prompt and schema."""
         response = self.client.beta.chat.completions.parse(
@@ -70,26 +104,15 @@ class OpenAIGenie(BaseGenie):
             raise ValueError("OpenAI response content is None")
         return content.model_dump()
 
-    def _is_available(self) -> bool:
-        """Check if all the dependencies are available in the environement."""
+    @classmethod
+    def _is_available(cls) -> bool:
+        """Check if all the dependencies are available in the environment."""
         if (
             importutil.find_spec("pydantic") is not None
             and importutil.find_spec("openai") is not None
         ):
             return True
         return False
-
-    def _import_dependencies(self) -> None:
-        """Import all the required dependencies."""
-        if self._is_available():
-            global OpenAI, BaseModel
-            from openai import OpenAI
-            from pydantic import BaseModel
-        else:
-            raise ImportError(
-                "One or more of the required modules are not available: [pydantic, openai]",
-                "Please install the dependencies via `pip install chonkie[openai]`",
-            )
 
     def __repr__(self) -> str:
         """Return a string representation of the OpenAIGenie instance."""

@@ -1,5 +1,6 @@
 """Module containing the LateChunker class."""
 
+import os
 from typing import Any, Optional, Union
 
 import numpy as np
@@ -76,11 +77,11 @@ class LateChunker(RecursiveChunker):
         self._use_multiprocessing = False
 
     @classmethod
-    def from_recipe(
-        cls,  # type: ignore[override]
+    def from_recipe(  # type: ignore[override]
+        cls,
         name: Optional[str] = "default",
         lang: Optional[str] = "en",
-        path: Optional[str] = None,
+        path: str | os.PathLike | None = None,
         embedding_model: Union[
             str,
             SentenceTransformerEmbeddings,
@@ -107,7 +108,7 @@ class LateChunker(RecursiveChunker):
             ValueError: If the recipe is invalid or if the recipe is not found.
 
         """
-        logger.info("Loading LateChunker recipe", name=name, lang=lang)
+        logger.info("Loading LateChunker recipe", recipe_name=name, lang=lang)
         # Create a hubbie instance
         rules = RecursiveRules.from_recipe(name, lang, path)
         logger.debug(f"Recipe loaded successfully with {len(rules.levels or [])} levels")

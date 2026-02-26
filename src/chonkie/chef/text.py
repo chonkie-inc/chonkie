@@ -1,5 +1,6 @@
 """TextChef is a chef that processes text data."""
 
+import os
 from pathlib import Path
 from typing import Union
 
@@ -16,11 +17,11 @@ logger = get_logger(__name__)
 class TextChef(BaseChef):
     """TextChef is a chef that processes text data."""
 
-    def process(self, path: Union[str, Path]) -> Document:
+    def process(self, path: str | os.PathLike) -> Document:
         """Process the text data from given file(s).
 
         Args:
-            path (Union[str, Path]): Path to the file(s) to process.
+            path: Path to the file(s) to process.
 
         Returns:
             Document: Processed text data.
@@ -43,11 +44,11 @@ class TextChef(BaseChef):
         """
         return Document(content=text)
 
-    def process_batch(self, paths: Union[list[str], list[Path]]) -> list[Document]:
+    def process_batch(self, paths: list[str | os.PathLike]) -> list[Document]:
         """Process the text data in a batch.
 
         Args:
-            paths (Union[list[str], list[Path]]): Paths to the files to process.
+            paths: Paths to the files to process.
 
         Returns:
             list[Document]: Processed text data.
@@ -55,10 +56,10 @@ class TextChef(BaseChef):
         """
         return [self.process(path) for path in paths]
 
-    def __call__(
+    def __call__(  # type: ignore[override]
         self,
-        path: Union[str, Path, list[str], list[Path]],
-    ) -> Union[Document, list[Document]]:  # type: ignore[override]
+        path: str | os.PathLike | list[str | os.PathLike],
+    ) -> Union[Document, list[Document]]:
         """Process the text data from given file(s).
 
         Args:

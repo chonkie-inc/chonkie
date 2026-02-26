@@ -15,10 +15,6 @@ logger = get_logger(__name__)
 class BaseRefinery(ABC):
     """Base class for all refinery classes."""
 
-    def _import_dependencies(self) -> None:
-        """Lazy import the dependencies."""
-        raise NotImplementedError("Subclasses must implement this method.")
-
     @abstractmethod
     def refine(self, chunks: list[Chunk]) -> list[Chunk]:
         """Refine the chunks.
@@ -65,5 +61,5 @@ class BaseRefinery(ABC):
             logger.info(f"Refinement complete: {len(refined_chunks)} chunks output")
             return refined_chunks
         except Exception as e:
-            logger.error(f"Refinement failed: {str(e)}", error_type=type(e).__name__)
+            logger.error(f"Refinement failed: {e}", exc_info=True)
             raise

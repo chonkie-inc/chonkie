@@ -1,19 +1,18 @@
 """Tests for the AutoEmbeddings class."""
 
 import os
-import warnings
 
 import pytest
 
 from chonkie import AutoEmbeddings
 from chonkie.embeddings.azure_openai import AzureOpenAIEmbeddings
 from chonkie.embeddings.base import BaseEmbeddings
+from chonkie.embeddings.catsu import CatsuEmbeddings
 from chonkie.embeddings.cohere import CohereEmbeddings
 from chonkie.embeddings.jina import JinaEmbeddings
 from chonkie.embeddings.model2vec import Model2VecEmbeddings
 from chonkie.embeddings.openai import OpenAIEmbeddings
 from chonkie.embeddings.sentence_transformer import SentenceTransformerEmbeddings
-from chonkie.embeddings.voyageai import VoyageAIEmbeddings
 
 
 class TestAutoEmbeddingsModel2Vec:
@@ -95,9 +94,9 @@ class TestAutoEmbeddingsProviderPrefix:
 
     @pytest.mark.skipif(not os.getenv("VOYAGE_API_KEY"), reason="Voyage API key not set")
     def test_voyage_provider_prefix(self) -> None:
-        """Test VoyageAI embeddings with provider prefix."""
+        """Test VoyageAI embeddings with provider prefix (via CatsuEmbeddings)."""
         embeddings = AutoEmbeddings.get_embeddings("voyageai://voyage-3")
-        assert isinstance(embeddings, VoyageAIEmbeddings)
+        assert isinstance(embeddings, CatsuEmbeddings)
         assert embeddings.model == "voyage-3"
 
     @pytest.mark.skipif(not os.getenv("JINA_API_KEY"), reason="Jina API key not set")
@@ -160,14 +159,12 @@ class TestAutoEmbeddingsInputTypes:
                 return [[1.0, 2.0, 3.0] for _ in texts]
 
         mock_obj = MockEmbeddings()
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            try:
-                result = AutoEmbeddings.get_embeddings(mock_obj)
-                assert isinstance(result, BaseEmbeddings)
-            except ValueError:
-                # Expected if registry can't wrap this type
-                pass
+        try:
+            result = AutoEmbeddings.get_embeddings(mock_obj)
+            assert isinstance(result, BaseEmbeddings)
+        except ValueError:
+            # Expected if registry can't wrap this type
+            pass
 
 
 class TestAutoEmbeddingsErrorHandling:

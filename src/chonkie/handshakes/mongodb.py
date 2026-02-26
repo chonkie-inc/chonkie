@@ -21,7 +21,7 @@ from .utils import generate_random_collection_name
 logger = get_logger(__name__)
 
 if TYPE_CHECKING:
-    import pymongo
+    from pymongo import MongoClient
 
 
 @handshake("mongodb")
@@ -46,7 +46,7 @@ class MongoDBHandshake(BaseHandshake):
 
     def __init__(
         self,
-        client: Optional["pymongo.MongoClient"] = None,
+        client: Optional["MongoClient"] = None,
         uri: Optional[str] = None,
         username: Optional[str] = None,
         password: Optional[str] = None,
@@ -73,11 +73,16 @@ class MongoDBHandshake(BaseHandshake):
 
         """
         super().__init__()
-        self._import_dependencies()
 
         if client is not None:
             self.client = client
         else:
+            try:
+                import pymongo
+            except ImportError as ie:
+                raise ImportError(
+                    "pymongo is not installed. Please install it with `pip install chonkie[mongodb]`.",
+                ) from ie
             # use uri
             if uri is None:
                 # construct the uri
@@ -123,17 +128,9 @@ class MongoDBHandshake(BaseHandshake):
             raise ValueError(f"Invalid embedding model: {embedding_model}")
         self.dimension = self.embedding_model.dimension
 
-    def _is_available(self) -> bool:
+    @classmethod
+    def _is_available(cls) -> bool:
         return importutil.find_spec("pymongo") is not None
-
-    def _import_dependencies(self) -> None:
-        if self._is_available():
-            global pymongo
-            import pymongo
-        else:
-            raise ImportError(
-                "pymongo is not installed. Please install it with `pip install chonkie[mongodb]`.",
-            )
 
     def _generate_id(self, index: int, chunk: Chunk) -> str:
         return str(uuid5(NAMESPACE_OID, f"{self.collection_name}::chunk-{index}:{chunk.text}"))
@@ -154,7 +151,7 @@ class MongoDBHandshake(BaseHandshake):
             chunks = [chunks]
         logger.debug(f"Writing {len(chunks)} chunks to MongoDB collection: {self.collection_name}")
         texts = [chunk.text for chunk in chunks]
-        embeddings = self.embedding_model.embed_batch(texts)  # type: ignore
+        embeddings = self.embedding_model.embed_batch(texts)
         documents = []
         for index, chunk in enumerate(chunks):
             embedding = embeddings[index]

@@ -3,9 +3,8 @@
 Splits text into smaller chunks recursively. Express chunking logic through RecursiveLevel objects.
 """
 
-from bisect import bisect_left
+import os
 from functools import lru_cache
-from itertools import accumulate
 from typing import Optional, Union
 
 from chonkie.chunker.base import BaseChunker
@@ -20,21 +19,7 @@ from chonkie.types import (
 
 logger = get_logger(__name__)
 
-# Import the unified split function
-try:
-    from .c_extensions.split import split_text
-
-    SPLIT_AVAILABLE = True
-except ImportError:
-    SPLIT_AVAILABLE = False
-
-# Import optimized merge functions
-try:
-    from .c_extensions.merge import _merge_splits as _merge_splits_cython
-
-    MERGE_CYTHON_AVAILABLE = True
-except ImportError:
-    MERGE_CYTHON_AVAILABLE = False
+import chonkie_core
 
 
 @chunker("recursive")
@@ -91,7 +76,7 @@ class RecursiveChunker(BaseChunker):
         cls,
         name: Optional[str] = "default",
         lang: Optional[str] = "en",
-        path: Optional[str] = None,
+        path: str | os.PathLike | None = None,
         tokenizer: Union[str, TokenizerProtocol] = "character",
         chunk_size: int = 2048,
         min_characters_per_chunk: int = 24,
@@ -115,7 +100,7 @@ class RecursiveChunker(BaseChunker):
             ValueError: If the recipe is not found.
 
         """
-        logger.info("Loading RecursiveChunker recipe", name=name, lang=lang)
+        logger.info("Loading RecursiveChunker recipe", recipe_name=name, lang=lang)
         # Create a recursive rules object
         rules = RecursiveRules.from_recipe(name, lang, path)
         logger.debug(f"Recipe loaded successfully with {len(rules.levels or [])} levels")
@@ -134,65 +119,58 @@ class RecursiveChunker(BaseChunker):
 
     def _split_text(self, text: str, recursive_level: RecursiveLevel) -> list[str]:
         """Split the text into chunks using the delimiters."""
-        if SPLIT_AVAILABLE and recursive_level.delimiters:
-            # Use optimized Cython split function for delimiter-based splitting only
-            return list(
-                split_text(
-                    text=text,
-                    delim=recursive_level.delimiters,
-                    include_delim=recursive_level.include_delim,
-                    min_characters_per_segment=self.min_characters_per_chunk,
-                    whitespace_mode=False,
-                    character_fallback=False,
-                ),
-            )
-        else:
-            # Fallback to original implementation
-            if recursive_level.whitespace:
-                splits = text.split(" ")
-            elif recursive_level.delimiters:
-                if recursive_level.include_delim == "prev":
-                    for delimiter in recursive_level.delimiters:
-                        text = text.replace(delimiter, delimiter + self.sep)
-                elif recursive_level.include_delim == "next":
-                    for delimiter in recursive_level.delimiters:
-                        text = text.replace(delimiter, self.sep + delimiter)
-                else:
-                    for delimiter in recursive_level.delimiters:
-                        text = text.replace(delimiter, self.sep)
+        if recursive_level.delimiters:
+            include_mode = recursive_level.include_delim or "prev"
+            text_bytes = text.encode("utf-8")
 
-                splits = [split for split in text.split(self.sep) if split != ""]
+            # Check if we have multi-byte delimiters
+            delimiters = recursive_level.delimiters
+            if isinstance(delimiters, str):
+                delimiters = [delimiters]
 
-                # Merge short splits
-                current = ""
-                merged = []
-                for split in splits:
-                    if len(split) < self.min_characters_per_chunk:
-                        current += split
-                    elif current:
-                        current += split
-                        merged.append(current)
-                        current = ""
-                    else:
-                        merged.append(split)
+            has_multibyte = any(len(d) > 1 for d in delimiters)
 
-                    if len(current) >= self.min_characters_per_chunk:
-                        merged.append(current)
-                        current = ""
-
-                if current:
-                    merged.append(current)
-
-                splits = merged
+            if has_multibyte:
+                # Use split_pattern_offsets for multi-byte patterns
+                patterns = [d.encode("utf-8") for d in delimiters]
+                offsets = chonkie_core.split_pattern_offsets(
+                    text_bytes,
+                    patterns=patterns,
+                    include_delim=include_mode,
+                    min_chars=self.min_characters_per_chunk,
+                )
             else:
-                # Encode, Split, and Decode
-                encoded = self.tokenizer.encode(text)
-                token_splits = [
-                    encoded[i : i + self.chunk_size]
-                    for i in range(0, len(encoded), self.chunk_size)
-                ]
-                splits = list(self.tokenizer.decode_batch(token_splits))
+                # Use faster split_offsets for single-byte delimiters
+                delim_bytes = "".join(delimiters).encode("utf-8")
+                offsets = chonkie_core.split_offsets(
+                    text_bytes,
+                    delimiters=delim_bytes,
+                    include_delim=include_mode,
+                    min_chars=self.min_characters_per_chunk,
+                )
 
+            # Convert offsets to strings
+            splits = [text_bytes[start:end].decode("utf-8") for start, end in offsets]
+            return [s for s in splits if s]  # Filter empty strings
+        elif recursive_level.whitespace:
+            # Split on whitespace using split_offsets (preserves spaces for reconstruction)
+            text_bytes = text.encode("utf-8")
+            include_mode = recursive_level.include_delim or "prev"
+            offsets = chonkie_core.split_offsets(
+                text_bytes,
+                delimiters=b" ",
+                include_delim=include_mode,
+                min_chars=self.min_characters_per_chunk,
+            )
+            splits = [text_bytes[start:end].decode("utf-8") for start, end in offsets]
+            return [s for s in splits if s]
+        else:
+            # Encode, Split, and Decode
+            encoded = self.tokenizer.encode(text)
+            token_splits = [
+                encoded[i : i + self.chunk_size] for i in range(0, len(encoded), self.chunk_size)
+            ]
+            splits = list(self.tokenizer.decode_batch(token_splits))
             return splits
 
     def _make_chunks(self, text: str, token_count: int, level: int, start_offset: int) -> Chunk:
@@ -222,30 +200,11 @@ class RecursiveChunker(BaseChunker):
         self,
         splits: list[str],
         token_counts: list[int],
-        combine_whitespace: bool = False,
     ) -> tuple[list[str], list[int]]:
-        """Merge short splits into larger chunks.
-
-        Uses optimized Cython implementation when available, with Python fallback.
-        """
-        if MERGE_CYTHON_AVAILABLE:
-            # Use optimized Cython implementation
-            return _merge_splits_cython(splits, token_counts, self.chunk_size, combine_whitespace)
-        else:
-            # Fallback to original Python implementation
-            return self._merge_splits_fallback(splits, token_counts, combine_whitespace)
-
-    def _merge_splits_fallback(
-        self,
-        splits: list[str],
-        token_counts: list[int],
-        combine_whitespace: bool = False,
-    ) -> tuple[list[str], list[int]]:
-        """Original Python implementation of _merge_splits (fallback)."""
+        """Merge short splits into larger chunks using chonkie-core."""
         if not splits or not token_counts:
             return [], []
 
-        # If the number of splits and token counts does not match, raise an error
         if len(splits) != len(token_counts):
             raise ValueError(
                 f"Number of splits {len(splits)} does not match number of token counts {len(token_counts)}",
@@ -255,49 +214,9 @@ class RecursiveChunker(BaseChunker):
         if all(counts > self.chunk_size for counts in token_counts):
             return splits, token_counts
 
-        # If the splits are too short, merge them
-        merged = []
-        if combine_whitespace:
-            # +1 for the whitespace
-            cumulative_token_counts = list(accumulate([0] + token_counts, lambda x, y: x + y + 1))
-        else:
-            cumulative_token_counts = list(accumulate([0] + token_counts))
-        current_index = 0
-        combined_token_counts = []
-
-        while current_index < len(splits):
-            current_token_count = cumulative_token_counts[current_index]
-            required_token_count = current_token_count + self.chunk_size
-
-            # Find the index to merge at
-            index = min(
-                bisect_left(
-                    cumulative_token_counts,
-                    required_token_count,
-                    lo=current_index,
-                )
-                - 1,
-                len(splits),
-            )
-
-            # If current_index == index,
-            # we need to move to the next index
-            if index == current_index:
-                index += 1
-
-            # Merge splits
-            if combine_whitespace:
-                merged.append(" ".join(splits[current_index:index]))
-            else:
-                merged.append("".join(splits[current_index:index]))
-
-            # Adjust token count
-            combined_token_counts.append(
-                cumulative_token_counts[min(index, len(splits))] - current_token_count,
-            )
-            current_index = index
-
-        return merged, combined_token_counts
+        # Use chonkie-core to merge (string joining done in Rust for performance)
+        result = chonkie_core.merge_splits(splits, token_counts, self.chunk_size)
+        return result.merged, result.token_counts
 
     def _recursive_chunk(self, text: str, level: int = 0, start_offset: int = 0) -> list[Chunk]:
         """Recursive helper for core chunking."""
@@ -318,22 +237,12 @@ class RecursiveChunker(BaseChunker):
             merged, combined_token_counts = splits, token_counts
 
         elif curr_rule.delimiters is None and curr_rule.whitespace:
-            merged, combined_token_counts = self._merge_splits(
-                splits,
-                token_counts,
-                combine_whitespace=True,
-            )
-            # NOTE: This is a hack to fix the reconstruction issue when whitespace is used.
-            # When whitespace is there, " ".join only adds space between words, not before the first word.
-            # To make it combine back properly, all splits except the first one are prefixed with a space.
-            merged = merged[:1] + [" " + text for (i, text) in enumerate(merged) if i != 0]
+            # With split_offsets using include_delim="prev", splits already contain trailing spaces
+            # e.g., ["Hello ", "World ", "Test"] - so we just concatenate them
+            merged, combined_token_counts = self._merge_splits(splits, token_counts)
 
         else:
-            merged, combined_token_counts = self._merge_splits(
-                splits,
-                token_counts,
-                combine_whitespace=False,
-            )
+            merged, combined_token_counts = self._merge_splits(splits, token_counts)
 
         # Chunk long merged splits
         chunks: list[Chunk] = []

@@ -3,7 +3,7 @@
 import os
 from typing import Any, Optional, Union, cast
 
-import requests
+import httpx
 
 from chonkie.cloud.file import FileManager
 from chonkie.types import Chunk
@@ -45,7 +45,7 @@ class TokenChunker(CloudChunker):
         self.chunk_overlap = chunk_overlap
 
         # Check if the API is up right now
-        response = requests.get(f"{self.BASE_URL}/")
+        response = httpx.get(f"{self.BASE_URL}/")
         if response.status_code != 200:
             raise ValueError(
                 "Oh no! You caught Chonkie at a bad time. It seems to be down right now."
@@ -59,7 +59,7 @@ class TokenChunker(CloudChunker):
     def chunk(
         self,
         text: Optional[Union[str, list[str]]] = None,
-        file: Optional[str] = None,
+        file: str | os.PathLike | None = None,
     ) -> Union[list[Chunk], list[list[Chunk]]]:
         """Chunk the text into a list of chunks."""
         # Define the payload for the request
@@ -89,7 +89,7 @@ class TokenChunker(CloudChunker):
             )
 
         # Make the request to the Chonkie API
-        response = requests.post(
+        response = httpx.post(
             f"{self.BASE_URL}/{self.VERSION}/chunk/token",
             json=payload,
             headers={"Authorization": f"Bearer {self.api_key}"},
@@ -119,7 +119,7 @@ class TokenChunker(CloudChunker):
     def __call__(
         self,
         text: Optional[Union[str, list[str]]] = None,
-        file: Optional[str] = None,
+        file: str | os.PathLike | None = None,
     ) -> Union[list[Chunk], list[list[Chunk]]]:
         """Call the chunker."""
         return self.chunk(text=text, file=file)

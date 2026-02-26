@@ -1,4 +1,4 @@
-"""Test suite for GeminiEmbeddings."""
+"""Test suite for GeminiEmbeddings (CatsuEmbeddings wrapper)."""
 
 import os
 from unittest.mock import MagicMock, patch
@@ -10,21 +10,40 @@ from chonkie.embeddings.gemini import GeminiEmbeddings
 
 
 @pytest.fixture
-def embedding_model() -> GeminiEmbeddings:
+def mock_catsu_client():
+    """Mock Catsu client for testing."""
+    mock_client = MagicMock()
+
+    mock_embed_response = MagicMock()
+    mock_embed_response.to_numpy.return_value = np.random.rand(1, 3072).astype(np.float32)
+    mock_client.embed.return_value = mock_embed_response
+
+    mock_model_info = MagicMock()
+    mock_model_info.name = "gemini-embedding-001"
+    mock_model_info.dimensions = 3072
+    mock_client.list_models.return_value = [mock_model_info]
+
+    mock_tokenize_response = MagicMock()
+    mock_tokenize_response.token_count = 10
+    mock_client.tokenize.return_value = mock_tokenize_response
+
+    return mock_client
+
+
+@pytest.fixture
+def embedding_model(mock_catsu_client):
     """Fixture to create a GeminiEmbeddings instance."""
-    api_key = os.environ.get("GEMINI_API_KEY")
-    return GeminiEmbeddings(api_key=api_key)  # Use default model
+    with patch("catsu.Client", return_value=mock_catsu_client):
+        return GeminiEmbeddings(api_key="test-key")
 
 
 @pytest.fixture
 def sample_text() -> str:
-    """Fixture to create a sample text for testing."""
     return "This is a sample text for testing."
 
 
 @pytest.fixture
-def sample_texts() -> list[str]:
-    """Fixture to create a list of sample texts for testing."""
+def sample_texts() -> list:
     return [
         "This is the first sample text.",
         "Here is another example sentence.",
@@ -32,341 +51,144 @@ def sample_texts() -> list[str]:
     ]
 
 
-def test_initialization_without_api_key() -> None:
-    """Test that GeminiEmbeddings raises ValueError when no API key is provided."""
-    with patch.dict(os.environ, {}, clear=True):
-        with pytest.raises(ValueError, match="Gemini API key not found"):
-            GeminiEmbeddings()
+def test_initialization(embedding_model: GeminiEmbeddings) -> None:
+    """Test that GeminiEmbeddings initializes correctly."""
+    assert embedding_model.model == "gemini-embedding-001"
+    assert embedding_model.task_type == "SEMANTIC_SIMILARITY"
+    assert embedding_model._catsu is not None
 
 
-def test_initialization_with_api_key() -> None:
-    """Test that GeminiEmbeddings initializes correctly with API key."""
-    with patch("google.genai.Client") as mock_client:
-        embeddings = GeminiEmbeddings(api_key="test-key")
-        assert embeddings.model == "gemini-embedding-exp-03-07"  # Updated default model
-        assert embeddings.task_type == "SEMANTIC_SIMILARITY"
-        assert embeddings._api_key == "test-key"
-        mock_client.assert_called_once_with(api_key="test-key")
-
-
-def test_initialization_with_env_var() -> None:
-    """Test that GeminiEmbeddings uses environment variable for API key."""
-    with patch.dict(os.environ, {"GEMINI_API_KEY": "env-key"}):
-        with patch("google.genai.Client") as mock_client:
+def test_initialization_with_env_var(mock_catsu_client) -> None:
+    """Test initialization using environment variable for API key."""
+    with patch("catsu.Client", return_value=mock_catsu_client):
+        with patch.dict(os.environ, {"GEMINI_API_KEY": "env-test-key"}):
             embeddings = GeminiEmbeddings()
-            assert embeddings._api_key == "env-key"
-            mock_client.assert_called_once_with(api_key="env-key")
+            assert embeddings.model == "gemini-embedding-001"
 
 
-def test_initialization_with_custom_model() -> None:
-    """Test that GeminiEmbeddings initializes with custom model."""
-    with patch("google.genai.Client"):
-        embeddings = GeminiEmbeddings(model="embedding-001", api_key="test-key")
-        assert embeddings.model == "embedding-001"
-        assert embeddings.dimension == 768
-
-        # Test experimental model with different dimensions
-        embeddings_exp = GeminiEmbeddings(model="gemini-embedding-exp-03-07", api_key="test-key")
-        assert embeddings_exp.model == "gemini-embedding-exp-03-07"
-        assert embeddings_exp.dimension == 3072
+def test_initialization_without_api_key(mock_catsu_client) -> None:
+    """Test that GeminiEmbeddings can initialize without API key (validation deferred to API call)."""
+    with patch("catsu.Client", return_value=mock_catsu_client):
+        with patch.dict(os.environ, {}, clear=True):
+            # With catsu wrapper, API key validation is deferred to the actual API call
+            embeddings = GeminiEmbeddings()
+            assert embeddings.model == "gemini-embedding-001"
 
 
-def test_dimension_property() -> None:
-    """Test that the dimension property returns correct value."""
-    with patch("google.genai.Client"):
-        embeddings = GeminiEmbeddings(api_key="test-key")
-        assert embeddings.dimension == 3072  # Updated for new default model
+def test_initialization_with_custom_model(mock_catsu_client) -> None:
+    """Test initialization with a custom model."""
+    with patch("catsu.Client", return_value=mock_catsu_client):
+        embeddings = GeminiEmbeddings(model="text-embedding-004", api_key="test-key")
+        assert embeddings.model == "text-embedding-004"
 
 
-def test_count_tokens() -> None:
-    """Test token counting functionality."""
-    with patch("google.genai.Client") as mock_client_class:
-        mock_client = MagicMock()
-        mock_client_class.return_value = mock_client
-
-        # Mock the CountTokensResponse object
-        mock_response = MagicMock()
-        mock_response.total_tokens = 10
-        mock_client.models.count_tokens.return_value = mock_response
-
-        embeddings = GeminiEmbeddings(api_key="test-key")
-
-        # Test API-based token counting
-        text = "This is a test sentence"
-        token_count = embeddings.count_tokens(text)
-        assert token_count == 10
-        mock_client.models.count_tokens.assert_called_once_with(
-            model="gemini-embedding-exp-03-07",
-            contents=text,
-        )
+def test_default_model() -> None:
+    """Test that GeminiEmbeddings has the correct default model."""
+    assert GeminiEmbeddings.DEFAULT_MODEL == "gemini-embedding-001"
 
 
-def test_count_tokens_batch() -> None:
-    """Test batch token counting functionality."""
-    with patch("google.genai.Client") as mock_client_class:
-        mock_client = MagicMock()
-        mock_client_class.return_value = mock_client
+def test_embed_single_text(
+    embedding_model: GeminiEmbeddings, sample_text: str, mock_catsu_client
+) -> None:
+    """Test that embed delegates to CatsuEmbeddings."""
+    mock_response = MagicMock()
+    mock_response.to_numpy.return_value = np.random.rand(1, 3072).astype(np.float32)
+    mock_catsu_client.embed.return_value = mock_response
 
-        # Mock the CountTokensResponse object
-        mock_response1 = MagicMock()
-        mock_response1.total_tokens = 2
-        mock_response2 = MagicMock()
-        mock_response2.total_tokens = 4
-        mock_client.models.count_tokens.side_effect = [mock_response1, mock_response2]
-
-        embeddings = GeminiEmbeddings(api_key="test-key")
-
-        texts = ["Hello world", "This is a test"]
-        token_counts = embeddings.count_tokens_batch(texts)
-
-        assert len(token_counts) == 2
-        assert all(isinstance(count, int) for count in token_counts)
-        assert token_counts == [2, 4]
+    result = embedding_model.embed(sample_text)
+    assert isinstance(result, np.ndarray)
+    assert result.ndim == 1
 
 
-def test_similarity() -> None:
-    """Test similarity computation."""
-    with patch("google.genai.Client"):
-        embeddings = GeminiEmbeddings(api_key="test-key")
+def test_embed_batch_texts(
+    embedding_model: GeminiEmbeddings, sample_texts: list, mock_catsu_client
+) -> None:
+    """Test that embed_batch delegates to CatsuEmbeddings."""
+    mock_response = MagicMock()
+    mock_response.to_numpy.return_value = np.random.rand(len(sample_texts), 3072).astype(
+        np.float32
+    )
+    mock_catsu_client.embed.return_value = mock_response
 
-        # Create sample embeddings
-        embedding1 = np.array([1.0, 0.0, 0.0], dtype=np.float32)
-        embedding2 = np.array([0.0, 1.0, 0.0], dtype=np.float32)
-        embedding3 = np.array([1.0, 0.0, 0.0], dtype=np.float32)
-
-        # Test orthogonal vectors (similarity should be 0)
-        sim1 = embeddings.similarity(embedding1, embedding2)
-        assert abs(sim1) < 1e-6
-
-        # Test identical vectors (similarity should be 1)
-        sim2 = embeddings.similarity(embedding1, embedding3)
-        assert abs(sim2 - 1.0) < 1e-6
+    results = embedding_model.embed_batch(sample_texts)
+    assert isinstance(results, list)
+    assert len(results) == len(sample_texts)
 
 
-def test_get_tokenizer() -> None:
-    """Test that get_tokenizer returns the count_tokens method."""
-    with patch("google.genai.Client"):
-        embeddings = GeminiEmbeddings(api_key="test-key")
-
-        tokenizer = embeddings.get_tokenizer()
-        assert callable(tokenizer)
-        assert tokenizer == embeddings.count_tokens
+def test_embed_batch_empty(embedding_model: GeminiEmbeddings) -> None:
+    """Test embed_batch with empty list."""
+    results = embedding_model.embed_batch([])
+    assert results == []
 
 
-def test_repr() -> None:
+def test_dimension_property(embedding_model: GeminiEmbeddings) -> None:
+    """Test that dimension property works."""
+    assert isinstance(embedding_model.dimension, int)
+    assert embedding_model.dimension == 3072
+
+
+def test_get_tokenizer(embedding_model: GeminiEmbeddings) -> None:
+    """Test that get_tokenizer returns a tokenizer."""
+    tokenizer = embedding_model.get_tokenizer()
+    assert tokenizer is not None
+
+
+def test_similarity(embedding_model: GeminiEmbeddings) -> None:
+    """Test similarity calculation."""
+    v1 = np.array([1.0, 0.0, 0.0], dtype=np.float32)
+    v2 = np.array([1.0, 0.0, 0.0], dtype=np.float32)
+    sim = embedding_model.similarity(v1, v2)
+    assert isinstance(sim, np.float32)
+    assert abs(sim - 1.0) < 1e-6
+
+
+def test_repr(embedding_model: GeminiEmbeddings) -> None:
     """Test string representation."""
-    with patch("google.genai.Client"):
-        embeddings = GeminiEmbeddings(api_key="test-key")
-        repr_str = repr(embeddings)
-        assert "GeminiEmbeddings" in repr_str
-        assert "gemini-embedding-exp-03-07" in repr_str
-        assert "SEMANTIC_SIMILARITY" in repr_str
-
-
-def test_initialization_with_real_api_key_mock():
-    """Test GeminiEmbeddings initializes with a real API key (mocked)."""
-    with patch("google.genai.Client"):
-        embeddings = GeminiEmbeddings(api_key="test-key")
-        assert embeddings.model == "gemini-embedding-exp-03-07"
-        assert embeddings.client is not None
-
-
-def test_embed_single_text_real_mock(sample_text: str):
-    """Test GeminiEmbeddings embeds a single text (mocked)."""
-    mock_embedding_values = [0.1] * 3072
-    with patch("google.genai.Client") as mock_client_class:
-        mock_client = MagicMock()
-        mock_client_class.return_value = mock_client
-        mock_result = MagicMock()
-        mock_result.embeddings = [MagicMock()]
-        mock_result.embeddings[0].values = mock_embedding_values
-        mock_client.models.embed_content.return_value = mock_result
-        embeddings = GeminiEmbeddings(api_key="test-key")
-        embedding = embeddings.embed(sample_text)
-        assert isinstance(embedding, np.ndarray)
-        assert embedding.dtype == np.float32
-        assert embedding.shape == (3072,)
-        assert not np.allclose(embedding, 0)
-
-
-def test_embed_batch_real_mock(sample_texts: list[str]):
-    """Test GeminiEmbeddings embeds multiple texts (mocked)."""
-    mock_embedding_values = [0.1] * 3072
-    with patch("google.genai.Client") as mock_client_class:
-        mock_client = MagicMock()
-        mock_client_class.return_value = mock_client
-        mock_result = MagicMock()
-        mock_result.embeddings = [MagicMock()]
-        mock_result.embeddings[0].values = mock_embedding_values
-        mock_client.models.embed_content.return_value = mock_result
-        embeddings = GeminiEmbeddings(api_key="test-key")
-        results = embeddings.embed_batch(sample_texts)
-        assert isinstance(results, list)
-        assert len(results) == len(sample_texts)
-        for embedding in results:
-            assert isinstance(embedding, np.ndarray)
-            assert embedding.dtype == np.float32
-            assert embedding.shape == (3072,)
-            assert not np.allclose(embedding, 0)
-
-
-def test_call_method_real_mock(sample_text: str, sample_texts: list[str]):
-    """Test GeminiEmbeddings __call__ method (mocked)."""
-    mock_embedding_values = [0.1] * 3072
-    with patch("google.genai.Client") as mock_client_class:
-        mock_client = MagicMock()
-        mock_client_class.return_value = mock_client
-        mock_result = MagicMock()
-        mock_result.embeddings = [MagicMock()]
-        mock_result.embeddings[0].values = mock_embedding_values
-        mock_client.models.embed_content.return_value = mock_result
-        embeddings = GeminiEmbeddings(api_key="test-key")
-        # Test single text
-        single_embedding = embeddings(sample_text)
-        assert isinstance(single_embedding, np.ndarray)
-        assert single_embedding.shape == (3072,)
-        # Test multiple texts
-        multiple_embeddings = embeddings(sample_texts)
-        assert isinstance(multiple_embeddings, list)
-        assert len(multiple_embeddings) == len(sample_texts)
-
-
-def test_embed_mock() -> None:
-    """Test embed method with mocked API response."""
-    mock_embedding_values = [0.1] * 3072  # Mock 3072-dimensional embedding (for exp model)
-
-    with patch("google.genai.Client") as mock_client_class:
-        mock_client = MagicMock()
-        mock_client_class.return_value = mock_client
-
-        # Mock the API response
-        mock_result = MagicMock()
-        mock_result.embeddings = [MagicMock()]
-        mock_result.embeddings[0].values = mock_embedding_values
-        mock_client.models.embed_content.return_value = mock_result
-
-        embeddings = GeminiEmbeddings(api_key="test-key")
-        result = embeddings.embed("test text")
-
-        assert isinstance(result, np.ndarray)
-        assert result.shape == (3072,)
-        assert np.allclose(result, mock_embedding_values)
-
-        # Verify the API was called correctly
-        mock_client.models.embed_content.assert_called_once()
-        call_args = mock_client.models.embed_content.call_args
-        assert call_args[1]["model"] == "gemini-embedding-exp-03-07"
-        assert call_args[1]["contents"] == "test text"
-
-
-def test_embed_batch_mock() -> None:
-    """Test embed_batch method with mocked API response."""
-    mock_embedding_values = [0.1] * 3072  # Updated for new default model
-
-    with patch("google.genai.Client") as mock_client_class:
-        mock_client = MagicMock()
-        mock_client_class.return_value = mock_client
-
-        # Mock the API response
-        mock_result = MagicMock()
-        mock_result.embeddings = [MagicMock()]
-        mock_result.embeddings[0].values = mock_embedding_values
-        mock_client.models.embed_content.return_value = mock_result
-
-        embeddings = GeminiEmbeddings(api_key="test-key")
-        texts = ["text1", "text2"]
-        results = embeddings.embed_batch(texts)
-
-        assert len(results) == 2
-        assert all(isinstance(result, np.ndarray) for result in results)
-        assert all(result.shape == (3072,) for result in results)
-
-        # Verify the API was called for each text
-        assert mock_client.models.embed_content.call_count == 2
-
-
-def test_embed_retry_logic() -> None:
-    """Test retry logic when API calls fail."""
-    with patch("google.genai.Client") as mock_client_class:
-        mock_client = MagicMock()
-        mock_client_class.return_value = mock_client
-
-        # First two calls fail, third succeeds
-        mock_client.models.embed_content.side_effect = [
-            Exception("API Error 1"),
-            Exception("API Error 2"),
-            MagicMock(embeddings=[MagicMock(values=[0.1] * 768)]),
-        ]
-
-        embeddings = GeminiEmbeddings(api_key="test-key", max_retries=3)
-        result = embeddings.embed("test text")
-
-        assert isinstance(result, np.ndarray)
-        assert mock_client.models.embed_content.call_count == 3
-
-
-def test_embed_failure_after_retries() -> None:
-    """Test that embed raises exception after all retries fail."""
-    with patch("google.genai.Client") as mock_client_class:
-        mock_client = MagicMock()
-        mock_client_class.return_value = mock_client
-
-        # All calls fail
-        mock_client.models.embed_content.side_effect = Exception("API Error")
-
-        embeddings = GeminiEmbeddings(api_key="test-key", max_retries=2)
-
-        with pytest.raises(RuntimeError, match="Failed to get embeddings after 2 attempts"):
-            embeddings.embed("test text")
+    repr_str = repr(embedding_model)
+    assert "GeminiEmbeddings" in repr_str
+    assert "gemini-embedding-001" in repr_str
+    assert "SEMANTIC_SIMILARITY" in repr_str
 
 
 def test_is_available() -> None:
-    """Test the _is_available method."""
-    with patch("importlib.util.find_spec") as mock_find_spec:
-        # Test when dependencies are available
-        mock_find_spec.return_value = MagicMock()  # Mock spec found
-
-        embeddings = GeminiEmbeddings.__new__(GeminiEmbeddings)  # Create without calling __init__
-        assert embeddings._is_available() is True
-
-        # Test when dependencies are not available
-        mock_find_spec.return_value = None
-        assert embeddings._is_available() is False
+    """Test _is_available method returns a bool."""
+    assert isinstance(GeminiEmbeddings._is_available(), bool)
 
 
 def test_import_dependencies_failure() -> None:
-    """Test that _import_dependencies raises ImportError when dependencies not available."""
+    """Test that ImportError is raised when catsu is not available."""
     with patch.object(GeminiEmbeddings, "_is_available", return_value=False):
-        with pytest.raises(ImportError, match="google-genai"):
+        with pytest.raises(
+            ImportError, match=r"One \(or more\) of the following packages is not available"
+        ):
             GeminiEmbeddings(api_key="test-key")
 
 
-def test_unknown_model_warning() -> None:
-    """Test that unknown model warning uses dynamic default model values."""
-    import warnings
+def test_catsu_initialized_with_correct_provider(mock_catsu_client) -> None:
+    """Test that CatsuEmbeddings is initialized with gemini provider."""
+    with patch("catsu.Client", return_value=mock_catsu_client) as mock_client_class:
+        embeddings = GeminiEmbeddings(api_key="my-key")  # noqa: F841
+        call_kwargs = mock_client_class.call_args[1]
+        assert call_kwargs.get("api_keys") == {"gemini": "my-key"}
 
-    with patch("google.genai.Client"):
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
 
-            # Create embeddings with unknown model
-            embeddings = GeminiEmbeddings(model="unknown-future-model", api_key="test-key")
+@pytest.mark.skipif(
+    "GEMINI_API_KEY" not in os.environ,
+    reason="Skipping integration test - requires GEMINI_API_KEY",
+)
+@pytest.mark.xfail(
+    reason="Known catsu upstream bug: Gemini batch embed endpoint does not pass model name correctly in published catsu<=0.1.7",
+    strict=False,
+)
+def test_real_embed_integration():
+    """Integration test with real API (requires GEMINI_API_KEY)."""
+    embeddings = GeminiEmbeddings()
+    text = "This is a real integration test."
+    embedding = embeddings.embed(text)
+    assert isinstance(embedding, np.ndarray)
+    assert embedding.ndim == 1
+    assert len(embedding) > 0
 
-            # Check that warning was issued
-            assert len(w) == 1
-            warning_message = str(w[0].message)
 
-            # Verify warning contains the unknown model name
-            assert "unknown-future-model" in warning_message
-
-            # Verify warning contains the default model name and its specs
-            default_dimension, default_max_tokens = GeminiEmbeddings.AVAILABLE_MODELS[
-                GeminiEmbeddings.DEFAULT_MODEL
-            ]
-            assert GeminiEmbeddings.DEFAULT_MODEL in warning_message
-            assert str(default_dimension) in warning_message
-            assert str(default_max_tokens) in warning_message
-
-            # Verify the embeddings instance uses the default model's specs
-            assert embeddings.dimension == default_dimension
-            assert embeddings._max_tokens == default_max_tokens
+if __name__ == "__main__":
+    pytest.main()

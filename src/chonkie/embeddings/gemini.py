@@ -1,39 +1,42 @@
-"""Google Gemini embeddings implementation using the GenAI API."""
+"""Google Gemini embeddings - backward-compatible wrapper around CatsuEmbeddings.
+
+Note: Consider using CatsuEmbeddings(model=..., provider="gemini") directly.
+"""
 
 import importlib.util as importutil
 import os
 import warnings
-from typing import TYPE_CHECKING, Any, Optional
+from typing import Any, Optional
 
 import numpy as np
 
 from .base import BaseEmbeddings
-
-if TYPE_CHECKING:
-    from google import genai
-    from google.genai import types
+from .catsu import CatsuEmbeddings
 
 
 class GeminiEmbeddings(BaseEmbeddings):
-    """Google Gemini embeddings implementation using the GenAI API.
+    """Google Gemini embeddings via CatsuEmbeddings.
+
+    This is a backward-compatible wrapper around CatsuEmbeddings.
+    Consider using CatsuEmbeddings(model=..., provider="gemini") directly.
 
     Args:
-        model: The model to use.
-        api_key: The API key to use.
-        task_type: The task type for embeddings (SEMANTIC_SIMILARITY, CLASSIFICATION, etc.).
-        max_retries: The maximum number of retries to use.
-        batch_size: The batch size to use.
-        show_warnings: Whether to show warnings about token usage.
+        model: Gemini embedding model name (default: "gemini-embedding-001").
+        api_key: Gemini API key (or set GEMINI_API_KEY env var).
+        task_type: Ignored; kept for backward compatibility.
+        max_retries: Maximum retry attempts (default: 3).
+        batch_size: Number of texts per API call (default: 100).
+        show_warnings: Ignored; kept for backward compatibility.
 
     """
 
-    AVAILABLE_MODELS = {
-        "text-embedding-004": (768, 2048),  # (dimension, max_tokens)
-        "embedding-001": (768, 2048),
-        "gemini-embedding-exp-03-07": (3072, 8192),  # Experimental model
-    }
+    DEFAULT_MODEL = "gemini-embedding-001"
 
-    DEFAULT_MODEL = "gemini-embedding-exp-03-07"
+    AVAILABLE_MODELS = {
+        "text-embedding-004": (768, 2048),
+        "embedding-001": (768, 2048),
+        "gemini-embedding-001": (3072, 8192),
+    }
 
     def __init__(
         self,
@@ -44,197 +47,83 @@ class GeminiEmbeddings(BaseEmbeddings):
         batch_size: int = 100,
         show_warnings: bool = True,
     ):
-        """Initialize Gemini embeddings.
+        """Initialize Gemini embeddings wrapper.
 
         Args:
-            model: Name of the Gemini embedding model to use
-            api_key: Gemini API key (if not provided, looks for GEMINI_API_KEY env var)
-            task_type: Task type for embeddings (SEMANTIC_SIMILARITY, CLASSIFICATION, etc.)
-            max_retries: Maximum number of retries for failed requests
-            batch_size: Maximum number of texts to embed in one API call
-            show_warnings: Whether to show warnings about token usage
+            model: Gemini embedding model name.
+            api_key: Gemini API key (falls back to GEMINI_API_KEY env var).
+            task_type: Ignored; kept for backward compatibility.
+            max_retries: Maximum retry attempts.
+            batch_size: Number of texts per API call.
+            show_warnings: Ignored; kept for backward compatibility.
+
+        Raises:
+            ImportError: If the catsu package is not installed.
 
         """
         super().__init__()
 
-        # Lazy import dependencies if they are not already imported
-        self._import_dependencies()
-
-        # Initialize the model - use default if empty string provided
-        self.model = model if model else self.DEFAULT_MODEL
-        self.task_type = task_type
-        self._max_retries = max_retries
-        self._batch_size = batch_size
-        self._show_warnings = show_warnings
-        self._chars_per_token = 6.5
-
-        # Get dimension and max tokens for the model
-        if self.model in self.AVAILABLE_MODELS:
-            self._dimension, self._max_tokens = self.AVAILABLE_MODELS[self.model]
-        else:
-            # Use default model values if model not in list
-            self._dimension, self._max_tokens = self.AVAILABLE_MODELS[self.DEFAULT_MODEL]
-            if show_warnings:
-                warnings.warn(
-                    f"Model {self.model} not in known models list. Using default model '{self.DEFAULT_MODEL}' with dimension {self._dimension} and max tokens {self._max_tokens}.",
-                )
-
-        # Setup Gemini client
-        self._api_key = api_key or os.getenv("GEMINI_API_KEY")
-        if self._api_key is None:
-            raise ValueError(
-                "Gemini API key not found. Either pass it as api_key or set GEMINI_API_KEY environment variable.",
+        if not self._is_available():
+            raise ImportError(
+                "One (or more) of the following packages is not available: catsu. "
+                'Please install it via `pip install "chonkie[catsu]"`',
             )
 
-        self.client = genai.Client(api_key=self._api_key)  # type: ignore
+        if task_type != "SEMANTIC_SIMILARITY":
+            warnings.warn(
+                "The `task_type` parameter is not supported in this version and will be ignored.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+        if show_warnings is not True:
+            warnings.warn(
+                "The `show_warnings` parameter is not supported in this version and will be ignored.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+
+        self.model = model if model else self.DEFAULT_MODEL
+        self.task_type = task_type
+        api_key = api_key or os.getenv("GEMINI_API_KEY")
+        api_keys = {"gemini": api_key} if api_key else None
+
+        self._catsu = CatsuEmbeddings(
+            model=self.model,
+            provider="gemini",
+            api_keys=api_keys,
+            max_retries=max_retries,
+            batch_size=batch_size,
+        )
 
     def embed(self, text: str) -> np.ndarray:
-        """Get embeddings for a single text."""
-        # Check token count and warn if necessary
-        if self._show_warnings:
-            token_count = self.count_tokens(text)
-            if token_count > self._max_tokens:
-                warnings.warn(
-                    f"Text has {token_count} tokens which exceeds the model's limit of {self._max_tokens}. "
-                    "Consider chunking the text.",
-                )
+        """Embed a single text string."""
+        return self._catsu.embed(text)
 
-        for attempt in range(self._max_retries):
-            try:
-                result = self.client.models.embed_content(
-                    model=self.model,
-                    contents=text,
-                    config=types.EmbedContentConfig(task_type=self.task_type),  # type: ignore
-                )
+    def embed_batch(self, texts: list) -> list:
+        """Embed multiple texts using batched API calls."""
+        return self._catsu.embed_batch(texts)
 
-                # Extract embedding from result
-                if hasattr(result, "embeddings") and result.embeddings:
-                    embedding = result.embeddings[0].values
-                    return np.array(embedding, dtype=np.float32)
-                else:
-                    raise ValueError("No embeddings returned from API")
+    async def aembed(self, text: str) -> np.ndarray:
+        """Embed a single text string asynchronously."""
+        return await self._catsu.aembed(text)
 
-            except Exception as e:
-                if attempt == self._max_retries - 1:
-                    raise RuntimeError(
-                        f"Failed to get embeddings after {self._max_retries} attempts: {str(e)}",
-                    )
-                if self._show_warnings:
-                    warnings.warn(f"Embedding attempt {attempt + 1} failed: {str(e)}. Retrying...")
-
-        raise RuntimeError("Failed to get embeddings")
-
-    def embed_batch(self, texts: list[str]) -> list[np.ndarray]:
-        """Get embeddings for multiple texts."""
-        if not texts:
-            return []
-
-        all_embeddings = []
-
-        # Process in batches
-        for i in range(0, len(texts), self._batch_size):
-            batch = texts[i : i + self._batch_size]
-
-            # Check token counts and warn if necessary
-            if self._show_warnings:
-                for text in batch:
-                    token_count = self.count_tokens(text)
-                    if token_count > self._max_tokens:
-                        warnings.warn(
-                            f"Text has {token_count} tokens which exceeds the model's limit of {self._max_tokens}.",
-                        )
-
-            try:
-                for attempt in range(self._max_retries):
-                    try:
-                        # Process each text in the batch individually for now
-                        # (Gemini API may not support true batch processing)
-                        batch_embeddings = []
-                        for text in batch:
-                            result = self.client.models.embed_content(
-                                model=self.model,
-                                contents=text,
-                                config=types.EmbedContentConfig(task_type=self.task_type),  # type: ignore
-                            )
-                            if hasattr(result, "embeddings") and result.embeddings:
-                                embedding = result.embeddings[0].values
-                                batch_embeddings.append(np.array(embedding, dtype=np.float32))
-                            else:
-                                raise ValueError("No embeddings returned from API")
-
-                        all_embeddings.extend(batch_embeddings)
-                        break
-
-                    except Exception as e:
-                        if attempt == self._max_retries - 1:
-                            # If the batch fails, try one by one
-                            if len(batch) > 1:
-                                warnings.warn(
-                                    f"Batch embedding failed: {str(e)}. Trying one by one.",
-                                )
-                                individual_embeddings = [self.embed(text) for text in batch]
-                                all_embeddings.extend(individual_embeddings)
-                                break
-                            else:
-                                raise e
-                        if self._show_warnings:
-                            warnings.warn(
-                                f"Batch attempt {attempt + 1} failed: {str(e)}. Retrying...",
-                            )
-
-            except Exception as e:
-                raise RuntimeError(f"Failed to process batch: {str(e)}")
-
-        return all_embeddings
-
-    def count_tokens(self, text: str) -> int:
-        """Count tokens in text using Google's token counting API."""
-        try:
-            response = self.client.models.count_tokens(model=self.model, contents=text)
-            # CountTokensResponse has a total_tokens attribute
-            if response.total_tokens is not None:
-                return int(response.total_tokens)
-            else:
-                # Fallback if total_tokens is None
-                return int(len(text) / self._chars_per_token)
-        except Exception:
-            # Fallback to character-based estimation if API call fails
-            return int(len(text) / self._chars_per_token)
-
-    def count_tokens_batch(self, texts: list[str]) -> list[int]:
-        """Count tokens in multiple texts using Google's token counting API."""
-        return [self.count_tokens(text) for text in texts]
-
-    def similarity(self, u: "np.ndarray", v: "np.ndarray") -> "np.float32":
-        """Compute cosine similarity between two embeddings."""
-        return np.float32(np.dot(u, v) / (np.linalg.norm(u) * np.linalg.norm(v)))
+    async def aembed_batch(self, texts: list) -> list:
+        """Embed multiple texts asynchronously using batched API calls."""
+        return await self._catsu.aembed_batch(texts)
 
     @property
     def dimension(self) -> int:
         """Return the embedding dimension."""
-        return self._dimension
+        return self._catsu.dimension
 
     def get_tokenizer(self) -> Any:
-        """Return the token counter function.
+        """Return a tokenizer object for token counting."""
+        return self._catsu.get_tokenizer()
 
-        Since Gemini doesn't provide a public tokenizer, we return the count_tokens method.
-        """
-        return self.count_tokens
-
-    def _is_available(self) -> bool:
-        """Check if the Google GenAI package is available."""
-        return importutil.find_spec("google.genai") is not None
-
-    def _import_dependencies(self) -> None:
-        """Lazy import dependencies for the embeddings implementation."""
-        if self._is_available():
-            global genai, types
-            from google import genai
-            from google.genai import types
-        else:
-            raise ImportError(
-                'google-genai is not available. Please install it via `pip install "chonkie[gemini]"`',
-            )
+    @classmethod
+    def _is_available(cls) -> bool:
+        """Check if the catsu package is available."""
+        return importutil.find_spec("catsu") is not None
 
     def __repr__(self) -> str:
         """Representation of the GeminiEmbeddings instance."""

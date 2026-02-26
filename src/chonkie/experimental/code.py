@@ -4,10 +4,10 @@ This module provides an experimental CodeChunker class that uses tree-sitter
 for advanced code analysis and language-specific chunking strategies.
 """
 
-import warnings
 from typing import TYPE_CHECKING, Any, Optional
 
 from chonkie.chunker.base import BaseChunker
+from chonkie.logger import get_logger
 from chonkie.types import Chunk
 from chonkie.types.code import SplitRule
 
@@ -15,6 +15,9 @@ from .code_registry import CodeLanguageRegistry
 
 if TYPE_CHECKING:
     from tree_sitter import Node
+
+
+logger = get_logger(__name__)
 
 
 class CodeChunker(BaseChunker):
@@ -66,9 +69,6 @@ class CodeChunker(BaseChunker):
         """
         super().__init__(tokenizer=tokenizer)
 
-        # Import the dependencies
-        self._import_dependencies()
-
         # Initialize the state
         self.chunk_size = chunk_size
         self.add_split_context = add_split_context
@@ -78,13 +78,15 @@ class CodeChunker(BaseChunker):
         if language == "auto":
             # Set a warning to the user that the language is auto and this might
             # affect the performance of the chunker.
-            warnings.warn(
+            logger.warning(
                 "The language is set to `auto`. This would adversely affect the performance of the chunker. "
-                + "Consider setting the `language` parameter to a specific language to improve performance.",
+                "Consider setting the `language` parameter to a specific language to improve performance.",
             )
 
+            from magika import Magika
+
             # Set the language to auto and initialize the Magika instance
-            self.magika = Magika()  # type: ignore
+            self.magika = Magika()
             self.parser = None
             self.language_config = None
         else:
@@ -92,27 +94,15 @@ class CodeChunker(BaseChunker):
             if language not in CodeLanguageRegistry:
                 raise ValueError(f"Language {language} is not registered in the configs.")
 
-            self.parser = get_parser(language)  # type: ignore
-            self.language_config = CodeLanguageRegistry[language]
-
-    def _import_dependencies(self) -> None:
-        """Import the dependencies from the node."""
-        try:
-            global Node, get_parser, Magika
-            from magika import Magika
-            from tree_sitter import Node
             from tree_sitter_language_pack import get_parser
-        except ImportError:
-            raise ImportError(
-                "One or more of the following dependencies are not installed: "
-                + "[ tree-sitter, tree-sitter-language-pack, magika ]"
-                + " Please install them using `pip install chonkie[code]`.",
-            )
+
+            self.parser = get_parser(language)  # type: ignore[arg-type]
+            self.language_config = CodeLanguageRegistry[language]
 
     def _detect_language(self, bytes_text: bytes) -> str:
         """Detect the language of the code."""
         response = self.magika.identify_bytes(bytes_text)
-        return response.output.label  # type: ignore
+        return response.output.label
 
     def _merge_extracted_nodes(
         self,
@@ -141,7 +131,8 @@ class CodeChunker(BaseChunker):
 
     def _extract_node(self, node: "Node") -> dict[str, Any]:
         """Extract the node content."""
-        text = node.text.decode()  # type: ignore
+        assert node.text
+        text = node.text.decode()
         return {
             "text": text,
             "start_line": node.start_point[0],
@@ -447,7 +438,9 @@ class CodeChunker(BaseChunker):
         except KeyError as error:
             raise KeyError(f"KeyError: {error}") from error
 
-        for rule in self.language_config.merge_rules:  # type: ignore
+        assert self.language_config, "Language config must be initialized for merging nodes."
+
+        for rule in self.language_config.merge_rules:
             # First check if this is the bidirectional or not
             if (
                 rule.bidirectional
@@ -675,13 +668,17 @@ class CodeChunker(BaseChunker):
                 )
 
             # Initialize parser and language config for detected language
-            self.parser = get_parser(detected_language)  # type: ignore
+            from tree_sitter_language_pack import get_parser
+
+            self.parser = get_parser(detected_language)  # type: ignore[arg-type]
             self.language_config = CodeLanguageRegistry[detected_language]
 
+        assert self.parser, "Should have initialized the parser by now."
+
         # Create the tree-sitter tree
-        tree = self.parser.parse(text_bytes)  # type: ignore
-        root = tree.root_node  # type: ignore
-        nodes = root.children  # type: ignore
+        tree = self.parser.parse(text_bytes)
+        root = tree.root_node
+        nodes = root.children
 
         # Extract and split the nodes
         exnodes = self._extract_split_nodes(nodes, text_bytes)

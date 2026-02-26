@@ -2,16 +2,19 @@
 
 import importlib.util as importutil
 import os
-import warnings
 from typing import TYPE_CHECKING, Any, Optional
 
 import numpy as np
 
+from chonkie.logger import get_logger
+
 from .base import BaseEmbeddings
 
 if TYPE_CHECKING:
-    import tiktoken
-    from openai import AzureOpenAI
+    from tiktoken import Encoding
+
+
+logger = get_logger(__name__)
 
 
 class AzureOpenAIEmbeddings(BaseEmbeddings):
@@ -84,7 +87,13 @@ class AzureOpenAIEmbeddings(BaseEmbeddings):
         if azure_api_key is None:
             azure_api_key = os.getenv("AZURE_OPENAI_API_KEY")
 
-        self._import_dependencies()
+        try:
+            import tiktoken
+            from openai import AzureOpenAI
+        except ImportError as ie:
+            raise ImportError(
+                "Required packages not found. Install with `pip install chonkie[azure-openai]`.",
+            ) from ie
 
         self.model = model
         self._deployment = deployment or model
@@ -121,7 +130,9 @@ class AzureOpenAIEmbeddings(BaseEmbeddings):
         if tokenizer is not None:
             self._tokenizer = tokenizer
         elif model in self.AVAILABLE_MODELS:
-            self._tokenizer = tiktoken.encoding_for_model(model)  # type: ignore
+            import tiktoken
+
+            self._tokenizer = tiktoken.encoding_for_model(model)
         else:
             raise ValueError(f"Tokenizer not available for model '{model}'.")
 
@@ -160,7 +171,10 @@ class AzureOpenAIEmbeddings(BaseEmbeddings):
                 all_embeddings.extend(embeddings)
             except Exception as e:
                 if len(batch) > 1:
-                    warnings.warn(f"Batch failed: {e}. Falling back to single embedding calls.")
+                    logger.warning(
+                        f"Batch failed: {e}. Falling back to single embedding calls.",
+                        exc_info=True,
+                    )
                     all_embeddings.extend(self.embed(t) for t in batch)
                 else:
                     raise
@@ -175,32 +189,18 @@ class AzureOpenAIEmbeddings(BaseEmbeddings):
         """Return the embedding dimension."""
         return self._dimension
 
-    def get_tokenizer(self) -> "tiktoken.Encoding":
+    def get_tokenizer(self) -> "Encoding":
         """Return a tiktoken tokenizer object."""
-        return self._tokenizer  # type: ignore
+        return self._tokenizer
 
-    def _is_available(self) -> bool:
+    @classmethod
+    def _is_available(cls) -> bool:
         """Check if the required dependencies are available."""
         return (
             importutil.find_spec("openai") is not None
             and importutil.find_spec("tiktoken") is not None
             and importutil.find_spec("azure.identity") is not None
         )
-
-    def _import_dependencies(self) -> None:
-        """Lazy import dependencies for the embeddings implementation.
-
-        This method should be implemented by all embeddings implementations that require
-        additional dependencies. It lazily imports the dependencies only when they are needed.
-        """
-        if self._is_available():
-            global tiktoken, AzureOpenAI
-            import tiktoken
-            from openai import AzureOpenAI
-        else:
-            raise ImportError(
-                "Required packages not found. Install with `pip install chonkie[azure-openai]`.",
-            )
 
     def __repr__(self) -> str:
         """Representation of the AzureOpenAIEmbeddings instance."""

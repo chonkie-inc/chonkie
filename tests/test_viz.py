@@ -3,7 +3,6 @@
 import html
 import os
 import tempfile
-import warnings
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -116,18 +115,6 @@ class TestVisualizerInitialization:
         with patch("rich.console.Console"):
             with pytest.raises(ValueError, match="Invalid theme"):
                 Visualizer(theme="invalid_theme")
-
-    def test_import_dependencies_success(self) -> None:
-        """Test successful import of dependencies."""
-        with patch("rich.console.Console"):
-            viz = Visualizer()
-            viz._import_dependencies()
-
-    def test_import_dependencies_failure(self) -> None:
-        """Test import failure handling."""
-        with patch("builtins.__import__", side_effect=ImportError("Missing rich")):
-            with pytest.raises(ImportError, match="Could not import dependencies"):
-                Visualizer()
 
 
 # ... (The rest of the file is identical and omitted for brevity)
@@ -242,7 +229,7 @@ class TestVisualizerPrintMethod:
             with pytest.raises(ValueError, match="Chunks must have 'text'"):
                 viz.print(invalid_chunks)
 
-    def test_print_invalid_chunk_indices(self, sample_text: str) -> None:
+    def test_print_invalid_chunk_indices(self, sample_text: str, caplog) -> None:
         """Test printing with chunks having invalid indices."""
         invalid_chunks = [
             MagicMock(text="Hello ", start_index=None, end_index=6),
@@ -257,16 +244,14 @@ class TestVisualizerPrintMethod:
             mock_console_class.return_value = mock_console
             mock_text_class.return_value = mock_text
             viz = Visualizer()
-            with warnings.catch_warnings(record=True) as w:
-                warnings.simplefilter("always")
-                viz.print(invalid_chunks, sample_text)
-                assert len(w) == 2
-                assert "invalid start/end index" in str(w[0].message)
+            viz.print(invalid_chunks, sample_text)
+            assert "invalid start/end index" in caplog.text
 
     def test_print_stylize_error_handling(
         self,
         sample_chunks: list[Chunk],
         sample_text: str,
+        caplog,
     ) -> None:
         """Test error handling during text stylization."""
         with (
@@ -279,11 +264,8 @@ class TestVisualizerPrintMethod:
             mock_console_class.return_value = mock_console
             mock_text_class.return_value = mock_text
             viz = Visualizer()
-            with warnings.catch_warnings(record=True) as w:
-                warnings.simplefilter("always")
-                viz.print(sample_chunks, sample_text)
-                assert len(w) >= 1
-                assert "Could not apply style" in str(w[0].message)
+            viz.print(sample_chunks, sample_text)
+            assert "Could not apply style" in caplog.text
 
 
 class TestVisualizerSaveMethod:
@@ -561,9 +543,7 @@ class TestVisualizerEdgeCases:
         ]
         with patch("rich.console.Console"):
             viz = Visualizer()
-            with warnings.catch_warnings(record=True):
-                warnings.simplefilter("always")
-                viz.print(equal_indices_chunks, sample_text)
+            viz.print(equal_indices_chunks, sample_text)
 
 
 class TestVisualizerConstants:
@@ -659,3 +639,94 @@ class TestVisualizerIntegration:
             assert "brown" in content
             assert "fox" in content
             assert "jumps" in content
+
+
+class TestVisualizerStringInput:
+    """Test the list[str] input support for Visualizer."""
+
+    def test_print_list_of_strings(self) -> None:
+        """Test printing a list of strings auto-constructs chunks and full_text."""
+        with (
+            patch("rich.console.Console") as mock_console_class,
+            patch("rich.text.Text") as mock_text_class,
+        ):
+            mock_console = MagicMock()
+            mock_text = MagicMock()
+            mock_console_class.return_value = mock_console
+            mock_text_class.return_value = mock_text
+            viz = Visualizer()
+            viz.print(["hello", "world"])
+            mock_text_class.assert_called_once_with("helloworld")
+            mock_console.print.assert_called_once_with(mock_text)
+
+    def test_call_list_of_strings(self) -> None:
+        """Test __call__ with a list of strings delegates to print correctly."""
+        with (
+            patch("rich.console.Console") as mock_console_class,
+            patch("rich.text.Text") as mock_text_class,
+        ):
+            mock_console = MagicMock()
+            mock_text = MagicMock()
+            mock_console_class.return_value = mock_console
+            mock_text_class.return_value = mock_text
+            viz = Visualizer()
+            viz(["hello", "world"])
+            mock_text_class.assert_called_once_with("helloworld")
+
+    def test_print_strings_with_explicit_full_text(self) -> None:
+        """Test that explicit full_text is not overwritten when strings are passed."""
+        with (
+            patch("rich.console.Console") as mock_console_class,
+            patch("rich.text.Text") as mock_text_class,
+        ):
+            mock_console = MagicMock()
+            mock_text = MagicMock()
+            mock_console_class.return_value = mock_console
+            mock_text_class.return_value = mock_text
+            viz = Visualizer()
+            # full_text has a space between the chunks
+            viz.print(["hello", "world"], full_text="hello world")
+            mock_text_class.assert_called_once_with("hello world")
+
+    def test_print_strings_indices_with_gaps(self) -> None:
+        """Test that string chunks get correct indices when full_text has gaps."""
+        with (
+            patch("rich.console.Console") as mock_console_class,
+            patch("rich.text.Text") as mock_text_class,
+        ):
+            mock_console = MagicMock()
+            mock_text = MagicMock()
+            mock_console_class.return_value = mock_console
+            mock_text_class.return_value = mock_text
+            viz = Visualizer()
+            viz.print(["a", "b"], full_text="a-b")
+            # "b" should be highlighted at index 2, not index 1
+            assert mock_text.stylize.call_count == 2
+            # First call: "a" at (0, 1)
+            first_call_args = mock_text.stylize.call_args_list[0]
+            assert first_call_args[0][1] == 0  # start
+            assert first_call_args[0][2] == 1  # end
+            # Second call: "b" at (2, 3)
+            second_call_args = mock_text.stylize.call_args_list[1]
+            assert second_call_args[0][1] == 2  # start
+            assert second_call_args[0][2] == 3  # end
+
+    def test_print_mixed_chunks_and_strings(self) -> None:
+        """Test printing a mix of Chunk objects and strings."""
+        with (
+            patch("rich.console.Console") as mock_console_class,
+            patch("rich.text.Text") as mock_text_class,
+        ):
+            mock_console = MagicMock()
+            mock_text = MagicMock()
+            mock_console_class.return_value = mock_console
+            mock_text_class.return_value = mock_text
+            viz = Visualizer()
+            mixed = [
+                Chunk(text="Hello ", start_index=0, end_index=6, token_count=1),
+                "world",
+            ]
+            viz.print(mixed, full_text="Hello world")
+            mock_text_class.assert_called_once_with("Hello world")
+            # Should have 2 stylize calls for 2 chunks
+            assert mock_text.stylize.call_count == 2

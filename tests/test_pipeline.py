@@ -98,7 +98,7 @@ class TestPipelineFetcher:
         """Test pipeline with single file fetcher."""
         doc = (
             Pipeline()
-            .fetch_from("file", path=str(temp_file))
+            .fetch_from("file", path=temp_file)
             .process_with("text")
             .chunk_with("recursive", chunk_size=512)
             .run()
@@ -112,7 +112,7 @@ class TestPipelineFetcher:
         """Test pipeline with directory fetcher."""
         docs = (
             Pipeline()
-            .fetch_from("file", dir=str(temp_dir_with_files))
+            .fetch_from("file", dir=temp_dir_with_files)
             .process_with("text")
             .chunk_with("recursive", chunk_size=512)
             .run()
@@ -125,7 +125,7 @@ class TestPipelineFetcher:
         """Test pipeline with directory and extension filter."""
         docs = (
             Pipeline()
-            .fetch_from("file", dir=str(temp_dir_with_files), ext=[".txt"])
+            .fetch_from("file", dir=temp_dir_with_files, ext=[".txt"])
             .process_with("text")
             .chunk_with("recursive", chunk_size=512)
             .run()
@@ -456,7 +456,7 @@ class TestPipelineWithFile:
         """Test complete pipeline from single file to chunks."""
         doc = (
             Pipeline()
-            .fetch_from("file", path=str(temp_text_file))
+            .fetch_from("file", path=temp_text_file)
             .process_with("text")
             .chunk_with("recursive", chunk_size=512)
             .run()
@@ -470,7 +470,7 @@ class TestPipelineWithFile:
         """Test pipeline processing entire directory."""
         docs = (
             Pipeline()
-            .fetch_from("file", dir=str(temp_dir_with_files))
+            .fetch_from("file", dir=temp_dir_with_files)
             .process_with("text")
             .chunk_with("recursive", chunk_size=512)
             .run()
@@ -487,7 +487,7 @@ class TestPipelineWithFile:
         """Test pipeline with directory and extension filter."""
         docs = (
             Pipeline()
-            .fetch_from("file", dir=str(temp_dir_with_files), ext=[".txt"])
+            .fetch_from("file", dir=temp_dir_with_files, ext=[".txt"])
             .process_with("text")
             .chunk_with("recursive", chunk_size=512)
             .run()
@@ -524,6 +524,13 @@ class TestPipelineChaining:
 
 class TestPipelineEdgeCases:
     """Test edge cases and error conditions."""
+
+    def test_empty_list_input(self) -> None:
+        """Test pipeline with empty list of texts (Issue #460)."""
+        result = Pipeline().chunk_with("recursive", chunk_size=512).run(texts=[])
+
+        assert isinstance(result, list)
+        assert len(result) == 0
 
     def test_empty_text_input(self) -> None:
         """Test pipeline with empty text."""
@@ -581,8 +588,6 @@ class TestPipelineReturnTypes:
             temp_path = Path(temp_dir)
             (temp_path / "file.txt").write_text("Content")
 
-            result = (
-                Pipeline().fetch_from("file", dir=str(temp_path)).chunk_with("recursive").run()
-            )
+            result = Pipeline().fetch_from("file", dir=temp_path).chunk_with("recursive").run()
 
             assert isinstance(result, list)

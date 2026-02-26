@@ -56,9 +56,8 @@ class BaseHandshake(ABC):
                 return result
             except Exception as e:
                 logger.error(
-                    f"Failed to write {chunk_count} chunk(s) to database",
-                    error=str(e),
-                    error_type=type(e).__name__,
+                    f"Failed to write {chunk_count} chunk(s) to database: {e}",
+                    exc_info=True,
                 )
                 raise
         else:

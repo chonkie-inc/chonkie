@@ -22,7 +22,7 @@ from .utils import generate_random_collection_name
 logger = get_logger(__name__)
 
 if TYPE_CHECKING:
-    import weaviate
+    from weaviate import WeaviateClient
 
 
 @handshake("weaviate")
@@ -33,7 +33,7 @@ class WeaviateHandshake(BaseHandshake):
     It supports both API key and OAuth authentication methods.
 
     Args:
-        client: Optional[weaviate.Client]: An existing Weaviate client instance.
+        client: Optional[weaviate.WeaviateClient]: An existing Weaviate client instance.
         collection_name: Union[str, Literal["random"]]: The name of the collection to use.
         embedding_model: Union[str, BaseEmbeddings]: The embedding model to use.
         url: Optional[str]: The URL to the Weaviate server.
@@ -48,7 +48,7 @@ class WeaviateHandshake(BaseHandshake):
 
     def __init__(
         self,
-        client: Optional[Any] = None,  # weaviate.Client
+        client: Optional["WeaviateClient"] = None,
         collection_name: Union[str, Literal["random"]] = "random",
         embedding_model: Union[str, BaseEmbeddings] = "minishlab/potion-retrieval-32M",
         url: Optional[str] = None,
@@ -84,8 +84,12 @@ class WeaviateHandshake(BaseHandshake):
         """
         super().__init__()
 
-        # Lazy importing the dependencies
-        self._import_dependencies()
+        try:
+            import weaviate
+        except ImportError as ie:
+            raise ImportError(
+                "Weaviate not available. Please install it with `pip install chonkie[weaviate]`."
+            ) from ie
 
         # Initialize the Weaviate client
         if client is None:
@@ -174,21 +178,14 @@ class WeaviateHandshake(BaseHandshake):
         if not self._collection_exists(self.collection_name):
             self._create_collection()
 
-    def _is_available(self) -> bool:
+    @classmethod
+    def _is_available(cls) -> bool:
         """Check if the dependencies are available."""
         return importutil.find_spec("weaviate") is not None
 
     def close(self) -> None:
         """Close."""
         self.client.close()
-
-    def _import_dependencies(self) -> None:
-        """Lazy import the dependencies."""
-        if self._is_available():
-            global weaviate
-            import weaviate
-        else:
-            raise ImportError("Please install it with `pip install chonkie[weaviate]`.")
 
     def _collection_exists(self, collection_name: str) -> bool:
         """Check if a collection exists in Weaviate.
@@ -204,7 +201,10 @@ class WeaviateHandshake(BaseHandshake):
             exists = self.client.collections.exists(collection_name)
             return exists
         except Exception as e:
-            logger.warning(f"Failed to check for collection '{collection_name}': {e}")
+            logger.warning(
+                f"Failed to check for collection '{collection_name}': {e}",
+                exc_info=True,
+            )
             return False
 
     def _create_collection(self) -> None:
@@ -348,7 +348,7 @@ class WeaviateHandshake(BaseHandshake):
 
                     chunk_ids.append(chunk_id)
                 except Exception as e:
-                    logger.error(f"Error processing chunk {index}: {str(e)}")
+                    logger.error(f"Error processing chunk {index}: {e}", exc_info=True)
                     # Continue with next chunk
 
             # After batch is complete, check for errors
@@ -449,6 +449,8 @@ class WeaviateHandshake(BaseHandshake):
             list[dict[str, Any]]: The list of most similar chunks with their metadata.
 
         """
+        from weaviate.classes.query import MetadataQuery
+
         logger.debug(f"Searching Weaviate collection: {self.collection_name} with limit={limit}")
         if embedding is None and query is None:
             raise ValueError("Either query or embedding must be provided")
@@ -459,7 +461,7 @@ class WeaviateHandshake(BaseHandshake):
         results = collection.query.near_vector(
             near_vector=embedding,  # type: ignore[arg-type]
             limit=limit,
-            return_metadata=weaviate.classes.query.MetadataQuery(distance=True),
+            return_metadata=MetadataQuery(distance=True),
         )
         # Format results to match other handshakes
         matches = []
