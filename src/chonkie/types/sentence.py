@@ -58,7 +58,7 @@ class Sentence:
         result = self.__dict__.copy()
         # Convert numpy array to list if present
         if self.embedding is not None:
-            if hasattr(self.embedding, "tolist"):
+            if isinstance(self.embedding, np.ndarray):
                 result["embedding"] = self.embedding.tolist()
             else:
                 result["embedding"] = self.embedding
