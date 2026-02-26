@@ -1,6 +1,7 @@
 """Milvus Handshake to export Chonkie's Chunks into a Milvus collection."""
 
 import importlib.util as importutil
+import json
 from typing import (
     Any,
     Literal,
@@ -142,10 +143,13 @@ class MilvusHandshake(BaseHandshake):
 
         fields = [
             FieldSchema(name="pk", dtype=DataType.INT64, is_primary=True, auto_id=True),
+            FieldSchema(name="chunk_id", dtype=DataType.VARCHAR, max_length=256),
             FieldSchema(name="text", dtype=DataType.VARCHAR, max_length=65_535),
             FieldSchema(name="start_index", dtype=DataType.INT64),
             FieldSchema(name="end_index", dtype=DataType.INT64),
             FieldSchema(name="token_count", dtype=DataType.INT64),
+            FieldSchema(name="context", dtype=DataType.VARCHAR, max_length=65_535),
+            FieldSchema(name="metadata_json", dtype=DataType.VARCHAR, max_length=65_535),
             FieldSchema(name="embedding", dtype=DataType.FLOAT_VECTOR, dim=self.dimension),
         ]
         schema = CollectionSchema(fields, description="Chonkie Handshake Collection")
@@ -167,13 +171,25 @@ class MilvusHandshake(BaseHandshake):
             chunks = [chunks]
 
         # Prepare data in columnar format for Milvus
+        chunk_ids = [chunk.id for chunk in chunks]
         texts = [chunk.text for chunk in chunks]
         start_indices = [chunk.start_index for chunk in chunks]
         end_indices = [chunk.end_index for chunk in chunks]
         token_counts = [chunk.token_count for chunk in chunks]
+        contexts = [chunk.context or "" for chunk in chunks]
+        metadata_jsons = [json.dumps(chunk.metadata) for chunk in chunks]
         embeddings = self.embedding_model.embed_batch(texts)
 
-        data_to_insert = [texts, start_indices, end_indices, token_counts, embeddings]
+        data_to_insert = [
+            chunk_ids,
+            texts,
+            start_indices,
+            end_indices,
+            token_counts,
+            contexts,
+            metadata_jsons,
+            embeddings,
+        ]
 
         mutation_result = self.collection.insert(data_to_insert)
         self.collection.flush()  # Essential to make data searchable
@@ -212,7 +228,15 @@ class MilvusHandshake(BaseHandshake):
 
         # Default search parameters for HNSW index
         search_params = {"metric_type": "L2", "params": {"ef": 64}}
-        output_fields = ["text", "start_index", "end_index", "token_count"]
+        output_fields = [
+            "chunk_id",
+            "text",
+            "start_index",
+            "end_index",
+            "token_count",
+            "context",
+            "metadata_json",
+        ]
 
         results = self.collection.search(
             data=query_vectors,

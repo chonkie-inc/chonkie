@@ -1,6 +1,7 @@
 """Turbopuffer Handshake to export Chonkie's Chunks into a Turbopuffer database."""
 
 import importlib.util as importutil
+import json
 import os
 from typing import Any, Literal, Optional, Union
 from uuid import NAMESPACE_OID, uuid5
@@ -99,21 +100,27 @@ class TurbopufferHandshake(BaseHandshake):
         logger.debug(f"Writing {len(chunks)} chunks to Turbopuffer namespace: {self.namespace.id}")  # type: ignore[misc]
         # Embed the chunks
         ids = [self._generate_id(index, chunk) for (index, chunk) in enumerate(chunks)]
+        chunk_ids = [chunk.id for chunk in chunks]
         texts = [chunk.text for chunk in chunks]
         embeddings = [embedding.tolist() for embedding in self.embedding_model.embed_batch(texts)]
         start_indices = [chunk.start_index for chunk in chunks]
         end_indices = [chunk.end_index for chunk in chunks]
         token_counts = [chunk.token_count for chunk in chunks]
+        contexts = [chunk.context or "" for chunk in chunks]
+        metadata_jsons = [json.dumps(chunk.metadata) for chunk in chunks]
 
         # Write the chunks to the database
         self.namespace.write(  # type: ignore[attr-defined]
             upsert_columns={
                 "id": ids,
                 "vector": embeddings,
+                "chunk_id": chunk_ids,
                 "text": texts,
                 "start_index": start_indices,
                 "end_index": end_indices,
                 "token_count": token_counts,
+                "context": contexts,
+                "metadata_json": metadata_jsons,
             },
             distance_metric="cosine_distance",
         )
@@ -153,7 +160,15 @@ class TurbopufferHandshake(BaseHandshake):
         results = self.namespace.query(
             rank_by=("vector", "ANN", embedding),  # type: ignore[arg-type]
             top_k=limit,
-            include_attributes=["text", "start_index", "end_index", "token_count"],
+            include_attributes=[
+                "chunk_id",
+                "text",
+                "start_index",
+                "end_index",
+                "token_count",
+                "context",
+                "metadata_json",
+            ],
         )
         assert results.rows is not None
         return [

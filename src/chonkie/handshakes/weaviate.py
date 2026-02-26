@@ -272,13 +272,19 @@ class WeaviateHandshake(BaseHandshake):
             dict[str, Any]: The properties for the chunk.
 
         """
-        properties = {
+        properties: dict[str, Any] = {
+            "chunk_id": chunk.id,
             "text": chunk.text,
             "start_index": chunk.start_index,
             "end_index": chunk.end_index,
             "token_count": chunk.token_count,
             "chunk_type": type(chunk).__name__,
         }
+
+        if chunk.context is not None:
+            properties["context"] = chunk.context
+        if chunk.metadata:
+            properties.update(chunk.metadata)
 
         # Add chunk-specific properties
         if hasattr(chunk, "sentences") and chunk.sentences:

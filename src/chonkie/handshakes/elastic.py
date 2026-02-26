@@ -115,16 +115,22 @@ class ElasticHandshake(BaseHandshake):
         embeddings = self.embedding_model.embed_batch([chunk.text for chunk in chunks])
 
         for i, chunk in enumerate(chunks):
+            source: dict[str, Any] = {
+                "chunk_id": chunk.id,
+                "text": chunk.text,
+                "embedding": embeddings[i],
+                "start_index": chunk.start_index,
+                "end_index": chunk.end_index,
+                "token_count": chunk.token_count,
+            }
+            if chunk.context is not None:
+                source["context"] = chunk.context
+            if chunk.metadata:
+                source.update(chunk.metadata)
             actions.append({
                 "_index": self.index_name,
                 "_id": self._generate_id(i, chunk),
-                "_source": {
-                    "text": chunk.text,
-                    "embedding": embeddings[i],
-                    "start_index": chunk.start_index,
-                    "end_index": chunk.end_index,
-                    "token_count": chunk.token_count,
-                },
+                "_source": source,
             })
         return actions
 

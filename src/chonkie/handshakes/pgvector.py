@@ -129,13 +129,19 @@ class PgvectorHandshake(BaseHandshake):
 
     def _generate_metadata(self, chunk: Chunk) -> dict[str, Any]:
         """Generate metadata for the chunk."""
-        metadata = {
+        metadata: dict[str, Any] = {
+            "chunk_id": chunk.id,
             "text": chunk.text,
             "start_index": chunk.start_index,
             "end_index": chunk.end_index,
             "token_count": chunk.token_count,
             "chunk_type": type(chunk).__name__,
         }
+
+        if chunk.context is not None:
+            metadata["context"] = chunk.context
+        if chunk.metadata:
+            metadata.update(chunk.metadata)
 
         # Add chunk-specific metadata
         if hasattr(chunk, "sentences") and chunk.sentences:

@@ -165,11 +165,17 @@ class ChromaHandshake(BaseHandshake):
 
     def _generate_metadata(self, chunk: Chunk) -> dict:
         """Generate the metadata for the Chunk."""
-        return {
+        metadata = {
+            "chunk_id": chunk.id,
             "start_index": chunk.start_index,
             "end_index": chunk.end_index,
             "token_count": chunk.token_count,
         }
+        if chunk.context is not None:
+            metadata["context"] = chunk.context
+        if chunk.metadata:
+            metadata.update(chunk.metadata)
+        return metadata
 
     def write(self, chunks: Union[Chunk, list[Chunk]]) -> None:
         """Write the Chunks to the Chroma collection."""

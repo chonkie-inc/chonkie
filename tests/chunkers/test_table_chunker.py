@@ -697,6 +697,53 @@ def test_table_chunker_very_small_chunk_size() -> None:
         assert "| Name | Value |" in chunk.text
 
 
+# Metadata propagation tests
+def test_chunk_document_propagates_metadata(sample_table: str) -> None:
+    """TableChunker.chunk_document() should copy document.metadata to all chunks."""
+    doc = Document(
+        content=sample_table,
+        metadata={"title": "Employee Table", "source": "wiki"},
+    )
+    chunker = TableChunker(tokenizer="row", chunk_size=3)
+    result = chunker.chunk_document(doc)
+    assert len(result.chunks) > 0
+    for chunk in result.chunks:
+        assert chunk.metadata["title"] == "Employee Table"
+        assert chunk.metadata["source"] == "wiki"
+
+
+def test_chunk_document_no_metadata(sample_table: str) -> None:
+    """chunk_document() with empty Document.metadata leaves chunk.metadata empty."""
+    doc = Document(content=sample_table, metadata={})
+    chunker = TableChunker(tokenizer="row", chunk_size=3)
+    result = chunker.chunk_document(doc)
+    assert len(result.chunks) > 0
+    for chunk in result.chunks:
+        assert chunk.metadata == {}
+
+
+def test_chunk_document_markdown_propagates_metadata() -> None:
+    """TableChunker.chunk_document() propagates metadata for MarkdownDocument too."""
+    table_content = """| A | B |
+|---|---|
+| 1 | 2 |
+| 3 | 4 |
+| 5 | 6 |
+| 7 | 8 |"""
+    md_table = MarkdownTable(content=table_content, start_index=0, end_index=len(table_content))
+    doc = MarkdownDocument(
+        content=table_content,
+        tables=[md_table],
+        metadata={"title": "Test Doc", "author": "Alice"},
+    )
+    chunker = TableChunker(tokenizer="row", chunk_size=2)
+    result = chunker.chunk_document(doc)
+    assert len(result.chunks) > 0
+    for chunk in result.chunks:
+        assert chunk.metadata["title"] == "Test Doc"
+        assert chunk.metadata["author"] == "Alice"
+
+
 # Test TableChunker with row tokenizer
 def test_table_chunker_row_tokenizer(sample_table: str) -> None:
     """Test TableChunker with tokenizer='row' chunks by rows, preserving header."""

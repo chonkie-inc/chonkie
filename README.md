@@ -118,6 +118,32 @@ for chunk in doc.chunks:
     print(chunk.text)
 ```
 
+### Working with Metadata
+
+When you need to attach metadata (like source file, author, or page number) to your chunks, use the `Document` class. Any metadata set on a `Document` is automatically propagated to all resulting chunks when you use `chunk_document()`:
+
+```python
+from chonkie import TokenChunker, Document
+
+# Create a document with metadata
+doc = Document(
+    content="Chonkie is the best chunking library. It is fast, lightweight, and easy to use!",
+    metadata={"source": "annual_report.pdf", "author": "Finance Team", "page": 42}
+)
+
+# Chunk the document — metadata is automatically propagated to all chunks
+chunker = TokenChunker(chunk_size=512)
+doc = chunker.chunk_document(doc)
+
+# Each chunk now carries the document's metadata
+for chunk in doc.chunks:
+    print(f"Text: {chunk.text}")
+    print(f"Metadata: {chunk.metadata}")
+    # {'source': 'annual_report.pdf', 'author': 'Finance Team', 'page': 42}
+```
+
+The `metadata` field is a free-form `dict[str, Any]`, so you can store anything you need — strings, numbers, lists, nested dicts, etc. This works with all chunkers and with pipelines too (which use `chunk_document()` under the hood).
+
 Check out more usage examples in the [docs](https://docs.chonkie.ai)!
 
 ## ✂️ Chunkers

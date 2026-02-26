@@ -132,12 +132,18 @@ class QdrantHandshake(BaseHandshake):
 
     def _generate_payload(self, chunk: Chunk) -> dict:
         """Generate the payload for the chunk."""
-        return {
+        payload = {
+            "chunk_id": chunk.id,
             "text": chunk.text,
             "start_index": chunk.start_index,
             "end_index": chunk.end_index,
             "token_count": chunk.token_count,
         }
+        if chunk.context is not None:
+            payload["context"] = chunk.context
+        if chunk.metadata:
+            payload.update(chunk.metadata)
+        return payload
 
     def _get_points(self, chunks: Union[Chunk, list[Chunk]]) -> list["PointStruct"]:
         """Get the points from the chunks."""

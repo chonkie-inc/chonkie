@@ -1,7 +1,7 @@
 """Custom base types for Chonkie."""
 
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Iterator, Optional, Union
+from typing import TYPE_CHECKING, Any, Iterator, Optional, Union
 from uuid import uuid4
 
 if TYPE_CHECKING:
@@ -36,6 +36,7 @@ class Chunk:
     token_count: int = field(default=0)
     context: Optional[str] = field(default=None)
     embedding: Union[list[float], "np.ndarray", None] = field(default=None)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     def __len__(self) -> int:
         """Return the length of the text."""
@@ -103,6 +104,7 @@ class Chunk:
         """Return the Chunk as a dictionary."""
         result = self.__dict__.copy()
         result["context"] = self.context
+        result["metadata"] = dict(self.metadata)
         # Convert embedding to list if it has tolist method (numpy array)
         if self.embedding is not None:
             if hasattr(self.embedding, "tolist"):
@@ -122,6 +124,7 @@ class Chunk:
             token_count=data["token_count"],
             context=data.get("context", None),
             embedding=data.get("embedding", None),
+            metadata=dict(data.get("metadata", {})),
         )
 
     def copy(self) -> "Chunk":

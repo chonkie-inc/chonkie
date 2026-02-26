@@ -136,14 +136,20 @@ class MongoDBHandshake(BaseHandshake):
         return str(uuid5(NAMESPACE_OID, f"{self.collection_name}::chunk-{index}:{chunk.text}"))
 
     def _generate_document(self, index: int, chunk: Chunk, embedding: list[float]) -> dict:
-        return {
+        doc = {
             "_id": self._generate_id(index, chunk),
+            "chunk_id": chunk.id,
             "text": chunk.text,
             "start_index": chunk.start_index,
             "end_index": chunk.end_index,
             "token_count": chunk.token_count,
             "embedding": embedding,
         }
+        if chunk.context is not None:
+            doc["context"] = chunk.context
+        if chunk.metadata:
+            doc.update(chunk.metadata)
+        return doc
 
     def write(self, chunks: Union[Chunk, list[Chunk]]) -> None:
         """Write chunks to the MongoDB collection."""

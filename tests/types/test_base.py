@@ -236,3 +236,65 @@ def test_chunk_from_dict_generates_id_when_missing():
     d = {"text": "test", "start_index": 0, "end_index": 4, "token_count": 1}
     chunk = Chunk.from_dict(d)
     assert chunk.id.startswith("chnk_")
+
+
+def test_chunk_metadata_default_empty():
+    """Test that Chunk.metadata defaults to an empty dict."""
+    chunk = Chunk(text="test", start_index=0, end_index=4, token_count=1)
+    assert chunk.metadata == {}
+
+
+def test_chunk_metadata_field():
+    """Test Chunk with metadata dict."""
+    chunk = Chunk(
+        text="test",
+        start_index=0,
+        end_index=4,
+        token_count=1,
+        metadata={"title": "My Document", "source": "https://example.com"},
+    )
+    assert chunk.metadata["title"] == "My Document"
+    assert chunk.metadata["source"] == "https://example.com"
+
+
+def test_chunk_metadata_serialization():
+    """Test that metadata is preserved in to_dict/from_dict round-trip."""
+    chunk = Chunk(
+        text="test",
+        start_index=0,
+        end_index=4,
+        token_count=1,
+        metadata={"title": "My Doc", "page": 3},
+    )
+    chunk_dict = chunk.to_dict()
+    assert "metadata" in chunk_dict
+    assert chunk_dict["metadata"]["title"] == "My Doc"
+    assert chunk_dict["metadata"]["page"] == 3
+
+    restored = Chunk.from_dict(chunk_dict)
+    assert restored.metadata["title"] == "My Doc"
+    assert restored.metadata["page"] == 3
+
+
+def test_chunk_metadata_empty_serialization():
+    """Test that empty metadata round-trips cleanly."""
+    chunk = Chunk(text="test", start_index=0, end_index=4, token_count=1)
+    chunk_dict = chunk.to_dict()
+    assert chunk_dict["metadata"] == {}
+    restored = Chunk.from_dict(chunk_dict)
+    assert restored.metadata == {}
+
+
+def test_chunk_copy_preserves_metadata():
+    """Test that copy() preserves metadata and the copy is independent."""
+    chunk = Chunk(
+        text="test",
+        start_index=0,
+        end_index=4,
+        token_count=1,
+        metadata={"title": "Doc"},
+    )
+    copy = chunk.copy()
+    assert copy.metadata["title"] == "Doc"
+    copy.metadata["title"] = "Other"
+    assert chunk.metadata["title"] == "Doc"

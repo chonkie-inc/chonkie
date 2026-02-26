@@ -137,12 +137,18 @@ class PineconeHandshake(BaseHandshake):
         return str(uuid5(NAMESPACE_OID, f"{self.index_name}::chunk-{index}:{chunk.text}"))
 
     def _generate_metadata(self, chunk: Chunk) -> dict:
-        return {
+        metadata = {
+            "chunk_id": chunk.id,
             "text": chunk.text,
             "start_index": chunk.start_index,
             "end_index": chunk.end_index,
             "token_count": chunk.token_count,
         }
+        if chunk.context is not None:
+            metadata["context"] = chunk.context
+        if chunk.metadata:
+            metadata.update(chunk.metadata)
+        return metadata
 
     def _get_vectors(
         self,

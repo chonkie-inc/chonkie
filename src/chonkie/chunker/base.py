@@ -180,6 +180,18 @@ class BaseChunker(ABC):
         else:
             return self._sequential_batch_processing(texts, show_progress)
 
+    def _propagate_metadata(self, chunks: list[Chunk], document: Document) -> None:
+        """Copy document.metadata into each chunk's metadata dict.
+
+        Args:
+            chunks: The chunks to update.
+            document: The source document whose metadata should be propagated.
+
+        """
+        if document.metadata:
+            for chunk in chunks:
+                chunk.metadata.update(document.metadata)
+
     def chunk_document(self, document: Document) -> Document:
         """Chunk a document.
 
@@ -207,4 +219,5 @@ class BaseChunker(ABC):
             document.chunks = chunks
         else:
             document.chunks = self.chunk(document.content)
+        self._propagate_metadata(document.chunks, document)
         return document
