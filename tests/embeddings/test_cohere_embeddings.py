@@ -160,7 +160,7 @@ def test_batch_size_capped_at_96(mock_catsu_client) -> None:
 
 
 @pytest.mark.skipif(
-    "COHERE_API_KEY" not in os.environ,
+    not os.environ.get("COHERE_API_KEY"),
     reason="Skipping integration test - requires COHERE_API_KEY",
 )
 def test_real_api_integration():
