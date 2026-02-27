@@ -1,4 +1,5 @@
 """Weaviate Handshake to export Chonkie's Chunks into a Weaviate collection."""
+
 import importlib.util as importutil
 from typing import (
     TYPE_CHECKING,
@@ -142,11 +143,9 @@ class WeaviateHandshake(BaseHandshake):
 
         # Initialize the embedding model
         if isinstance(embedding_model, str):
-             embedding_model = AutoEmbeddings.get_embeddings(embedding_model)
+            embedding_model = AutoEmbeddings.get_embeddings(embedding_model)
         if not isinstance(embedding_model, BaseEmbeddings):
-            raise ValueError(
-                "embedding_model must be a string or a BaseEmbeddings instance."
-            )
+            raise ValueError("embedding_model must be a string or a BaseEmbeddings instance.")
         self.embedding_model = embedding_model
 
         # Determine vector dimensions

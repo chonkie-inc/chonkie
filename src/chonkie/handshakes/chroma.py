@@ -126,7 +126,10 @@ class ChromaHandshake(BaseHandshake):
         elif client is None and path is not None:
             self.client = chromadb.PersistentClient(path=str(path))
         else:
-            self.client = client  # type: ignore[assignment]
+            assert isinstance(client, chromadb.api.ClientAPI), (
+                "Client must be an instance of chromadb.Client or chromadb.PersistentClient"
+            )
+            self.client = client
 
         # Initialize the EmbeddingRefinery internally!
         self.embedding_function = ChromaEmbeddingFunction(embedding_model)
@@ -137,7 +140,7 @@ class ChromaHandshake(BaseHandshake):
             self.collection = self.client.get_or_create_collection(
                 self.collection_name,
                 embedding_function=self.embedding_function,  # type: ignore[arg-type]
-            )  # type: ignore[arg-type]
+            )
         else:
             # Keep generating random collection names until we find one that doesn't exist
             while True:
@@ -146,7 +149,7 @@ class ChromaHandshake(BaseHandshake):
                     self.collection = self.client.create_collection(
                         self.collection_name,
                         embedding_function=self.embedding_function,  # type: ignore[arg-type]
-                    )  # type: ignore[arg-type]
+                    )
                     break
                 except Exception:
                     pass
@@ -171,27 +174,27 @@ class ChromaHandshake(BaseHandshake):
             "token_count": chunk.token_count,
         }
 
-    def write(self, chunks: Union[Chunk, list[Chunk]]) -> None:
+    def write(self, chunk: Union[Chunk, list[Chunk]]) -> None:
         """Write the Chunks to the Chroma collection."""
-        if isinstance(chunks, Chunk):
-            chunks = [chunks]
+        if isinstance(chunk, Chunk):
+            chunk = [chunk]
 
-        logger.debug(f"Writing {len(chunks)} chunks to Chroma collection: {self.collection_name}")
+        logger.debug(f"Writing {len(chunk)} chunks to Chroma collection: {self.collection_name}")
         # Generate the ids and metadata
-        ids = [self._generate_id(index, chunk) for (index, chunk) in enumerate(chunks)]
-        metadata = [self._generate_metadata(chunk) for chunk in chunks]
-        texts = [chunk.text for chunk in chunks]
+        ids = [self._generate_id(index, chunk) for (index, chunk) in enumerate(chunk)]
+        metadata = [self._generate_metadata(chunk) for chunk in chunk]
+        texts = [chunk.text for chunk in chunk]
 
         # Write the Chunks to the Chroma collection
         # Since this uses the `upsert` method, if the same index and same chunk text already exist, it will update the existing Chunk — which would only be the case if the Chunk has a different embedding
         self.collection.upsert(
             ids=ids,
             documents=texts,
-            metadatas=metadata,  # type: ignore
+            metadatas=metadata,
         )
 
         logger.info(
-            f"Chonkie wrote {len(chunks)} chunks to the Chroma collection: {self.collection_name}",
+            f"Chonkie wrote {len(chunk)} chunks to the Chroma collection: {self.collection_name}",
         )
 
     def __repr__(self) -> str:
@@ -221,14 +224,14 @@ class ChromaHandshake(BaseHandshake):
 
         # Determine the query embeddings based on the input
         if query:
-            query_embedding_result = cast("np.ndarray", self.embedding_function(query))
+            query_embedding_result = cast(np.ndarray, self.embedding_function(query))
             query_embeddings = [query_embedding_result.tolist()]
         else:
-            query_embeddings = [embedding]  # type: ignore[list-item]
+            query_embeddings = [embedding]
 
         # Perform the query
         results = self.collection.query(
-            query_embeddings=query_embeddings,
+            query_embeddings=query_embeddings,  # ty:ignore[invalid-argument-type]
             n_results=limit,
             include=["metadatas", "documents", "distances"],
         )

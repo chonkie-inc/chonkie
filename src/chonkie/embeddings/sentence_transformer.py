@@ -1,7 +1,7 @@
 """SentenceTransformer embeddings."""
 
 import importlib.util as importutil
-from typing import TYPE_CHECKING, Any, Union
+from typing import TYPE_CHECKING, Any, Union, cast
 
 import numpy as np
 
@@ -63,7 +63,7 @@ class SentenceTransformerEmbeddings(BaseEmbeddings):
 
     def embed(self, text: str) -> np.ndarray:
         """Embed a single text using the sentence-transformers model."""
-        return self.model.encode(text, convert_to_numpy=True)  # type: ignore[return-value]
+        return self.model.encode(text, convert_to_numpy=True)
 
     def embed_batch(self, texts: list[str]) -> list[np.ndarray]:
         """Embed multiple texts using the sentence-transformers model."""
@@ -97,11 +97,15 @@ class SentenceTransformerEmbeddings(BaseEmbeddings):
         # Get the token embeddings
         try:
             token_embeddings_raw = self.model.encode(split_texts, output_value="token_embeddings")
+            assert token_embeddings_raw is not None, (
+                "Expected token_embeddings output from the model"
+            )
+
         except KeyError:
             # Fallback: use sentence embeddings for each split if token_embeddings not available
             # Ensure all fallback embeddings are np.ndarray before expanding dims
             token_embeddings_raw = [
-                np.expand_dims(np.array(emb), axis=0)  # type: ignore
+                np.expand_dims(np.array(emb), axis=0)
                 for emb in self.model.encode(split_texts, convert_to_numpy=True)
             ]
 
@@ -110,7 +114,7 @@ class SentenceTransformerEmbeddings(BaseEmbeddings):
         if isinstance(token_embeddings_raw, list):
             for emb in token_embeddings_raw:
                 if hasattr(emb, "cpu"):
-                    token_embeddings.append(emb.cpu().numpy())
+                    token_embeddings.append(emb.cpu().numpy())  # ty:ignore[call-non-callable]
                 else:
                     token_embeddings.append(np.array(emb))
         else:
@@ -150,7 +154,7 @@ class SentenceTransformerEmbeddings(BaseEmbeddings):
     @property
     def max_seq_length(self) -> int:
         """Return the maximum sequence length, using chunk_size or fallback to 512 if needed."""
-        max_seq_length = self.model.get_max_seq_length()  # type: ignore
+        max_seq_length = self.model.get_max_seq_length()
         # Try max_seq_length first
         if isinstance(max_seq_length, int):
             return max_seq_length

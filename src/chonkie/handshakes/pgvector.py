@@ -1,7 +1,7 @@
 """Pgvector Handshake to export Chonkie's Chunks into a PostgreSQL database with pgvector using vecs."""
 
 import importlib.util as importutil
-from typing import TYPE_CHECKING, Any, Optional, Union
+from typing import TYPE_CHECKING, Any, Literal, Optional, Union, cast
 from uuid import NAMESPACE_OID, uuid5
 
 from chonkie.embeddings import AutoEmbeddings, BaseEmbeddings
@@ -15,6 +15,7 @@ logger = get_logger(__name__)
 
 if TYPE_CHECKING:
     from vecs import Client
+    from vecs.collection import IndexMethod
 
 
 @handshake("pgvector")
@@ -139,36 +140,36 @@ class PgvectorHandshake(BaseHandshake):
 
         # Add chunk-specific metadata
         if hasattr(chunk, "sentences") and chunk.sentences:
-            metadata["sentence_count"] = len(chunk.sentences)
+            metadata["sentence_count"] = len(cast(list, chunk.sentences))
 
         if hasattr(chunk, "words") and chunk.words:
-            metadata["word_count"] = len(chunk.words)
+            metadata["word_count"] = len(cast(list, chunk.words))
 
         if hasattr(chunk, "language") and chunk.language:
             metadata["language"] = chunk.language
 
         return metadata
 
-    def write(self, chunks: Union[Chunk, list[Chunk]]) -> list[str]:
+    def write(self, chunk: Union[Chunk, list[Chunk]]) -> list[str]:
         """Write chunks to the PostgreSQL database using vecs.
 
         Args:
-            chunks: A single chunk or sequence of chunks to write.
+            chunk: A single chunk or sequence of chunks to write.
 
         Returns:
             list[str]: List of IDs of the inserted chunks.
 
         """
-        if isinstance(chunks, Chunk):
-            chunks = [chunks]
+        if isinstance(chunk, Chunk):
+            chunk = [chunk]
 
         logger.debug(
-            f"Writing {len(chunks)} chunks to PostgreSQL collection: {self.collection_name}",
+            f"Writing {len(chunk)} chunks to PostgreSQL collection: {self.collection_name}",
         )
         records = []
         chunk_ids = []
 
-        for index, chunk in enumerate(chunks):
+        for index, chunk in enumerate(chunk):
             # Generate ID and metadata
             chunk_id = self._generate_id(index, chunk)
             metadata = self._generate_metadata(chunk)
@@ -184,7 +185,7 @@ class PgvectorHandshake(BaseHandshake):
         self.collection.upsert(records=records)
 
         logger.info(
-            f"Chonkie wrote {len(chunks)} chunks to PostgreSQL collection: {self.collection_name}",
+            f"Chonkie wrote {len(chunk)} chunks to PostgreSQL collection: {self.collection_name}",
         )
         return chunk_ids
 
@@ -232,7 +233,7 @@ class PgvectorHandshake(BaseHandshake):
                 result_dict["similarity"] = result[1]
 
             if include_metadata and len(result) > 2:
-                metadata = result[2]
+                metadata = cast(dict[str, Any], result[2])
                 result_dict.update(metadata)
 
             formatted_results.append(result_dict)
@@ -240,7 +241,9 @@ class PgvectorHandshake(BaseHandshake):
         logger.info(f"Search complete: found {len(formatted_results)} matching chunks")
         return formatted_results
 
-    def create_index(self, method: str = "hnsw", **index_params: Any) -> None:
+    def create_index(
+        self, method: Literal["auto", "hnsw", "ivfflat"] = "hnsw", **index_params: Any
+    ) -> None:
         """Create a vector index for improved search performance.
 
         Args:
@@ -249,7 +252,7 @@ class PgvectorHandshake(BaseHandshake):
 
         """
         # Create index using vecs (vecs handles the specifics)
-        self.collection.create_index(method=method, **index_params)
+        self.collection.create_index(method=IndexMethod[method], **index_params)
 
         logger.info(f"Created {method} index on collection: {self.collection_name}")
 

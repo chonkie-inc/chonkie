@@ -10,6 +10,8 @@ from typing import (
 )
 from uuid import NAMESPACE_OID, uuid5
 
+from flatbuffers.builder import np
+
 from chonkie.embeddings import AutoEmbeddings, BaseEmbeddings
 from chonkie.logger import get_logger
 from chonkie.pipeline import handshake
@@ -145,20 +147,20 @@ class MongoDBHandshake(BaseHandshake):
             "embedding": embedding,
         }
 
-    def write(self, chunks: Union[Chunk, list[Chunk]]) -> None:
+    def write(self, chunk: Union[Chunk, list[Chunk]]) -> None:
         """Write chunks to the MongoDB collection."""
-        if isinstance(chunks, Chunk):
-            chunks = [chunks]
-        logger.debug(f"Writing {len(chunks)} chunks to MongoDB collection: {self.collection_name}")
-        texts = [chunk.text for chunk in chunks]
+        if isinstance(chunk, Chunk):
+            chunk = [chunk]
+        logger.debug(f"Writing {len(chunk)} chunks to MongoDB collection: {self.collection_name}")
+        texts = [chunk.text for chunk in chunk]
         embeddings = self.embedding_model.embed_batch(texts)
         documents = []
-        for index, chunk in enumerate(chunks):
+        for index, chunk in enumerate(chunk):
             embedding = embeddings[index]
-            if hasattr(embedding, "tolist"):
-                embedding_list: list[float] = embedding.tolist()
-            else:
-                embedding_list = embedding  # type: ignore[assignment]
+            if isinstance(embedding, np.ndarray):
+                embedding = embedding.tolist()
+            assert isinstance(embedding, list), "Embedding must be a list of floats"
+            embedding_list: list[float] = embedding
             documents.append(self._generate_document(index, chunk, embedding_list))
         if documents:
             self.collection.insert_many(documents)

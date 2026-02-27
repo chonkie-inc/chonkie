@@ -293,6 +293,7 @@ class CatsuEmbeddings(BaseEmbeddings):
                         f"Could not determine embedding dimension for model {self.model}: {e}",
                     ) from e
 
+        assert self._dimension is not None, "Dimension should be set at this point"
         return self._dimension
 
     def get_tokenizer(self) -> Any:

@@ -55,7 +55,6 @@ class TurbopufferHandshake(BaseHandshake):
             ) from ie
 
         # Setting the tpuf api key
-        # self.tpuf.api_key = api_key  # type: ignore[attr-defined]
         self.tpuf = turbopuffer.Turbopuffer(api_key=api_key, region=region)
 
         # Get a list of namespaces
@@ -69,10 +68,15 @@ class TurbopufferHandshake(BaseHandshake):
                     namespace_name = generate_random_collection_name()
                     if namespace_name not in namespaces:
                         break
-            self.namespace = self.tpuf.namespace(namespace_name)
-            logger.info(f"Chonkie has created a new namespace: {self.namespace.id}")  # type: ignore[misc]
-        else:
-            self.namespace = namespace
+            namespace = self.tpuf.namespace(namespace_name)
+            logger.info(f"Chonkie has created a new namespace: {namespace.id}")
+        # enforce linting
+        if not isinstance(namespace, turbopuffer.Namespace):
+            raise ValueError(
+                "The provided namespace is not a valid Turbopuffer Namespace instance."
+            )
+
+        self.namespace = namespace
 
         # Initialize the embedding model
         self.embedding_model = AutoEmbeddings.get_embeddings(embedding_model)
@@ -87,26 +91,26 @@ class TurbopufferHandshake(BaseHandshake):
         return str(
             uuid5(
                 NAMESPACE_OID,
-                f"{self.namespace.id}::chunk-{index}:{chunk.text}",  # type: ignore[misc]
+                f"{self.namespace.id}::chunk-{index}:{chunk.text}",
             ),
         )
 
-    def write(self, chunks: Union[Chunk, list[Chunk]]) -> None:
+    def write(self, chunk: Union[Chunk, list[Chunk]]) -> None:
         """Write the chunks to the Turbopuffer database."""
-        if isinstance(chunks, Chunk):
-            chunks = [chunks]
+        if isinstance(chunk, Chunk):
+            chunk = [chunk]
 
-        logger.debug(f"Writing {len(chunks)} chunks to Turbopuffer namespace: {self.namespace.id}")  # type: ignore[misc]
+        logger.debug(f"Writing {len(chunk)} chunks to Turbopuffer namespace: {self.namespace.id}")
         # Embed the chunks
-        ids = [self._generate_id(index, chunk) for (index, chunk) in enumerate(chunks)]
-        texts = [chunk.text for chunk in chunks]
+        ids = [self._generate_id(index, chunk) for (index, chunk) in enumerate(chunk)]
+        texts = [chunk.text for chunk in chunk]
         embeddings = [embedding.tolist() for embedding in self.embedding_model.embed_batch(texts)]
-        start_indices = [chunk.start_index for chunk in chunks]
-        end_indices = [chunk.end_index for chunk in chunks]
-        token_counts = [chunk.token_count for chunk in chunks]
+        start_indices = [chunk.start_index for chunk in chunk]
+        end_indices = [chunk.end_index for chunk in chunk]
+        token_counts = [chunk.token_count for chunk in chunk]
 
         # Write the chunks to the database
-        self.namespace.write(  # type: ignore[attr-defined]
+        self.namespace.write(
             upsert_columns={
                 "id": ids,
                 "vector": embeddings,
@@ -119,12 +123,12 @@ class TurbopufferHandshake(BaseHandshake):
         )
 
         logger.info(
-            f"Chonkie has written {len(chunks)} chunks to the namespace: {self.namespace.id}",  # type: ignore[misc]
+            f"Chonkie has written {len(chunk)} chunks to the namespace: {self.namespace.id}",
         )
 
     def __repr__(self) -> str:
         """Return the representation of the Turbopuffer Handshake."""
-        return f"TurbopufferHandshake(namespace={self.namespace.id})"  # type: ignore[misc]
+        return f"TurbopufferHandshake(namespace={(self.namespace.id)})"
 
     def search(
         self,

@@ -179,12 +179,12 @@ def chunk(
     # Handle output
     if handshaker is None:
         try:
-            # Set UTF-8 encoding for stdout on Windows if possible
-            if sys.platform == "win32":
-                try:
-                    sys.stdout.reconfigure(encoding="utf-8")
-                except (AttributeError, ValueError):
-                    pass  # Python < 3.7 or reconfigure not available
+            # # Set UTF-8 encoding for stdout on Windows if possible
+            # if sys.platform == "win32":
+            #     try:
+            #         sys.stdout.reconfigure(encoding="utf-8")
+            #     except (AttributeError, ValueError):
+            #         pass  # Python < 3.7 or reconfigure not available
             viz(chunks)
         except (UnicodeEncodeError, UnicodeDecodeError, BrokenPipeError) as e:
             # Fallback for Windows console encoding issues
@@ -398,12 +398,12 @@ def pipeline(
 
         docs: list[Document] = doc if isinstance(doc, list) else [doc]  # type: ignore
 
-        # Set UTF-8 encoding for stdout on Windows if possible (once, before loop)
-        if sys.platform == "win32":
-            try:
-                sys.stdout.reconfigure(encoding="utf-8")
-            except (AttributeError, ValueError):
-                pass  # Python < 3.7 or reconfigure not available
+        # # Set UTF-8 encoding for stdout on Windows if possible (once, before loop)
+        # if sys.platform == "win32":
+        #     try:
+        #         sys.stdout.reconfigure(encoding="utf-8")
+        #     except (AttributeError, ValueError):
+        #         pass  # Python < 3.7 or reconfigure not available
 
         # Summary for multiple files
         if len(docs) > 1:
