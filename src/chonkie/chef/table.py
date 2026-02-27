@@ -172,7 +172,9 @@ class TableChef(BaseChef):
         for match in self.table_pattern.finditer(markdown):
             start_index = match.start()
             end_index = match.end()
-            if any(start_index < ht.end_index and ht.start_index < end_index for ht in html_tables):
+            if any(
+                start_index < ht.end_index and ht.start_index < end_index for ht in html_tables
+            ):
                 continue
             tables.append(
                 MarkdownTable(content=match.group(0), start_index=start_index, end_index=end_index)
