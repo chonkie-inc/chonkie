@@ -1,7 +1,7 @@
 """SentenceTransformer embeddings."""
 
 import importlib.util as importutil
-from typing import TYPE_CHECKING, Any, Union, cast
+from typing import TYPE_CHECKING, Any, Union
 
 import numpy as np
 
