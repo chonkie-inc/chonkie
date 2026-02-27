@@ -228,7 +228,7 @@ class SemanticChunker(BaseChunker):
         if not sentences:
             return []
 
-        token_counts = self.tokenizer.count_tokens_batch(sentences)  # type: ignore[union-attr]
+        token_counts = self.tokenizer.count_tokens_batch(sentences)
         return [
             Sentence(text=s, start_index=i, end_index=i + len(s), token_count=tc)
             for (i, (s, tc)) in enumerate(zip(sentences, token_counts))

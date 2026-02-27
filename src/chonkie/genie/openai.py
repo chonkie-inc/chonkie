@@ -10,13 +10,13 @@ try:
     from openai import APIError, APITimeoutError, OpenAI, RateLimitError
 except ImportError:
 
-    class APIError(Exception):  # type: ignore
+    class APIError(Exception):
         """API error."""
 
-    class APITimeoutError(Exception):  # type: ignore
+    class APITimeoutError(Exception):
         """API timeout error."""
 
-    class RateLimitError(Exception):  # type: ignore
+    class RateLimitError(Exception):
         """Rate limit error."""
 
     OpenAI = None  # type: ignore

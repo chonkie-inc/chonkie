@@ -53,7 +53,7 @@ class AzureOpenAIEmbeddings(BaseEmbeddings):
         max_retries: int = 3,
         timeout: float = 60.0,
         batch_size: int = 128,
-        **kwargs: dict[str, Any],
+        **kwargs: Any,
     ):
         """Initialize Azure OpenAI embeddings.
 
@@ -102,7 +102,7 @@ class AzureOpenAIEmbeddings(BaseEmbeddings):
 
         # Initialize Azure client
         if azure_api_key:
-            self.client = AzureOpenAI(  # type: ignore
+            self.client = AzureOpenAI(
                 api_key=azure_api_key,
                 azure_endpoint=azure_endpoint,
                 api_version=api_version,
@@ -117,7 +117,7 @@ class AzureOpenAIEmbeddings(BaseEmbeddings):
                 DefaultAzureCredential(),
                 "https://cognitiveservices.azure.com/.default",
             )
-            self.client = AzureOpenAI(  # type: ignore
+            self.client = AzureOpenAI(
                 azure_endpoint=azure_endpoint,
                 azure_ad_token_provider=token_provider,
                 api_version=api_version,

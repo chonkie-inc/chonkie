@@ -46,7 +46,7 @@ class FastChunker(BaseChunker):
         """Initialize the FastChunker."""
         # Don't call super().__init__() - we don't need a tokenizer
         # But set required attributes for BaseChunker compatibility
-        self._tokenizer = None  # type: ignore[assignment]
+        self._tokenizer = None
         self._use_multiprocessing = False
 
         self.chunk_size = chunk_size
