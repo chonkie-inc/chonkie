@@ -203,17 +203,8 @@ def test_load_token_raises_when_no_config(tmp_path, monkeypatch):
     """load_token() raises ValueError when neither env var nor config file exists."""
     monkeypatch.setenv("HOME", str(tmp_path))
     monkeypatch.delenv("CHONKIE_API_KEY", raising=False)
-    # Ensure no config file exists
-    config_path = tmp_path / ".chonkie" / "config.json"
-    if config_path.exists():
-        config_path.unlink()
-    # Remove the directory too so get_config_path recreates it
-    chonkie_dir = tmp_path / ".chonkie"
-    if chonkie_dir.exists():
-        import shutil
-
-        shutil.rmtree(str(chonkie_dir))
-    with pytest.raises(ValueError):
+    assert not (tmp_path / ".chonkie").exists()  # Sanity check; tmp_path should always be new.
+    with pytest.raises(ValueError, match="config file not found"):
         load_token()
 
 
@@ -224,5 +215,5 @@ def test_load_token_raises_when_api_key_missing_from_config(tmp_path, monkeypatc
     config_path = get_config_path()
     with open(config_path, "w") as f:
         json.dump({"other_key": "value"}, f)
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="API key not found in config file"):
         load_token()
