@@ -150,26 +150,26 @@ class PgvectorHandshake(BaseHandshake):
 
         return metadata
 
-    def write(self, chunk: Union[Chunk, list[Chunk]]) -> list[str]:
+    def write(self, chunks: Union[Chunk, list[Chunk]]) -> list[str]:
         """Write chunks to the PostgreSQL database using vecs.
 
         Args:
-            chunk: A single chunk or sequence of chunks to write.
+            chunks: A single chunk or sequence of chunks to write.
 
         Returns:
             list[str]: List of IDs of the inserted chunks.
 
         """
-        if isinstance(chunk, Chunk):
-            chunk = [chunk]
+        if isinstance(chunks, Chunk):
+            chunks = [chunks]
 
         logger.debug(
-            f"Writing {len(chunk)} chunks to PostgreSQL collection: {self.collection_name}",
+            f"Writing {len(chunks)} chunks to PostgreSQL collection: {self.collection_name}",
         )
         records = []
         chunk_ids = []
 
-        for index, chunk in enumerate(chunk):
+        for index, chunk in enumerate(chunks):
             # Generate ID and metadata
             chunk_id = self._generate_id(index, chunk)
             metadata = self._generate_metadata(chunk)
@@ -185,7 +185,7 @@ class PgvectorHandshake(BaseHandshake):
         self.collection.upsert(records=records)
 
         logger.info(
-            f"Chonkie wrote {len(chunk)} chunks to PostgreSQL collection: {self.collection_name}",
+            f"Chonkie wrote {len(chunks)} chunks to PostgreSQL collection: {self.collection_name}",
         )
         return chunk_ids
 

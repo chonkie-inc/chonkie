@@ -95,19 +95,19 @@ class TurbopufferHandshake(BaseHandshake):
             ),
         )
 
-    def write(self, chunk: Union[Chunk, list[Chunk]]) -> None:
+    def write(self, chunks: Union[Chunk, list[Chunk]]) -> None:
         """Write the chunks to the Turbopuffer database."""
-        if isinstance(chunk, Chunk):
-            chunk = [chunk]
+        if isinstance(chunks, Chunk):
+            chunks = [chunks]
 
-        logger.debug(f"Writing {len(chunk)} chunks to Turbopuffer namespace: {self.namespace.id}")
+        logger.debug(f"Writing {len(chunks)} chunks to Turbopuffer namespace: {self.namespace.id}")
         # Embed the chunks
-        ids = [self._generate_id(index, chunk) for (index, chunk) in enumerate(chunk)]
-        texts = [chunk.text for chunk in chunk]
+        ids = [self._generate_id(index, chunk) for (index, chunk) in enumerate(chunks)]
+        texts = [chunk.text for chunk in chunks]
         embeddings = [embedding.tolist() for embedding in self.embedding_model.embed_batch(texts)]
-        start_indices = [chunk.start_index for chunk in chunk]
-        end_indices = [chunk.end_index for chunk in chunk]
-        token_counts = [chunk.token_count for chunk in chunk]
+        start_indices = [chunk.start_index for chunk in chunks]
+        end_indices = [chunk.end_index for chunk in chunks]
+        token_counts = [chunk.token_count for chunk in chunks]
 
         # Write the chunks to the database
         self.namespace.write(
@@ -123,7 +123,7 @@ class TurbopufferHandshake(BaseHandshake):
         )
 
         logger.info(
-            f"Chonkie has written {len(chunk)} chunks to the namespace: {self.namespace.id}",
+            f"Chonkie has written {len(chunks)} chunks to the namespace: {self.namespace.id}",
         )
 
     def __repr__(self) -> str:

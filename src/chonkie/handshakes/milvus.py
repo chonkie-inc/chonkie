@@ -164,16 +164,16 @@ class MilvusHandshake(BaseHandshake):
         collection.create_index(field_name="embedding", index_params=index_params)
         logger.info("Created default HNSW index on 'embedding' field.")
 
-    def write(self, chunk: Union[Chunk, list[Chunk]]) -> None:
+    def write(self, chunks: Union[Chunk, list[Chunk]]) -> None:
         """Write the chunks to the Milvus collection."""
-        if isinstance(chunk, Chunk):
-            chunk = [chunk]
+        if isinstance(chunks, Chunk):
+            chunks = [chunks]
 
         # Prepare data in columnar format for Milvus
-        texts = [chunk.text for chunk in chunk]
-        start_indices = [chunk.start_index for chunk in chunk]
-        end_indices = [chunk.end_index for chunk in chunk]
-        token_counts = [chunk.token_count for chunk in chunk]
+        texts = [chunk.text for chunk in chunks]
+        start_indices = [chunk.start_index for chunk in chunks]
+        end_indices = [chunk.end_index for chunk in chunks]
+        token_counts = [chunk.token_count for chunk in chunks]
         embeddings = self.embedding_model.embed_batch(texts)
 
         data_to_insert = [texts, start_indices, end_indices, token_counts, embeddings]

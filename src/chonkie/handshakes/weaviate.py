@@ -295,11 +295,11 @@ class WeaviateHandshake(BaseHandshake):
 
         return properties
 
-    def write(self, chunk: Union[Chunk, list[Chunk]]) -> list[str]:
+    def write(self, chunks: Union[Chunk, list[Chunk]]) -> list[str]:
         """Write chunks to the Weaviate collection.
 
         Args:
-            chunk: A single chunk or sequence of chunks to write.
+            chunks: A single chunk or sequence of chunks to write.
 
         Returns:
             list[str]: List of IDs of the inserted chunks.
@@ -308,13 +308,13 @@ class WeaviateHandshake(BaseHandshake):
             RuntimeError: If there are too many errors during batch processing.
 
         """
-        if isinstance(chunk, Chunk):
-            chunk = [chunk]
-        elif not isinstance(chunk, list):
-            chunk = list(chunk)
+        if isinstance(chunks, Chunk):
+            chunks = [chunks]
+        elif not isinstance(chunks, list):
+            chunks = list(chunks)
 
         logger.debug(
-            f"Writing {len(chunk)} chunks to Weaviate collection: {self.collection_name}",
+            f"Writing {len(chunks)} chunks to Weaviate collection: {self.collection_name}",
         )
         # Get the collection
         collection = self.client.collections.get(self.collection_name)
@@ -322,9 +322,9 @@ class WeaviateHandshake(BaseHandshake):
         # Create a batch
         with collection.batch.fixed_size(batch_size=self.batch_size) as batch:
             chunk_ids = []
-            max_errors = min(len(chunk) // 10 + 1, 10)  # Allow up to 10% errors or max 10
+            max_errors = min(len(chunks) // 10 + 1, 10)  # Allow up to 10% errors or max 10
 
-            for index, chunk in enumerate(chunk):
+            for index, chunk in enumerate(chunks):
                 # Check if we've hit too many errors
                 if batch.number_errors > max_errors:
                     error_msg = f"Too many errors during batch processing ({batch.number_errors}). Aborting."
@@ -369,8 +369,8 @@ class WeaviateHandshake(BaseHandshake):
         logger.info(
             f"Chonkie wrote {successful_chunks} chunks to Weaviate collection: {self.collection_name}",
         )
-        if successful_chunks < len(chunk):
-            logger.warning(f"{len(chunk) - successful_chunks} chunks failed to write")
+        if successful_chunks < len(chunks):
+            logger.warning(f"{len(chunks) - successful_chunks} chunks failed to write")
 
         return chunk_ids
 

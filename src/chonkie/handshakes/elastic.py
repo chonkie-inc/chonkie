@@ -128,12 +128,12 @@ class ElasticHandshake(BaseHandshake):
             })
         return actions
 
-    def write(self, chunk: Union[Chunk, list[Chunk]]) -> None:
+    def write(self, chunks: Union[Chunk, list[Chunk]]) -> None:
         """Write the chunks to the Elasticsearch index using the bulk API."""
-        if isinstance(chunk, Chunk):
-            chunk = [chunk]
+        if isinstance(chunks, Chunk):
+            chunks = [chunks]
 
-        actions = self._create_bulk_actions(chunk)
+        actions = self._create_bulk_actions(chunks)
 
         # Use the bulk helper to efficiently write the documents
         from elasticsearch.helpers import bulk

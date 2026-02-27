@@ -163,19 +163,19 @@ class QdrantHandshake(BaseHandshake):
             )
         return points
 
-    def write(self, chunk: Union[Chunk, list[Chunk]]) -> None:
+    def write(self, chunks: Union[Chunk, list[Chunk]]) -> None:
         """Write the chunks to the collection."""
-        if isinstance(chunk, Chunk):
-            chunk = [chunk]
+        if isinstance(chunks, Chunk):
+            chunks = [chunks]
 
-        logger.debug(f"Writing {len(chunk)} chunks to Qdrant collection: {self.collection_name}")
-        points = self._get_points(chunk)
+        logger.debug(f"Writing {len(chunks)} chunks to Qdrant collection: {self.collection_name}")
+        points = self._get_points(chunks)
 
         # Write the points to the collection
         self.client.upsert(collection_name=self.collection_name, points=points, wait=True)
 
         logger.info(
-            f"Chonkie wrote {len(chunk)} chunks to Qdrant collection: {self.collection_name}",
+            f"Chonkie wrote {len(chunks)} chunks to Qdrant collection: {self.collection_name}",
         )
 
     def __repr__(self) -> str:

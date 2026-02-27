@@ -174,16 +174,16 @@ class ChromaHandshake(BaseHandshake):
             "token_count": chunk.token_count,
         }
 
-    def write(self, chunk: Union[Chunk, list[Chunk]]) -> None:
+    def write(self, chunks: Union[Chunk, list[Chunk]]) -> None:
         """Write the Chunks to the Chroma collection."""
-        if isinstance(chunk, Chunk):
-            chunk = [chunk]
+        if isinstance(chunks, Chunk):
+            chunks = [chunks]
 
-        logger.debug(f"Writing {len(chunk)} chunks to Chroma collection: {self.collection_name}")
+        logger.debug(f"Writing {len(chunks)} chunks to Chroma collection: {self.collection_name}")
         # Generate the ids and metadata
-        ids = [self._generate_id(index, chunk) for (index, chunk) in enumerate(chunk)]
-        metadata = [self._generate_metadata(chunk) for chunk in chunk]
-        texts = [chunk.text for chunk in chunk]
+        ids = [self._generate_id(index, chunk) for (index, chunk) in enumerate(chunks)]
+        metadata = [self._generate_metadata(chunk) for chunk in chunks]
+        texts = [chunk.text for chunk in chunks]
 
         # Write the Chunks to the Chroma collection
         # Since this uses the `upsert` method, if the same index and same chunk text already exist, it will update the existing Chunk — which would only be the case if the Chunk has a different embedding
@@ -194,7 +194,7 @@ class ChromaHandshake(BaseHandshake):
         )
 
         logger.info(
-            f"Chonkie wrote {len(chunk)} chunks to the Chroma collection: {self.collection_name}",
+            f"Chonkie wrote {len(chunks)} chunks to the Chroma collection: {self.collection_name}",
         )
 
     def __repr__(self) -> str:

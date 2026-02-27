@@ -147,15 +147,15 @@ class MongoDBHandshake(BaseHandshake):
             "embedding": embedding,
         }
 
-    def write(self, chunk: Union[Chunk, list[Chunk]]) -> None:
+    def write(self, chunks: Union[Chunk, list[Chunk]]) -> None:
         """Write chunks to the MongoDB collection."""
-        if isinstance(chunk, Chunk):
-            chunk = [chunk]
-        logger.debug(f"Writing {len(chunk)} chunks to MongoDB collection: {self.collection_name}")
-        texts = [chunk.text for chunk in chunk]
+        if isinstance(chunks, Chunk):
+            chunks = [chunks]
+        logger.debug(f"Writing {len(chunks)} chunks to MongoDB collection: {self.collection_name}")
+        texts = [chunk.text for chunk in chunks]
         embeddings = self.embedding_model.embed_batch(texts)
         documents = []
-        for index, chunk in enumerate(chunk):
+        for index, chunk in enumerate(chunks):
             embedding = embeddings[index]
             if isinstance(embedding, np.ndarray):
                 embedding = embedding.tolist()

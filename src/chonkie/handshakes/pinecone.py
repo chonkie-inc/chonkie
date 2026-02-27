@@ -173,22 +173,22 @@ class PineconeHandshake(BaseHandshake):
             ))
         return vectors
 
-    def write(self, chunk: Union[Chunk, list[Chunk]]) -> None:
+    def write(self, chunks: Union[Chunk, list[Chunk]]) -> None:
         """Write chunks to the Pinecone index.
 
         Args:
-            chunk: A single Chunk or sequence of Chunks to write to the index.
+            chunks: A single Chunk or sequence of Chunks to write to the index.
 
         Returns:
             None
 
         """
-        if isinstance(chunk, Chunk):
-            chunk = [chunk]
-        logger.debug(f"Writing {len(chunk)} chunks to Pinecone index: {self.index_name}")
-        vectors = self._get_vectors(chunk)
+        if isinstance(chunks, Chunk):
+            chunks = [chunks]
+        logger.debug(f"Writing {len(chunks)} chunks to Pinecone index: {self.index_name}")
+        vectors = self._get_vectors(chunks)
         self.index.upsert(vectors)
-        logger.info(f"Chonkie wrote {len(chunk)} chunks to Pinecone index: {self.index_name}")
+        logger.info(f"Chonkie wrote {len(chunks)} chunks to Pinecone index: {self.index_name}")
 
     def __repr__(self) -> str:
         """Return a string representation of the PineconeHandshake instance.
