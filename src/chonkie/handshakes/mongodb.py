@@ -10,6 +10,8 @@ from typing import (
 )
 from uuid import NAMESPACE_OID, uuid5
 
+from flatbuffers.builder import np
+
 from chonkie.embeddings import AutoEmbeddings, BaseEmbeddings
 from chonkie.logger import get_logger
 from chonkie.pipeline import handshake
@@ -155,10 +157,10 @@ class MongoDBHandshake(BaseHandshake):
         documents = []
         for index, chunk in enumerate(chunks):
             embedding = embeddings[index]
-            if hasattr(embedding, "tolist"):
-                embedding_list: list[float] = embedding.tolist()
-            else:
-                embedding_list = embedding  # type: ignore[assignment]
+            if isinstance(embedding, np.ndarray):
+                embedding = embedding.tolist()
+            assert isinstance(embedding, list), "Embedding must be a list of floats"
+            embedding_list: list[float] = embedding
             documents.append(self._generate_document(index, chunk, embedding_list))
         if documents:
             self.collection.insert_many(documents)

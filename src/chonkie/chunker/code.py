@@ -84,7 +84,7 @@ class CodeChunker(BaseChunker):
         else:
             from tree_sitter_language_pack import get_parser
 
-            self.parser = get_parser(language)  # type: ignore[arg-type]
+            self.parser = get_parser(language)
 
         # Set the use_multiprocessing flag
         self._use_multiprocessing = False
@@ -322,7 +322,7 @@ class CodeChunker(BaseChunker):
                     end_index=current_index + len(text),
                     token_count=token_count,
                 ),
-            )  # type: ignore[attr-defined]
+            )
             current_index += len(text)
         return chunks
 

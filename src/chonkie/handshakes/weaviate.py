@@ -11,6 +11,8 @@ from typing import (
 from urllib.parse import urlparse
 from uuid import NAMESPACE_OID, uuid5
 
+from flatbuffers.builder import np
+
 from chonkie.embeddings import AutoEmbeddings, BaseEmbeddings
 from chonkie.logger import get_logger
 from chonkie.pipeline import handshake
@@ -217,31 +219,31 @@ class WeaviateHandshake(BaseHandshake):
                 name=self.collection_name,
                 vector_index_config=Configure.VectorIndex.hnsw(),
                 properties=[
-                    Property(
-                        name="text",
-                        data_type=DataType.TEXT,
-                        description="The text content of the chunk",
-                    ),
-                    Property(
-                        name="start_index",
-                        data_type=DataType.INT,
-                        description="The start index of the chunk in the original text",
-                    ),
-                    Property(
-                        name="end_index",
-                        data_type=DataType.INT,
-                        description="The end index of the chunk in the original text",
-                    ),
-                    Property(
-                        name="token_count",
-                        data_type=DataType.INT,
-                        description="The number of tokens in the chunk",
-                    ),
-                    Property(
-                        name="chunk_type",
-                        data_type=DataType.TEXT,
-                        description="The type of the chunk",
-                    ),
+                    Property.model_validate({
+                        "name": "text",
+                        "data_type": DataType.TEXT,
+                        "description": "The text content of the chunk",
+                    }),
+                    Property.model_validate({
+                        "name": "start_index",
+                        "data_type": DataType.INT,
+                        "description": "The start index of the chunk in the original text",
+                    }),
+                    Property.model_validate({
+                        "name": "end_index",
+                        "data_type": DataType.INT,
+                        "description": "The end index of the chunk in the original text",
+                    }),
+                    Property.model_validate({
+                        "name": "token_count",
+                        "data_type": DataType.INT,
+                        "description": "The number of tokens in the chunk",
+                    }),
+                    Property.model_validate({
+                        "name": "chunk_type",
+                        "data_type": DataType.TEXT,
+                        "description": "The type of the chunk",
+                    }),
                 ],
             )
 
@@ -281,11 +283,13 @@ class WeaviateHandshake(BaseHandshake):
         }
 
         # Add chunk-specific properties
-        if hasattr(chunk, "sentences") and chunk.sentences:
-            properties["sentence_count"] = len(chunk.sentences)
+        sentences = getattr(chunk, "sentences", None)
+        if sentences:
+            properties["sentence_count"] = len(sentences)
 
-        if hasattr(chunk, "words") and chunk.words:
-            properties["word_count"] = len(chunk.words)
+        words = getattr(chunk, "words", None)
+        if words:
+            properties["word_count"] = len(words)
 
         if hasattr(chunk, "language") and chunk.language:
             properties["language"] = chunk.language
@@ -338,10 +342,10 @@ class WeaviateHandshake(BaseHandshake):
                     embedding = self.embedding_model.embed(chunk.text)
 
                     vector: list[float]
-                    if hasattr(embedding, "tolist"):
-                        vector = embedding.tolist()  # type: ignore[assignment]
+                    if isinstance(embedding, np.ndarray):
+                        vector = embedding.tolist()
                     else:
-                        vector = list(embedding)  # type: ignore[arg-type]
+                        vector = list(embedding)
 
                     # Add to batch
                     batch.add_object(properties=properties, uuid=chunk_id, vector=vector)
@@ -456,10 +460,13 @@ class WeaviateHandshake(BaseHandshake):
             raise ValueError("Either query or embedding must be provided")
         if query is not None:
             embedding = self.embedding_model.embed(query).tolist()
+        # enforce typing
+        if not isinstance(embedding, list) or not all(isinstance(x, float) for x in embedding):
+            raise ValueError("Embedding must be a list of floats")
         collection = self.client.collections.get(self.collection_name)
         # Weaviate expects a vector for similarity search
         results = collection.query.near_vector(
-            near_vector=embedding,  # type: ignore[arg-type]
+            near_vector=embedding,
             limit=limit,
             return_metadata=MetadataQuery(distance=True),
         )

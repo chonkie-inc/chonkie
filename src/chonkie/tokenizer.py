@@ -463,7 +463,7 @@ class InvalidTokenizerError(ValueError):
 
 def _create_auto_tokenizer_from_string(tokenizer: str) -> "AutoTokenizer":
     if tokenizer_cls := _chonkie_tokenizer_classes.get(tokenizer):
-        return ChonkieAutoTokenizer(tokenizer_cls())  # type: ignore[abstract]
+        return ChonkieAutoTokenizer(tokenizer_cls())
 
     backend_errors = {}
 

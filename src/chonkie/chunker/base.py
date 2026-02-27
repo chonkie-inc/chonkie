@@ -172,7 +172,7 @@ class BaseChunker(ABC):
         if len(texts) == 0:
             return []
         if len(texts) == 1:
-            return [self.chunk(texts[0])]  # type: ignore
+            return [self.chunk(texts[0])]
 
         # Now for the remaining, check the self._multiprocessing bool flag
         if self._use_multiprocessing:

@@ -3,7 +3,7 @@
 import os
 import re
 from pathlib import Path
-from typing import Union
+from typing import Union, cast
 
 from chonkie.chef.base import BaseChef
 from chonkie.logger import get_logger
@@ -63,7 +63,7 @@ class TableChef(BaseChef):
             if str_path.endswith(".csv"):
                 logger.debug("Processing CSV file")
                 df = pd.read_csv(str_path)
-                markdown = df.to_markdown(index=False)
+                markdown = df.to_markdown(index=False) or ""
                 logger.info(f"CSV processing complete: converted {len(df)} rows to markdown")
                 # CSV always produces a single table
                 table = MarkdownTable(content=markdown, start_index=0, end_index=len(markdown))
@@ -74,7 +74,7 @@ class TableChef(BaseChef):
                 tables: list[MarkdownTable] = []
                 all_content = []
                 for df in all_df.values():
-                    text = df.to_markdown(index=False)
+                    text = df.to_markdown(index=False) or ""
                     all_content.append(text)
                     tables.append(MarkdownTable(content=text, start_index=0, end_index=len(text)))
                 # Join all sheets with double newline
@@ -116,7 +116,7 @@ class TableChef(BaseChef):
 
         """
         if isinstance(path, (list, tuple)):
-            return self.process_batch(path)
+            return self.process_batch(cast("list[str | os.PathLike]", list(path)))
         elif isinstance(path, (str, Path)):
             return self.process(path)
         else:

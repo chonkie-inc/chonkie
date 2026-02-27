@@ -52,7 +52,7 @@ class EmbeddingsRefinery(BaseRefinery):
         texts = [chunk.text for chunk in chunks]
         embeds = self.embedding_model.embed_batch(texts)
         for chunk, embed in zip(chunks, embeds):
-            chunk.embedding = embed  # type: ignore[attr-defined]
+            chunk.embedding = embed
         logger.info(f"Embedding refinement complete: added embeddings to {len(chunks)} chunks")
         return chunks
 

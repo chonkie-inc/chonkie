@@ -1,15 +1,9 @@
 """Unit tests for Sentence class."""
 
+import numpy as np
 import pytest
 
 from chonkie import Sentence
-
-try:
-    import numpy as np
-
-    NUMPY_AVAILABLE = True
-except ImportError:
-    NUMPY_AVAILABLE = False
 
 
 def test_sentence_init():
@@ -103,7 +97,6 @@ def test_sentence_to_dict_with_list_embedding():
     assert d["embedding"] == [0.1, 0.2, 0.3]
 
 
-@pytest.mark.skipif(not NUMPY_AVAILABLE, reason="NumPy not available")
 def test_sentence_to_dict_converts_numpy_embedding():
     """Test that to_dict converts a numpy embedding to a list."""
     embedding = np.array([0.4, 0.5, 0.6])
