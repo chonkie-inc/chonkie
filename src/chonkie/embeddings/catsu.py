@@ -130,9 +130,9 @@ class CatsuEmbeddings(BaseEmbeddings):
         try:
             models = self.client.list_models(provider=self.provider)
             for model_info in models:
-                if model_info.name == self.model:
+                if getattr(model_info, "name", None) == self.model:
                     self._model_info = model_info
-                    self._dimension = model_info.dimensions
+                    self._dimension = getattr(model_info, "dimensions", None)
                     break
 
             if self._model_info is None and self._verbose:

@@ -1,6 +1,6 @@
 """AutoEmbeddings is a factory class for automatically loading embeddings."""
 
-from typing import Any, Union
+from typing import Any, Union, cast
 
 from chonkie.logger import get_logger
 
@@ -78,7 +78,7 @@ class AutoEmbeddings:
                 embeddings_cls = EmbeddingsRegistry.get_provider(provider)
                 if embeddings_cls:
                     try:
-                        return embeddings_cls(model_name, **kwargs)
+                        return cast(Any, embeddings_cls)(model_name, **kwargs)
                     except Exception as error:
                         raise ValueError(
                             f"Failed to load {model} with {embeddings_cls.__name__}, with error: {error}",
@@ -93,7 +93,7 @@ class AutoEmbeddings:
                 if embeddings_cls:
                     try:
                         # Try instantiating with the model identifier
-                        embeddings_instance = embeddings_cls(model, **kwargs)
+                        embeddings_instance = cast(Any, embeddings_cls)(model, **kwargs)
                     except Exception as error:
                         logger.warning(
                             f"Failed to load {model} with {embeddings_cls.__name__}: {error}\n"
