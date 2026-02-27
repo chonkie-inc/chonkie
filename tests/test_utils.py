@@ -121,6 +121,7 @@ def test_get_config_path_returns_string(tmp_path, monkeypatch):
 def test_get_config_path_creates_directory(tmp_path, monkeypatch):
     """get_config_path creates the ~/.chonkie directory if it does not exist."""
     monkeypatch.setenv("HOME", str(tmp_path))
+    monkeypatch.setenv("USERPROFILE", str(tmp_path))
     chonkie_dir = tmp_path / ".chonkie"
     assert not chonkie_dir.exists()
     get_config_path()
@@ -202,6 +203,7 @@ def test_load_token_env_takes_priority(tmp_path, monkeypatch):
 def test_load_token_raises_when_no_config(tmp_path, monkeypatch):
     """load_token() raises ValueError when neither env var nor config file exists."""
     monkeypatch.setenv("HOME", str(tmp_path))
+    monkeypatch.setenv("USERPROFILE", str(tmp_path))
     monkeypatch.delenv("CHONKIE_API_KEY", raising=False)
     assert not (tmp_path / ".chonkie").exists()  # Sanity check; tmp_path should always be new.
     with pytest.raises(ValueError, match="config file not found"):

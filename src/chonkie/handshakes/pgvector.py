@@ -15,7 +15,6 @@ logger = get_logger(__name__)
 
 if TYPE_CHECKING:
     from vecs import Client
-    from vecs.collection import IndexMethod
 
 
 @handshake("pgvector")
@@ -71,6 +70,7 @@ class PgvectorHandshake(BaseHandshake):
 
         try:
             import vecs
+
         except ImportError as ie:
             raise ImportError(
                 "vecs is not installed. Please install it with `pip install chonkie[pgvector]`.",
@@ -252,6 +252,8 @@ class PgvectorHandshake(BaseHandshake):
 
         """
         # Create index using vecs (vecs handles the specifics)
+        from vecs.collection import IndexMethod
+
         self.collection.create_index(method=IndexMethod[method], **index_params)
 
         logger.info(f"Created {method} index on collection: {self.collection_name}")

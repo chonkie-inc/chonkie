@@ -88,7 +88,8 @@ def test_initialization_with_config_params(mock_catsu_client) -> None:
         call_kwargs = mock_client_class.call_args[1]
         assert call_kwargs["max_retries"] == 5
         assert call_kwargs["timeout"] == 60
-        assert call_kwargs["verbose"] is True
+        assert "verbose" not in call_kwargs
+        assert embeddings._verbose is True
         assert embeddings._batch_size == 64
 
 

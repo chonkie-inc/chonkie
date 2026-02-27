@@ -143,10 +143,11 @@ class WeaviateHandshake(BaseHandshake):
 
         # Initialize the embedding model
         if isinstance(embedding_model, str):
-            embedding_model = AutoEmbeddings.get_embeddings(embedding_model)
-        if not isinstance(embedding_model, BaseEmbeddings):
+            self.embedding_model = AutoEmbeddings.get_embeddings(embedding_model)
+        elif isinstance(embedding_model, BaseEmbeddings):
+            self.embedding_model = embedding_model
+        else:
             raise ValueError("embedding_model must be a string or a BaseEmbeddings instance.")
-        self.embedding_model = embedding_model
 
         # Determine vector dimensions
         if (

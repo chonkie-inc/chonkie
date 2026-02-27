@@ -106,7 +106,6 @@ class CatsuEmbeddings(BaseEmbeddings):
             ) from e
 
         self.client = catsu.Client(
-            verbose=verbose,
             max_retries=max_retries,
             timeout=timeout,
             api_keys=api_keys,

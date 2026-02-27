@@ -1,11 +1,10 @@
 """Custom base types for Chonkie."""
 
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Iterator, Optional, Union
+from typing import Iterator, Optional, Union
 from uuid import uuid4
 
-if TYPE_CHECKING:
-    import numpy as np
+import numpy as np
 
 
 # Function to generate the IDs for the Chonkie  types
@@ -35,7 +34,7 @@ class Chunk:
     end_index: int = field(default=0)
     token_count: int = field(default=0)
     context: Optional[str] = field(default=None)
-    embedding: Union[list[float], "np.ndarray", None] = field(default=None)
+    embedding: Union[list[float], np.ndarray, None] = field(default=None)
 
     def __len__(self) -> int:
         """Return the length of the text."""
