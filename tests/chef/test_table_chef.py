@@ -194,15 +194,16 @@ class TestTableChef:
         with pytest.raises(TypeError, match="Unsupported type"):
             table_chef(123)  # type: ignore
 
-    def test_extract_tables_from_markdown_multiple(
+    def test_extract_tables_from_markdown_html(
         self: "TestTableChef",
         table_chef: TableChef,
     ) -> None:
-        """Test extracting multiple tables from markdown text."""
+        """Test extracting HTML tables from markdown text."""
         md = """
-| a | b |
-|---|---|
-| 1 | 2 |
+<table>
+  <tr><th>Col1</th><th>Col2</th></tr>
+  <tr><td>1</td><td>2</td></tr>
+</table>
 
 Some text
 
@@ -213,7 +214,8 @@ Some text
         tables = table_chef.extract_tables_from_markdown(md)
         assert isinstance(tables, list)
         assert len(tables) == 2
-        assert all(hasattr(t, "content") and "|" in t.content for t in tables)
+        assert any("<table>" in t.content for t in tables)
+        assert any("| c | d |" in t.content for t in tables)
 
     def test_repr(self: "TestTableChef", table_chef: TableChef) -> None:
         """Test the __repr__ method of TableChef."""
