@@ -348,7 +348,8 @@ class CodeChunker(BaseChunker):
             logger.debug(f"Using configured language: {self.language}")
 
         try:
-            assert self.parser is not None, "Parser is not initialized."
+            if self.parser is None:
+                raise RuntimeError("Parser failed to initialize. Language detection or initialization failed.")
             # Create the parsing tree for the current code
             tree: Tree = self.parser.parse(original_text_bytes)
             root_node: Node = tree.root_node
