@@ -1,7 +1,6 @@
 """Base Class for All Chunkers."""
 
 import asyncio
-import warnings
 from abc import ABC, abstractmethod
 from dataclasses import replace
 from typing import Sequence, Union
