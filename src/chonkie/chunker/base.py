@@ -1,6 +1,8 @@
 """Base Class for All Chunkers."""
 
+import asyncio
 from abc import ABC, abstractmethod
+from dataclasses import replace
 from typing import Sequence, Union
 
 from tqdm import tqdm
@@ -180,6 +182,57 @@ class BaseChunker(ABC):
         else:
             return self._sequential_batch_processing(texts, show_progress)
 
+    async def chunk_async(self, text: str) -> list[Chunk]:
+        """Chunk the given text asynchronously.
+
+        Args:
+            text (str): The text to chunk.
+
+        Returns:
+            list[Chunk]: A list of Chunks.
+
+        """
+        return await asyncio.to_thread(self.chunk, text)
+
+    async def chunk_batch_async(
+        self, texts: Sequence[str], show_progress: bool = True
+    ) -> list[list[Chunk]]:
+        """Chunk a batch of texts asynchronously.
+
+        Args:
+            texts (Sequence[str]): The texts to chunk.
+            show_progress (bool): Whether to show progress.
+
+        Returns:
+            list[list[Chunk]]: A list of lists of Chunks.
+
+        """
+        return await asyncio.to_thread(self.chunk_batch, texts, show_progress)
+
+    @staticmethod
+    def _merge_new_chunks(
+        original_chunks: list[Chunk], new_chunk_batches: list[list[Chunk]]
+    ) -> list[Chunk]:
+        """Merge new chunks batches into a single list, shifting indices.
+
+        Args:
+            original_chunks: The original chunks from the document.
+            new_chunk_batches: The new batches of chunks corresponding to each original chunk.
+
+        Returns:
+            list[Chunk]: The merged and shifted chunks.
+
+        """
+        return [
+            replace(
+                c,
+                start_index=c.start_index + old_chunk.start_index,
+                end_index=c.end_index + old_chunk.start_index,
+            )
+            for old_chunk, new_chunks in zip(original_chunks, new_chunk_batches)
+            for c in new_chunks
+        ]
+
     def chunk_document(self, document: Document) -> Document:
         """Chunk a document.
 
@@ -192,19 +245,27 @@ class BaseChunker(ABC):
         """
         # If the document has chunks already, then we need to re-chunk the content
         if document.chunks:
-            chunks: list[Chunk] = []
-            for old_chunk in document.chunks:
-                new_chunks: list[Chunk] = self.chunk(old_chunk.text)
-                for new_chunk in new_chunks:
-                    chunks.append(
-                        Chunk(
-                            text=new_chunk.text,
-                            start_index=new_chunk.start_index + old_chunk.start_index,
-                            end_index=new_chunk.end_index + old_chunk.start_index,
-                            token_count=new_chunk.token_count,
-                        ),
-                    )
-            document.chunks = chunks
+            chunk_results = [self.chunk(c.text) for c in document.chunks]
+            document.chunks = self._merge_new_chunks(document.chunks, chunk_results)
         else:
             document.chunks = self.chunk(document.content)
+        return document
+
+    async def chunk_document_async(self, document: Document) -> Document:
+        """Chunk a document asynchronously.
+
+        Args:
+            document: The document to chunk.
+
+        Returns:
+            The document with chunks populated.
+
+        """
+        # If the document has chunks already, then we need to re-chunk the content
+        if document.chunks:
+            tasks = [self.chunk_async(c.text) for c in document.chunks]
+            chunk_results = await asyncio.gather(*tasks)
+            document.chunks = self._merge_new_chunks(document.chunks, chunk_results)
+        else:
+            document.chunks = await self.chunk_async(document.content)
         return document
