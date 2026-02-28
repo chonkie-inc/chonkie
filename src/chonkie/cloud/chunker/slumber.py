@@ -77,7 +77,7 @@ class SlumberChunker(CloudChunker):
     def chunk(
         self,
         text: Optional[Union[str, list[str]]] = None,
-        file: Optional[str] = None,
+        file: str | os.PathLike | None = None,
     ) -> Union[list[Chunk], list[list[Chunk]]]:
         """Chunk the text or file into a list of chunks using the Slumber strategy via API.
 
@@ -132,14 +132,13 @@ class SlumberChunker(CloudChunker):
                 "Oh no! The Chonkie API returned an error while trying to chunk with Slumber."
                 + " Please try again in a short while."
             )
-            if hasattr(e, "response") and e.response is not None:
+            resp = getattr(e, "response", None)
+            if resp is not None:
                 try:
-                    error_detail = e.response.json()
+                    error_detail = resp.json()
                     error_message += f" Details: {error_detail}"
                 except ValueError:  # if response is not JSON
-                    error_message += (
-                        f" Status Code: {e.response.status_code}. Response: {e.response.text}"
-                    )
+                    error_message += f" Status Code: {resp.status_code}. Response: {resp.text}"
             error_message += (
                 " If the issue persists, please contact support at support@chonkie.ai."
             )
@@ -178,7 +177,7 @@ class SlumberChunker(CloudChunker):
     def __call__(
         self,
         text: Optional[Union[str, list[str]]] = None,
-        file: Optional[str] = None,
+        file: str | os.PathLike | None = None,
     ) -> Union[list[Chunk], list[list[Chunk]]]:
         """Call the SlumberChunker."""
         return self.chunk(text=text, file=file)

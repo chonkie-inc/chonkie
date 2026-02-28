@@ -6,13 +6,19 @@ from typing import Any, Optional, Pattern, Union
 from .azure_openai import AzureOpenAIEmbeddings
 from .base import BaseEmbeddings
 from .catsu import CatsuEmbeddings
+from .cloudflare import CloudflareEmbeddings
 from .cohere import CohereEmbeddings
+from .deepinfra import DeepInfraEmbeddings
 from .gemini import GeminiEmbeddings
 from .jina import JinaEmbeddings
 from .litellm import LiteLLMEmbeddings
+from .mistral import MistralEmbeddings
+from .mixedbread import MixedbreadEmbeddings
 from .model2vec import Model2VecEmbeddings
+from .nomic import NomicEmbeddings
 from .openai import OpenAIEmbeddings
 from .sentence_transformer import SentenceTransformerEmbeddings
+from .together import TogetherEmbeddings
 
 
 class EmbeddingsRegistry:
@@ -173,10 +179,43 @@ EmbeddingsRegistry.register_types(
     "SentenceTransformer",
     SentenceTransformerEmbeddings,
 )
-EmbeddingsRegistry.register_model("all-minilm-l6-v2", SentenceTransformerEmbeddings)
-EmbeddingsRegistry.register_model("all-mpnet-base-v2", SentenceTransformerEmbeddings)
-EmbeddingsRegistry.register_model("multi-qa-mpnet-base-dot-v1", SentenceTransformerEmbeddings)
-# TODO: Add all the other SentenceTransformer models here as well!
+
+for model in [
+    "all-minilm-l6-v2",
+    "all-mpnet-base-v2",
+    "multi-qa-mpnet-base-dot-v1",
+    "all-MiniLM-L12-v2",
+    "all-distilroberta-v1",
+    "all-roberta-large-v1",
+    "paraphrase-multilingual-MiniLM-L12-v2",
+    "paraphrase-multilingual-mpnet-base-v2",
+    "distiluse-base-multilingual-cased-v1",
+    "distiluse-base-multilingual-cased-v2",
+    "paraphrase-xlm-r-multilingual-v1",
+    "paraphrase-MiniLM-L6-v2",
+    "paraphrase-MiniLM-L3-v2",
+    "paraphrase-mpnet-base-v2",
+    "paraphrase-distilroberta-base-v2",
+    "paraphrase-albert-small-v2",
+    "paraphrase-TinyBERT-L6-v2",
+    "multi-qa-MiniLM-L6-cos-v1",
+    "multi-qa-distilbert-cos-v1",
+    "multi-qa-mpnet-base-cos-v1",
+    "msmarco-distilbert-base-v4",
+    "msmarco-roberta-base-v3",
+    "msmarco-distilbert-base-tas-b",
+    "msmarco-MiniLM-L6-cos-v5",
+    "msmarco-MiniLM-L12-cos-v5",
+    "gtr-t5-large",
+    "gtr-t5-xl",
+    "sentence-t5-large",
+    "sentence-t5-xl",
+    "LaBSE",
+    "allenai-specter",
+    "average_word_embeddings_glove.6B.300d",
+    "average_word_embeddings_komninos",
+]:
+    EmbeddingsRegistry.register_model(model, SentenceTransformerEmbeddings)
 
 # Register OpenAI embeddings with pattern
 EmbeddingsRegistry.register_provider("openai", OpenAIEmbeddings)
@@ -240,7 +279,7 @@ EmbeddingsRegistry.register_model("gemini-embedding-exp-03-07", GeminiEmbeddings
 
 # Register Catsu embeddings (unified provider for 11+ APIs)
 EmbeddingsRegistry.register_provider("catsu", CatsuEmbeddings)
-# Catsu supports patterns from multiple providers (Mistral, Nomic, Cloudflare, etc.)
+# Catsu supports patterns from multiple providers
 EmbeddingsRegistry.register_pattern(r"^mistral-embed", CatsuEmbeddings)
 EmbeddingsRegistry.register_pattern(r"^nomic-embed", CatsuEmbeddings)
 EmbeddingsRegistry.register_pattern(r"^@cf/", CatsuEmbeddings)
@@ -249,6 +288,24 @@ EmbeddingsRegistry.register_pattern(r"^mxbai-embed", CatsuEmbeddings)
 EmbeddingsRegistry.register_model("mistral-embed", CatsuEmbeddings)
 EmbeddingsRegistry.register_model("nomic-embed-text-v1.5", CatsuEmbeddings)
 EmbeddingsRegistry.register_model("mxbai-embed-large-v1", CatsuEmbeddings)
+
+# Register Mistral embeddings
+EmbeddingsRegistry.register_provider("mistral", MistralEmbeddings)
+
+# Register Together embeddings
+EmbeddingsRegistry.register_provider("together", TogetherEmbeddings)
+
+# Register Mixedbread embeddings
+EmbeddingsRegistry.register_provider("mixedbread", MixedbreadEmbeddings)
+
+# Register Nomic embeddings
+EmbeddingsRegistry.register_provider("nomic", NomicEmbeddings)
+
+# Register DeepInfra embeddings
+EmbeddingsRegistry.register_provider("deepinfra", DeepInfraEmbeddings)
+
+# Register Cloudflare embeddings
+EmbeddingsRegistry.register_provider("cloudflare", CloudflareEmbeddings)
 
 # Register LiteLLM embeddings
 EmbeddingsRegistry.register_provider("litellm", LiteLLMEmbeddings)

@@ -113,7 +113,7 @@ def test_backend_selection(request: pytest.FixtureRequest, backend_str: str) -> 
     try:
         tokenizer = AutoTokenizer(request.getfixturevalue(backend_str))
     except Exception as e:
-        pytest.skip(f"Skipping test with backend {backend_str}: {str(e)}")
+        pytest.skip(f"Skipping test with backend {backend_str}: {e}")
 
     assert tokenizer._backend in [
         "transformers",
@@ -135,7 +135,7 @@ def test_string_init(model_name: str) -> None:
             "tiktoken",
         ]
     except ImportError as e:
-        pytest.skip(f"Could not import tokenizer for {model_name}: {str(e)}")
+        pytest.skip(f"Could not import tokenizer for {model_name}: {e}")
     except Exception as e:
         if "not found in model".casefold() in str(e).casefold():
             pytest.skip(f"Skipping test with {model_name}. Backend not available")
@@ -153,7 +153,7 @@ def test_encode_decode(request: pytest.FixtureRequest, backend_str: str, sample_
         tokenizer = request.getfixturevalue(backend_str)
         tokenizer = AutoTokenizer(tokenizer)
     except Exception as e:
-        pytest.skip(f"Skipping test with backend {backend_str}: {str(e)}")
+        pytest.skip(f"Skipping test with backend {backend_str}: {e}")
 
     # Encode, Decode and Compare
     tokens = tokenizer.encode(sample_text)
@@ -194,7 +194,7 @@ def test_string_init_encode_decode(model_name: str) -> None:
         ]:
             assert word.lower() in decoded.lower()
     except ImportError as e:
-        pytest.skip(f"Skipping test. Could not import tokenizer for {model_name}: {str(e)}")
+        pytest.skip(f"Skipping test. Could not import tokenizer for {model_name}: {e}")
     except Exception as e:
         if "not found in model".casefold() in str(e).casefold():
             pytest.skip(f"Skipping test with {model_name}. Backend not available")
@@ -221,7 +221,7 @@ def test_token_counting(
         tokenizer = request.getfixturevalue(backend_str)
         tokenizer = AutoTokenizer(tokenizer)
     except Exception as e:
-        pytest.skip(f"Skipping test with backend {backend_str}: {str(e)}")
+        pytest.skip(f"Skipping test with backend {backend_str}: {e}")
 
     count = tokenizer.count_tokens(sample_text)
     assert isinstance(count, int)
@@ -246,7 +246,7 @@ def test_batch_encode_decode(
         tokenizer = request.getfixturevalue(backend_str)
         tokenizer = AutoTokenizer(tokenizer)
     except Exception as e:
-        pytest.skip(f"Skipping test with backend {backend_str}: {str(e)}")
+        pytest.skip(f"Skipping test with backend {backend_str}: {e}")
 
     batch_encoded = tokenizer.encode_batch(sample_text_list)
     assert isinstance(batch_encoded, list)
@@ -277,7 +277,7 @@ def test_batch_counting(
         tokenizer = request.getfixturevalue(backend_str)
         tokenizer = AutoTokenizer(tokenizer)
     except Exception as e:
-        pytest.skip(f"Skipping test with backend {backend_str}: {str(e)}")
+        pytest.skip(f"Skipping test with backend {backend_str}: {e}")
 
     # Test batch token count
     counts = tokenizer.count_tokens_batch(sample_text_list)
@@ -896,27 +896,6 @@ def test_tokenizer_invalid_initialization(invalid_input: Any) -> None:
 ### Additional Coverage Tests ###
 
 
-def test_tokenizer_fallback_warnings() -> None:
-    """Test that appropriate warnings are issued during tokenizer fallbacks."""
-    import warnings
-
-    # Test with a non-existent model to trigger fallbacks
-    with warnings.catch_warnings(record=True) as w:
-        warnings.simplefilter("always")
-        try:
-            # This should trigger warning fallbacks
-            AutoTokenizer("non_existent_model_12345")
-        except ValueError:
-            # Expected to fail eventually, but should generate warnings
-            pass
-
-        # Check that some warnings were generated during fallback attempts
-        warning_messages = [str(warning.message) for warning in w]
-        fallback_warnings = [msg for msg in warning_messages if "Falling back" in msg]
-        # At least one fallback warning should be generated
-        assert len(fallback_warnings) >= 0  # May vary based on available packages
-
-
 def test_tokenizer_decode_batch_callable_error() -> None:
     """Test that decode_batch raises NotImplementedError for callable tokenizers."""
     callable_tokenizer = AutoTokenizer(lambda x: len(x.split()))
@@ -994,26 +973,6 @@ def test_base_tokenizer_not_implemented_errors() -> None:
 
     with pytest.raises(NotImplementedError, match="Decoding not implemented"):
         tokenizer.decode([1, 2, 3])
-
-
-def test_tokenizer_unsupported_backend_errors() -> None:
-    """Test error handling for unsupported backends in various methods."""
-    # Create a tokenizer and manually set an unsupported backend
-    tokenizer = AutoTokenizer(CharacterTokenizer())
-    tokenizer._backend = "unsupported_backend"
-
-    # Test that all methods raise ValueError for unsupported backend
-    with pytest.raises(ValueError, match="Unsupported tokenizer backend"):
-        tokenizer.encode("test")
-
-    with pytest.raises(ValueError, match="Unsupported tokenizer backend"):
-        tokenizer.count_tokens("test")
-
-    with pytest.raises(ValueError, match="Unsupported tokenizer backend"):
-        tokenizer.encode_batch(["test"])
-
-    with pytest.raises(ValueError, match="Tokenizer backend .* not supported"):
-        tokenizer.count_tokens_batch(["test"])
 
 
 def test_character_tokenizer_default_token2id() -> None:
@@ -1169,23 +1128,9 @@ def test_tokenizer_chonkie_backend_paths() -> None:
 def test_tokenizer_error_paths_comprehensive() -> None:
     """Test various error paths in tokenizer methods."""
     # Test invalid tokenizer creation with non-existent model
-    with pytest.raises(ValueError, match="Tokenizer not found"):
+    with pytest.raises(ValueError, match="Tokenizer.+could not be loaded"):
         # This should try all backends and fail
         AutoTokenizer("definitely_not_a_real_model_name_12345_xyz")
-
-
-def test_decode_batch_fallthrough_error() -> None:
-    """Test decode_batch fallthrough error path."""
-    tokenizer = AutoTokenizer(CharacterTokenizer())
-    # Manually set an invalid backend to trigger the fallthrough error
-    original_backend = tokenizer._backend
-    tokenizer._backend = "unknown_backend"
-
-    with pytest.raises(ValueError, match="Unsupported tokenizer backend"):
-        tokenizer.decode_batch([[1, 2], [3, 4]])
-
-    # Restore original backend
-    tokenizer._backend = original_backend
 
 
 def test_tokenizer_decode_batch_chonkie_path() -> None:

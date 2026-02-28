@@ -1,8 +1,9 @@
 """TableChef is a chef that processes tabular data from files (e.g., CSV, Excel) and markdown strings."""
 
+import os
 import re
 from pathlib import Path
-from typing import Union
+from typing import Union, cast
 
 from chonkie.chef.base import BaseChef
 from chonkie.logger import get_logger
@@ -35,11 +36,11 @@ class TableChef(BaseChef):
         logger.info(f"Markdown table extraction complete: found {len(tables)} tables")
         return MarkdownDocument(content=text, tables=tables)
 
-    def process(self, path: Union[str, Path]) -> Document:
+    def process(self, path: str | os.PathLike) -> Document:
         """Process a CSV/Excel file or markdown text into a MarkdownDocument.
 
         Args:
-            path (Union[str, Path]): Path to the CSV/Excel file, or markdown text string.
+            path: Path to the CSV/Excel file, or markdown text string.
 
         Returns:
             Document: MarkdownDocument with extracted tables.
@@ -59,7 +60,7 @@ class TableChef(BaseChef):
             if str_path.endswith(".csv"):
                 logger.debug("Processing CSV file")
                 df = pd.read_csv(str_path)
-                markdown = df.to_markdown(index=False)
+                markdown = df.to_markdown(index=False) or ""
                 logger.info(f"CSV processing complete: converted {len(df)} rows to markdown")
                 # CSV always produces a single table
                 table = MarkdownTable(content=markdown, start_index=0, end_index=len(markdown))
@@ -70,7 +71,7 @@ class TableChef(BaseChef):
                 tables: list[MarkdownTable] = []
                 all_content = []
                 for df in all_df.values():
-                    text = df.to_markdown(index=False)
+                    text = df.to_markdown(index=False) or ""
                     all_content.append(text)
                     tables.append(MarkdownTable(content=text, start_index=0, end_index=len(text)))
                 # Join all sheets with double newline
@@ -83,11 +84,11 @@ class TableChef(BaseChef):
         logger.debug("Extracting tables from markdown string")
         return self.parse(str(path))
 
-    def process_batch(self, paths: Union[list[str], list[Path]]) -> list[Document]:
+    def process_batch(self, paths: list[str | os.PathLike]) -> list[Document]:
         """Process multiple CSV/Excel files or markdown texts.
 
         Args:
-            paths (Union[list[str], list[Path]]): Paths to files or markdown text strings.
+            paths: Paths to files or markdown text strings.
 
         Returns:
             list[Document]: List of MarkdownDocuments with extracted tables.
@@ -100,7 +101,7 @@ class TableChef(BaseChef):
 
     def __call__(  # type: ignore[override]
         self,
-        path: Union[str, Path, list[str], list[Path]],
+        path: str | os.PathLike | list[str | os.PathLike],
     ) -> Union[Document, list[Document]]:
         """Process a single file/text or a batch of files/texts.
 
@@ -112,7 +113,7 @@ class TableChef(BaseChef):
 
         """
         if isinstance(path, (list, tuple)):
-            return self.process_batch(path)
+            return self.process_batch(cast("list[str | os.PathLike]", list(path)))
         elif isinstance(path, (str, Path)):
             return self.process(path)
         else:

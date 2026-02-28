@@ -155,37 +155,28 @@ def test_table_chunker_preserves_content() -> None:
     assert set(unique_data_rows) == set(original_data)
 
 
-def test_table_chunker_invalid_table() -> None:
+def test_table_chunker_invalid_table(caplog) -> None:
     """Test that the TableChunker handles invalid tables appropriately."""
     chunker = TableChunker(tokenizer="character", chunk_size=500)
 
     # Table with no rows (just header)
-    invalid_table = """| Name | Value |
-|------|-------|"""
-
-    with pytest.warns(
-        UserWarning,
-        match="Table must have at least a header, separator, and one data row",
-    ):
-        chunks = chunker.chunk(invalid_table)
-        assert len(chunks) == 0
+    chunks = chunker.chunk("| Name | Value |\n|------|-------|")
+    assert len(chunks) == 0
+    assert "Table must have at least a header, separator, and one data row" in caplog.text
+    caplog.clear()
 
     # Single line (no table structure)
-    with pytest.warns(
-        UserWarning,
-        match="Table must have at least a header, separator, and one data row",
-    ):
-        chunks = chunker.chunk("Just a single line")
-        assert len(chunks) == 0
+    chunks = chunker.chunk("Just a single line")
+    assert len(chunks) == 0
+    assert "Table must have at least a header, separator, and one data row" in caplog.text
 
 
-def test_table_chunker_empty_input() -> None:
+def test_table_chunker_empty_input(caplog) -> None:
     """Test that the TableChunker handles empty input."""
     chunker = TableChunker(tokenizer="character", chunk_size=500)
 
-    with pytest.warns(UserWarning, match="No table content found"):
-        chunks = chunker.chunk("")
-        assert len(chunks) == 0
+    assert not chunker.chunk("")
+    assert "No table content found" in caplog.text
 
 
 def test_table_chunker_exact_chunk_size() -> None:

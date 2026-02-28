@@ -16,17 +16,6 @@ from .base import BaseChunker
 
 logger = get_logger(__name__)
 
-# TODO: Add a check to see if the model is supported
-
-# TODO: Add try/except block to catch if the model is not loaded correctly
-
-# TODO: Add a list of supported models to choose from
-
-# TODO: Allow for loading a custom model by passing in the model + tokenizer directly
-
-# TODO: Add stride parameters for the pipeline (also does the pipeline do it sequentially or in parallel?)
-# If they do it sequentially, then we are making a huge mistake by not batching and processing multiple texts at once.
-
 
 @chunker("neural")
 class NeuralChunker(BaseChunker):
@@ -99,10 +88,10 @@ class NeuralChunker(BaseChunker):
                     "Invalid tokenizer provided. Please provide a string or a transformers.PreTrainedTokenizerFast object.",
                 )
         except Exception as e:
-            raise ValueError(f"Error initializing tokenizer: {e}")
+            raise ValueError(f"Error initializing tokenizer: {e}") from e
 
         # Initialize the Parent class with the tokenizer
-        super().__init__(tokenizer)  # type: ignore[arg-type]
+        super().__init__(tokenizer)
 
         # Initialize the model and stride
         try:
@@ -128,7 +117,7 @@ class NeuralChunker(BaseChunker):
                     "Invalid model provided. Please provide a string or a transformers.AutoModelForTokenClassification object.",
                 )
         except Exception as e:
-            raise ValueError(f"Error initializing model: {e}")
+            raise ValueError(f"Error initializing model: {e}") from e
 
         # Set the attributes
         self.min_characters_per_chunk = min_characters_per_chunk
@@ -144,7 +133,7 @@ class NeuralChunker(BaseChunker):
                 stride=stride,
             )
         except Exception as e:
-            raise ValueError(f"Error initializing pipeline: {e}")
+            raise ValueError(f"Error initializing pipeline: {e}") from e
 
         # Set the _use_multiprocessing value to be False
         self._use_multiprocessing = False

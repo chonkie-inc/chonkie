@@ -1,10 +1,13 @@
 """AutoEmbeddings is a factory class for automatically loading embeddings."""
 
-import warnings
-from typing import Any, Union
+from typing import Any, Union, cast
+
+from chonkie.logger import get_logger
 
 from .base import BaseEmbeddings
 from .registry import EmbeddingsRegistry
+
+logger = get_logger(__name__)
 
 
 class AutoEmbeddings:
@@ -75,11 +78,11 @@ class AutoEmbeddings:
                 embeddings_cls = EmbeddingsRegistry.get_provider(provider)
                 if embeddings_cls:
                     try:
-                        return embeddings_cls(model_name, **kwargs)  # type: ignore
+                        return cast(Any, embeddings_cls)(model_name, **kwargs)
                     except Exception as error:
                         raise ValueError(
                             f"Failed to load {model} with {embeddings_cls.__name__}, with error: {error}",
-                        )
+                        ) from error
                 else:
                     raise ValueError(
                         f"No provider found for {provider}. Please check the provider name and try again.",
@@ -90,19 +93,21 @@ class AutoEmbeddings:
                 if embeddings_cls:
                     try:
                         # Try instantiating with the model identifier
-                        embeddings_instance = embeddings_cls(model, **kwargs)  # type: ignore
+                        embeddings_instance = cast(Any, embeddings_cls)(model, **kwargs)
                     except Exception as error:
-                        warnings.warn(
+                        logger.warning(
                             f"Failed to load {model} with {embeddings_cls.__name__}: {error}\n"
-                            f"Falling back to loading default provider model.",
+                            "Falling back to loading default provider model.",
+                            exc_info=True,
                         )
                         try:
                             # Try instantiating with the default provider model without the model identifier
                             embeddings_instance = embeddings_cls(**kwargs)
                         except Exception as error:
-                            warnings.warn(
+                            logger.warning(
                                 f"Failed to load the default model for {embeddings_cls.__name__}: {error}\n"
-                                f"Falling back to SentenceTransformerEmbeddings.",
+                                "Falling back to SentenceTransformerEmbeddings.",
+                                exc_info=True,
                             )
 
             # If registry lookup and instantiation succeeded, return the instance
@@ -117,10 +122,10 @@ class AutoEmbeddings:
             except Exception as e:
                 raise ValueError(
                     f"Failed to load embeddings via SentenceTransformerEmbeddings after registry/fallback failure: {e}",
-                )
+                ) from e
         else:
             # get the wrapped embeddings instance
             try:
                 return EmbeddingsRegistry.wrap(model, **kwargs)
             except Exception as e:
-                raise ValueError(f"Failed to wrap embeddings instance: {e}")
+                raise ValueError(f"Failed to wrap embeddings instance: {e}") from e

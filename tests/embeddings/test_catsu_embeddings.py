@@ -7,6 +7,8 @@ from unittest.mock import MagicMock, patch
 import numpy as np
 import pytest
 
+from tests.embeddings.utils import make_mock_catsu_client
+
 # Try to import CatsuEmbeddings, skip all tests if not available
 try:
     from chonkie.embeddings.catsu import CatsuEmbeddings, CatsuTokenizerWrapper
@@ -18,26 +20,7 @@ except ImportError:
 
 @pytest.fixture
 def mock_catsu_client():
-    """Fixture to create a mock Catsu client."""
-    mock_client = MagicMock()
-
-    # Mock embed response
-    mock_embed_response = MagicMock()
-    mock_embed_response.to_numpy.return_value = np.random.rand(2, 1024).astype(np.float32)
-    mock_client.embed.return_value = mock_embed_response
-
-    # Mock list_models response
-    mock_model_info = MagicMock()
-    mock_model_info.name = "voyage-3"
-    mock_model_info.dimensions = 1024
-    mock_client.list_models.return_value = [mock_model_info]
-
-    # Mock tokenize response
-    mock_tokenize_response = MagicMock()
-    mock_tokenize_response.token_count = 10
-    mock_client.tokenize.return_value = mock_tokenize_response
-
-    return mock_client
+    return make_mock_catsu_client(dimension=1024, model_name="voyage-3")
 
 
 @pytest.fixture
@@ -105,7 +88,8 @@ def test_initialization_with_config_params(mock_catsu_client) -> None:
         call_kwargs = mock_client_class.call_args[1]
         assert call_kwargs["max_retries"] == 5
         assert call_kwargs["timeout"] == 60
-        assert call_kwargs["verbose"] is True
+        assert "verbose" not in call_kwargs
+        assert embeddings._verbose is True
         assert embeddings._batch_size == 64
 
 
@@ -175,6 +159,7 @@ def test_embed_batch_with_batching(embedding_model: CatsuEmbeddings) -> None:
 def test_embed_batch_fallback_on_error(
     embedding_model: CatsuEmbeddings,
     sample_texts: List[str],
+    caplog,
 ) -> None:
     """Test that CatsuEmbeddings falls back to individual embeds on batch failure."""
     # Mock batch embed to fail, individual embeds to succeed
@@ -196,9 +181,8 @@ def test_embed_batch_fallback_on_error(
 
     embedding_model.client.embed.side_effect = mock_embed_side_effect
 
-    with pytest.warns(UserWarning, match="Batch embedding failed"):
-        embeddings = embedding_model.embed_batch(sample_texts)
-
+    embeddings = embedding_model.embed_batch(sample_texts)
+    assert "Batch embedding failed" in caplog.text
     assert len(embeddings) == len(sample_texts)
 
 
@@ -255,14 +239,13 @@ def test_tokenizer_count(embedding_model: CatsuEmbeddings, sample_text: str) -> 
     assert token_count == 10  # From mock
 
 
-def test_tokenizer_encode_warning(embedding_model: CatsuEmbeddings) -> None:
+def test_tokenizer_encode_warning(embedding_model: CatsuEmbeddings, caplog) -> None:
     """Test that tokenizer encode method warns about unsupported functionality."""
     tokenizer = embedding_model.get_tokenizer()
 
-    with pytest.warns(UserWarning, match="Token encoding not supported"):
-        tokens = tokenizer.encode("test text")
-
+    tokens = tokenizer.encode("test text")
     assert tokens == []
+    assert "Token encoding not supported" in caplog.text
 
 
 def test_repr(embedding_model: CatsuEmbeddings) -> None:

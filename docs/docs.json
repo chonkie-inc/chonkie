@@ -24,9 +24,7 @@
           {
             "group": "Products",
             "pages": [
-              "common/open-source",
-              "common/chunking-api",
-              "common/labs"
+              "common/open-source"
             ]
           }
         ]
@@ -151,88 +149,6 @@
             ]
           }
         ]
-      },
-      {
-        "tab": "API Reference",
-        "icon": "cloud",
-        "groups": [
-          {
-            "group": "Getting Started",
-            "pages": [
-              "api/common/introduction",
-              "api/common/playground"
-            ]
-          },
-          {
-            "group": "Chunkers",
-            "pages": [
-              "api/chunkers/token-chunker",
-              "api/chunkers/sentence-chunker",
-              "api/chunkers/recursive-chunker",
-              "api/chunkers/semantic-chunker",
-              "api/chunkers/late-chunker",
-              "api/chunkers/code-chunker",
-              "api/chunkers/neural-chunker",
-              "api/chunkers/slumber-chunker"
-            ]
-          },
-          {
-            "group": "Refineries",
-            "pages": [
-              "api/refineries/embeddings",
-              "api/refineries/overlap"
-            ]
-          },
-          {
-            "group": "Pipelines",
-            "pages": [
-              "api/pipelines/create",
-              "api/pipelines/list",
-              "api/pipelines/get",
-              "api/pipelines/update",
-              "api/pipelines/delete",
-              "api/pipelines/execute",
-              "api/pipelines/validate"
-            ]
-          },
-          {
-            "group": "Knowledge Bases",
-            "pages": [
-              "api/knowledge/create",
-              "api/knowledge/list",
-              "api/knowledge/get-files",
-              "api/knowledge/upload",
-              "api/knowledge/download",
-              "api/knowledge/delete-file",
-              "api/knowledge/delete"
-            ]
-          },
-          {
-            "group": "Search",
-            "pages": [
-              "api/search/search"
-            ]
-          },
-          {
-            "group": "Agents",
-            "pages": [
-              "api/agents/create",
-              "api/agents/list",
-              "api/agents/get",
-              "api/agents/update",
-              "api/agents/delete",
-              "api/agents/chat",
-              "api/agents/research",
-              "api/agents/mcp"
-            ]
-          },
-          {
-            "group": "Parse",
-            "pages": [
-              "api/parse/parse"
-            ]
-          }
-        ]
       }
     ],
     "global": {
@@ -272,17 +188,7 @@
       "type": "github",
       "href": "https://github.com/chonkie-inc/chonkie"
     },
-    "links": [
-      {
-        "label": "API Dashboard",
-        "href": "https://labs.chonkie.ai"
-      }
-    ]
-  },
-  "api": {
-    "playground": {
-      "display": "none"
-    }
+    "links": []
   },
   "seo": {
     "metatags": {

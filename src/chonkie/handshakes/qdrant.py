@@ -1,6 +1,7 @@
 """Qdrant Handshake to export Chonkie's Chunks into a Qdrant collection."""
 
 import importlib.util as importutil
+import os
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -37,7 +38,7 @@ class QdrantHandshake(BaseHandshake):
         embedding_model: Union[str, BaseEmbeddings]: The embedding model to use.
         url: Optional[str]: The URL to the Qdrant Server.
         api_key: Optional[str]: The API key to the Qdrant Server. Only needed for Qdrant Cloud.
-        path: Optional[str]: The path to the Qdrant collection locally. If not provided, will create an ephemeral collection.
+        path: The path to the Qdrant collection locally. If not provided, will create an ephemeral collection.
 
     """
 
@@ -47,7 +48,7 @@ class QdrantHandshake(BaseHandshake):
         collection_name: Union[str, Literal["random"]] = "random",
         embedding_model: Union[str, BaseEmbeddings] = "minishlab/potion-retrieval-32M",
         url: Optional[str] = None,
-        path: Optional[str] = None,
+        path: str | os.PathLike | None = None,
         api_key: Optional[str] = None,
         **kwargs: dict[str, Any],
     ) -> None:
@@ -83,7 +84,7 @@ class QdrantHandshake(BaseHandshake):
             elif url is not None:
                 self.client = qdrant_client.QdrantClient(url=url, **kwargs)  # type: ignore[arg-type]
             elif path is not None:
-                self.client = qdrant_client.QdrantClient(path=path, **kwargs)  # type: ignore[arg-type]
+                self.client = qdrant_client.QdrantClient(path=str(path), **kwargs)  # type: ignore[arg-type]
             else:
                 # If no client is provided, create an ephemeral collection
                 self.client = qdrant_client.QdrantClient(":memory:", **kwargs)  # type: ignore[arg-type]
@@ -92,9 +93,14 @@ class QdrantHandshake(BaseHandshake):
 
         # Initialize the embedding model
         if isinstance(embedding_model, str):
-            self.embedding_model = AutoEmbeddings.get_embeddings(embedding_model)
-        else:
-            self.embedding_model = embedding_model
+            embedding_model = AutoEmbeddings.get_embeddings(embedding_model)
+        # enforce linting
+        if not isinstance(embedding_model, BaseEmbeddings):
+            raise ValueError(
+                "The provided embedding model is not a valid BaseEmbeddings instance."
+            )
+
+        self.embedding_model = embedding_model
 
         self.dimension = self.embedding_model.dimension
 
@@ -151,7 +157,7 @@ class QdrantHandshake(BaseHandshake):
             points.append(
                 PointStruct(
                     id=self._generate_id(index, chunk),
-                    vector=self.embedding_model.embed(chunk.text).tolist(),  # type: ignore[arg-type] # Since this passes a numpy array, we need to convert it to a list
+                    vector=self.embedding_model.embed(chunk.text).tolist(),
                     payload=self._generate_payload(chunk),
                 ),
             )

@@ -1,5 +1,6 @@
 """Custom types for recursive chunking."""
 
+import os
 import re
 from dataclasses import dataclass
 from typing import Iterator, Literal, Optional, Union
@@ -53,7 +54,7 @@ class RecursiveLevel:
             try:
                 re.compile(self.pattern)
             except re.error as e:
-                raise ValueError(f"Invalid regex pattern: {e}")
+                raise ValueError(f"Invalid regex pattern: {e}") from e
 
         if self.pattern_mode not in ["split", "extract"]:
             raise ValueError("pattern_mode must be either 'split' or 'extract'.")
@@ -194,7 +195,7 @@ class RecursiveRules:
         cls,
         name: Optional[str] = "default",
         lang: Optional[str] = "en",
-        path: Optional[str] = None,
+        path: str | os.PathLike | None = None,
     ) -> "RecursiveRules":
         """Create a RecursiveRules object from a recipe.
 

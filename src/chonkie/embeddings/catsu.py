@@ -8,12 +8,15 @@ Nomic, Cloudflare, MixedBread, DeepInfra, TogetherAI.
 """
 
 import importlib.util as importutil
-import warnings
 from typing import Any, Dict, List, Optional
 
 import numpy as np
 
+from chonkie.logger import get_logger
+
 from .base import BaseEmbeddings
+
+logger = get_logger(__name__)
 
 
 class CatsuEmbeddings(BaseEmbeddings):
@@ -103,7 +106,6 @@ class CatsuEmbeddings(BaseEmbeddings):
             ) from e
 
         self.client = catsu.Client(
-            verbose=verbose,
             max_retries=max_retries,
             timeout=timeout,
             api_keys=api_keys,
@@ -117,8 +119,9 @@ class CatsuEmbeddings(BaseEmbeddings):
         try:
             self._load_model_info()
         except Exception as e:
-            warnings.warn(
+            logger.warning(
                 f"Could not load model info for {model}: {e}. Will attempt to use model anyway.",
+                exc_info=True,
             )
 
     def _load_model_info(self) -> None:
@@ -126,19 +129,19 @@ class CatsuEmbeddings(BaseEmbeddings):
         try:
             models = self.client.list_models(provider=self.provider)
             for model_info in models:
-                if model_info.name == self.model:
+                if getattr(model_info, "name", None) == self.model:
                     self._model_info = model_info
-                    self._dimension = model_info.dimensions
+                    self._dimension = getattr(model_info, "dimensions", None)
                     break
 
             if self._model_info is None and self._verbose:
-                warnings.warn(
+                logger.warning(
                     f"Model '{self.model}' not found in Catsu catalog. "
                     "Embedding may fail if model name is incorrect.",
                 )
         except Exception as e:
             if self._verbose:
-                warnings.warn(f"Failed to load model info: {e}")
+                logger.warning(f"Failed to load model info: {e}", exc_info=True)
 
     def embed(self, text: str) -> np.ndarray:
         """Embed a single text string into a vector representation.
@@ -203,13 +206,64 @@ class CatsuEmbeddings(BaseEmbeddings):
             except Exception as e:
                 # If batch fails, try one by one (with Catsu's built-in retries)
                 if len(batch) > 1:
-                    warnings.warn(f"Batch embedding failed: {str(e)}. Trying one by one.")
+                    logger.warning(
+                        f"Batch embedding failed: {e}. Trying one by one.",
+                        exc_info=True,
+                    )
                     for text in batch:
                         individual_embedding = self.embed(text)
                         all_embeddings.append(individual_embedding)
                 else:
                     raise e
 
+        return all_embeddings
+
+    async def aembed(self, text: str) -> np.ndarray:
+        """Embed a single text string asynchronously.
+
+        Args:
+            text: Text string to embed
+
+        Returns:
+            np.ndarray: Embedding vector for the text (1D array)
+
+        Raises:
+            Various Catsu exceptions for API errors, auth failures, etc.
+
+        """
+        response = await self.client.aembed(
+            model=self.model,
+            input=text,
+            provider=self.provider,
+        )
+        return response.to_numpy()[0]
+
+    async def aembed_batch(self, texts: List[str]) -> List[np.ndarray]:
+        """Embed multiple texts asynchronously using batched API calls.
+
+        Args:
+            texts: List of text strings to embed
+
+        Returns:
+            List[np.ndarray]: List of embedding vectors (1D arrays)
+
+        Raises:
+            Various Catsu exceptions for API errors, auth failures, etc.
+
+        """
+        if not texts:
+            return []
+
+        all_embeddings = []
+        for i in range(0, len(texts), self._batch_size):
+            batch = texts[i : i + self._batch_size]
+            response = await self.client.aembed(
+                model=self.model,
+                input=batch,
+                provider=self.provider,
+            )
+            arr = response.to_numpy()
+            all_embeddings.extend([arr[j] for j in range(len(batch))])
         return all_embeddings
 
     @property
@@ -236,8 +290,9 @@ class CatsuEmbeddings(BaseEmbeddings):
                 except Exception as e:
                     raise RuntimeError(
                         f"Could not determine embedding dimension for model {self.model}: {e}",
-                    )
+                    ) from e
 
+        assert self._dimension is not None, "Dimension should be set at this point"
         return self._dimension
 
     def get_tokenizer(self) -> Any:
@@ -343,7 +398,7 @@ class CatsuTokenizerWrapper:
         """
         # Catsu doesn't expose token IDs for all providers
         # Return empty list as fallback
-        warnings.warn(
+        logger.warning(
             "Token encoding not supported via Catsu. Use count() for token counting instead.",
         )
         return []

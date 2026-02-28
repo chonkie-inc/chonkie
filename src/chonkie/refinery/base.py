@@ -88,5 +88,5 @@ class BaseRefinery(ABC):
             logger.info(f"Refinement complete: {len(refined_chunks)} chunks output")
             return refined_chunks
         except Exception as e:
-            logger.error(f"Refinement failed: {str(e)}", error_type=type(e).__name__)
+            logger.error(f"Refinement failed: {e}", exc_info=True)
             raise

@@ -28,7 +28,7 @@ class BaseChunker(ABC):
 
         """
         self._tokenizer = AutoTokenizer(tokenizer)
-        self._use_multiprocessing = True
+        self._use_multiprocessing = False
         logger.debug(
             f"Initialized {self.__class__.__name__}",
             tokenizer=str(tokenizer)[:50],
@@ -78,11 +78,10 @@ class BaseChunker(ABC):
                 cpu_cores=cpu_cores,
             )
             return worker_count
-        except Exception as e:
-            warnings.warn(f"Proceeding with 1 worker. Error calculating optimal worker count: {e}")
+        except Exception:
             logger.warning(
                 "Failed to calculate optimal worker count, using 1 worker",
-                error=str(e),
+                exc_info=True,
             )
             return 1
 
@@ -176,7 +175,7 @@ class BaseChunker(ABC):
         if len(texts) == 0:
             return []
         if len(texts) == 1:
-            return [self.chunk(texts[0])]  # type: ignore
+            return [self.chunk(texts[0])]
 
         # Now for the remaining, check the self._multiprocessing bool flag
         if self._use_multiprocessing:

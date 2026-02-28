@@ -24,11 +24,11 @@ class BaseHandshake(ABC):
     """Abstract base class for Handshakes."""
 
     @abstractmethod
-    def write(self, chunk: Union[Chunk, list[Chunk]]) -> Any:
-        """Write a single chunk to the vector database.
+    def write(self, chunks: Union[Chunk, list[Chunk]]) -> Any:
+        """Write chunk(s) to the vector database.
 
         Args:
-            chunk (Union[Chunk, list[Chunk]]): The chunk to write.
+            chunks (Union[Chunk, list[Chunk]]): The chunk(s) to write.
 
         Returns:
             Any: The result from the database write operation.
@@ -70,9 +70,8 @@ class BaseHandshake(ABC):
                 return result
             except Exception as e:
                 logger.error(
-                    f"Failed to write {chunk_count} chunk(s) to database",
-                    error=str(e),
-                    error_type=type(e).__name__,
+                    f"Failed to write {chunk_count} chunk(s) to database: {e}",
+                    exc_info=True,
                 )
                 raise
         else:

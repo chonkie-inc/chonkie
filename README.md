@@ -15,11 +15,11 @@
 
 _The lightweight ingestion library for fast, efficient and robust RAG pipelines_
 
-[Installation](#installation) •
-[Usage](#usage) •
-[Chunkers](#chunkers) •
-[Integrations](#integrations) •
-[Benchmarks](#benchmarks)
+[Installation](#📦-installation) •
+[Usage](#🚀-usage) •
+[Chunkers](#✂️-chunkers) •
+[Integrations](#🔌-integrations) •
+[Benchmarks](#📊-benchmarks)
 
 </div>
 
@@ -136,7 +136,7 @@ Chonkie provides several chunkers to help you split your text efficiently for RA
 | Name               | Alias       | Description                                                                                                                |
 | ------------------ | ----------- | -------------------------------------------------------------------------------------------------------------------------- |
 | `TokenChunker`     | `token`     | Splits text into fixed-size token chunks.                                                                                  |
-| `FastChunker`      | `fast`      | SIMD-accelerated byte-based chunking at 100+ GB/s. Install with `chonkie[fast]`.                                           |
+| `FastChunker`      | `fast`      | SIMD-accelerated byte-based chunking at 100+ GB/s. Included in the default install.                                        |
 | `SentenceChunker`  | `sentence`  | Splits text into chunks based on sentences.                                                                                |
 | `RecursiveChunker` | `recursive` | Splits text hierarchically using customizable rules to create semantically meaningful chunks.                              |
 | `SemanticChunker`  | `semantic`  | Splits text into chunks based on semantic similarity. Inspired by the work of [Greg Kamradt](https://github.com/gkamradt). |
@@ -252,15 +252,17 @@ Seamlessly works with various embedding model providers. Bring your favorite emb
 </details>
 
 <details>
-<summary><strong>🧞‍♂️ Power Up with Genies! Chonkie supports 3+ LLM providers!</strong></summary>
+<summary><strong>🧞‍♂️ Power Up with Genies! Chonkie supports 5+ LLM providers!</strong></summary>
 
 Genies provide interfaces to interact with Large Language Models (LLMs) for advanced chunking strategies or other tasks within the pipeline.
 
-| Genie Name     | Class              | Description                       | Optional Install        |
-| -------------- | ------------------ | --------------------------------- | ----------------------- |
-| `gemini`       | `GeminiGenie`      | Interact with Google Gemini APIs. | `chonkie[gemini]`       |
-| `openai`       | `OpenAIGenie`      | Interact with OpenAI APIs.        | `chonkie[openai]`       |
-| `azure-openai` | `AzureOpenAIGenie` | Interact with Azure OpenAI APIs.  | `chonkie[azure-openai]` |
+| Genie Name     | Class              | Description                                | Optional Install        |
+| -------------- | ------------------ | ------------------------------------------ | ----------------------- |
+| `gemini`       | `GeminiGenie`      | Interact with Google Gemini APIs.          | `chonkie[gemini]`       |
+| `openai`       | `OpenAIGenie`      | Interact with OpenAI APIs.                 | `chonkie[openai]`       |
+| `azure-openai` | `AzureOpenAIGenie` | Interact with Azure OpenAI APIs.           | `chonkie[azure-openai]` |
+| `groq`         | `GroqGenie`        | Fast inference on Groq hardware.           | `chonkie[groq]`         |
+| `cerebras`     | `CerebrasGenie`    | Fastest inference on Cerebras hardware.    | `chonkie[cerebras]`     |
 
 You can also use the `OpenAIGenie` to interact with any LLM provider that supports the OpenAI API format, by simply changing the `model`, `base_url`, and `api_key` parameters. For example, here's how to use the `OpenAIGenie` to interact with the `Llama-4-Maverick` model via OpenRouter:
 

@@ -1,6 +1,8 @@
-"""Fast chunker powered by memchunk."""
+"""Fast chunker powered by chonkie-core."""
 
 from typing import Any, Dict, List, Optional, Sequence
+
+import chonkie_core
 
 from chonkie.chunker.base import BaseChunker
 from chonkie.pipeline import chunker
@@ -14,7 +16,7 @@ class FastChunker(BaseChunker):
     Unlike other chonkie chunkers that use token counts, FastChunker uses
     byte size limits for maximum performance (~100+ GB/s throughput).
 
-    This is a thin wrapper around memchunk's chunking functionality.
+    This is a thin wrapper around chonkie-core's chunking functionality.
 
     Args:
         chunk_size: Target chunk size in bytes (default: 4096)
@@ -44,7 +46,7 @@ class FastChunker(BaseChunker):
         """Initialize the FastChunker."""
         # Don't call super().__init__() - we don't need a tokenizer
         # But set required attributes for BaseChunker compatibility
-        self._tokenizer = None  # type: ignore[assignment]
+        self._tokenizer = None
         self._use_multiprocessing = False
 
         self.chunk_size = chunk_size
@@ -53,16 +55,6 @@ class FastChunker(BaseChunker):
         self.prefix = prefix
         self.consecutive = consecutive
         self.forward_fallback = forward_fallback
-        # Lazy import memchunk.
-        try:
-            from memchunk import chunk_offsets
-        except ImportError:
-            raise ImportError(
-                "memchunk is required for FastChunker. Install it with: pip install chonkie[fast]"
-            )
-
-        # Verify memchunk is available
-        self._chunk_offsets = chunk_offsets
 
     def __repr__(self) -> str:
         """Return a string representation of the chunker."""
@@ -85,7 +77,7 @@ class FastChunker(BaseChunker):
         if not text:
             return []
 
-        # Build kwargs for memchunk
+        # Build kwargs for chonkie-core
         kwargs: Dict[str, Any] = {
             "size": self.chunk_size,
             "prefix": self.prefix,
@@ -98,19 +90,29 @@ class FastChunker(BaseChunker):
         else:
             kwargs["delimiters"] = self.delimiters
 
-        # Get chunk offsets from memchunk
-        offsets = self._chunk_offsets(text, **kwargs)
+        # Encode to bytes for chonkie-core (which works with byte offsets)
+        text_bytes = text.encode("utf-8")
 
-        # Convert to Chunk objects
-        return [
-            Chunk(
-                text=text[start:end],
-                start_index=start,
-                end_index=end,
-                token_count=0,
+        # Get chunk offsets from chonkie-core (these are byte offsets)
+        offsets = chonkie_core.chunk_offsets(text_bytes, **kwargs)
+
+        # Convert to Chunk objects by slicing bytes and decoding
+        # Track character position to convert byte offsets to char offsets
+        chunks = []
+        char_pos = 0
+        for start, end in offsets:
+            chunk_text = text_bytes[start:end].decode("utf-8")
+            chunk_char_len = len(chunk_text)
+            chunks.append(
+                Chunk(
+                    text=chunk_text,
+                    start_index=char_pos,
+                    end_index=char_pos + chunk_char_len,
+                    token_count=0,
+                )
             )
-            for start, end in offsets
-        ]
+            char_pos += chunk_char_len
+        return chunks
 
     def chunk_batch(self, texts: Sequence[str], show_progress: bool = True) -> List[List[Chunk]]:
         """Chunk a batch of texts.

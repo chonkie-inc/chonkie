@@ -3,6 +3,7 @@
 import asyncio
 import inspect
 import json
+import os
 from pathlib import Path
 from typing import Any, Optional, Union
 
@@ -61,7 +62,7 @@ class Pipeline:
         ] = {}  # Cache: (name, json_kwargs) -> instance
 
     @classmethod
-    def from_recipe(cls, name: str, path: Optional[str] = None) -> "Pipeline":
+    def from_recipe(cls, name: str, path: str | os.PathLike | None = None) -> "Pipeline":
         """Create pipeline from a pre-defined recipe.
 
         Recipes are loaded from the Chonkie Hub (chonkie-ai/recipes repo)
@@ -398,6 +399,10 @@ class Pipeline:
 
         # Validate after reordering (when we know the final structure)
         self._validate_pipeline(ordered_steps, has_text_input=(texts is not None))
+
+        # Handle empty list input gracefully (Issue #460)
+        if isinstance(texts, list) and len(texts) == 0:
+            return []
 
         # Execute pipeline steps
         data = texts  # Start with input texts (or None for fetcher-based pipelines)
@@ -813,7 +818,7 @@ class Pipeline:
         self._component_instances.clear()
         return self
 
-    def to_config(self, path: Optional[str] = None) -> list[dict[str, Any]]:
+    def to_config(self, path: str | os.PathLike | None = None) -> list[dict[str, Any]]:
         """Export pipeline to config format and optionally save to file.
 
         Args:

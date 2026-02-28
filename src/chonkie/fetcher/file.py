@@ -24,8 +24,8 @@ class FileFetcher(BaseFetcher):
 
     def fetch(
         self,
-        path: Optional[str] = None,
-        dir: Optional[str] = None,
+        path: str | os.PathLike | None = None,
+        dir: str | os.PathLike | None = None,
         ext: Optional[list[str]] = None,
     ) -> Union[Path, list[Path]]:
         """Fetch a single file or files from a directory.
@@ -36,7 +36,7 @@ class FileFetcher(BaseFetcher):
             ext: File extensions to filter (only used with dir parameter)
 
         Returns:
-            Union[Path, list[Path]]: Single Path for file mode, list[Path] for directory mode
+            Single Path for file mode, List of paths for directory mode
 
         Raises:
             ValueError: If neither or both path and dir are provided
@@ -80,7 +80,7 @@ class FileFetcher(BaseFetcher):
         else:
             raise ValueError("Must provide either 'path' or 'dir'")
 
-    def fetch_file(self, dir: str, name: str) -> Path:  # type: ignore[override]
+    def fetch_file(self, dir: str | os.PathLike, name: str) -> Path:
         """Given a directory and a file name, return the path to the file.
 
         NOTE: This method is mostly for uniformity across fetchers since one may require to
@@ -94,10 +94,10 @@ class FileFetcher(BaseFetcher):
 
     def __call__(
         self,
-        path: Optional[str] = None,
-        dir: Optional[str] = None,
+        path: str | os.PathLike | None = None,
+        dir: str | os.PathLike | None = None,
         ext: Optional[list[str]] = None,
-    ) -> Union[Path, list[Path]]:  # type: ignore[override]
+    ) -> Union[Path, list[Path]]:
         """Fetch a single file or files from a directory.
 
         Args:
@@ -106,7 +106,7 @@ class FileFetcher(BaseFetcher):
             ext: File extensions to filter (only used with dir parameter)
 
         Returns:
-            Union[Path, list[Path]]: Single Path for file mode, list[Path] for directory mode
+            Single Path for file mode, list[Path] for directory mode
 
         """
         return self.fetch(path=path, dir=dir, ext=ext)

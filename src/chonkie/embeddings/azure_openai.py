@@ -2,15 +2,19 @@
 
 import importlib.util as importutil
 import os
-import warnings
 from typing import TYPE_CHECKING, Any, Optional
 
 import numpy as np
+
+from chonkie.logger import get_logger
 
 from .base import BaseEmbeddings
 
 if TYPE_CHECKING:
     from tiktoken import Encoding
+
+
+logger = get_logger(__name__)
 
 
 class AzureOpenAIEmbeddings(BaseEmbeddings):
@@ -49,7 +53,7 @@ class AzureOpenAIEmbeddings(BaseEmbeddings):
         max_retries: int = 3,
         timeout: float = 60.0,
         batch_size: int = 128,
-        **kwargs: dict[str, Any],
+        **kwargs: Any,
     ):
         """Initialize Azure OpenAI embeddings.
 
@@ -98,7 +102,7 @@ class AzureOpenAIEmbeddings(BaseEmbeddings):
 
         # Initialize Azure client
         if azure_api_key:
-            self.client = AzureOpenAI(  # type: ignore
+            self.client = AzureOpenAI(
                 api_key=azure_api_key,
                 azure_endpoint=azure_endpoint,
                 api_version=api_version,
@@ -113,7 +117,7 @@ class AzureOpenAIEmbeddings(BaseEmbeddings):
                 DefaultAzureCredential(),
                 "https://cognitiveservices.azure.com/.default",
             )
-            self.client = AzureOpenAI(  # type: ignore
+            self.client = AzureOpenAI(
                 azure_endpoint=azure_endpoint,
                 azure_ad_token_provider=token_provider,
                 api_version=api_version,
@@ -167,7 +171,10 @@ class AzureOpenAIEmbeddings(BaseEmbeddings):
                 all_embeddings.extend(embeddings)
             except Exception as e:
                 if len(batch) > 1:
-                    warnings.warn(f"Batch failed: {e}. Falling back to single embedding calls.")
+                    logger.warning(
+                        f"Batch failed: {e}. Falling back to single embedding calls.",
+                        exc_info=True,
+                    )
                     all_embeddings.extend(self.embed(t) for t in batch)
                 else:
                     raise

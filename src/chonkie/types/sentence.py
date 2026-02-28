@@ -1,10 +1,9 @@
 """Custom types for Sentence Chunking."""
 
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any, Union
+from typing import Any, Union
 
-if TYPE_CHECKING:
-    import numpy as np
+import numpy as np
 
 
 @dataclass
@@ -58,7 +57,7 @@ class Sentence:
         result = self.__dict__.copy()
         # Convert numpy array to list if present
         if self.embedding is not None:
-            if hasattr(self.embedding, "tolist"):
+            if isinstance(self.embedding, np.ndarray):
                 result["embedding"] = self.embedding.tolist()
             else:
                 result["embedding"] = self.embedding

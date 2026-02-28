@@ -1,6 +1,5 @@
 """Tests for the fetcher module."""
 
-import tempfile
 from pathlib import Path
 
 import pytest
@@ -50,30 +49,21 @@ class TestFileFetcher:
         return FileFetcher()
 
     @pytest.fixture
-    def temp_dir_with_files(self):
+    def temp_dir_with_files(self, tmp_path) -> Path:
         """Fixture that creates a temporary directory with test files."""
-        with tempfile.TemporaryDirectory() as temp_dir:
-            temp_path = Path(temp_dir)
+        # Create test files with different extensions
+        (tmp_path / "file1.txt").write_text("Content of file1")
+        (tmp_path / "file2.py").write_text("print('Hello World')")
+        (tmp_path / "file3.md").write_text("# Markdown File")
+        (tmp_path / "file4.txt").write_text("Content of file4")
+        (tmp_path / "no_extension_file").write_text("File without extension")
 
-            # Create test files with different extensions
-            (temp_path / "file1.txt").write_text("Content of file1")
-            (temp_path / "file2.py").write_text("print('Hello World')")
-            (temp_path / "file3.md").write_text("# Markdown File")
-            (temp_path / "file4.txt").write_text("Content of file4")
-            (temp_path / "no_extension_file").write_text("File without extension")
+        # Create a subdirectory with a file (should now be included by fetch)
+        subdir = tmp_path / "subdirectory"
+        subdir.mkdir()
+        (subdir / "nested_file.txt").write_text("Nested file content")
 
-            # Create a subdirectory with a file (should now be included by fetch)
-            subdir = temp_path / "subdirectory"
-            subdir.mkdir()
-            (subdir / "nested_file.txt").write_text("Nested file content")
-
-            yield temp_dir
-
-    @pytest.fixture
-    def empty_temp_dir(self):
-        """Fixture that creates an empty temporary directory."""
-        with tempfile.TemporaryDirectory() as temp_dir:
-            yield temp_dir
+        return tmp_path
 
     def test_initialization(self, file_fetcher):
         """Test FileFetcher can be instantiated."""
@@ -143,12 +133,11 @@ class TestFileFetcher:
         assert len(files) == 0
         assert files == []
 
-    def test_fetch_empty_directory(self, file_fetcher, empty_temp_dir):
+    def test_fetch_empty_directory(self, file_fetcher, tmp_path):
         """Test fetching files from empty directory."""
-        files = file_fetcher.fetch(dir=empty_temp_dir)
+        files = file_fetcher.fetch(dir=str(tmp_path))
 
         # Should return empty list
-        assert len(files) == 0
         assert files == []
 
     def test_fetch_non_existent_directory(self, file_fetcher):
@@ -215,35 +204,34 @@ class TestFileFetcher:
         file_names = [f.name for f in files]
         assert "subdirectory" not in file_names
 
-    def test_fetch_with_mixed_case_extensions(self, file_fetcher):
+    def test_fetch_with_mixed_case_extensions(self, file_fetcher, tmp_path):
         """Test fetch with mixed case extensions."""
-        with tempfile.TemporaryDirectory() as temp_dir:
-            temp_path = Path(temp_dir)
+        # Create files with mixed case extensions
+        (tmp_path / "file1.TXT").write_text("Content 1")
+        (tmp_path / "file2.txt").write_text("Content 2")
+        (tmp_path / "file3.Txt").write_text("Content 3")
 
-            # Create files with mixed case extensions
-            (temp_path / "file1.TXT").write_text("Content 1")
-            (temp_path / "file2.txt").write_text("Content 2")
-            (temp_path / "file3.Txt").write_text("Content 3")
+        temp_dir = str(tmp_path)
 
-            # Test exact case matching
-            files_lower = file_fetcher.fetch(dir=temp_dir, ext=[".txt"])
-            files_upper = file_fetcher.fetch(dir=temp_dir, ext=[".TXT"])
-            files_mixed = file_fetcher.fetch(dir=temp_dir, ext=[".Txt"])
+        # Test exact case matching
+        files_lower = file_fetcher.fetch(dir=temp_dir, ext=[".txt"])
+        files_upper = file_fetcher.fetch(dir=temp_dir, ext=[".TXT"])
+        files_mixed = file_fetcher.fetch(dir=temp_dir, ext=[".Txt"])
 
-            assert len(files_lower) == 1  # Only file2.txt
-            assert len(files_upper) == 1  # Only file1.TXT
-            assert len(files_mixed) == 1  # Only file3.Txt
+        assert len(files_lower) == 1  # Only file2.txt
+        assert len(files_upper) == 1  # Only file1.TXT
+        assert len(files_mixed) == 1  # Only file3.Txt
 
-            assert files_lower[0].name == "file2.txt"
-            assert files_upper[0].name == "file1.TXT"
-            assert files_mixed[0].name == "file3.Txt"
+        assert files_lower[0].name == "file2.txt"
+        assert files_upper[0].name == "file1.TXT"
+        assert files_mixed[0].name == "file3.Txt"
 
     def test_fetch_single_file_mode(self, file_fetcher, temp_dir_with_files):
         """Test fetching a single file using path parameter."""
         temp_path = Path(temp_dir_with_files)
         file_path = temp_path / "file1.txt"
 
-        result = file_fetcher.fetch(path=str(file_path))
+        result = file_fetcher.fetch(path=file_path)
 
         assert isinstance(result, Path)
         assert result.name == "file1.txt"
@@ -256,7 +244,7 @@ class TestFileFetcher:
         file_path = temp_path / "nonexistent.txt"
 
         with pytest.raises(FileNotFoundError, match="File not found"):
-            file_fetcher.fetch(path=str(file_path))
+            file_fetcher.fetch(path=file_path)
 
     def test_fetch_both_path_and_dir_raises_error(self, file_fetcher, temp_dir_with_files):
         """Test that providing both path and dir raises ValueError."""
@@ -274,7 +262,7 @@ class TestFileFetcher:
         file_path = temp_path / "file2.py"
 
         # ext should be ignored when path is provided
-        result = file_fetcher.fetch(path=str(file_path), ext=[".txt"])
+        result = file_fetcher.fetch(path=file_path, ext=[".txt"])
 
         assert isinstance(result, Path)
         assert result.name == "file2.py"
@@ -285,7 +273,7 @@ class TestFileFetcher:
         temp_path = Path(temp_dir_with_files)
         file_path = temp_path / "file1.txt"
 
-        result = file_fetcher(path=str(file_path))
+        result = file_fetcher(path=file_path)
 
         assert isinstance(result, Path)
         assert result.name == "file1.txt"

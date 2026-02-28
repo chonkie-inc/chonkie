@@ -1,6 +1,3 @@
-# This workflow builds wheels using cibuildwheel for proper manylinux support
-# Use this instead of python-publish.yml for packages with C extensions
-
 name: Build and Upload Python Wheels
 
 on:
@@ -11,54 +8,8 @@ permissions:
   contents: read
 
 jobs:
-  build_wheels:
-    name: Build wheels on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        include:
-          # Linux wheels (x86_64 and aarch64)
-          - os: ubuntu-latest
-          # macOS ARM64 wheels (Apple Silicon)
-          - os: macos-latest
-            macos_arch: arm64
-          # macOS x86_64 wheels (Intel)
-          - os: macos-15-intel
-            macos_arch: x86_64
-          # Windows wheels
-          - os: windows-latest
-
-    steps:
-      - uses: actions/checkout@v6
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v7
-
-      - name: Set up QEMU for ARM builds
-        if: runner.os == 'Linux'
-        uses: docker/setup-qemu-action@v3
-        with:
-          platforms: arm64
-
-      - name: Build wheels
-        run: uvx cibuildwheel --output-dir wheelhouse
-        env:
-          CIBW_BUILD: cp39-* cp310-* cp311-* cp312-* cp313-* cp314-*
-          CIBW_SKIP: "*-win32 *-manylinux_i686 *-musllinux*"
-          CIBW_ARCHS_LINUX: x86_64 aarch64
-          CIBW_ARCHS_MACOS: ${{ matrix.macos_arch || 'x86_64 arm64' }}
-          CIBW_ARCHS_WINDOWS: AMD64
-          CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_28
-          CIBW_MANYLINUX_AARCH64_IMAGE: manylinux_2_28
-          CIBW_ENVIRONMENT_WINDOWS: "PIP_PREFER_BINARY=1"
-
-      - uses: actions/upload-artifact@v6
-        with:
-          name: cibw-wheels-${{ matrix.os }}
-          path: ./wheelhouse/*.whl
-
-  build_sdist:
-    name: Build source distribution
+  build:
+    name: Build distribution
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -66,23 +17,22 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v7
 
-      - name: Build sdist
-        run: uv build --sdist
+      - name: Build wheel and sdist
+        run: uv build
 
       - uses: actions/upload-artifact@v6
         with:
-          name: cibw-sdist
-          path: dist/*.tar.gz
+          name: python-package-distributions
+          path: dist/
 
   upload_pypi:
-    needs: [build_wheels, build_sdist]
+    needs: [build]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v7
         with:
-          pattern: cibw-*
+          name: python-package-distributions
           path: dist
-          merge-multiple: true
 
       - uses: pypa/gh-action-pypi-publish@27b31702a0e7fc50959f5ad993c78deac1bdfc29
         with:

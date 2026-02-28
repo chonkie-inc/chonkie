@@ -1,11 +1,11 @@
 [build-system]
-requires = ["setuptools>=45", "wheel", "cython>=3.0.0"]
+requires = ["setuptools>=45", "wheel"]
 build-backend = "setuptools.build_meta"
 
 
 [project]
 name = "chonkie"
-version = "1.5.2"
+version = "1.5.6"
 description = "🦛 CHONK your texts with Chonkie ✨ - The no-nonsense chunking library"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -45,7 +45,7 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Information Analysis",
     "Topic :: Text Processing :: Linguistic",
 ]
-dependencies = ["tqdm>=4.64.0", "numpy>=2.0.0"]
+dependencies = ["tqdm>=4.64.0", "numpy>=2.0.0", "chonkie-core>=0.8.0", "tenacity>=8.0.0"]
 
 [project.urls]
 Homepage = "https://github.com/chonkie-inc/chonkie"
@@ -75,7 +75,6 @@ code = [
     "magika>=0.6.0, <1.1.0",
 ]
 neural = ["transformers>=4.0.0", "torch>=2.0.0, <3.0"]
-fast = ["memchunk>=0.3.0"]
 
 # Optional dependencies for the embeddings
 
@@ -93,6 +92,8 @@ azure-openai = [
     "openai>=1.0.0",
     "pydantic>=2.0.0",
 ]
+groq = ["pydantic>=2.0.0", "groq>=0.4.0"]
+cerebras = ["pydantic>=2.0.0", "cerebras-cloud-sdk>=1.0.0"]
 voyageai = ["tokenizers>=0.16.0", "voyageai>=0.3.2"]
 cohere = ["tokenizers>=0.16.0", "cohere>=5.13.0"]
 jina = ["tokenizers>=0.16.0"]
@@ -133,6 +134,8 @@ all = [
     "jsonschema>=4.23.0",
     "pydantic>=2.0.0",
     "google-genai>=1.0.0",
+    "groq>=0.4.0",
+    "cerebras-cloud-sdk>=1.0.0",
     "transformers>=4.0.0",
     "torch>=2.0.0, <3.0",
     "chromadb>=1.0.0",
@@ -152,7 +155,6 @@ all = [
     "catsu>=0.0.1",
     "litellm>=1.0.0",
     "datasets>=1.14.0",
-    "memchunk>=0.3.0",
 ]
 dev = [
     "datasets>=1.14.0",
@@ -163,12 +165,12 @@ dev = [
     "pytest-asyncio>=0.26.0",
     "coverage",
     "ruff>=0.13.3",
-    "mypy>=1.11.0",
-    "cython>=3.0.0",
+    "ty",
     "pandas",
     "tabulate",
     "openpyxl",
     "uv>=0.9.18",
+    "requests-cache>=1.2.1",
 ]
 
 [dependency-groups]
@@ -209,8 +211,9 @@ packages = [
 [tool.ruff]
 line-length = 99
 exclude = ["*.ipynb"]
-lint.select = ["F", "I", "D"]
+lint.select = ["B904", "F", "I", "D"]
 lint.ignore = ["D211", "D213", "D203"]
+lint.per-file-ignores = {"tests/**" = ["D100", "D102", "D103", "D104"]}
 
 [tool.ruff.format]
 preview = true
@@ -222,25 +225,3 @@ ignore_missing_imports = true
 no_implicit_optional = true
 check_untyped_defs = true
 show_error_codes = true
-
-[tool.uv]
-constraint-dependencies = [
-    # This pair of grpcio + protobuf is required by a check in weaviate.proto.v1
-    "grpcio>=1.72",
-    "protobuf>=6.30",
-]
-
-[tool.coverage.report]
-exclude_also = [
-    # Don't complain about missing debug-only code:
-    "def __repr__",
-    # Don't complain if tests don't hit defensive assertion code:
-    "raise AssertionError",
-    "raise NotImplementedError",
-    "if 0:",
-    "if __name__ == .__main__.:",
-    # Don't complain about abstract methods, they aren't run:
-    "@(abc\\.)?abstractmethod",
-    # Don't complain about import error guards:
-    "except ImportError.+",
-]

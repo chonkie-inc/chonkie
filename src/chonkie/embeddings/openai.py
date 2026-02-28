@@ -1,52 +1,47 @@
-"""OpenAI embeddings."""
+"""OpenAI embeddings - backward-compatible wrapper around CatsuEmbeddings.
 
-import asyncio
+Note: Consider using CatsuEmbeddings(model=..., provider="openai") directly.
+"""
+
 import importlib.util as importutil
 import os
 import warnings
-from functools import lru_cache
-from typing import TYPE_CHECKING, Any, Optional
+from typing import Any, Optional
 
 import numpy as np
 
 from .base import BaseEmbeddings
-
-if TYPE_CHECKING:
-    from tiktoken import Encoding
+from .catsu import CatsuEmbeddings
 
 
 class OpenAIEmbeddings(BaseEmbeddings):
-    """OpenAI embeddings implementation using their API.
+    """OpenAI embeddings via CatsuEmbeddings.
+
+    This is a backward-compatible wrapper around CatsuEmbeddings.
+    Consider using CatsuEmbeddings(model=..., provider="openai") directly.
 
     Args:
-        model: The model to use.
-        tokenizer: The tokenizer to use. Can be loaded directly if it's a OpenAI model, otherwise needs to be provided.
-        dimension: The dimension of the embedding model to use. Can be inferred if it's a OpenAI model, otherwise needs to be provided.
-        base_url: The base URL to use.
-        api_key: The API key to use.
-        organization: The organization to use.
-        max_retries: The maximum number of retries to use.
-        timeout: The timeout to use.
-        batch_size: The batch size to use.
+        model: OpenAI embedding model name (default: "text-embedding-3-small").
+        api_key: OpenAI API key (or set OPENAI_API_KEY env var).
+        max_retries: Maximum retry attempts (default: 3).
+        timeout: Request timeout in seconds (default: 60).
+        batch_size: Number of texts per API call (default: 128).
+        tokenizer: Ignored; kept for backward compatibility.
+        dimension: Ignored; kept for backward compatibility.
+        max_tokens: Ignored; kept for backward compatibility.
+        base_url: Ignored; kept for backward compatibility.
+        organization: Ignored; kept for backward compatibility.
+        **kwargs: Additional keyword arguments (ignored for compatibility).
 
     """
 
-    AVAILABLE_MODELS = {
-        "text-embedding-3-small": {
-            "dimension": 1536,
-            "max_tokens": 8192,
-        },
-        "text-embedding-3-large": {
-            "dimension": 3072,
-            "max_tokens": 8192,
-        },
-        "text-embedding-ada-002": {
-            "dimension": 1536,
-            "max_tokens": 8192,
-        },
-    }
-
     DEFAULT_MODEL = "text-embedding-3-small"
+
+    AVAILABLE_MODELS = {
+        "text-embedding-3-small": {"dimension": 1536, "max_tokens": 8192},
+        "text-embedding-3-large": {"dimension": 3072, "max_tokens": 8192},
+        "text-embedding-ada-002": {"dimension": 1536, "max_tokens": 8192},
+    }
 
     def __init__(
         self,
@@ -56,212 +51,112 @@ class OpenAIEmbeddings(BaseEmbeddings):
         max_tokens: Optional[int] = None,
         base_url: Optional[str] = None,
         api_key: Optional[str] = None,
+        organization: Optional[str] = None,
         max_retries: int = 3,
         timeout: float = 60.0,
         batch_size: int = 128,
-        **kwargs: dict[str, Any],
+        **kwargs: Any,
     ):
-        """Initialize OpenAI embeddings.
+        """Initialize OpenAI embeddings wrapper.
 
         Args:
-            model: Name of the OpenAI embedding model to use
-            tokenizer: The tokenizer to use. Can be loaded directly if it's a OpenAI model, otherwise needs to be provided.
-            dimension: The dimension of the embedding model to use. Can be inferred if it's a OpenAI model, otherwise needs to be provided.
-            max_tokens: The maximum number of tokens to use. Can be inferred if it's a OpenAI model, otherwise needs to be provided.
-            base_url: The base URL to use.
-            api_key: OpenAI API key (if not provided, looks for OPENAI_API_KEY env var)
-            max_retries: Maximum number of retries for failed requests
-            timeout: Timeout in seconds for API requests
-            batch_size: Maximum number of texts to embed in one API call
-            **kwargs: Additional keyword arguments to pass to the OpenAI client.
+            model: OpenAI embedding model name.
+            tokenizer: Ignored; kept for backward compatibility.
+            dimension: Ignored; kept for backward compatibility.
+            max_tokens: Ignored; kept for backward compatibility.
+            base_url: Ignored; kept for backward compatibility.
+            api_key: OpenAI API key (falls back to OPENAI_API_KEY env var).
+            organization: Ignored; kept for backward compatibility.
+            max_retries: Maximum retry attempts.
+            timeout: Request timeout in seconds.
+            batch_size: Number of texts per API call.
+            **kwargs: Additional keyword arguments (ignored).
+
+        Raises:
+            ImportError: If the catsu package is not installed.
 
         """
         super().__init__()
 
-        try:
-            import tiktoken
-            from openai import AsyncOpenAI, OpenAI
-        except ImportError as ie:
+        if not self._is_available():
             raise ImportError(
-                'One (or more) of the following packages is not available: openai, tiktoken. Please install it via `pip install "chonkie[openai]"`',
-            ) from ie
+                "One (or more) of the following packages is not available: catsu. "
+                'Please install it via `pip install "chonkie[catsu]"`',
+            )
 
-        # Initialize the model
-        self.model = model
-        self.base_url = base_url
-        self._batch_size = batch_size
-
-        # Do something for the tokenizer
         if tokenizer is not None:
-            self._tokenizer = tokenizer
-        elif model in self.AVAILABLE_MODELS:
-            self._tokenizer = tiktoken.encoding_for_model(model)
-        else:
-            raise ValueError(f"Tokenizer not found for model {model}. Please provide a tokenizer.")
-
-        # Do something for the dimension
+            warnings.warn(
+                "The `tokenizer` parameter is not supported in this version and will be ignored.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
         if dimension is not None:
-            self._dimension = dimension
-        elif model in self.AVAILABLE_MODELS:
-            self._dimension = self.AVAILABLE_MODELS[model]["dimension"]
-        else:
-            raise ValueError(f"Dimension not found for model {model}. Please provide a dimension.")
-
-        # Do something for the max tokens
+            warnings.warn(
+                "The `dimension` parameter is not supported in this version and will be ignored.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
         if max_tokens is not None:
-            self._max_tokens = max_tokens
-        elif model in self.AVAILABLE_MODELS:
-            self._max_tokens = self.AVAILABLE_MODELS[model]["max_tokens"]
-        else:
-            raise ValueError(
-                f"Max tokens not found for model {model}. Please provide a max tokens.",
+            warnings.warn(
+                "The `max_tokens` parameter is not supported in this version and will be ignored.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+        if base_url is not None:
+            warnings.warn(
+                "The `base_url` parameter is not supported in this version and will be ignored.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+        if organization is not None:
+            warnings.warn(
+                "The `organization` parameter is not supported in this version and will be ignored.",
+                DeprecationWarning,
+                stacklevel=2,
             )
 
-        # Setup OpenAI client
-        self.client = OpenAI(
-            api_key=api_key or os.getenv("OPENAI_API_KEY"),
-            base_url=base_url,
-            timeout=timeout,
-            max_retries=max_retries,
-            **kwargs,  # type: ignore[arg-type]
-        )
-        self.async_client = AsyncOpenAI(
-            api_key=api_key or os.getenv("OPENAI_API_KEY"),
-            base_url=base_url,
-            timeout=timeout,
-            max_retries=max_retries,
-            **kwargs,  # type: ignore[arg-type]
-        )
+        self.model = model
+        api_key = api_key or os.getenv("OPENAI_API_KEY")
+        api_keys = {"openai": api_key} if api_key else None
 
-        if self.client.api_key is None:
-            raise ValueError(
-                "OpenAI API key not found. Either pass it as api_key or set OPENAI_API_KEY environment variable.",
-            )
-
-    @lru_cache(maxsize=4096)
-    def _truncate(self, text: str) -> str:
-        """Truncate the text to be below the max token count."""
-        max_tokens = self._max_tokens
-        token_estimate = len(text) // 5
-        if token_estimate > max_tokens:
-            tokens = self._tokenizer.encode(text)
-            if len(tokens) > max_tokens:
-                warnings.warn(
-                    f"OpenAIEmbeddings encountered a text that is too long. Truncating to {max_tokens} tokens.",
-                )
-                return self._tokenizer.decode(tokens[:max_tokens])
-        return text
+        self._catsu = CatsuEmbeddings(
+            model=model,
+            provider="openai",
+            api_keys=api_keys,
+            max_retries=max_retries,
+            timeout=round(timeout),
+            batch_size=batch_size,
+        )
 
     def embed(self, text: str) -> np.ndarray:
-        """Get embeddings for a single text."""
-        text = self._truncate(text)
-        response = self.client.embeddings.create(
-            model=self.model,
-            input=text,
-        )
-        return np.array(response.data[0].embedding, dtype=np.float32)
+        """Embed a single text string."""
+        return self._catsu.embed(text)
 
-    async def embed_async(self, text: str) -> np.ndarray:
-        """Get embeddings for a single text asynchronously."""
-        text = self._truncate(text)
-        response = await self.async_client.embeddings.create(
-            model=self.model,
-            input=text,
-        )
-        return np.array(response.data[0].embedding, dtype=np.float32)
+    def embed_batch(self, texts: list) -> list:
+        """Embed multiple texts using batched API calls."""
+        return self._catsu.embed_batch(texts)
 
-    @staticmethod
-    def _process_embedding_response(response: Any) -> list[np.ndarray]:
-        """Process the response from the OpenAI API. Helper function for embed batch."""
-        # Sort embeddings by index as OpenAI might return them in different order
-        sorted_embeddings = sorted(response.data, key=lambda x: x.index)
-        return [np.array(e.embedding, dtype=np.float32) for e in sorted_embeddings]
+    async def aembed(self, text: str) -> np.ndarray:
+        """Embed a single text string asynchronously."""
+        return await self._catsu.aembed(text)
 
-    def embed_batch(self, texts: list[str]) -> list[np.ndarray]:
-        """Get embeddings for multiple texts using batched API calls."""
-        if not texts:
-            return []
-
-        all_embeddings = []
-
-        # Truncate all the texts
-        texts = [self._truncate(text) for text in texts]
-
-        # Process in batches
-        for i in range(0, len(texts), self._batch_size):
-            batch = texts[i : i + self._batch_size]
-            try:
-                response = self.client.embeddings.create(
-                    model=self.model,
-                    input=batch,
-                )
-                all_embeddings.extend(self._process_embedding_response(response))
-
-            except Exception as e:
-                # If the batch fails, try one by one
-                if len(batch) > 1:
-                    warnings.warn(f"Batch embedding failed: {str(e)}. Trying one by one.")
-                    individual_embeddings = [self.embed(text) for text in batch]
-                    all_embeddings.extend(individual_embeddings)
-                else:
-                    raise e
-
-        return all_embeddings
-
-    async def embed_batch_async(self, texts: list[str]) -> list[np.ndarray]:
-        """Get embeddings for multiple texts using batched API calls asynchronously."""
-        if not texts:
-            return []
-
-        all_embeddings = []
-
-        # Truncate all the texts
-        texts = [self._truncate(text) for text in texts]
-
-        # Process in batches
-        for i in range(0, len(texts), self._batch_size):
-            batch = texts[i : i + self._batch_size]
-            try:
-                response = await self.async_client.embeddings.create(
-                    model=self.model,
-                    input=batch,
-                )
-                all_embeddings.extend(self._process_embedding_response(response))
-
-            except Exception as e:
-                # If the batch fails, try one by one
-                if len(batch) > 1:
-                    warnings.warn(f"Batch embedding failed: {str(e)}. Trying one by one.")
-                    individual_embeddings = await asyncio.gather(*[
-                        self.embed_async(text) for text in batch
-                    ])
-                    all_embeddings.extend(individual_embeddings)
-                else:
-                    raise e
-
-        return all_embeddings
-
-    def similarity(self, u: np.ndarray, v: np.ndarray) -> np.float32:
-        """Compute cosine similarity between two embeddings."""
-        return np.float32(np.divide(np.dot(u, v), np.linalg.norm(u) * np.linalg.norm(v)))
+    async def aembed_batch(self, texts: list) -> list:
+        """Embed multiple texts asynchronously using batched API calls."""
+        return await self._catsu.aembed_batch(texts)
 
     @property
     def dimension(self) -> int:
         """Return the embedding dimension."""
-        return self._dimension
+        return self._catsu.dimension
 
-    def get_tokenizer(self) -> "Encoding":
-        """Return a tiktoken tokenizer object."""
-        return self._tokenizer  # type: ignore[return-value]
+    def get_tokenizer(self) -> Any:
+        """Return a tokenizer object for token counting."""
+        return self._catsu.get_tokenizer()
 
     @classmethod
     def _is_available(cls) -> bool:
-        """Check if the OpenAI package is available."""
-        # We should check for OpenAI package alongside tiktoken
-        return (
-            importutil.find_spec("openai") is not None
-            and importutil.find_spec("tiktoken") is not None
-        )
+        """Check if the catsu package is available."""
+        return importutil.find_spec("catsu") is not None
 
     def __repr__(self) -> str:
         """Representation of the OpenAIEmbeddings instance."""
