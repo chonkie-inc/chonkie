@@ -9,6 +9,9 @@ services:
       - "8000:8000"
     volumes:
       - ./data:/app/data
+    env_file:
+      - path: .env
+        required: false
     environment:
       # Log verbosity: DEBUG | INFO | WARNING | ERROR
       LOG_LEVEL: "${LOG_LEVEL:-INFO}"
