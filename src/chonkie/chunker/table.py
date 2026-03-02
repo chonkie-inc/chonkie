@@ -44,8 +44,8 @@ class TableChunker(BaseChunker):
 
         self.chunk_size = chunk_size
         self.newline_pattern = re.compile(r"\n(?=\|)")
-        self.html_tag_pattern = re.compile(r"<table.*?>", re.IGNORECASE)
-        self.html_row_pattern = re.compile(r"<tr.*?>.*?</tr>", re.DOTALL | re.IGNORECASE)
+        self.html_tag_pattern = re.compile(r"<table[^>]*>", re.IGNORECASE)
+        self.html_row_pattern = re.compile(r"<tr[^>]*>.*?</tr>", re.DOTALL | re.IGNORECASE)
         self.sep = "✄"
         self._is_row_tokenizer = isinstance(self.tokenizer.tokenizer, RowTokenizer)
 
@@ -61,7 +61,7 @@ class TableChunker(BaseChunker):
     def _split_html_table(self, table: str) -> tuple[str, list[str]]:
         table = table.strip()
         # Find the start of tbody or end of thead
-        tbody_match = re.search(r"<tbody.*?>", table, re.IGNORECASE)
+        tbody_match = re.search(r"<tbody[^>]*>", table, re.IGNORECASE)
         if tbody_match:
             header = table[: tbody_match.end()]
             body_content = table[tbody_match.end() : table.lower().find("</tbody>")]
