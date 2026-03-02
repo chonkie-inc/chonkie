@@ -318,7 +318,10 @@ async def execute_pipeline(
             # text so we can re-chunk it (e.g. chunk → refine → chunk).
             if has_chunks:
                 if is_batch:
-                    state = [" ".join(c.text for c in chunk_list) for chunk_list in cast(list[list[Any]], state)]
+                    state = [
+                        " ".join(c.text for c in chunk_list)
+                        for chunk_list in cast(list[list[Any]], state)
+                    ]
                 else:
                     state = " ".join(c.text for c in cast(list[Any], state))
                 has_chunks = False
@@ -377,7 +380,9 @@ async def execute_pipeline(
                         refined.append(r)
                     state = refined
                 else:
-                    state = await asyncio.to_thread(_run_refine_step, refinery_name, config, cast(list, state))
+                    state = await asyncio.to_thread(
+                        _run_refine_step, refinery_name, config, cast(list, state)
+                    )
             except ValueError as exc:
                 raise HTTPException(
                     status_code=400,
