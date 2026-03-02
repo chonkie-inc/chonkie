@@ -68,6 +68,8 @@ api = [
     "sqlalchemy>=2.0.0",
     "alembic>=1.13.0",
     "aiosqlite>=0.20.0",
+    "huggingface-hub>=1.5.0",
+    "jsonschema>=4.23.0",
 ]
 
 # Optional dependencies for table chef
