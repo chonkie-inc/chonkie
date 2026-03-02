@@ -1,6 +1,5 @@
 """Base Class for All Chunkers."""
 
-import warnings
 from abc import ABC, abstractmethod
 from typing import Sequence, Union
 
@@ -76,11 +75,10 @@ class BaseChunker(ABC):
                 cpu_cores=cpu_cores,
             )
             return worker_count
-        except Exception as e:
-            warnings.warn(f"Proceeding with 1 worker. Error calculating optimal worker count: {e}")
+        except Exception:
             logger.warning(
                 "Failed to calculate optimal worker count, using 1 worker",
-                error=str(e),
+                exc_info=True,
             )
             return 1
 
@@ -174,7 +172,7 @@ class BaseChunker(ABC):
         if len(texts) == 0:
             return []
         if len(texts) == 1:
-            return [self.chunk(texts[0])]  # type: ignore
+            return [self.chunk(texts[0])]
 
         # Now for the remaining, check the self._multiprocessing bool flag
         if self._use_multiprocessing:
