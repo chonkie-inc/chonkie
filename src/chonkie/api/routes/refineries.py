@@ -76,22 +76,6 @@ async def embeddings_refine(
         return []
 
     try:
-        try:
-            from catsu import Embeddings
-        except ImportError as exc:
-            msg = "Embeddings require catsu.  Install it with: pip install 'chonkie[catsu]'"
-            log.error(msg, error=str(exc))
-            raise HTTPException(status_code=500, detail=msg) from exc
-
-        timer.start("embedding_init")
-        embedding = Embeddings(model=request.embedding_model)
-        log.info(
-            "Embedding model ready",
-            endpoint="POST /v1/refine/embeddings",
-            model=request.embedding_model,
-            duration_ms=round(timer.end("embedding_init"), 2),
-        )
-
         timer.start("convert_to_chunks")
         chunk_objects = _dicts_to_chunks(request.chunks)
         log.info(
@@ -100,8 +84,16 @@ async def embeddings_refine(
             duration_ms=round(timer.end("convert_to_chunks"), 2),
         )
 
+        timer.start("embedding_init")
+        refinery = EmbeddingsRefinery(embedding_model=request.embedding_model)
+        log.info(
+            "Embedding model ready",
+            endpoint="POST /v1/refine/embeddings",
+            model=request.embedding_model,
+            duration_ms=round(timer.end("embedding_init"), 2),
+        )
+
         timer.start("refinery")
-        refinery = EmbeddingsRefinery(embedding_model=embedding)
         refined = refinery.refine(chunk_objects)
         log.info(
             "Refinery processing completed",

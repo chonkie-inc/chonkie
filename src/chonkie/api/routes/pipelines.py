@@ -131,14 +131,7 @@ def _run_refine_step(refinery_name: str, config: dict, chunks: list) -> list:
     ref: Union[EmbeddingsRefinery, OverlapRefinery]
     if refinery_cls is EmbeddingsRefinery:
         embedding_model = cfg.pop("embedding_model", "text-embedding-3-small")
-        try:
-            from catsu import Embeddings
-
-            embedding = Embeddings(model=embedding_model)
-            ref = EmbeddingsRefinery(embedding_model=embedding)
-        except ImportError:
-            # Fall back to AutoEmbeddings (e.g. model2vec for local models)
-            ref = EmbeddingsRefinery(embedding_model=embedding_model)
+        ref = EmbeddingsRefinery(embedding_model=embedding_model)
     elif refinery_cls is OverlapRefinery:
         # Never mutate the chunks that might be reused by later steps
         cfg.setdefault("inplace", False)

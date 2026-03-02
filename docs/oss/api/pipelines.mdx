@@ -5,10 +5,6 @@ sidebarTitle: "Pipelines"
 icon: "pipe-section"
 ---
 
-<Info>
-  Pipelines store reusable chunking workflow configurations. Pipeline **execution** is coming in a future release — for now, you can create, list, update, and delete pipeline configs via CRUD endpoints.
-</Info>
-
 ## What Are Pipelines?
 
 A pipeline is a named, reusable configuration that describes a sequence of chunking and refinement steps. Instead of passing the same configuration on every request, you define it once and reference it by ID.
@@ -205,8 +201,65 @@ Pipelines are stored in a local SQLite database (`data/chonkie.db`). The databas
 
 ---
 
-## Pipeline Execution
+## Execute a Pipeline
 
-<Note>
-  Pipeline execution (`POST /v1/pipelines/{id}/execute`) is stubbed and returns `501 Not Implemented`. The CRUD operations above are fully functional. Execution will be implemented in a future release.
-</Note>
+`POST /v1/pipelines/{pipeline_id}/execute`
+
+Runs the pipeline steps sequentially on the provided text. Each `chunk` step produces chunks; each `refine` step enriches them. Returns the final list of chunks.
+
+```bash
+curl -X POST http://localhost:8000/v1/pipelines/550e8400-e29b-41d4-a716-446655440000/execute \
+  -H "Content-Type: application/json" \
+  -d '{"text": "Your document text goes here. It will be chunked and refined."}'
+```
+
+**Response:**
+
+```json
+[
+  {
+    "id": "chnk_abc123",
+    "text": "Your document text goes here.",
+    "start_index": 0,
+    "end_index": 29,
+    "token_count": 29,
+    "context": null,
+    "embedding": null
+  },
+  {
+    "id": "chnk_def456",
+    "text": "It will be chunked and refined.",
+    "start_index": 30,
+    "end_index": 61,
+    "token_count": 31,
+    "context": null,
+    "embedding": null
+  }
+]
+```
+
+### Batch Execution
+
+Submit a list of strings to process multiple documents in one request. The response is a list of lists — one inner list per input document.
+
+```bash
+curl -X POST http://localhost:8000/v1/pipelines/550e8400-e29b-41d4-a716-446655440000/execute \
+  -H "Content-Type: application/json" \
+  -d '{"text": ["First document.", "Second document.", "Third document."]}'
+```
+
+<AccordionGroup>
+  <Accordion title="Request Parameters">
+    <ParamField body="text" type="string | string[]" required>
+      Text or list of texts to process through the pipeline.
+    </ParamField>
+  </Accordion>
+</AccordionGroup>
+
+### Error Responses
+
+| Status | Cause |
+|---|---|
+| `404` | Pipeline ID not found |
+| `400` | Pipeline has no steps, a `refine` step appears before any `chunk` step, or a step is missing required fields |
+| `500` | A step failed at runtime (e.g. missing extra, model error) |

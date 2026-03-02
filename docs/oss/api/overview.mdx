@@ -14,11 +14,11 @@ Run Chonkie as a self-hosted REST API and call any chunker or refinery from any 
   <Card title="Endpoints" icon="code" href="/oss/api/endpoints">
     All chunkers and refineries
   </Card>
+  <Card title="Pipelines" icon="pipe-section" href="/oss/api/pipelines">
+    Save and execute reusable chunking workflows
+  </Card>
   <Card title="Docker" icon="docker" href="/oss/api/docker">
     Container and production deployment
-  </Card>
-  <Card title="Interactive Docs" icon="browser" href="http://localhost:8000/docs">
-    Swagger UI (when server is running)
   </Card>
 </CardGroup>
 
@@ -40,6 +40,12 @@ Run Chonkie as a self-hosted REST API and call any chunker or refinery from any 
 | `POST /v1/chunk/semantic` | Embedding-based semantic splitting |
 | `POST /v1/chunk/code` | AST-aware code splitting |
 | `POST /v1/refine/overlap` | Add overlap context to chunks |
-| `POST /v1/refine/embeddings` | Attach OpenAI embeddings to chunks |
+| `POST /v1/refine/embeddings` | Attach embeddings to chunks |
+| `POST /v1/pipelines` | Create a reusable pipeline |
+| `GET /v1/pipelines` | List all pipelines |
+| `GET /v1/pipelines/{id}` | Get a pipeline by ID |
+| `PUT /v1/pipelines/{id}` | Update a pipeline |
+| `DELETE /v1/pipelines/{id}` | Delete a pipeline |
+| `POST /v1/pipelines/{id}/execute` | Execute a pipeline on text |
 | `GET /health` | Health check |
 | `GET /` | API info and available endpoints |

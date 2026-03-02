@@ -12,7 +12,7 @@ pip install "chonkie[api,semantic,code,openai]"
 ```
 
 <Note>
-  The `api` extra includes FastAPI and uvicorn. Add `semantic` and `code` for those chunkers. Add `openai` only if you plan to use the embeddings refinery.
+  The `api` extra includes FastAPI and uvicorn. Add `semantic` for the semantic chunker and `code` for the code chunker. The embeddings refinery works out of the box with local models (e.g. `minishlab/potion-base-8M`); add the relevant extra (e.g. `openai`) only if you plan to use API-based embedding providers.
 </Note>
 
 ## 2. Start the Server
@@ -128,6 +128,9 @@ The server starts on port `8000`. See the [Docker guide](/oss/api/docker) for th
 <CardGroup cols={2}>
   <Card title="All Endpoints" icon="code" href="/oss/api/endpoints">
     Token, Sentence, Recursive, Semantic, Code, and refineries
+  </Card>
+  <Card title="Pipelines" icon="pipe-section" href="/oss/api/pipelines">
+    Save and execute reusable chunking workflows
   </Card>
   <Card title="Docker Deployment" icon="docker" href="/oss/api/docker">
     Production-ready Docker setup with env vars

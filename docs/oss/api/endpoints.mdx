@@ -290,24 +290,12 @@ curl -X POST http://localhost:8000/v1/refine/overlap \
 
 `POST /v1/refine/embeddings`
 
-Computes and attaches embeddings to each chunk via [Catsu](https://github.com/chonkie-inc/catsu). Each chunk in the response gains an `embedding` field containing a list of floats. Multiple embedding providers are supported.
+Computes and attaches embeddings to each chunk via Chonkie's `AutoEmbeddings`. Each chunk in the response gains an `embedding` field containing a list of floats.
 
-<Warning>
-  Requires `chonkie[catsu]` and the API key for your chosen provider. Set `OPENAI_API_KEY`, `COHERE_API_KEY`, `VOYAGE_API_KEY`, etc. as appropriate.
-</Warning>
-
-## Embeddings Providers
-
-| Provider | Example Model | Environment Variable |
-|---|---|---|
-| OpenAI | `text-embedding-3-small`, `text-embedding-3-large` | `OPENAI_API_KEY` |
-| Cohere | `embed-english-v3.0`, `embed-multilingual-v3.0` | `COHERE_API_KEY` |
-| Voyage AI | `voyage-large-2`, `voyage-code-2` | `VOYAGE_API_KEY` |
-| Mistral | `mistral-embed` | `MISTRAL_API_KEY` |
-| Azure OpenAI | Your deployment name | `AZURE_OPENAI_API_KEY` + `AZURE_OPENAI_ENDPOINT` |
+**Local models** (e.g. `minishlab/potion-base-8M`) run entirely on-device and require no API key. **API-based models** require the appropriate environment variable for your provider.
 
 ```bash
-# OpenAI
+# Local model (no API key required)
 curl -X POST http://localhost:8000/v1/refine/embeddings \
   -H "Content-Type: application/json" \
   -d '{
@@ -315,27 +303,36 @@ curl -X POST http://localhost:8000/v1/refine/embeddings \
       {"text": "First chunk.", "start_index": 0, "end_index": 12, "token_count": 3},
       {"text": "Second chunk.", "start_index": 13, "end_index": 26, "token_count": 3}
     ],
-    "embedding_model": "text-embedding-3-small"
+    "embedding_model": "minishlab/potion-base-8M"
   }'
 
-# Voyage AI
+# OpenAI (requires OPENAI_API_KEY)
 curl -X POST http://localhost:8000/v1/refine/embeddings \
   -H "Content-Type: application/json" \
   -d '{
     "chunks": [
       {"text": "First chunk.", "start_index": 0, "end_index": 12, "token_count": 3}
     ],
-    "embedding_model": "voyage-large-2"
+    "embedding_model": "text-embedding-3-small"
   }'
 ```
+
+## Embeddings Providers
+
+| Type | Example Model | Requirement |
+|---|---|---|
+| Local (model2vec) | `minishlab/potion-base-8M`, `minishlab/potion-retrieval-32M` | None |
+| OpenAI | `text-embedding-3-small`, `text-embedding-3-large` | `OPENAI_API_KEY` |
+| Cohere | `embed-english-v3.0`, `embed-multilingual-v3.0` | `COHERE_API_KEY` |
+| Voyage AI | `voyage-large-2`, `voyage-code-2` | `VOYAGE_API_KEY` |
 
 <AccordionGroup>
   <Accordion title="Parameters">
     <ParamField body="chunks" type="Chunk[]" required>
       List of chunk objects to embed.
     </ParamField>
-    <ParamField body="embedding_model" type="string" default='"text-embedding-3-small"'>
-      Embedding model name. Catsu auto-detects the provider from the model name. Set the appropriate API key environment variable for your chosen provider.
+    <ParamField body="embedding_model" type="string" default='"minishlab/potion-retrieval-32M"'>
+      Embedding model name. Local model2vec models (e.g. `minishlab/potion-base-8M`) require no API key. For API-based models, set the appropriate environment variable for your provider.
     </ParamField>
   </Accordion>
 </AccordionGroup>
