@@ -120,6 +120,52 @@ for chunk in doc.chunks:
 
 Check out more usage examples in the [docs](https://docs.chonkie.ai)!
 
+## 🌐 API Server
+
+Run Chonkie as a self-hosted REST API for easy integration into any application:
+
+```bash
+# Install with API dependencies (includes catsu for multi-provider embeddings)
+pip install "chonkie[api,semantic,code,catsu]"
+
+# Start the server using the CLI
+chonkie serve
+
+# Or with custom options
+chonkie serve --port 3000 --reload --log-level debug
+
+# Or directly with uvicorn
+uvicorn chonkie.api.main:app --host 0.0.0.0 --port 8000
+```
+
+Or use Docker:
+
+```bash
+docker compose up
+```
+
+The API provides endpoints for all chunkers, refineries, and **pipelines** — reusable workflow configurations stored in a local SQLite database.
+
+```bash
+# Create a reusable pipeline
+curl -X POST http://localhost:8000/v1/pipelines \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "rag-chunker",
+    "steps": [
+      {"type": "chunk", "chunker": "semantic", "config": {"chunk_size": 512}},
+      {"type": "refine", "refinery": "embeddings", "config": {"embedding_model": "text-embedding-3-small"}}
+    ]
+  }'
+
+# List your pipelines
+curl http://localhost:8000/v1/pipelines
+```
+
+Interactive documentation is available at `/docs` when the server is running.
+
+📚 **Full API documentation**: [docs.chonkie.ai/api](https://docs.chonkie.ai/api)
+
 ## ✂️ Chunkers
 
 Chonkie provides several chunkers to help you split your text efficiently for RAG applications. Here's a quick overview of the available chunkers:

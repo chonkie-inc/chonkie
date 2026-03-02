@@ -44,8 +44,6 @@ class TableChunker(BaseChunker):
 
         self.chunk_size = chunk_size
         self.newline_pattern = re.compile(r"\n(?=\|)")
-        self.html_tag_pattern = re.compile(r"<table.*?>", re.IGNORECASE)
-        self.html_row_pattern = re.compile(r"<tr.*?>.*?</tr>", re.DOTALL | re.IGNORECASE)
         self.sep = "✄"
         self._is_row_tokenizer = isinstance(self.tokenizer.tokenizer, RowTokenizer)
 
@@ -58,22 +56,45 @@ class TableChunker(BaseChunker):
         rows = chunks[2:]  # data rows still contain their trailing \n
         return header, rows
 
+    def _find_html_rows(self, body_content: str) -> list[str]:
+        """Extract <tr>...</tr> rows using plain string search (O(n), no ReDoS)."""
+        rows = []
+        lower = body_content.lower()
+        pos = 0
+        while True:
+            tr_start = lower.find("<tr", pos)
+            if tr_start == -1:
+                break
+            tr_tag_end = lower.find(">", tr_start)
+            if tr_tag_end == -1:
+                break
+            close_start = lower.find("</tr>", tr_tag_end + 1)
+            if close_start == -1:
+                break
+            rows.append(body_content[tr_start : close_start + 5])  # 5 = len("</tr>")
+            pos = close_start + 5
+        return rows
+
     def _split_html_table(self, table: str) -> tuple[str, list[str]]:
         table = table.strip()
-        # Find the start of tbody or end of thead
-        tbody_match = re.search(r"<tbody.*?>", table, re.IGNORECASE)
-        if tbody_match:
-            header = table[: tbody_match.end()]
-            body_content = table[tbody_match.end() : table.lower().find("</tbody>")]
-            rows = self.html_row_pattern.findall(body_content)
-            return header, rows
-        else:
-            # If no tbody, assume everything after the first matching row is data
-            rows = self.html_row_pattern.findall(table)
-            if not rows:
-                return table, []
-            header = table[: table.find(rows[0])]
-            return header, rows
+        lower = table.lower()
+        # Find the start of <tbody...> using plain string search (O(n), no ReDoS)
+        tbody_start = lower.find("<tbody")
+        if tbody_start != -1:
+            tbody_tag_end = lower.find(">", tbody_start)
+            if tbody_tag_end != -1:
+                header = table[: tbody_tag_end + 1]
+                tbody_close = lower.find("</tbody>", tbody_tag_end + 1)
+                body_end = tbody_close if tbody_close != -1 else len(table)
+                body_content = table[tbody_tag_end + 1 : body_end]
+                rows = self._find_html_rows(body_content)
+                return header, rows
+        # If no tbody, assume everything after the first matching row is data
+        rows = self._find_html_rows(table)
+        if not rows:
+            return table, []
+        header = table[: table.find(rows[0])]
+        return header, rows
 
     def chunk(self, text: str) -> list[Chunk]:
         """Chunk the table into smaller tables based on the chunk size.
@@ -92,8 +113,8 @@ class TableChunker(BaseChunker):
             logger.warning("No table content found. Skipping chunking.")
             return []
 
-        # Detect table type
-        is_html = bool(self.html_tag_pattern.search(text))
+        # Detect table type (plain string check avoids ReDoS)
+        is_html = "<table" in text.lower()
 
         if is_html:
             header, data_rows = self._split_html_table(text)
