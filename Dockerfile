@@ -65,6 +65,9 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
 # ---------------------------------------------------------------------------
 ENV LOG_LEVEL="INFO"
 ENV CORS_ORIGINS="*"
+# Point HuggingFace cache into the mounted data volume so the non-root
+# chonkie user (created with --no-create-home) has a writable cache dir.
+ENV HF_HOME="/app/data/huggingface"
 # OPENAI_API_KEY – required only if you use /v1/refine/embeddings
 
 # ---------------------------------------------------------------------------
