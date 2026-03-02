@@ -61,6 +61,7 @@ class OpenAIGenie(BaseGenie):
             )
 
         # Initialize the client and model
+        assert OpenAI is not None, "openai package is required but not installed"
         if base_url is None:
             self.client = OpenAI(api_key=self.api_key)
         else:

@@ -4,7 +4,7 @@ All endpoints live under the ``/v1/pipelines`` prefix.
 """
 
 import asyncio
-from typing import Any, List
+from typing import Any, List, cast
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
@@ -211,13 +211,13 @@ async def update_pipeline(
                 status_code=400,
                 detail=f"Pipeline name '{request.name}' already exists",
             )
-        pipeline.name = request.name  # type: ignore[assignment]
+        pipeline.name = request.name
 
     if request.description is not None:
-        pipeline.description = request.description  # type: ignore[assignment]
+        pipeline.description = request.description
 
     if request.steps is not None:
-        pipeline.config = {"steps": [step.model_dump() for step in request.steps]}  # type: ignore[assignment]
+        pipeline.config = {"steps": [step.model_dump() for step in request.steps]}
 
     await db.commit()
     await db.refresh(pipeline)
@@ -424,10 +424,11 @@ async def execute_pipeline(
             detail="Pipeline produced no chunks. Ensure it contains at least one chunk step.",
         )
 
+    chunks: list[Any] = cast(list[Any], state)
     if is_batch:
-        response = [[c.to_dict() for c in chunk_list] for chunk_list in state]
+        response = [[c.to_dict() for c in chunk_list] for chunk_list in chunks]
     else:
-        response = [c.to_dict() for c in state]
+        response = [c.to_dict() for c in chunks]
 
     chunk_count = sum(len(cl) for cl in response) if is_batch else len(response)
     log.info(

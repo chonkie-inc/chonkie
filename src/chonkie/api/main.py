@@ -14,10 +14,13 @@ Or via Docker::
 """
 
 import os
+from contextlib import asynccontextmanager
 from importlib.metadata import PackageNotFoundError, version
+from typing import AsyncGenerator
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware import Middleware
 
 from chonkie.api.database import init_db
 from chonkie.api.routes.chunking import router as chunking_router
@@ -32,6 +35,19 @@ try:
 except PackageNotFoundError:
     _chonkie_version = "unknown"
 
+# CORS is permissive by default for local development.
+# Override with the CORS_ORIGINS env var (comma-separated list of origins).
+_raw_origins = os.getenv("CORS_ORIGINS", "*")
+_origins = [o.strip() for o in _raw_origins.split(",") if o.strip()]
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+    """Initialize database on startup."""
+    await init_db()
+    yield
+
+
 app = FastAPI(
     title="Chonkie OSS API",
     description=(
@@ -45,26 +61,17 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc",
     openapi_url="/openapi.json",
+    lifespan=lifespan,
+    middleware=[
+        Middleware(
+            CORSMiddleware,  # type: ignore[arg-type]
+            allow_origins=_origins,
+            allow_credentials=True,
+            allow_methods=["*"],
+            allow_headers=["*"],
+        )
+    ],
 )
-
-# CORS is permissive by default for local development.
-# Override with the CORS_ORIGINS env var (comma-separated list of origins).
-_raw_origins = os.getenv("CORS_ORIGINS", "*")
-_origins = [o.strip() for o in _raw_origins.split(",") if o.strip()]
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=_origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-
-@app.on_event("startup")
-async def startup_event() -> None:
-    """Initialize database on startup."""
-    await init_db()
 
 
 app.include_router(chunking_router, prefix="/v1")
