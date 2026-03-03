@@ -89,6 +89,13 @@ class OpenAIGenie(BaseGenie):
             raise ValueError("OpenAI response content is None")
         return content
 
+    @retry(
+        stop=stop_after_attempt(5),
+        wait=wait_exponential(multiplier=2, max=60),
+        retry=retry_if_exception_type(
+            cast(tuple[type[BaseException], ...], (RateLimitError, APIError, APITimeoutError))
+        ),
+    )
     async def generate_async(self, prompt: str) -> str:
         """Generate a response asynchronously."""
         response = await self.async_client.chat.completions.create(
@@ -119,6 +126,13 @@ class OpenAIGenie(BaseGenie):
             raise ValueError("OpenAI response content is None")
         return content.model_dump()
 
+    @retry(
+        stop=stop_after_attempt(5),
+        wait=wait_exponential(multiplier=2, max=60),
+        retry=retry_if_exception_type(
+            cast(tuple[type[BaseException], ...], (RateLimitError, APIError, APITimeoutError))
+        ),
+    )
     async def generate_json_async(self, prompt: str, schema: "BaseModel") -> dict[str, Any]:
         """Generate a JSON response asynchronously."""
         response = await self.async_client.beta.chat.completions.parse(
