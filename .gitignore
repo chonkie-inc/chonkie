@@ -52,6 +52,7 @@ Thumbs.db
 /tests/data/*
 notebooks/*
 CLAUDE.md
+*_PLAN.md
 .temp/*
 chroma/*
 .chaider/*
