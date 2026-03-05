@@ -87,7 +87,7 @@ class AzureOpenAIGenie(BaseGenie):
             raise ValueError("Azure OpenAI response content is None")
         return content
 
-    async def generate_async(self, prompt: str) -> str:
+    async def agenerate(self, prompt: str) -> str:
         """Generate a response asynchronously."""
         response = await self.async_client.chat.completions.create(
             model=self._deployment,
@@ -110,7 +110,7 @@ class AzureOpenAIGenie(BaseGenie):
             raise ValueError("Azure OpenAI response content is None")
         return content.model_dump()
 
-    async def generate_json_async(self, prompt: str, schema: "BaseModel") -> dict[str, Any]:
+    async def agenerate_json(self, prompt: str, schema: "BaseModel") -> dict[str, Any]:
         """Generate a structured JSON response asynchronously."""
         response = await self.async_client.beta.chat.completions.parse(
             model=self._deployment,

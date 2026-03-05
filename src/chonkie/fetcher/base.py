@@ -17,6 +17,6 @@ class BaseFetcher(ABC):
         """Fetch data from the source."""
         raise NotImplementedError("Subclasses must implement fetch()")
 
-    async def fetch_async(self, *args: Any, **kwargs: Any) -> Any:
+    async def afetch(self, *args: Any, **kwargs: Any) -> Any:
         """Fetch data from the source asynchronously."""
         return await asyncio.to_thread(self.fetch, *args, **kwargs)

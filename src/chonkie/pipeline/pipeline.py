@@ -418,7 +418,7 @@ class Pipeline:
 
         return data  # type: ignore[return-value]
 
-    async def run_async(
+    async def arun(
         self,
         texts: Optional[Union[str, list[str]]] = None,
     ) -> Union[Document, list[Document]]:
@@ -447,7 +447,7 @@ class Pipeline:
                 continue
 
             try:
-                data = await self._execute_step_async(step, data)
+                data = await self._aexecute_step(step, data)
             except Exception as e:
                 raise RuntimeError(f"Pipeline failed at step {i + 1} ({step['type']}): {e}") from e
 
@@ -594,11 +594,11 @@ class Pipeline:
             call_kwargs,
         )
 
-    async def _execute_step_async(self, step: dict[str, Any], input_data: Any) -> Any:
+    async def _aexecute_step(self, step: dict[str, Any], input_data: Any) -> Any:
         """Execute a single pipeline step asynchronously."""
         component, call_kwargs = self._prepare_step_execution(step)
 
-        return await self._call_component_async(
+        return await self._acall_component(
             component,
             step["type"],
             input_data,
@@ -750,7 +750,7 @@ class Pipeline:
 
         raise ValueError(f"Unknown step type: {step_type}")
 
-    async def _call_component_async(
+    async def _acall_component(
         self,
         component: Any,
         step_type: str,
@@ -759,38 +759,36 @@ class Pipeline:
     ) -> Any:
         """Call the appropriate method on a component asynchronously."""
         if step_type == "fetch":
-            return await component.fetch_async(**kwargs)
+            return await component.afetch(**kwargs)
 
         if step_type == "process":
             if isinstance(input_data, list):
                 # Use gather for list input
                 return await asyncio.gather(*[
-                    component.process_async(item)
-                    if isinstance(item, Path)
-                    else component.parse_async(item)
+                    component.aprocess(item) if isinstance(item, Path) else component.aparse(item)
                     for item in input_data
                 ])
             return (
-                await component.process_async(input_data)
+                await component.aprocess(input_data)
                 if isinstance(input_data, Path)
-                else await component.parse_async(input_data)
+                else await component.aparse(input_data)
             )
 
         if step_type == "chunk":
             if isinstance(input_data, list):
                 return await asyncio.gather(*[
-                    component.chunk_document_async(doc) for doc in input_data
+                    component.achunk_document(doc) for doc in input_data
                 ])
             else:
-                return await component.chunk_document_async(input_data)
+                return await component.achunk_document(input_data)
 
         if step_type == "refine":
             if isinstance(input_data, list):
                 return await asyncio.gather(*[
-                    component.refine_document_async(doc) for doc in input_data
+                    component.arefine_document(doc) for doc in input_data
                 ])
             else:
-                return await component.refine_document_async(input_data)
+                return await component.arefine_document(input_data)
 
         if step_type == "export":
             chunks = (
@@ -798,7 +796,7 @@ class Pipeline:
                 if isinstance(input_data, list)
                 else input_data.chunks
             )
-            await component.export_async(chunks, **kwargs)
+            await component.aexport(chunks, **kwargs)
             return input_data
 
         if step_type == "write":
@@ -807,7 +805,7 @@ class Pipeline:
                 if isinstance(input_data, list)
                 else input_data.chunks
             )
-            return await component.write_async(chunks, **kwargs)
+            return await component.awrite(chunks, **kwargs)
 
         raise ValueError(f"Unknown step type: {step_type}")
 

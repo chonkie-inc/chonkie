@@ -30,7 +30,7 @@ class BaseRefinery(ABC):
         """
         raise NotImplementedError("Subclasses must implement this method.")
 
-    async def refine_async(self, chunks: list[Chunk]) -> list[Chunk]:
+    async def arefine(self, chunks: list[Chunk]) -> list[Chunk]:
         """Refine the chunks asynchronously.
 
         Args:
@@ -55,7 +55,7 @@ class BaseRefinery(ABC):
         document.chunks = self.refine(document.chunks)
         return document
 
-    async def refine_document_async(self, document: "Document") -> "Document":
+    async def arefine_document(self, document: "Document") -> "Document":
         """Refine the chunks within a document asynchronously.
 
         Args:
@@ -65,7 +65,7 @@ class BaseRefinery(ABC):
             The document with refined chunks.
 
         """
-        document.chunks = await self.refine_async(document.chunks)
+        document.chunks = await self.arefine(document.chunks)
         return document
 
     def __repr__(self) -> str:

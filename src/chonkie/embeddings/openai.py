@@ -136,14 +136,6 @@ class OpenAIEmbeddings(BaseEmbeddings):
         """Embed multiple texts using batched API calls."""
         return self._catsu.embed_batch(texts)
 
-    async def embed_async(self, text: str) -> np.ndarray:
-        """Embed a single text string asynchronously."""
-        return await self._catsu.aembed(text)
-
-    async def embed_batch_async(self, texts: list[str]) -> list[np.ndarray]:
-        """Embed multiple texts asynchronously using batched API calls."""
-        return await self._catsu.aembed_batch(texts)
-
     async def aembed(self, text: str) -> np.ndarray:
         """Embed a single text string asynchronously."""
         return await self._catsu.aembed(text)

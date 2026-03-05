@@ -26,7 +26,7 @@ class BaseChef(ABC):
         """
         raise NotImplementedError("Subclasses must implement process()")
 
-    async def process_async(self, path: str | os.PathLike) -> Document:
+    async def aprocess(self, path: str | os.PathLike) -> Document:
         """Process the data from a file path asynchronously."""
         return await asyncio.to_thread(self.process, path)
 
@@ -43,7 +43,7 @@ class BaseChef(ABC):
         """
         raise NotImplementedError("Subclasses must implement parse()")
 
-    async def parse_async(self, text: str) -> Document:
+    async def aparse(self, text: str) -> Document:
         """Parse raw text into a Document asynchronously."""
         return await asyncio.to_thread(self.parse, text)
 
@@ -62,9 +62,9 @@ class BaseChef(ABC):
         logger.info(f"Completed batch processing of {len(paths)} files")
         return results
 
-    async def process_batch_async(self, paths: list[str | os.PathLike]) -> list[Document]:
+    async def aprocess_batch(self, paths: list[str | os.PathLike]) -> list[Document]:
         """Process multiple files in a batch asynchronously."""
-        return await asyncio.gather(*[self.process_async(path) for path in paths])
+        return await asyncio.gather(*[self.aprocess(path) for path in paths])
 
     def read(self, path: str | os.PathLike) -> str:
         """Read the file content.
@@ -86,7 +86,7 @@ class BaseChef(ABC):
             logger.warning(f"Failed to read file {path}: {e}", exc_info=True)
             raise
 
-    async def read_async(self, path: str | os.PathLike) -> str:
+    async def aread(self, path: str | os.PathLike) -> str:
         """Read the file content asynchronously."""
         return await asyncio.to_thread(self.read, path)
 

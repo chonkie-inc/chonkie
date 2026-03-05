@@ -121,7 +121,7 @@ for chunk in doc.chunks:
 import asyncio
 
 async def main():
-    doc = await pipe.run_async(texts="Chonkie runs fast!")
+    doc = await pipe.arun(texts="Chonkie runs fast!")
     print(len(doc.chunks))
 
 asyncio.run(main())

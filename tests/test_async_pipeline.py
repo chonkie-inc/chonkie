@@ -20,7 +20,7 @@ class TestPipelineAsync:
         doc = await (
             Pipeline()
             .chunk_with("recursive", chunk_size=512)
-            .run_async(texts="This is a test document for chunking.")
+            .arun(texts="This is a test document for chunking.")
         )
 
         assert isinstance(doc, Document)
@@ -31,7 +31,7 @@ class TestPipelineAsync:
         """Test async pipeline with multiple text inputs."""
         texts = ["First document text.", "Second document text.", "Third document text."]
 
-        docs = await Pipeline().chunk_with("recursive", chunk_size=512).run_async(texts=texts)
+        docs = await Pipeline().chunk_with("recursive", chunk_size=512).arun(texts=texts)
 
         assert isinstance(docs, list)
         assert len(docs) == 3
@@ -46,7 +46,7 @@ class TestPipelineAsync:
             .process_with("text")
             .chunk_with("recursive", chunk_size=512)
             .refine_with("overlap", context_size=50)
-            .run_async(texts="Complex chaining test text. " * 50)
+            .arun(texts="Complex chaining test text. " * 50)
         )
 
         assert isinstance(doc, Document)
@@ -64,7 +64,7 @@ class TestPipelineAsync:
                 .fetch_from("file", path=str(temp_path))
                 .process_with("text")
                 .chunk_with("recursive", chunk_size=512)
-                .run_async()
+                .arun()
             )
 
             assert isinstance(doc, Document)
@@ -86,7 +86,7 @@ class TestPipelineAsync:
                 .fetch_from("file", dir=str(temp_path))
                 .process_with("text")
                 .chunk_with("recursive", chunk_size=512)
-                .run_async()
+                .arun()
             )
 
             assert isinstance(docs, list)
@@ -100,11 +100,11 @@ class TestPipelineAsync:
         # but we can verify it runs correctly on a batch.
         texts = [f"Text {i}" for i in range(10)]
 
-        docs = await Pipeline().chunk_with("recursive").run_async(texts=texts)
+        docs = await Pipeline().chunk_with("recursive").arun(texts=texts)
 
         assert len(docs) == 10
 
     async def test_pipeline_async_error_handling(self) -> None:
         """Test error handling in async pipeline."""
         with pytest.raises((ValueError, RuntimeError)):
-            await Pipeline().chunk_with("recursive", invalid_param=999).run_async(texts="fail")
+            await Pipeline().chunk_with("recursive", invalid_param=999).arun(texts="fail")

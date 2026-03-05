@@ -96,7 +96,7 @@ class OpenAIGenie(BaseGenie):
             cast(tuple[type[BaseException], ...], (RateLimitError, APIError, APITimeoutError))
         ),
     )
-    async def generate_async(self, prompt: str) -> str:
+    async def agenerate(self, prompt: str) -> str:
         """Generate a response asynchronously."""
         response = await self.async_client.chat.completions.create(
             model=self.model,
@@ -133,7 +133,7 @@ class OpenAIGenie(BaseGenie):
             cast(tuple[type[BaseException], ...], (RateLimitError, APIError, APITimeoutError))
         ),
     )
-    async def generate_json_async(self, prompt: str, schema: "BaseModel") -> dict[str, Any]:
+    async def agenerate_json(self, prompt: str, schema: "BaseModel") -> dict[str, Any]:
         """Generate a JSON response asynchronously."""
         response = await self.async_client.beta.chat.completions.parse(
             model=self.model,

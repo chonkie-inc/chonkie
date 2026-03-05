@@ -94,7 +94,7 @@ docs = (Pipeline()
 
 ### Asynchronous Execution
 
-For high-throughput applications (e.g., web servers, batch processing), use `run_async()`:
+For high-throughput applications (e.g., web servers, batch processing), use `arun()`:
 
 ```python
 import asyncio
@@ -103,10 +103,10 @@ async def process_docs():
     pipe = Pipeline().chunk_with("recursive")
 
     # Run pipeline asynchronously
-    doc = await pipe.run_async(texts="Async processing is fast!")
+    doc = await pipe.arun(texts="Async processing is fast!")
 
     # Process multiple concurrently
-    docs = await pipe.run_async(texts=["Doc 1", "Doc 2"])
+    docs = await pipe.arun(texts=["Doc 1", "Doc 2"])
 
     return docs
 ```

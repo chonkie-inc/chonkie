@@ -182,7 +182,7 @@ class BaseChunker(ABC):
         else:
             return self._sequential_batch_processing(texts, show_progress)
 
-    async def chunk_async(self, text: str) -> list[Chunk]:
+    async def achunk(self, text: str) -> list[Chunk]:
         """Chunk the given text asynchronously.
 
         Args:
@@ -194,7 +194,7 @@ class BaseChunker(ABC):
         """
         return await asyncio.to_thread(self.chunk, text)
 
-    async def chunk_batch_async(
+    async def achunk_batch(
         self, texts: Sequence[str], show_progress: bool = True
     ) -> list[list[Chunk]]:
         """Chunk a batch of texts asynchronously.
@@ -251,7 +251,7 @@ class BaseChunker(ABC):
             document.chunks = self.chunk(document.content)
         return document
 
-    async def chunk_document_async(self, document: Document) -> Document:
+    async def achunk_document(self, document: Document) -> Document:
         """Chunk a document asynchronously.
 
         Args:
@@ -263,9 +263,9 @@ class BaseChunker(ABC):
         """
         # If the document has chunks already, then we need to re-chunk the content
         if document.chunks:
-            tasks = [self.chunk_async(c.text) for c in document.chunks]
+            tasks = [self.achunk(c.text) for c in document.chunks]
             chunk_results = await asyncio.gather(*tasks)
             document.chunks = self._merge_new_chunks(document.chunks, chunk_results)
         else:
-            document.chunks = await self.chunk_async(document.content)
+            document.chunks = await self.achunk(document.content)
         return document

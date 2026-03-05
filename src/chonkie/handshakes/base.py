@@ -36,7 +36,7 @@ class BaseHandshake(ABC):
         """
         raise NotImplementedError
 
-    async def write_async(self, chunk: Union[Chunk, list[Chunk]], **kwargs: Any) -> Any:
+    async def awrite(self, chunk: Union[Chunk, list[Chunk]], **kwargs: Any) -> Any:
         """Write chunks to the vector database asynchronously.
 
         Args:

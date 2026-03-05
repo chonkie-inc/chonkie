@@ -44,7 +44,7 @@ class BaseEmbeddings(ABC):
         """
         raise NotImplementedError
 
-    async def embed_async(self, text: str) -> np.ndarray:
+    async def aembed(self, text: str) -> np.ndarray:
         """Embed a text string asynchronously.
 
         Args:
@@ -72,7 +72,7 @@ class BaseEmbeddings(ABC):
         """
         return [self.embed(text) for text in texts]
 
-    async def embed_batch_async(self, texts: list[str]) -> list[np.ndarray]:
+    async def aembed_batch(self, texts: list[str]) -> list[np.ndarray]:
         """Embed a list of text strings asynchronously.
 
         Args:
