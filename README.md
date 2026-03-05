@@ -124,7 +124,7 @@ async def main():
     doc = await pipe.run_async(texts="Chonkie runs fast!")
     print(len(doc.chunks))
 
-# asyncio.run(main())
+asyncio.run(main())
 ```
 
 Check out more usage examples in the [docs](https://docs.chonkie.ai)!

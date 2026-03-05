@@ -437,6 +437,10 @@ class Pipeline:
         ordered_steps = self._reorder_steps()
         self._validate_pipeline(ordered_steps, has_text_input=(texts is not None))
 
+        # handle empty list input gracefully (issue #460)
+        if isinstance(texts, list) and len(texts) == 0:
+            return []
+
         data = texts
         for i, step in enumerate(ordered_steps):
             if texts is not None and step["type"] == "fetch":
