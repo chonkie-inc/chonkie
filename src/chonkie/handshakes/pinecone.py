@@ -117,9 +117,8 @@ class PineconeHandshake(BaseHandshake):
                 **kwargs,
             )
         self.index: Index = self.client.Index(self.index_name)
-        assert isinstance(self.index, pinecone.db_data.Index), (
-            "Failed to initialize Pinecone index."
-        )
+        if not hasattr(self.index, "upsert"):
+            raise TypeError("Failed to initialize Pinecone index.")
 
     @classmethod
     def _is_available(cls) -> bool:
@@ -237,7 +236,7 @@ class PineconeHandshake(BaseHandshake):
                 f"Embedding must be a list of floats. Got {type(embedding)}",
             )
         results = self.index.query(vector=embedding, top_k=limit, include_metadata=True)
-        if not isinstance(results, QueryResponse):
+        if not hasattr(results, "get"):
             raise ValueError(f"Unexpected response type from Pinecone query: {type(results)}")
 
         matches = []

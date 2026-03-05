@@ -76,3 +76,18 @@ def test_base_porter_export_returns_none():
     porter = NullPorter()
     result = porter.export([make_chunk()])
     assert result is None
+
+
+@pytest.mark.asyncio
+async def test_base_porter_aexport_delegates_to_export():
+    """aexport on a concrete subclass invokes export() via asyncio.to_thread."""
+    received: list = []
+
+    class ConcretePorter(BasePorter):
+        def export(self, chunks, **kwargs):
+            received.extend(chunks)
+
+    porter = ConcretePorter()
+    chunks = [make_chunk("a"), make_chunk("b")]
+    await porter.aexport(chunks)
+    assert received == chunks
