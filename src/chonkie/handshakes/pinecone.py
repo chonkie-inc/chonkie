@@ -25,7 +25,7 @@ logger = get_logger(__name__)
 
 if TYPE_CHECKING:
     from pinecone import Pinecone, ServerlessSpec
-    from pinecone.db_data import Index, QueryResponse
+    from pinecone.db_data import Index
 
 
 @handshake("pinecone")

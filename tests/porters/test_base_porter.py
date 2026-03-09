@@ -80,7 +80,7 @@ def test_base_porter_export_returns_none():
 
 @pytest.mark.asyncio
 async def test_base_porter_aexport_delegates_to_export():
-    """aexport on a concrete subclass invokes export() via asyncio.to_thread."""
+    """Aexport on a concrete subclass invokes export() via asyncio.to_thread."""
     received: list = []
 
     class ConcretePorter(BasePorter):
