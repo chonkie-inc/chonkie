@@ -116,6 +116,15 @@ doc = pipe.run(texts="Chonkie is the goodest boi! My favorite chunking hippo heh
 # Access the processed chunks in the `doc` object
 for chunk in doc.chunks:
     print(chunk.text)
+
+# Run asynchronously for high-throughput applications
+import asyncio
+
+async def main():
+    doc = await pipe.arun(texts="Chonkie runs fast!")
+    print(len(doc.chunks))
+
+asyncio.run(main())
 ```
 
 Check out more usage examples in the [docs](https://docs.chonkie.ai)!
@@ -313,8 +322,6 @@ genie = OpenAIGenie(model="meta-llama/llama-4-maverick",
 
 </details>
 
-
-
 <details>
 <summary><strong>🛠️ Utilities & Helpers! Chonkie includes handy tools!</strong></summary>
 
@@ -326,8 +333,6 @@ Additional utilities to enhance your chunking workflow.
 | `viz`        | `Visualizer` | Rich console visualizations for chunks.        | `chonkie[viz]`   |
 
 </details>
-
-
 
 With Chonkie's wide range of integrations, you can easily plug it into your existing infrastructure and start CHONKING!
 
