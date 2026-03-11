@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "chonkie"
-version = "1.5.6"
+version = "1.6.0"
 description = "🦛 CHONK your texts with Chonkie ✨ - The no-nonsense chunking library"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -45,7 +45,12 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Information Analysis",
     "Topic :: Text Processing :: Linguistic",
 ]
-dependencies = ["tqdm>=4.64.0", "numpy>=2.0.0", "chonkie-core>=0.8.0", "tenacity>=8.0.0"]
+dependencies = [
+    "tqdm>=4.64.0",
+    "numpy>=2.0.0",
+    "chonkie-core>=0.8.0",
+    "tenacity>=8.0.0",
+]
 
 [project.urls]
 Homepage = "https://github.com/chonkie-inc/chonkie"
@@ -185,9 +190,7 @@ dev = [
 ]
 
 [dependency-groups]
-dev = [
-    "ruff>=0.13.3",
-]
+dev = ["ruff>=0.13.3"]
 
 [tool.pytest.ini_options]
 pythonpath = "src"
@@ -228,7 +231,7 @@ line-length = 99
 exclude = ["*.ipynb"]
 lint.select = ["B904", "F", "I", "D"]
 lint.ignore = ["D211", "D213", "D203"]
-lint.per-file-ignores = {"tests/**" = ["D100", "D102", "D103", "D104"]}
+lint.per-file-ignores = { "tests/**" = ["D100", "D102", "D103", "D104"] }
 
 [tool.ruff.format]
 preview = true
