@@ -71,7 +71,6 @@
             "group": "Chunkers",
             "pages": [
               "oss/chunkers/overview",
-              "oss/chunkers/async",
               "oss/chunkers/token-chunker",
               "oss/chunkers/fast-chunker",
               "oss/chunkers/sentence-chunker",
