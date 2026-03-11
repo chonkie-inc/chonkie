@@ -102,6 +102,10 @@ chunks = chunker.chunk_batch(texts)
 
 # Direct calling
 chunks = chunker(text)  # or chunker([text1, text2])
+
+# Async variants (all chunkers support these)
+chunks = await chunker.achunk(text)
+chunks = await chunker.achunk_batch(texts)
 ```
 
 ```javascript JavaScript
@@ -110,6 +114,10 @@ const chunks = await chunker.chunk(text);
 ```
 
 </CodeGroup>
+
+<Info>
+  All Python chunkers support async out of the box. See [Async Support](/oss/chunkers/async) for usage with FastAPI, asyncio, and concurrent workloads.
+</Info>
 
 ## F.A.Q.
 

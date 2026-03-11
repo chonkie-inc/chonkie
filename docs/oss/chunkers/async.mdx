@@ -1,0 +1,149 @@
+---
+title: "Async Support"
+description: "Use Chonkie chunkers in async applications with native asyncio support"
+icon: "bolt"
+---
+
+Every Chonkie chunker supports asynchronous execution out of the box — no extra setup required. The async interface mirrors the synchronous one, so you can drop chunkers into `async`/`await` code with minimal changes.
+
+## Async Methods
+
+All chunkers expose three async methods inherited from `BaseChunker`:
+
+| Method | Async Equivalent | Description |
+|--------|-----------------|-------------|
+| `chunk(text)` | `achunk(text)` | Chunk a single text |
+| `chunk_batch(texts)` | `achunk_batch(texts)` | Chunk a list of texts |
+| `chunk_document(doc)` | `achunk_document(doc)` | Chunk a `Document` object |
+
+## Basic Usage
+
+```python
+import asyncio
+from chonkie import RecursiveChunker
+
+async def main():
+    chunker = RecursiveChunker(chunk_size=512)
+
+    # Single text
+    chunks = await chunker.achunk("Your document text here...")
+
+    # Batch of texts
+    all_chunks = await chunker.achunk_batch([
+        "First document...",
+        "Second document...",
+        "Third document...",
+    ])
+
+asyncio.run(main())
+```
+
+## Concurrent Chunking
+
+Use `asyncio.gather` to chunk multiple texts concurrently:
+
+```python
+import asyncio
+from chonkie import SemanticChunker
+
+async def process_documents(texts: list[str]):
+    chunker = SemanticChunker(chunk_size=512)
+
+    # Chunk all texts concurrently
+    results = await asyncio.gather(
+        *[chunker.achunk(text) for text in texts]
+    )
+
+    for i, chunks in enumerate(results):
+        print(f"Document {i+1}: {len(chunks)} chunks")
+
+    return results
+```
+
+## Document Chunking
+
+`achunk_document` handles `Document` objects asynchronously. When a document already has chunks (e.g. from a previous processing step), it re-chunks each chunk concurrently using `asyncio.gather`:
+
+```python
+import asyncio
+from chonkie import RecursiveChunker
+from chonkie.types import Document
+
+async def chunk_doc():
+    chunker = RecursiveChunker(chunk_size=512)
+
+    doc = Document(content="A long piece of text to process...")
+    doc = await chunker.achunk_document(doc)
+
+    print(f"Created {len(doc.chunks)} chunks")
+    return doc
+```
+
+## How It Works
+
+- **`achunk` and `achunk_batch`** run the synchronous `chunk` / `chunk_batch` methods in a thread pool via `asyncio.to_thread`. This means CPU-bound chunking work does not block your event loop.
+- **`achunk_document`** goes further: if the document has pre-existing chunks, it dispatches a concurrent `asyncio.gather` over all of them, fully leveraging async parallelism.
+
+<Info>
+  Because `achunk` and `achunk_batch` use `asyncio.to_thread`, they are safe to use in async web frameworks (FastAPI, Starlette, aiohttp, etc.) without blocking the event loop.
+</Info>
+
+## FastAPI Example
+
+```python
+from fastapi import FastAPI
+from chonkie import RecursiveChunker
+
+app = FastAPI()
+chunker = RecursiveChunker(chunk_size=512)
+
+@app.post("/chunk")
+async def chunk_text(text: str):
+    chunks = await chunker.achunk(text)
+    return {"chunks": [c.text for c in chunks]}
+
+@app.post("/chunk-batch")
+async def chunk_batch(texts: list[str]):
+    results = await chunker.achunk_batch(texts)
+    return {"results": [[c.text for c in chunks] for chunks in results]}
+```
+
+## Pipeline Async
+
+If you are using the [Pipeline API](/oss/pipelines), swap `run()` for `arun()`:
+
+```python
+import asyncio
+from chonkie import Pipeline
+
+async def main():
+    pipe = Pipeline().chunk_with("recursive", chunk_size=512)
+
+    # Single text
+    doc = await pipe.arun(texts="Your text here...")
+
+    # Multiple texts concurrently
+    docs = await pipe.arun(texts=["Doc 1", "Doc 2", "Doc 3"])
+
+asyncio.run(main())
+```
+
+## F.A.Q.
+
+<AccordionGroup>
+  <Accordion title="Do I need to install anything extra for async support?">
+    No. Async support is built into every chunker via `BaseChunker`. Any chunker you import from `chonkie` already has `achunk`, `achunk_batch`, and `achunk_document` available.
+  </Accordion>
+
+  <Accordion title="Does async chunking improve throughput?">
+    Yes, especially when chunking many texts concurrently. `achunk` offloads work to a thread pool, so multiple coroutines can chunk in parallel without blocking the event loop. For single-text chunking the overhead is minimal.
+  </Accordion>
+
+  <Accordion title="Is it safe to share a chunker instance across async tasks?">
+    Yes. All chunkers are thread-safe, so sharing a single instance across concurrent `asyncio.gather` calls is fine and avoids redundant initialization costs.
+  </Accordion>
+
+  <Accordion title="Which async frameworks are supported?">
+    Any framework that uses `asyncio` — FastAPI, Starlette, aiohttp, Sanic, Litestar, and others. The async methods use standard `asyncio` primitives with no framework-specific dependencies.
+  </Accordion>
+</AccordionGroup>
