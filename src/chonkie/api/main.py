@@ -52,10 +52,10 @@ app = FastAPI(
     title="Chonkie OSS API",
     description=(
         "A lightweight, self-hostable REST API that exposes the "
-        "[Chonkie](https://github.com/chonkie-ai/chonkie) chunking library "
+        "[Chonkie](https://github.com/chonkie-inc/chonkie) chunking library "
         "over HTTP.\n\n"
         "No authentication or billing required – just run it and chunk away.\n\n"
-        "**Source:** https://github.com/chonkie-ai/chonkie"
+        "**Source:** https://github.com/chonkie-inc/chonkie"
     ),
     version=_chonkie_version,
     docs_url="/docs",
