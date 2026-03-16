@@ -3,6 +3,7 @@
 Splits text into smaller chunks recursively. Express chunking logic through RecursiveLevel objects.
 """
 
+import os
 from functools import lru_cache
 from typing import Optional, Union
 
@@ -27,8 +28,8 @@ class RecursiveChunker(BaseChunker):
 
     Args:
         tokenizer: Tokenizer to use
-        rules (list[RecursiveLevel]): List of RecursiveLevel objects defining chunking rules at a level.
         chunk_size (int): Maximum size of each chunk.
+        rules: Recursive rules to use for chunking.
         min_characters_per_chunk (int): Minimum number of characters per chunk.
 
     """
@@ -44,14 +45,14 @@ class RecursiveChunker(BaseChunker):
 
         Args:
             tokenizer: Tokenizer to use
-            rules (list[RecursiveLevel]): List of RecursiveLevel objects defining chunking rules at a level.
             chunk_size (int): Maximum size of each chunk.
+            rules: Recursive rules to use for chunking.
             min_characters_per_chunk (int): Minimum number of characters per chunk.
 
         Raises:
             ValueError: If chunk_size <=0
             ValueError: If min_characters_per_chunk < 1
-            ValueError: If recursive_rules is not a RecursiveRules object.
+            ValueError: If rules is not a RecursiveRules object.
 
         """
         super().__init__(tokenizer=tokenizer)
@@ -75,7 +76,7 @@ class RecursiveChunker(BaseChunker):
         cls,
         name: Optional[str] = "default",
         lang: Optional[str] = "en",
-        path: Optional[str] = None,
+        path: str | os.PathLike | None = None,
         tokenizer: Union[str, TokenizerProtocol] = "character",
         chunk_size: int = 2048,
         min_characters_per_chunk: int = 24,

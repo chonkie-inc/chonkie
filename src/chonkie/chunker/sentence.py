@@ -6,6 +6,7 @@ specified token count limits for each chunk. It also handles overlapping chunks 
 allows customization of sentence boundary delimiters and minimum sentence lengths.
 """
 
+import os
 import warnings
 from typing import Literal, Optional, Sequence, Union
 
@@ -87,6 +88,7 @@ class SentenceChunker(BaseChunker):
         if approximate:
             warnings.warn(
                 "Approximate has been deprecated and will be removed from next version onwards!",
+                DeprecationWarning,
             )
 
         # Assign the values if they make sense
@@ -104,7 +106,7 @@ class SentenceChunker(BaseChunker):
         cls,
         name: Optional[str] = "default",
         lang: Optional[str] = "en",
-        path: Optional[str] = None,
+        path: str | os.PathLike | None = None,
         tokenizer: Union[str, TokenizerProtocol] = "character",
         chunk_size: int = 2048,
         chunk_overlap: int = 0,
@@ -310,10 +312,10 @@ class SentenceChunker(BaseChunker):
                 if pos + self.min_sentences_per_chunk <= len(sentences):
                     split_idx = pos + self.min_sentences_per_chunk
                 else:
-                    warnings.warn(
+                    logger.warning(
                         f"Minimum sentences per chunk as {self.min_sentences_per_chunk} could not be met for all chunks. "
-                        + f"Last chunk of the text will have only {len(sentences) - pos} sentences. "
-                        + "Consider increasing the chunk_size or decreasing the min_sentences_per_chunk.",
+                        f"Last chunk of the text will have only {len(sentences) - pos} sentences. "
+                        "Consider increasing the chunk_size or decreasing the min_sentences_per_chunk.",
                     )
                     split_idx = len(sentences)
 

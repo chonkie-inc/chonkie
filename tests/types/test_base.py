@@ -14,15 +14,6 @@ except ImportError:
     NUMPY_AVAILABLE = False
 
 
-# Context tests removed - context is now a simple string field in Chunk
-
-
-# Context error tests removed - context is now a simple string field
-
-
-# Context serialization tests removed - context is now a simple string field
-
-
 # Chunk Tests
 def test_chunk_init():
     """Test Chunk initialization."""
@@ -174,3 +165,74 @@ def test_chunk_numpy_embedding_serialization():
     # from_dict keeps as list (numpy conversion happens elsewhere if needed)
     restored = Chunk.from_dict(dict_repr)
     assert restored.embedding == [0.1, 0.2, 0.3, 0.4, 0.5]
+
+
+def test_chunk_id_is_generated():
+    """Test that Chunk gets a unique auto-generated id."""
+    chunk1 = Chunk(text="a", start_index=0, end_index=1, token_count=1)
+    chunk2 = Chunk(text="b", start_index=0, end_index=1, token_count=1)
+    assert chunk1.id.startswith("chnk_")
+    assert chunk2.id.startswith("chnk_")
+    assert chunk1.id != chunk2.id
+
+
+def test_chunk_len():
+    """Test Chunk __len__ returns text length."""
+    chunk = Chunk(text="hello", start_index=0, end_index=5, token_count=1)
+    assert len(chunk) == 5
+
+
+def test_chunk_str():
+    """Test Chunk __str__ returns its text."""
+    chunk = Chunk(text="hello world", start_index=0, end_index=11, token_count=2)
+    assert str(chunk) == "hello world"
+
+
+def test_chunk_iter():
+    """Test Chunk __iter__ iterates over characters."""
+    chunk = Chunk(text="abc", start_index=0, end_index=3, token_count=1)
+    assert list(chunk) == ["a", "b", "c"]
+
+
+def test_chunk_getitem():
+    """Test Chunk __getitem__ slices the text."""
+    chunk = Chunk(text="hello", start_index=0, end_index=5, token_count=1)
+    assert chunk[0] == "h"
+    assert chunk[1:3] == "el"
+
+
+def test_chunk_copy():
+    """Test Chunk.copy() produces an independent equal copy."""
+    chunk = Chunk(
+        text="original",
+        start_index=0,
+        end_index=8,
+        token_count=2,
+        context="ctx",
+        embedding=[0.1, 0.2],
+    )
+    copy = chunk.copy()
+    assert copy.text == chunk.text
+    assert copy.start_index == chunk.start_index
+    assert copy.end_index == chunk.end_index
+    assert copy.token_count == chunk.token_count
+    assert copy.context == chunk.context
+    assert copy.embedding == chunk.embedding
+    # Mutating the copy should not affect the original
+    copy.text = "modified"
+    assert chunk.text == "original"
+
+
+def test_chunk_from_dict_preserves_id():
+    """Test that from_dict uses the id from the dictionary."""
+    chunk = Chunk(text="test", start_index=0, end_index=4, token_count=1)
+    d = chunk.to_dict()
+    restored = Chunk.from_dict(d)
+    assert restored.id == chunk.id
+
+
+def test_chunk_from_dict_generates_id_when_missing():
+    """Test that from_dict generates an id when none is present in dict."""
+    d = {"text": "test", "start_index": 0, "end_index": 4, "token_count": 1}
+    chunk = Chunk.from_dict(d)
+    assert chunk.id.startswith("chnk_")

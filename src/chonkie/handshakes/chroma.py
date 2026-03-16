@@ -1,6 +1,7 @@
 """Chroma Handshake to export Chonkie's Chunks into a Chroma collection."""
 
 import importlib.util as importutil
+import os
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -99,7 +100,7 @@ class ChromaHandshake(BaseHandshake):
         client: Optional[Any] = None,  # chromadb.Client
         collection_name: Union[str, Literal["random"]] = "random",
         embedding_model: Union[str, BaseEmbeddings] = "minishlab/potion-retrieval-32M",
-        path: Optional[str] = None,
+        path: str | os.PathLike | None = None,
     ) -> None:
         """Initialize the Chroma Handshake.
 
@@ -123,9 +124,12 @@ class ChromaHandshake(BaseHandshake):
         if client is None and path is None:
             self.client = chromadb.Client()
         elif client is None and path is not None:
-            self.client = chromadb.PersistentClient(path=path)
+            self.client = chromadb.PersistentClient(path=str(path))
         else:
-            self.client = client  # type: ignore[assignment]
+            assert isinstance(client, chromadb.api.ClientAPI), (
+                "Client must be an instance of chromadb.Client or chromadb.PersistentClient"
+            )
+            self.client = client
 
         # Initialize the EmbeddingRefinery internally!
         self.embedding_function = ChromaEmbeddingFunction(embedding_model)
@@ -136,7 +140,7 @@ class ChromaHandshake(BaseHandshake):
             self.collection = self.client.get_or_create_collection(
                 self.collection_name,
                 embedding_function=self.embedding_function,  # type: ignore[arg-type]
-            )  # type: ignore[arg-type]
+            )
         else:
             # Keep generating random collection names until we find one that doesn't exist
             while True:
@@ -145,7 +149,7 @@ class ChromaHandshake(BaseHandshake):
                     self.collection = self.client.create_collection(
                         self.collection_name,
                         embedding_function=self.embedding_function,  # type: ignore[arg-type]
-                    )  # type: ignore[arg-type]
+                    )
                     break
                 except Exception:
                     pass
@@ -186,7 +190,7 @@ class ChromaHandshake(BaseHandshake):
         self.collection.upsert(
             ids=ids,
             documents=texts,
-            metadatas=metadata,  # type: ignore
+            metadatas=metadata,
         )
 
         logger.info(
@@ -220,14 +224,14 @@ class ChromaHandshake(BaseHandshake):
 
         # Determine the query embeddings based on the input
         if query:
-            query_embedding_result = cast("np.ndarray", self.embedding_function(query))
+            query_embedding_result = cast(np.ndarray, self.embedding_function(query))
             query_embeddings = [query_embedding_result.tolist()]
         else:
-            query_embeddings = [embedding]  # type: ignore[list-item]
+            query_embeddings = [embedding]
 
         # Perform the query
         results = self.collection.query(
-            query_embeddings=query_embeddings,
+            query_embeddings=query_embeddings,  # ty:ignore[invalid-argument-type]
             n_results=limit,
             include=["metadatas", "documents", "distances"],
         )

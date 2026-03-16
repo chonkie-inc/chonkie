@@ -6,6 +6,8 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from chonkie.types import Document
 
+import asyncio
+
 from chonkie.logger import get_logger
 from chonkie.types import Chunk
 
@@ -28,6 +30,18 @@ class BaseRefinery(ABC):
         """
         raise NotImplementedError("Subclasses must implement this method.")
 
+    async def arefine(self, chunks: list[Chunk]) -> list[Chunk]:
+        """Refine the chunks asynchronously.
+
+        Args:
+            chunks: The chunks to refine.
+
+        Returns:
+            The refined chunks.
+
+        """
+        return await asyncio.to_thread(self.refine, chunks)
+
     def refine_document(self, document: "Document") -> "Document":
         """Refine the chunks within a document.
 
@@ -39,6 +53,19 @@ class BaseRefinery(ABC):
 
         """
         document.chunks = self.refine(document.chunks)
+        return document
+
+    async def arefine_document(self, document: "Document") -> "Document":
+        """Refine the chunks within a document asynchronously.
+
+        Args:
+            document: The document whose chunks should be refined.
+
+        Returns:
+            The document with refined chunks.
+
+        """
+        document.chunks = await self.arefine(document.chunks)
         return document
 
     def __repr__(self) -> str:
@@ -61,5 +88,5 @@ class BaseRefinery(ABC):
             logger.info(f"Refinement complete: {len(refined_chunks)} chunks output")
             return refined_chunks
         except Exception as e:
-            logger.error(f"Refinement failed: {str(e)}", error_type=type(e).__name__)
+            logger.error(f"Refinement failed: {e}", exc_info=True)
             raise

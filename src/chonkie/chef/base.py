@@ -1,8 +1,8 @@
 """Base class for chefs."""
 
+import asyncio
+import os
 from abc import ABC, abstractmethod
-from pathlib import Path
-from typing import Union
 
 from chonkie.logger import get_logger
 from chonkie.types import Document
@@ -14,7 +14,7 @@ class BaseChef(ABC):
     """Base class for chefs."""
 
     @abstractmethod
-    def process(self, path: Union[str, Path]) -> Document:
+    def process(self, path: str | os.PathLike) -> Document:
         """Process the data from a file path.
 
         Args:
@@ -25,6 +25,10 @@ class BaseChef(ABC):
 
         """
         raise NotImplementedError("Subclasses must implement process()")
+
+    async def aprocess(self, path: str | os.PathLike) -> Document:
+        """Process the data from a file path asynchronously."""
+        return await asyncio.to_thread(self.process, path)
 
     @abstractmethod
     def parse(self, text: str) -> Document:
@@ -39,7 +43,11 @@ class BaseChef(ABC):
         """
         raise NotImplementedError("Subclasses must implement parse()")
 
-    def process_batch(self, paths: Union[list[str], list[Path]]) -> list[Document]:
+    async def aparse(self, text: str) -> Document:
+        """Parse raw text into a Document asynchronously."""
+        return await asyncio.to_thread(self.parse, text)
+
+    def process_batch(self, paths: list[str | os.PathLike]) -> list[Document]:
         """Process multiple files in a batch.
 
         Args:
@@ -54,7 +62,11 @@ class BaseChef(ABC):
         logger.info(f"Completed batch processing of {len(paths)} files")
         return results
 
-    def read(self, path: Union[str, Path]) -> str:
+    async def aprocess_batch(self, paths: list[str | os.PathLike]) -> list[Document]:
+        """Process multiple files in a batch asynchronously."""
+        return await asyncio.gather(*[self.aprocess(path) for path in paths])
+
+    def read(self, path: str | os.PathLike) -> str:
         """Read the file content.
 
         Args:
@@ -71,10 +83,14 @@ class BaseChef(ABC):
                 logger.debug(f"Successfully read file: {path}", size=len(content))
                 return content
         except Exception as e:
-            logger.warning(f"Failed to read file: {path}", error=str(e))
+            logger.warning(f"Failed to read file {path}: {e}", exc_info=True)
             raise
 
-    def __call__(self, path: Union[str, Path]) -> Document:
+    async def aread(self, path: str | os.PathLike) -> str:
+        """Read the file content asynchronously."""
+        return await asyncio.to_thread(self.read, path)
+
+    def __call__(self, path: str | os.PathLike) -> Document:
         """Call the chef to process the data.
 
         Args:

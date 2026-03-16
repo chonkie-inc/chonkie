@@ -116,7 +116,7 @@ class SlumberChunker(BaseChunker):
                     "Please install it using `pip install chonkie[genie]` or use extract_mode='text'.",
                 ) from ie
 
-            class Split(BaseModel):  # type: ignore
+            class Split(BaseModel):
                 split_index: int
 
             self.Split = Split
@@ -252,20 +252,25 @@ class SlumberChunker(BaseChunker):
         for attempt in range(self.max_retries):
             try:
                 response = self.genie.generate_json(prompt, self.Split)
-                return int(response["split_index"])
+                index = int(response["split_index"])
+                if index > group_end_index:
+                    raise ValueError(
+                        f"Split index {index} is out of bounds (max {group_end_index})"
+                    )
+                return index
             except (KeyboardInterrupt, SystemExit):
                 raise
             except Exception as e:
                 last_error = e
-                logger.warning(
+                logger.debug(
                     f"JSON extraction attempt {attempt + 1}/{self.max_retries} failed: {e}"
                 )
                 continue
 
         # All retries failed - keep passages together by returning group end
-        logger.error(
+        logger.debug(
             f"JSON extraction failed after {self.max_retries} attempts. "
-            f"Last error: {last_error}. Keeping passages together."
+            f"Last error: {last_error}. Keeping passages together. Using fallback index {group_end_index}."
         )
         return group_end_index
 
@@ -286,20 +291,24 @@ class SlumberChunker(BaseChunker):
             try:
                 response = self.genie.generate(prompt)
                 index = self._extract_index_from_text(response)
+                if index > group_end_index:
+                    raise ValueError(
+                        f"Split index {index} is out of bounds (max {group_end_index})"
+                    )
                 return index
             except (KeyboardInterrupt, SystemExit):
                 raise
             except Exception as e:
                 last_error = e
-                logger.warning(
+                logger.debug(
                     f"Text extraction attempt {attempt + 1}/{self.max_retries} failed: {e}"
                 )
                 continue
 
         # All retries failed - keep passages together by returning group end
-        logger.error(
+        logger.debug(
             f"Text extraction failed after {self.max_retries} attempts. "
-            f"Last error: {last_error}. Keeping passages together."
+            f"Last error: {last_error}. Keeping passages together. Using fallback index {group_end_index}."
         )
         return group_end_index
 
@@ -457,6 +466,7 @@ class SlumberChunker(BaseChunker):
             prompt = self.template.format(
                 passages="\n".join(prepared_split_texts[current_pos:group_end_index]),
             )
+            # response is always <= group_end_index
             response = self._get_split_index(prompt, current_pos, group_end_index)
 
             # Make sure that the response doesn't bug out and return a index smaller
