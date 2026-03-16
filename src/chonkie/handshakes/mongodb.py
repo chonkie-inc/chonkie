@@ -10,7 +10,7 @@ from typing import (
 )
 from uuid import NAMESPACE_OID, uuid5
 
-from flatbuffers.builder import np
+import numpy as np
 
 from chonkie.embeddings import AutoEmbeddings, BaseEmbeddings
 from chonkie.logger import get_logger
