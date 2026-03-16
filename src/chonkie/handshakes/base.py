@@ -18,7 +18,7 @@ class BaseHandshake(ABC):
     """Abstract base class for Handshakes."""
 
     @staticmethod
-    def _generate_default_id(*args: Any) -> str:
+    def _generate_default_id() -> str:
         """Generate a default UUID."""
         return str(uuid.uuid4())
 
