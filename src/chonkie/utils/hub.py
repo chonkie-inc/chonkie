@@ -1,6 +1,7 @@
 """Module for managing access to the Chonkie hub."""
 
 import json
+import os
 from functools import cache
 from pathlib import Path
 from typing import Optional
@@ -77,7 +78,7 @@ class Hubbie:
         self,
         name: Optional[str] = "default",
         lang: Optional[str] = "en",
-        path: Optional[str] = None,
+        path: str | os.PathLike | None = None,
     ) -> dict:
         """Get a recipe from the hub.
 
@@ -145,7 +146,7 @@ class Hubbie:
         # Return the recipe
         return recipe
 
-    def get_pipeline_recipe(self, name: str, path: Optional[str] = None) -> dict:
+    def get_pipeline_recipe(self, name: str, path: str | os.PathLike | None = None) -> dict:
         """Get a pipeline recipe from the hub.
 
         Args:

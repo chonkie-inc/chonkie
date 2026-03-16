@@ -1,7 +1,6 @@
 """Tests for the AutoEmbeddings class."""
 
 import os
-import warnings
 
 import pytest
 
@@ -160,14 +159,12 @@ class TestAutoEmbeddingsInputTypes:
                 return [[1.0, 2.0, 3.0] for _ in texts]
 
         mock_obj = MockEmbeddings()
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            try:
-                result = AutoEmbeddings.get_embeddings(mock_obj)
-                assert isinstance(result, BaseEmbeddings)
-            except ValueError:
-                # Expected if registry can't wrap this type
-                pass
+        try:
+            result = AutoEmbeddings.get_embeddings(mock_obj)
+            assert isinstance(result, BaseEmbeddings)
+        except ValueError:
+            # Expected if registry can't wrap this type
+            pass
 
 
 class TestAutoEmbeddingsErrorHandling:

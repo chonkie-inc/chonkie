@@ -414,8 +414,8 @@ chunks = embeddings_refinery.refine(chunks)  # Add embeddings
 # Ready for vector database
 for chunk in chunks:
     print(f"Chunk ready for indexing: {chunk.text[:50]}...")
-    if hasattr(chunk, 'embeddings'):
-        print(f"  Embedding shape: {chunk.embeddings.shape}")
+    if chunk.embedding is not None:
+        print(f"  Embedding shape: {chunk.embedding.shape}")
 ```
 </Accordion>
 

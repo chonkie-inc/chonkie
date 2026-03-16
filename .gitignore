@@ -52,8 +52,15 @@ Thumbs.db
 /tests/data/*
 notebooks/*
 CLAUDE.md
+*_PLAN.md
 .temp/*
 chroma/*
 .chaider/*
 .chaiderignore
 test-env/*
+
+# SQLite database files
+data/
+*.db
+*.db-shm
+*.db-wal
