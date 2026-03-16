@@ -157,25 +157,18 @@ batch_chunks = chunker(["Text 1...", "Text 2..."])
 
 ## Return Type
 
-SlumberChunker returns chunks as `Chunk` objects, potentially with extra metadata attached depending on the configuration and Genie's output.
+SlumberChunker returns chunks as `Chunk` objects.
 
 ```python
 from dataclasses import dataclass
-from typing import Optional
-
-# Definition similar to TokenChunker's return type
-@dataclass
-class Context:
-    text: str
-    token_count: int
-    start_index: Optional[int] = None
-    end_index: Optional[int] = None
+from typing import Optional, Union
 
 @dataclass
 class Chunk:
-    text: str           # The chunk text
-    start_index: int    # Starting position in original text
-    end_index: int      # Ending position in original text
-    token_count: int    # Number of tokens in chunk
-    context: Optional[Context] = None # Contextual information if any
+    text: str                                           # The chunk text
+    start_index: int                                    # Starting position in original text
+    end_index: int                                      # Ending position in original text
+    token_count: int                                    # Number of tokens in chunk
+    context: Optional[str] = None                       # Optional overlap context text
+    embedding: Union[list[float], "np.ndarray", None] = None  # Optional embedding vector
 ```

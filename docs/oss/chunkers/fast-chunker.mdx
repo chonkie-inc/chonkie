@@ -4,20 +4,12 @@ description: "SIMD-accelerated text chunking at 100+ GB/s throughput"
 icon: "bolt"
 ---
 
-The `FastChunker` uses [memchunk](https://github.com/chonkie-inc/memchunk) for SIMD-accelerated boundary detection, enabling chunking speeds of 100+ GB/s.
+The `FastChunker` uses [chonkie-core](https://github.com/chonkie-inc/chunk) for SIMD-accelerated boundary detection, enabling chunking speeds of 100+ GB/s.
 
 <Warning>
   Unlike other chunkers, FastChunker uses **byte size** limits instead of token counts.
   This tradeoff enables extreme performance for high-throughput pipelines.
 </Warning>
-
-## Installation
-
-FastChunker requires the `memchunk` library:
-
-```bash
-pip install chonkie[fast]
-```
 
 ## Initialization
 
@@ -280,10 +272,12 @@ FastChunker returns chunks as `Chunk` objects:
 ```python
 @dataclass
 class Chunk:
-    text: str           # The chunk text
-    start_index: int    # Starting byte position in original text
-    end_index: int      # Ending byte position in original text
-    token_count: int    # Always 0 (not computed for speed)
+    text: str                                           # The chunk text
+    start_index: int                                    # Starting character position in original text
+    end_index: int                                      # Ending character position in original text
+    token_count: int                                    # Always 0 (not computed for speed)
+    context: Optional[str] = None                       # Optional overlap context text
+    embedding: Union[list[float], "np.ndarray", None] = None  # Optional embedding vector
 ```
 
 <Note>

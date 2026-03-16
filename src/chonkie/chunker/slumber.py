@@ -5,6 +5,7 @@ from bisect import bisect_left
 from itertools import accumulate
 from typing import Literal, Optional, Union
 
+import chonkie_core
 from tqdm import tqdm
 
 from chonkie.genie import BaseGenie, GeminiGenie
@@ -16,13 +17,6 @@ from chonkie.types import Chunk, RecursiveLevel, RecursiveRules
 from .base import BaseChunker
 
 logger = get_logger(__name__)
-
-try:
-    from .c_extensions.split import split_text
-
-    _CYTHON_AVAILABLE = True
-except ImportError:
-    _CYTHON_AVAILABLE = False
 
 
 JSON_PROMPT_TEMPLATE = """<task> You are given a set of texts between the starting tag <passages> and ending tag </passages>. Each text is labeled as 'ID `N`' where 'N' is the passage number. Your task is to find the first passage where the content clearly separates from the previous passages in topic and/or semantics. </task>
@@ -122,7 +116,7 @@ class SlumberChunker(BaseChunker):
                     "Please install it using `pip install chonkie[genie]` or use extract_mode='text'.",
                 ) from ie
 
-            class Split(BaseModel):  # type: ignore
+            class Split(BaseModel):
                 split_index: int
 
             self.Split = Split
@@ -258,20 +252,25 @@ class SlumberChunker(BaseChunker):
         for attempt in range(self.max_retries):
             try:
                 response = self.genie.generate_json(prompt, self.Split)
-                return int(response["split_index"])
+                index = int(response["split_index"])
+                if index > group_end_index:
+                    raise ValueError(
+                        f"Split index {index} is out of bounds (max {group_end_index})"
+                    )
+                return index
             except (KeyboardInterrupt, SystemExit):
                 raise
             except Exception as e:
                 last_error = e
-                logger.warning(
+                logger.debug(
                     f"JSON extraction attempt {attempt + 1}/{self.max_retries} failed: {e}"
                 )
                 continue
 
         # All retries failed - keep passages together by returning group end
-        logger.error(
+        logger.debug(
             f"JSON extraction failed after {self.max_retries} attempts. "
-            f"Last error: {last_error}. Keeping passages together."
+            f"Last error: {last_error}. Keeping passages together. Using fallback index {group_end_index}."
         )
         return group_end_index
 
@@ -292,153 +291,80 @@ class SlumberChunker(BaseChunker):
             try:
                 response = self.genie.generate(prompt)
                 index = self._extract_index_from_text(response)
+                if index > group_end_index:
+                    raise ValueError(
+                        f"Split index {index} is out of bounds (max {group_end_index})"
+                    )
                 return index
             except (KeyboardInterrupt, SystemExit):
                 raise
             except Exception as e:
                 last_error = e
-                logger.warning(
+                logger.debug(
                     f"Text extraction attempt {attempt + 1}/{self.max_retries} failed: {e}"
                 )
                 continue
 
         # All retries failed - keep passages together by returning group end
-        logger.error(
+        logger.debug(
             f"Text extraction failed after {self.max_retries} attempts. "
-            f"Last error: {last_error}. Keeping passages together."
+            f"Last error: {last_error}. Keeping passages together. Using fallback index {group_end_index}."
         )
         return group_end_index
 
     def _split_text(self, text: str, recursive_level: RecursiveLevel) -> list[str]:
         """Split the text into chunks using the delimiters."""
-        if _CYTHON_AVAILABLE:
-            # Use the optimized Cython split function
-            if recursive_level.whitespace:
-                return list(
-                    split_text(
-                        text,
-                        delim=None,
-                        include_delim=recursive_level.include_delim,
-                        min_characters_per_segment=self.min_characters_per_chunk,
-                        whitespace_mode=True,
-                        character_fallback=False,
-                    ),
-                )
-            elif recursive_level.delimiters:
-                return list(
-                    split_text(
-                        text,
-                        delim=recursive_level.delimiters,
-                        include_delim=recursive_level.include_delim,
-                        min_characters_per_segment=self.min_characters_per_chunk,
-                        whitespace_mode=False,
-                        character_fallback=False,
-                    ),
+        if recursive_level.delimiters:
+            include_mode = recursive_level.include_delim or "prev"
+            text_bytes = text.encode("utf-8")
+
+            # Check if we have multi-byte delimiters
+            delimiters = recursive_level.delimiters
+            if isinstance(delimiters, str):
+                delimiters = [delimiters]
+
+            has_multibyte = any(len(d) > 1 for d in delimiters)
+
+            if has_multibyte:
+                # Use split_pattern_offsets for multi-byte patterns
+                patterns = [d.encode("utf-8") for d in delimiters]
+                offsets = chonkie_core.split_pattern_offsets(
+                    text_bytes,
+                    patterns=patterns,
+                    include_delim=include_mode,
+                    min_chars=self.min_characters_per_chunk,
                 )
             else:
-                # Token-based splitting - fall back to original implementation
-                encoded = self.tokenizer.encode(text)
-                token_splits = [
-                    encoded[i : i + self.chunk_size]
-                    for i in range(0, len(encoded), self.chunk_size)
-                ]
-                return list(self.tokenizer.decode_batch(token_splits))
+                # Use faster split_offsets for single-byte delimiters
+                delim_bytes = "".join(delimiters).encode("utf-8")
+                offsets = chonkie_core.split_offsets(
+                    text_bytes,
+                    delimiters=delim_bytes,
+                    include_delim=include_mode,
+                    min_chars=self.min_characters_per_chunk,
+                )
+
+            splits = [text_bytes[start:end].decode("utf-8") for start, end in offsets]
+            return [s for s in splits if s]
+        elif recursive_level.whitespace:
+            # Split on whitespace using split_offsets (preserves spaces for reconstruction)
+            text_bytes = text.encode("utf-8")
+            include_mode = recursive_level.include_delim or "prev"
+            offsets = chonkie_core.split_offsets(
+                text_bytes,
+                delimiters=b" ",
+                include_delim=include_mode,
+                min_chars=self.min_characters_per_chunk,
+            )
+            splits = [text_bytes[start:end].decode("utf-8") for start, end in offsets]
+            return [s for s in splits if s]
         else:
-            # Fallback to original implementation when Cython is not available
-            return self._split_text_fallback(text, recursive_level)
-
-    def _split_text_fallback(self, text: str, recursive_level: RecursiveLevel) -> list[str]:
-        """Fallback implementation when Cython is not available."""
-        # At every delimiter, replace it with the sep
-        if recursive_level.whitespace:
-            candidate_splits = text.split(" ")
-
-            # Add whitespace back; assumes that the whitespace is uniform across the text
-            # if the whitespace is not uniform, the split will not be reconstructable.
-            if recursive_level.include_delim == "prev":
-                # Attach space to end of each segment (except last)
-                splits = [
-                    split + " " if i < len(candidate_splits) - 1 else split
-                    for i, split in enumerate(candidate_splits)
-                ]
-            elif recursive_level.include_delim == "next":
-                # Attach space to start of each segment (except first)
-                splits = [
-                    " " + split if i > 0 else split for i, split in enumerate(candidate_splits)
-                ]
-            else:
-                splits = candidate_splits
-
-        elif recursive_level.delimiters:
-            if recursive_level.include_delim == "prev":
-                for delimiter in recursive_level.delimiters:
-                    text = text.replace(delimiter, delimiter + self.sep)
-            elif recursive_level.include_delim == "next":
-                for delimiter in recursive_level.delimiters:
-                    text = text.replace(delimiter, self.sep + delimiter)
-            else:
-                for delimiter in recursive_level.delimiters:
-                    text = text.replace(delimiter, self.sep)
-
-            splits = [split for split in text.split(self.sep) if split != ""]
-        else:
-            # Encode, Split, and Decode
+            # Token-based splitting
             encoded = self.tokenizer.encode(text)
             token_splits = [
                 encoded[i : i + self.chunk_size] for i in range(0, len(encoded), self.chunk_size)
             ]
-            splits = list(self.tokenizer.decode_batch(token_splits))
-
-        # Merge short splits (preserve spacing/punctuation)
-        def _safe_append(base: str, addition: str) -> str:
-            """Safely append text while preserving language-specific spacing rules."""
-            if not base:
-                return addition
-            if not addition:
-                return base
-
-            last_char = base[-1]
-            first_char = addition[0]
-
-            # If either has whitespace, concatenate directly
-            if last_char.isspace() or first_char.isspace():
-                return base + addition
-
-            # Don't add space before punctuation
-            if first_char in ",.;:?!)]}'\"":
-                return base + addition
-
-            # Don't add space after opening brackets
-            if last_char in "([{'\"":
-                return base + addition
-
-            # Otherwise, add a space
-            return base + " " + addition
-
-        current = ""
-        merged = []
-        for split in splits:
-            if len(split) < self.min_characters_per_chunk:
-                current = _safe_append(current, split)
-            elif current:
-                current = _safe_append(current, split)
-                merged.append(current)
-                current = ""
-            else:
-                merged.append(split)
-
-            if len(current) >= self.min_characters_per_chunk:
-                merged.append(current)
-                current = ""
-
-        if current:
-            merged.append(current)
-
-        splits = merged
-
-        # Some splits may not be meaningful yet.
-        # This will be handled during chunk creation.
-        return splits
+            return list(self.tokenizer.decode_batch(token_splits))
 
     def _recursive_split(self, text: str, level: int = 0, offset: int = 0) -> list[Chunk]:
         """Recursively split the text into chunks."""
@@ -540,6 +466,7 @@ class SlumberChunker(BaseChunker):
             prompt = self.template.format(
                 passages="\n".join(prepared_split_texts[current_pos:group_end_index]),
             )
+            # response is always <= group_end_index
             response = self._get_split_index(prompt, current_pos, group_end_index)
 
             # Make sure that the response doesn't bug out and return a index smaller

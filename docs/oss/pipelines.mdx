@@ -92,6 +92,25 @@ docs = (Pipeline()
     .run(texts=["Text 1", "Text 2", "Text 3"]))
 ```
 
+### Asynchronous Execution
+
+For high-throughput applications (e.g., web servers, batch processing), use `arun()`:
+
+```python
+import asyncio
+
+async def process_docs():
+    pipe = Pipeline().chunk_with("recursive")
+
+    # Run pipeline asynchronously
+    doc = await pipe.arun(texts="Async processing is fast!")
+
+    # Process multiple concurrently
+    docs = await pipe.arun(texts=["Doc 1", "Doc 2"])
+
+    return docs
+```
+
 ## Pipeline Methods
 
 ### fetch_from()
@@ -265,7 +284,7 @@ pipeline = Pipeline.from_recipe("custom", path="./my_recipe.json")
 ```
 
 <Note>
-  Recipes are stored in the [chonkie-ai/recipes](https://huggingface.co/chonkie-ai/recipes) repository.
+  Recipes are stored in the [chonkie-ai/recipes](https://huggingface.co/datasets/chonkie-ai/recipes) repository.
 </Note>
 
 ## Best Practices
