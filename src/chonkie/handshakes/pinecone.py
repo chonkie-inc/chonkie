@@ -235,7 +235,9 @@ class PineconeHandshake(BaseHandshake):
             raise ValueError(
                 f"Embedding must be a list of floats. Got {type(embedding)}",
             )
-        results: dict[str, Any] = self.index.query(vector=embedding, top_k=limit, include_metadata=True)  # type: ignore[assignment]
+        results: dict[str, Any] = self.index.query(
+            vector=embedding, top_k=limit, include_metadata=True
+        )  # type: ignore[assignment]
         if not hasattr(results, "get"):
             raise ValueError(f"Unexpected response type from Pinecone query: {type(results)}")
 
