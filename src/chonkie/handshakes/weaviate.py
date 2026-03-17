@@ -292,7 +292,7 @@ class WeaviateHandshake(BaseHandshake):
             properties["word_count"] = len(words)
 
         if hasattr(chunk, "language") and chunk.language:
-            properties["language"] = chunk.language
+            properties["language"] = str(chunk.language)
 
         return properties
 
