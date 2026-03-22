@@ -5,6 +5,7 @@ from .base import BaseGenie
 from .cerebras import CerebrasGenie
 from .gemini import GeminiGenie
 from .groq import GroqGenie
+from .minimax import MiniMaxGenie
 from .openai import OpenAIGenie
 
 # Add all genie classes to __all__
@@ -14,5 +15,6 @@ __all__ = [
     "CerebrasGenie",
     "GeminiGenie",
     "GroqGenie",
+    "MiniMaxGenie",
     "OpenAIGenie",
 ]
