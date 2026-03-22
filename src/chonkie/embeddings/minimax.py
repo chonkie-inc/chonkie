@@ -99,7 +99,11 @@ class MiniMaxEmbeddings(BaseEmbeddings):
     @retry(
         stop=stop_after_attempt(3),
         wait=wait_exponential(multiplier=2, max=30),
-        retry=retry_if_exception_type((httpx.HTTPStatusError, httpx.ConnectError, httpx.TimeoutException)),
+        retry=retry_if_exception_type((
+            httpx.HTTPStatusError,
+            httpx.ConnectError,
+            httpx.TimeoutException,
+        )),
     )
     def _call_api(self, texts: List[str]) -> List[List[float]]:
         """Call the MiniMax embedding API.
@@ -132,9 +136,7 @@ class MiniMaxEmbeddings(BaseEmbeddings):
         # Check for API-level errors
         base_resp = data.get("base_resp", {})
         if base_resp.get("status_code", 0) != 0:
-            raise ValueError(
-                f"MiniMax API error: {base_resp.get('status_msg', 'unknown error')}"
-            )
+            raise ValueError(f"MiniMax API error: {base_resp.get('status_msg', 'unknown error')}")
 
         vectors = data.get("vectors")
         if vectors is None:
@@ -144,7 +146,11 @@ class MiniMaxEmbeddings(BaseEmbeddings):
     @retry(
         stop=stop_after_attempt(3),
         wait=wait_exponential(multiplier=2, max=30),
-        retry=retry_if_exception_type((httpx.HTTPStatusError, httpx.ConnectError, httpx.TimeoutException)),
+        retry=retry_if_exception_type((
+            httpx.HTTPStatusError,
+            httpx.ConnectError,
+            httpx.TimeoutException,
+        )),
     )
     async def _acall_api(self, texts: List[str]) -> List[List[float]]:
         """Call the MiniMax embedding API asynchronously.

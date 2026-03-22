@@ -1,0 +1,71 @@
+---
+title: MiniMaxEmbeddings
+description: MiniMaxEmbeddings is a utility for embedding chunks using MiniMax's embo-01 model.
+icon: "brain-circuit"
+iconType: "solid"
+---
+
+MiniMaxEmbeddings provides access to [MiniMax](https://www.minimax.io/)'s embedding API for Chonkie's semantic chunking. It uses the **embo-01** model with 1536-dimensional vectors.
+
+MiniMax's embedding API distinguishes between `"db"` (storage) and `"query"` (search) embedding types, enabling asymmetric retrieval for better search quality.
+
+## Installation
+
+MiniMaxEmbeddings uses `httpx` (a core dependency), so no extra packages are needed:
+
+```bash
+pip install chonkie
+```
+
+## Usage
+
+```python
+from chonkie import MiniMaxEmbeddings
+
+# Initialize with API key (or set MINIMAX_API_KEY env var)
+embeddings = MiniMaxEmbeddings(api_key="your-minimax-api-key")
+
+# Embed a single text
+vector = embeddings.embed("Hello, world!")
+
+# Batch embed multiple texts
+vectors = embeddings.embed_batch(["text 1", "text 2", "text 3"])
+
+# Use with semantic chunker
+from chonkie import SemanticChunker
+
+chunker = SemanticChunker(embeddings)
+chunks = chunker("Your long text here...")
+```
+
+### Search-optimized embeddings
+
+Use `embedding_type="query"` when embedding search queries for asymmetric retrieval:
+
+```python
+# For storing documents
+db_embeddings = MiniMaxEmbeddings(embedding_type="db")
+doc_vectors = db_embeddings.embed_batch(documents)
+
+# For search queries
+query_embeddings = MiniMaxEmbeddings(embedding_type="query")
+query_vector = query_embeddings.embed("search query")
+```
+
+### Using the provider URI
+
+```python
+from chonkie import AutoEmbeddings
+
+# Auto-detect MiniMax from model name
+embeddings = AutoEmbeddings.get_embeddings("embo-01", api_key="your-key")
+
+# Or use provider prefix
+embeddings = AutoEmbeddings.get_embeddings("minimax://embo-01", api_key="your-key")
+```
+
+## Available Models
+
+| Model | Dimensions | Description |
+|-------|-----------|-------------|
+| `embo-01` | 1536 | General-purpose embedding model |

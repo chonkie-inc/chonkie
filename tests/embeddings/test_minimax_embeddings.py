@@ -8,14 +8,13 @@ import pytest
 
 from chonkie.embeddings.minimax import MiniMaxEmbeddings
 
-
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
 
 
 def _make_api_response(vectors=None, n=1):
-    """Helper to create a mock API response."""
+    """Create a mock API response."""
     if vectors is None:
         vectors = [np.random.rand(1536).tolist() for _ in range(n)]
     response = MagicMock()

@@ -1,6 +1,5 @@
 """Tests for MiniMaxGenie class."""
 
-import json
 import os
 from unittest.mock import Mock, patch
 
