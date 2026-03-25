@@ -49,7 +49,10 @@ class TestMarkdownTableToJson:
 
         assert result[0]["Name"] == "Alice"
         assert result[0]["Value"] == 100
+        assert result[0]["Notes"] == ""
         assert result[1]["Name"] == "Bob"
+        assert result[1]["Value"] == ""
+        assert result[1]["Notes"] == "Extra"
 
     def test_special_content(self) -> None:
         """Test special characters, unicode, and whitespace."""

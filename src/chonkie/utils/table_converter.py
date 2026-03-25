@@ -28,6 +28,7 @@ class HTMLTableParser(HTMLParser):
         match tag:
             case "table":
                 self._current_table = {"headers": [], "rows": []}
+                self._current_headers = []
             case "thead":
                 self._in_thead = True
                 self._current_headers = []
@@ -97,9 +98,14 @@ def _parse_markdown_table(table_content: str) -> tuple[list[str], list[list[str]
     if len(lines) < 2:
         return [], []
 
-    headers = [cell.strip() for cell in lines[0].split("|") if cell.strip()]
-    rows = [[c for c in [cell.strip() for cell in line.split("|")] if c] for line in lines[2:]]
-    return headers, [r for r in rows if r]
+    headers = [cell.strip() for cell in lines[0].strip("|").split("|")]
+    rows = []
+    for line in lines[2:]:
+        cells = [cell.strip() for cell in line.strip("|").split("|")]
+        if any(cells):
+            rows.append(cells)
+
+    return headers, rows
 
 
 def markdown_table_to_json(table_content: str) -> list[dict[str, int | float | str]]:
