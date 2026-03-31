@@ -128,7 +128,7 @@ class RecursiveChunker(BaseChunker):
             if isinstance(delimiters, str):
                 delimiters = [delimiters]
 
-            has_multibyte = any(len(d) > 1 for d in delimiters)
+            has_multibyte = any(len(d) > 1 or len(d.encode("utf-8")) > 1 for d in delimiters)
 
             if has_multibyte:
                 # Use split_pattern_offsets for multi-byte patterns
