@@ -624,7 +624,9 @@ class TransformersAutoTokenizer(AutoTokenizer):
 
     def decode_batch(self, token_sequences: Sequence[Sequence[int]]) -> Sequence[str]:
         """Batch decode using batch_decode method."""
-        return self.tokenizer.batch_decode(token_sequences, skip_special_tokens=True)
+        return self.tokenizer.batch_decode(
+            [list(seq) for seq in token_sequences], skip_special_tokens=True
+        )
 
 
 class TokenizersAutoTokenizer(AutoTokenizer):

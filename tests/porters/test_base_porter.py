@@ -11,7 +11,7 @@ from chonkie.porters.base import BasePorter
 
 
 def make_chunk(text: str = "hello") -> Chunk:
-    """Make a Chunk object."""
+    """Create a simple Chunk for testing."""
     return Chunk(text=text, start_index=0, end_index=len(text), token_count=1)
 
 
@@ -76,3 +76,18 @@ def test_base_porter_export_returns_none():
     porter = NullPorter()
     result = porter.export([make_chunk()])
     assert result is None
+
+
+@pytest.mark.asyncio
+async def test_base_porter_aexport_delegates_to_export():
+    """Aexport on a concrete subclass invokes export() via asyncio.to_thread."""
+    received: list = []
+
+    class ConcretePorter(BasePorter):
+        def export(self, chunks, **kwargs):
+            received.extend(chunks)
+
+    porter = ConcretePorter()
+    chunks = [make_chunk("a"), make_chunk("b")]
+    await porter.aexport(chunks)
+    assert received == chunks

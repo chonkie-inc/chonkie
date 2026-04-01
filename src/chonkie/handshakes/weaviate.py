@@ -11,7 +11,7 @@ from typing import (
 from urllib.parse import urlparse
 from uuid import NAMESPACE_OID, uuid5
 
-from flatbuffers.builder import np
+import numpy as np
 
 from chonkie.embeddings import AutoEmbeddings, BaseEmbeddings
 from chonkie.logger import get_logger
@@ -292,7 +292,7 @@ class WeaviateHandshake(BaseHandshake):
             properties["word_count"] = len(words)
 
         if hasattr(chunk, "language") and chunk.language:
-            properties["language"] = chunk.language
+            properties["language"] = str(chunk.language)
 
         return properties
 
