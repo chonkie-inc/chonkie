@@ -4,9 +4,11 @@ This module provides a CodeChunker class for splitting code into chunks of a spe
 
 """
 
+from __future__ import annotations
+
 from bisect import bisect_left
 from itertools import accumulate
-from typing import TYPE_CHECKING, Any, Literal, Union, cast
+from typing import TYPE_CHECKING, Any, Literal, Union
 
 from chonkie.chunker.base import BaseChunker
 from chonkie.logger import get_logger
@@ -17,9 +19,8 @@ from chonkie.types import Chunk
 logger = get_logger(__name__)
 
 if TYPE_CHECKING:
-    from typing import Any
-
     from tree_sitter import Node, Tree
+    from tree_sitter_language_pack import SupportedLanguage
 
 
 @chunker("code")
@@ -38,7 +39,7 @@ class CodeChunker(BaseChunker):
         self,
         tokenizer: Union[str, TokenizerProtocol] = "character",
         chunk_size: int = 2048,
-        language: Union[Literal["auto"], Any] = "auto",
+        language: Union[Literal["auto"], SupportedLanguage] = "auto",
         include_nodes: bool = False,
     ) -> None:
         """Initialize a CodeChunker object.
@@ -79,15 +80,16 @@ class CodeChunker(BaseChunker):
             self.magika = Magika()
             self.parser = None
         else:
-            from tree_sitter_language_pack import SupportedLanguage, get_parser
+            from tree_sitter_language_pack import get_parser, manifest_languages
 
             try:
-                self.parser = get_parser(cast(SupportedLanguage, language))
+                self.parser = get_parser(language)
             except ValueError as e:
+                supported = ", ".join(sorted(manifest_languages()))
                 raise ValueError(
                     f"Unsupported language '{language}'. "
-                    "Please use a language supported by tree-sitter-language-pack "
-                    "or set language='auto'."
+                    f"Supported languages are: {supported}. "
+                    "Or set language='auto'."
                 ) from e
 
         # Set the use_multiprocessing flag
