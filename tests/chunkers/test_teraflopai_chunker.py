@@ -120,17 +120,17 @@ class TestTeraflopAIChunkerChunking:
     def test_chunk_text_content(
         self, chunker_with_mock, mock_client, sample_text, sample_segments
     ) -> None:
-        """Test that chunk text matches the segments."""
+        """Test that chunk text contains each segment."""
         mock_client.segment.return_value = {"results": sample_segments}
         chunks = chunker_with_mock.chunk(sample_text)
 
         for chunk, expected_text in zip(chunks, sample_segments):
-            assert chunk.text == expected_text
+            assert expected_text in chunk.text
 
     def test_chunk_indices(
         self, chunker_with_mock, mock_client, sample_text, sample_segments
     ) -> None:
-        """Test that chunk start and end indices are correct."""
+        """Test that chunk start and end indices are correct and contiguous."""
         mock_client.segment.return_value = {"results": sample_segments}
         chunks = chunker_with_mock.chunk(sample_text)
 
@@ -140,6 +140,11 @@ class TestTeraflopAIChunkerChunking:
             assert chunk.end_index > chunk.start_index
             # Verify the text at the indices matches the chunk text
             assert sample_text[chunk.start_index : chunk.end_index] == chunk.text
+
+        # Verify chunks are contiguous: no gaps between consecutive chunks
+        assert chunks[0].start_index == 0
+        for i in range(1, len(chunks)):
+            assert chunks[i].start_index == chunks[i - 1].end_index
 
     def test_chunk_token_counts(
         self, chunker_with_mock, mock_client, sample_text, sample_segments

@@ -111,20 +111,37 @@ class TeraflopAIChunker(BaseChunker):
             ]
 
         chunks: list[Chunk] = []
+        offset = 0
         for segment in segments:
             segment_text = segment if isinstance(segment, str) else str(segment)
-            start_index = text.find(segment_text)
-            if start_index == -1:
-                start_index = 0
-            end_index = start_index + len(segment_text)
-            token_count = self._tokenizer.count_tokens(segment_text)
+            idx = text.find(segment_text, offset)
+            if idx == -1:
+                idx = offset
+            end_index = idx + len(segment_text)
+            # Start from previous chunk's end so no text is skipped
+            start_index = offset
+            chunk_text = text[start_index:end_index]
+            token_count = self._tokenizer.count_tokens(chunk_text)
             chunks.append(
                 Chunk(
-                    text=segment_text,
+                    text=chunk_text,
                     start_index=start_index,
                     end_index=end_index,
                     token_count=token_count,
                 )
+            )
+            offset = end_index
+
+        # Include any trailing text after the last segment
+        if chunks and offset < len(text):
+            trailing = text[offset:]
+            last = chunks[-1]
+            combined = last.text + trailing
+            chunks[-1] = Chunk(
+                text=combined,
+                start_index=last.start_index,
+                end_index=len(text),
+                token_count=self._tokenizer.count_tokens(combined),
             )
 
         logger.info(f"Created {len(chunks)} chunks using TeraflopAI segmentation")
