@@ -9,7 +9,7 @@ import pandas as pd
 
 
 def _read_markdown_table(table_content: str):
-    """Read markdown table into DataFrame."""    
+    """Read markdown table into DataFrame."""
     lines = [line.strip() for line in table_content.strip().split("\n") if line.strip()]
     if len(lines) < 2:
         return pd.DataFrame()
