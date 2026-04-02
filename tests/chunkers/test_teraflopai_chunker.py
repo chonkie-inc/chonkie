@@ -74,6 +74,7 @@ class TestTeraflopAIChunkerInitialization:
                 api_key="test_key",
                 url="https://api.segmentation.teraflopai.com/v1/segmentation/free",
             )
+            assert chunker is not None, "Chunker should be initialized successfully with API key."
 
     def test_init_with_env_api_key(self, monkeypatch) -> None:
         """Test initialization with API key from environment variable."""
@@ -84,6 +85,9 @@ class TestTeraflopAIChunkerInitialization:
             _fake_TeraflopAI_cls.assert_called_once_with(
                 api_key="env_test_key",
                 url="https://api.segmentation.teraflopai.com/v1/segmentation/free",
+            )
+            assert chunker is not None, (
+                "Chunker should be initialized successfully with env API key."
             )
 
     def test_init_without_api_key_raises(self, monkeypatch) -> None:
@@ -100,6 +104,9 @@ class TestTeraflopAIChunkerInitialization:
         with patch.dict(sys.modules, {"teraflopai": _fake_teraflopai}):
             chunker = TeraflopAIChunker(api_key="test_key", url=custom_url)
             _fake_TeraflopAI_cls.assert_called_once_with(api_key="test_key", url=custom_url)
+            assert chunker is not None, (
+                "Chunker should be initialized successfully with custom URL."
+            )
 
 
 class TestTeraflopAIChunkerChunking:
