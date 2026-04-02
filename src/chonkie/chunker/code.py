@@ -82,7 +82,8 @@ class CodeChunker(BaseChunker):
             try:
                 self.parser = get_parser(language)
             except ValueError as e:
-                from tree_sitter_language_pack import manifest_languages
+                from tree_sitter_language_pack import manifest_languages  # type: ignore[attr-defined]
+
                 supported = ", ".join(sorted(manifest_languages()))
                 raise ValueError(
                     f"Unsupported language '{language}'. "
