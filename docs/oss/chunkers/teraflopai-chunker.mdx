@@ -21,20 +21,20 @@ pip install "chonkie[teraflopai]"
 </Info>
 
 ## Initialization
-
-```python
+<CodeGroup>
+```python using api_key
 from chonkie import TeraflopAIChunker
 
 # Using an API key (or set the TERAFLOPAI_API_KEY environment variable)
 chunker = TeraflopAIChunker(api_key="your_api_key_here")
-
-# Using a custom URL
+```
+```python using custom_url
 chunker = TeraflopAIChunker(
     api_key="your_api_key_here",
     url="https://api.segmentation.teraflopai.com/v1/segmentation/free",
 )
-
-# Using an existing TeraflopAI client
+```
+```python using external client
 from teraflopai import TeraflopAI
 
 client = TeraflopAI(
@@ -43,6 +43,7 @@ client = TeraflopAI(
 )
 chunker = TeraflopAIChunker(client=client)
 ```
+</CodeGroup>
 
 ## Parameters
 
