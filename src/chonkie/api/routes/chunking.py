@@ -368,7 +368,7 @@ def _get_code_chunker(tokenizer: str, language: str) -> CodeChunker:
     """
     key = f"{tokenizer}:{language}"
     if key not in _code_cache:
-        _code_cache[key] = CodeChunker(tokenizer=tokenizer, language=language)
+        _code_cache[key] = CodeChunker(tokenizer=tokenizer, language=language) 
     return _code_cache[key]
 
 

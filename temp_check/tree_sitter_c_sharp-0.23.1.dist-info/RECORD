@@ -1,0 +1,14 @@
+tree_sitter_c-sharp/queries/highlights.scm,sha256=d89SCgJWphtm24S2g4YdeP3-TGckpcu3_WwutbVbxUQ,2776
+tree_sitter_c-sharp/queries/tags.scm,sha256=TtCNoBYuzUggasNL6-fql1eox7YX9q2PcMFo1oXVFP4,848
+tree_sitter_c_sharp-0.23.1.dist-info/INSTALLER,sha256=zuuue4knoyJ-UwPPXg8fezS7VCrXJQrAP7zeNuwvFQg,4
+tree_sitter_c_sharp-0.23.1.dist-info/LICENSE,sha256=d4-31juMGETaMVZIwC8yXEcTpvSl0ZZE_UE0IUIndtM,1133
+tree_sitter_c_sharp-0.23.1.dist-info/METADATA,sha256=WWDV0TxG_BGHsNzycR1_gVlJS4Y71dIDfcdOhtroWFE,2751
+tree_sitter_c_sharp-0.23.1.dist-info/RECORD,,
+tree_sitter_c_sharp-0.23.1.dist-info/WHEEL,sha256=l0STrfPlEhKp2Oy3Nx0ZvGaD0HYE7fQA3lcI6qYo3QE,99
+tree_sitter_c_sharp-0.23.1.dist-info/top_level.txt,sha256=kh378M1Isj-_JaoT3wwTEKiVHM6hIw9MfQelghpONuU,29
+tree_sitter_c_sharp/__init__.py,sha256=wMAA8ii6-I6eyg6fqtdReA-qvHJUoqwbA2N83qpeYLc,1151
+tree_sitter_c_sharp/__init__.pyi,sha256=oixFm8lXsZZWYa5cRwj6brbqh37_fzN2rLE-dmX9_rA,247
+tree_sitter_c_sharp/__pycache__/__init__.cpython-312.pyc,,
+tree_sitter_c_sharp/_binding.pyd,sha256=RuNiy4VO75mq6vfkhbGA7LwOWgOTm3rRkZJy2CSVUz8,5924352
+tree_sitter_c_sharp/binding.c,sha256=COn5cvjlGlSkCfEaN0lh8zbJQUKhGrSByLjVT5ERfIE,685
+tree_sitter_c_sharp/py.typed,sha256=47DEQpj8HBSa-_TImW-5JCeuQeRkm5NMpJWZG3hSuFU,0

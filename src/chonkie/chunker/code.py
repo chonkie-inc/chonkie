@@ -4,8 +4,6 @@ This module provides a CodeChunker class for splitting code into chunks of a spe
 
 """
 
-from __future__ import annotations
-
 from bisect import bisect_left
 from itertools import accumulate
 from typing import TYPE_CHECKING, Any, Literal, Union
@@ -20,7 +18,6 @@ logger = get_logger(__name__)
 
 if TYPE_CHECKING:
     from tree_sitter import Node, Tree
-    from tree_sitter_language_pack import SupportedLanguage
 
 
 @chunker("code")
@@ -39,7 +36,7 @@ class CodeChunker(BaseChunker):
         self,
         tokenizer: Union[str, TokenizerProtocol] = "character",
         chunk_size: int = 2048,
-        language: Union[Literal["auto"], SupportedLanguage] = "auto",
+        language: Union[Literal["auto"], Any] = "auto",
         include_nodes: bool = False,
     ) -> None:
         """Initialize a CodeChunker object.
@@ -80,11 +77,12 @@ class CodeChunker(BaseChunker):
             self.magika = Magika()
             self.parser = None
         else:
-            from tree_sitter_language_pack import get_parser, manifest_languages
+            from tree_sitter_language_pack import get_parser
 
             try:
                 self.parser = get_parser(language)
             except ValueError as e:
+                from tree_sitter_language_pack import manifest_languages
                 supported = ", ".join(sorted(manifest_languages()))
                 raise ValueError(
                     f"Unsupported language '{language}'. "
