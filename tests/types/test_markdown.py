@@ -3,7 +3,6 @@
 from chonkie.types import Document
 from chonkie.types.markdown import MarkdownCode, MarkdownDocument, MarkdownImage, MarkdownTable
 
-
 # ---------------------------------------------------------------------------
 # MarkdownTable tests
 # ---------------------------------------------------------------------------

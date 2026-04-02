@@ -73,7 +73,7 @@ class RecursiveChunker(CloudChunker):
     def chunk(
         self,
         text: Optional[Union[str, list[str]]] = None,
-        file: Optional[str] = None,
+        file: str | os.PathLike | None = None,
     ) -> Any:
         """Chunk the text or file into a list of chunks."""
         # Make the payload
@@ -136,7 +136,7 @@ class RecursiveChunker(CloudChunker):
     def __call__(
         self,
         text: Optional[Union[str, list[str]]] = None,
-        file: Optional[str] = None,
+        file: str | os.PathLike | None = None,
     ) -> Any:
         """Call the RecursiveChunker."""
         return self.chunk(text=text, file=file)

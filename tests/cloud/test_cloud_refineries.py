@@ -9,7 +9,6 @@ from chonkie.cloud.refineries.base import BaseRefinery
 from chonkie.cloud.refineries.embeddings import EmbeddingsRefinery
 from chonkie.cloud.refineries.overlap import OverlapRefinery
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
@@ -19,8 +18,7 @@ def make_chunks(n: int = 3) -> list[Chunk]:
     """Return a list of n simple Chunk objects."""
     text = "The hippo chunked the river."
     return [
-        Chunk(text=text, start_index=i, end_index=i + len(text), token_count=5)
-        for i in range(n)
+        Chunk(text=text, start_index=i, end_index=i + len(text), token_count=5) for i in range(n)
     ]
 
 
@@ -124,7 +122,7 @@ def test_overlap_refinery_raises_on_mixed_chunk_types(monkeypatch):
         OtherChunk(text="b", start_index=1, end_index=2, token_count=1),
     ]
     with pytest.raises(ValueError, match="same type"):
-        refinery.refine(chunks)
+        result = refinery.refine(chunks)  # noqa: F841
 
 
 def test_overlap_refinery_refine_posts_correct_payload(monkeypatch):
@@ -137,8 +135,10 @@ def test_overlap_refinery_refine_posts_correct_payload(monkeypatch):
     mock_response = MagicMock()
     mock_response.json.return_value = response_data
 
-    with patch("chonkie.cloud.refineries.overlap.httpx.post", return_value=mock_response) as mock_post:
-        result = refinery.refine(chunks)
+    with patch(
+        "chonkie.cloud.refineries.overlap.httpx.post", return_value=mock_response
+    ) as mock_post:
+        refinery.refine(chunks)
 
     mock_post.assert_called_once()
     call_kwargs = mock_post.call_args
@@ -166,7 +166,7 @@ def test_overlap_refinery_refine_returns_deserialized_chunks(monkeypatch):
     mock_response.json.return_value = response_data
 
     with patch("chonkie.cloud.refineries.overlap.httpx.post", return_value=mock_response):
-        result = refinery.refine(chunks)
+        result = refinery.refine(chunks)  # noqa: F841
 
     assert len(result) == 2
     assert all(isinstance(c, Chunk) for c in result)
@@ -234,7 +234,7 @@ def test_embeddings_refinery_raises_on_mixed_chunk_types(monkeypatch):
         OtherChunk(text="b", start_index=1, end_index=2, token_count=1),
     ]
     with pytest.raises(ValueError, match="same type"):
-        refinery.refine(chunks)
+        result = refinery.refine(chunks)  # noqa: F841
 
 
 def test_embeddings_refinery_refine_posts_correct_payload(monkeypatch):
@@ -254,7 +254,7 @@ def test_embeddings_refinery_refine_posts_correct_payload(monkeypatch):
     with patch(
         "chonkie.cloud.refineries.embeddings.httpx.post", return_value=mock_response
     ) as mock_post:
-        refinery.refine(chunks)
+        result = refinery.refine(chunks)  # noqa: F841
 
     mock_post.assert_called_once()
     call_kwargs = mock_post.call_args
@@ -281,7 +281,7 @@ def test_embeddings_refinery_attaches_numpy_embeddings(monkeypatch):
     mock_response.json.return_value = response_data
 
     with patch("chonkie.cloud.refineries.embeddings.httpx.post", return_value=mock_response):
-        result = refinery.refine(chunks)
+        result = refinery.refine(chunks)  # noqa: F841
 
     for chunk in result:
         assert chunk.embedding is not None

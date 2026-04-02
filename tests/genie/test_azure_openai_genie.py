@@ -119,8 +119,8 @@ class TestAzureOpenAIGenieUtilities:
     def test_azure_genie_is_available_true(self) -> None:
         """Test _is_available returns True when dependencies are installed."""
         with patch("chonkie.genie.openai.importutil.find_spec") as mock_find_spec:
-            mock_find_spec.side_effect = (
-                lambda x: Mock() if x in ["openai", "pydantic", "azure.identity"] else None
+            mock_find_spec.side_effect = lambda x: (
+                Mock() if x in ["openai", "pydantic", "azure.identity"] else None
             )
             assert AzureOpenAIGenie._is_available()
 
