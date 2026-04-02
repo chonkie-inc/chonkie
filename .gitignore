@@ -63,4 +63,4 @@ test-env/*
 data/
 *.db
 *.db-shm
-*.db-wal
+*.db-waltemp_check/
