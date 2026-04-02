@@ -42,6 +42,8 @@ def _clean_for_json(value):
         return None
     if isinstance(value, float) and value.is_integer():
         return int(value)
+    if isinstance(value, str):
+        return value.strip()
     return value
 
 
