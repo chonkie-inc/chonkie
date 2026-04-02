@@ -12,6 +12,7 @@ from .chunker import (
     SentenceChunker,
     SlumberChunker,
     TableChunker,
+    TeraflopAIChunker,
     TokenChunker,
 )
 from .cloud import chunker, refineries
@@ -87,6 +88,7 @@ __all__ = (
     "SentenceChunker",
     "SlumberChunker",
     "TableChunker",
+    "TeraflopAIChunker",
     "TokenChunker",
     # cloud
     "chunker",

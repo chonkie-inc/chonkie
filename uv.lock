@@ -739,6 +739,7 @@ all = [
     { name = "sentence-transformers" },
     { name = "sqlalchemy" },
     { name = "tabulate" },
+    { name = "teraflopai" },
     { name = "tiktoken" },
     { name = "tokenizers" },
     { name = "torch" },
@@ -882,6 +883,9 @@ table = [
     { name = "pandas", version = "3.0.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
     { name = "tabulate" },
 ]
+teraflopai = [
+    { name = "teraflopai" },
+]
 tiktoken = [
     { name = "tiktoken" },
 ]
@@ -942,6 +946,7 @@ requires-dist = [
     { name = "chonkie", extras = ["semantic"], marker = "extra == 'all'" },
     { name = "chonkie", extras = ["st"], marker = "extra == 'all'" },
     { name = "chonkie", extras = ["table"], marker = "extra == 'all'" },
+    { name = "chonkie", extras = ["teraflopai"], marker = "extra == 'all'" },
     { name = "chonkie", extras = ["tiktoken"], marker = "extra == 'all'" },
     { name = "chonkie", extras = ["tokenizers"], marker = "extra == 'all'" },
     { name = "chonkie", extras = ["tpuf"], marker = "extra == 'all'" },
@@ -998,6 +1003,7 @@ requires-dist = [
     { name = "tabulate", marker = "extra == 'dev'" },
     { name = "tabulate", marker = "extra == 'table'" },
     { name = "tenacity", specifier = ">=8.0.0" },
+    { name = "teraflopai", marker = "extra == 'teraflopai'", specifier = ">=0.1.0" },
     { name = "tiktoken", marker = "extra == 'azure-openai'", specifier = ">=0.5.0" },
     { name = "tiktoken", marker = "extra == 'litellm'", specifier = ">=0.5.0" },
     { name = "tiktoken", marker = "extra == 'openai'", specifier = ">=0.5.0" },
@@ -1025,7 +1031,7 @@ requires-dist = [
     { name = "voyageai", marker = "extra == 'voyageai'", specifier = ">=0.3.2" },
     { name = "weaviate-client", marker = "extra == 'weaviate'", specifier = ">=4.16.7" },
 ]
-provides-extras = ["hub", "viz", "cli", "api", "table", "tokenizers", "tiktoken", "code", "neural", "model2vec", "st", "openai", "semantic", "gemini", "azure-openai", "groq", "cerebras", "voyageai", "cohere", "jina", "catsu", "litellm", "chroma", "qdrant", "tpuf", "pgvector", "weaviate", "datasets", "pinecone", "mongodb", "elastic", "milvus", "genie", "all", "dev"]
+provides-extras = ["hub", "viz", "cli", "api", "table", "tokenizers", "tiktoken", "code", "neural", "model2vec", "st", "openai", "semantic", "teraflopai", "gemini", "azure-openai", "groq", "cerebras", "voyageai", "cohere", "jina", "catsu", "litellm", "chroma", "qdrant", "tpuf", "pgvector", "weaviate", "datasets", "pinecone", "mongodb", "elastic", "milvus", "genie", "all", "dev"]
 
 [package.metadata.requires-dev]
 dev = [{ name = "ruff", specifier = ">=0.13.3" }]
@@ -5672,6 +5678,18 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/47/c6/ee486fd809e357697ee8a44d3d69222b344920433d3b6666ccd9b374630c/tenacity-9.1.4.tar.gz", hash = "sha256:adb31d4c263f2bd041081ab33b498309a57c77f9acf2db65aadf0898179cf93a", size = 49413, upload-time = "2026-02-07T10:45:33.841Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/d7/c1/eb8f9debc45d3b7918a32ab756658a0904732f75e555402972246b0b8e71/tenacity-9.1.4-py3-none-any.whl", hash = "sha256:6095a360c919085f28c6527de529e76a06ad89b23659fa881ae0649b867a9d55", size = 28926, upload-time = "2026-02-07T10:45:32.24Z" },
+]
+
+[[package]]
+name = "teraflopai"
+version = "0.1.14"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "httpx", extra = ["http2"] },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/ab/7f/a2c7dfe7b4576716cea782ad66ca07755544d433b6a19b4fcb21e5a188fe/teraflopai-0.1.14.tar.gz", hash = "sha256:a90b4c762dc470ac5eda7fccd91d550808768801f4862670078447c063de7328", size = 7111, upload-time = "2026-03-09T21:05:55.604Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/76/f3/e5d8d46b4212fabc6b86ea8725881666ae9e3f1669787d8faf46ff0b6ba7/teraflopai-0.1.14-py3-none-any.whl", hash = "sha256:ff2e2724a5f62488af3b1876e7b66fabb9d0e0360b4677761290074c7608eb82", size = 7556, upload-time = "2026-03-09T21:05:53.058Z" },
 ]
 
 [[package]]
