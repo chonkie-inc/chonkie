@@ -1,137 +1,100 @@
 """Table converter utilities for transforming tables to different formats."""
 
-import re
-from html.parser import HTMLParser
-from typing import Any
+from __future__ import annotations
 
-NUMERIC_PATTERN = re.compile(r"^-?\d+(?:\.\d+)?$")
+import math
+from io import StringIO
 
-
-class HTMLTableParser(HTMLParser):
-    """Simple HTML table parser to extract headers and rows."""
-
-    def __init__(self) -> None:
-        """Initialize the HTML table parser."""
-        super().__init__()
-        self.tables: list[dict[str, Any]] = []
-        self._current_table: dict[str, Any] = {"headers": [], "rows": []}
-        self._in_thead = False
-        self._in_tbody = False
-        self._in_th = False
-        self._in_td = False
-        self._current_headers: list[str] = []
-        self._current_row: list[str] = []
-        self._current_cell_data = ""
-
-    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
-        """Handle opening HTML tags."""
-        match tag:
-            case "table":
-                self._current_table = {"headers": [], "rows": []}
-                self._current_headers = []
-            case "thead":
-                self._in_thead = True
-                self._current_headers = []
-            case "tbody":
-                self._in_tbody = True
-            case "th":
-                self._in_th = True
-                self._current_cell_data = ""
-            case "td":
-                self._in_td = True
-                self._current_cell_data = ""
-            case "tr":
-                self._current_row = []
-
-    def handle_endtag(self, tag: str) -> None:
-        """Handle closing HTML tags."""
-        match tag:
-            case "table":
-                if self._current_headers:
-                    self._current_table["headers"] = self._current_headers
-                self.tables.append(self._current_table)
-            case "thead":
-                self._in_thead = False
-                if self._current_headers:
-                    self._current_table["headers"] = self._current_headers
-            case "tbody":
-                self._in_tbody = False
-            case "th":
-                self._in_th = False
-                self._current_headers.append(self._current_cell_data.strip())
-            case "td":
-                self._in_td = False
-                self._current_row.append(self._current_cell_data.strip())
-            case "tr":
-                if self._current_row:
-                    self._current_table["rows"].append(self._current_row)
-
-    def handle_data(self, data: str) -> None:
-        """Handle text data within HTML tags."""
-        if self._in_th or self._in_td:
-            self._current_cell_data += data
+import pandas as pd
 
 
-def _infer_type(value: str) -> int | float | str:
-    """Infer the type of a cell value."""
-    if not value:
-        return ""
-    if NUMERIC_PATTERN.match(value):
-        return float(value) if "." in value else int(value)
-    return value
-
-
-def _rows_to_json(headers: list[str], rows: list[list[str]]) -> list[dict[str, int | float | str]]:
-    """Convert parsed headers and rows to JSON format."""
-    result: list[dict[str, int | float | str]] = []
-    for row in rows:
-        row_dict: dict[str, int | float | str] = {}
-        for i, header in enumerate(headers):
-            row_dict[header] = _infer_type(row[i]) if i < len(row) else ""
-        result.append(row_dict)
-    return result
-
-
-def _parse_markdown_table(table_content: str) -> tuple[list[str], list[list[str]]]:
-    """Parse markdown table into headers and rows."""
+def _read_markdown_table(table_content: str):
+    """Read markdown table into DataFrame."""    
     lines = [line.strip() for line in table_content.strip().split("\n") if line.strip()]
     if len(lines) < 2:
-        return [], []
+        return pd.DataFrame()
 
-    headers = [cell.strip() for cell in lines[0].strip("|").split("|")]
-    rows = []
-    for line in lines[2:]:
-        cells = [cell.strip() for cell in line.strip("|").split("|")]
-        if any(cells):
-            rows.append(cells)
-
-    return headers, rows
+    cleaned_lines = [line.strip("|").strip() for line in lines]
+    csv_content = "\n".join([cleaned_lines[0]] + cleaned_lines[2:])
+    df = pd.read_csv(StringIO(csv_content), sep="|", skipinitialspace=True)
+    df.columns = df.columns.str.strip()
+    df = df.apply(lambda x: x.str.strip() if x.dtype == "object" else x)
+    return df
 
 
-def markdown_table_to_json(table_content: str) -> list[dict[str, int | float | str]]:
-    """Convert a markdown table to a JSON-serializable list of dictionaries."""
-    headers, rows = _parse_markdown_table(table_content)
-    if not headers or not rows:
-        return []
-    return _rows_to_json(headers, rows)
-
-
-def html_table_to_json(table_content: str) -> list[dict[str, int | float | str]] | None:
-    """Convert an HTML table to a JSON-serializable list of dictionaries."""
-    parser = HTMLTableParser()
+def _read_html_table(table_content: str):
+    """Read HTML table into DataFrame."""
     try:
-        parser.feed(table_content)
+        tables = pd.read_html(StringIO(table_content))
+        if not tables:
+            return None
+        df = tables[0]
+        if df.columns[0] == 0 and len(df.columns) == 1:
+            return None
+        return df
     except Exception:
         return None
 
-    if not parser.tables:
+
+def _clean_for_json(value):
+    """Convert pandas values to JSON-serializable types."""
+    if value is None or (isinstance(value, float) and math.isnan(value)):
         return None
+    if isinstance(value, float) and value.is_integer():
+        return int(value)
+    return value
 
-    table = parser.tables[0]
-    headers = table.get("headers", [])
-    rows = table.get("rows", [])
 
-    if not headers:
+def markdown_table_to_json(table_content: str) -> list[dict]:
+    """Convert a markdown table to a JSON-serializable list of dictionaries.
+
+    Each row becomes a dictionary with column names as keys.
+    Numeric values are automatically converted to int/float.
+
+    Args:
+        table_content: The markdown table content as a string.
+
+    Returns:
+        A list of dictionaries, one per data row.
+
+    Example:
+        >>> table = '''
+        ... | Name | Score |
+        ... |------|-------|
+        ... | Alice | 100 |
+        ... | Bob | 95 |
+        ... '''
+        >>> markdown_table_to_json(table)
+        [{'Name': 'Alice', 'Score': 100}, {'Name': 'Bob', 'Score': 95}]
+
+    """
+    df = _read_markdown_table(table_content)
+    if df.empty:
+        return []
+    records = df.to_dict(orient="records")
+    return [{k: _clean_for_json(v) for k, v in record.items()} for record in records]
+
+
+def html_table_to_json(table_content: str) -> list[dict] | None:
+    """Convert an HTML table to a JSON-serializable list of dictionaries.
+
+    Each row becomes a dictionary with column names as keys.
+    Numeric values are automatically converted to int/float.
+
+    Args:
+        table_content: The HTML table content as a string.
+
+    Returns:
+        A list of dictionaries, one per data row, or None if no valid table found.
+
+    Example:
+        >>> html = '<table><thead><tr><th>Name</th><th>Age</th></tr></thead><tbody><tr><td>Alice</td><td>30</td></tr></tbody></table>'
+        >>> html_table_to_json(html)
+        [{'Name': 'Alice', 'Age': 30}]
+
+    """
+    df = _read_html_table(table_content)
+    if df is None or df.empty:
         return None
-
-    return _rows_to_json(headers, rows)
+    records = df.to_dict(orient="records")
+    return [{k: _clean_for_json(v) for k, v in record.items()} for record in records]
