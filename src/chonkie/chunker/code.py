@@ -6,7 +6,7 @@ This module provides a CodeChunker class for splitting code into chunks of a spe
 
 from bisect import bisect_left
 from itertools import accumulate
-from typing import TYPE_CHECKING, Any, Literal, get_args
+from typing import TYPE_CHECKING, Any, Literal, cast, get_args
 
 from chonkie.chunker.base import BaseChunker
 from chonkie.logger import get_logger
@@ -77,15 +77,11 @@ class CodeChunker(BaseChunker):
             self.magika = Magika()
             self.parser = None
         else:
-            from tree_sitter_language_pack import get_parser
+            from tree_sitter_language_pack import SupportedLanguage, get_parser
 
             try:
-                self.parser = get_parser(language)
+                self.parser = get_parser(cast(SupportedLanguage, language))
             except LookupError as e:
-                from tree_sitter_language_pack import (
-                    SupportedLanguage,
-                )
-
                 raise ValueError(
                     f"Unsupported language '{language}'. "
                     f"Supported languages are: {list(get_args(SupportedLanguage))}. "
