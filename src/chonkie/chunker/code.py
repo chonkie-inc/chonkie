@@ -6,7 +6,7 @@ This module provides a CodeChunker class for splitting code into chunks of a spe
 
 from bisect import bisect_left
 from itertools import accumulate
-from typing import TYPE_CHECKING, Any, Literal, Union
+from typing import TYPE_CHECKING, Any, Literal, get_args
 
 from chonkie.chunker.base import BaseChunker
 from chonkie.logger import get_logger
@@ -34,9 +34,9 @@ class CodeChunker(BaseChunker):
 
     def __init__(
         self,
-        tokenizer: Union[str, TokenizerProtocol] = "character",
+        tokenizer: str | TokenizerProtocol = "character",
         chunk_size: int = 2048,
-        language: Union[Literal["auto"], Any] = "auto",
+        language: Literal["auto"] | str = "auto",
         include_nodes: bool = False,
     ) -> None:
         """Initialize a CodeChunker object.
@@ -81,15 +81,14 @@ class CodeChunker(BaseChunker):
 
             try:
                 self.parser = get_parser(language)
-            except ValueError as e:
+            except LookupError as e:
                 from tree_sitter_language_pack import (
-                    manifest_languages,  # type: ignore[attr-defined]
+                    SupportedLanguage,
                 )
 
-                supported = ", ".join(sorted(manifest_languages()))
                 raise ValueError(
                     f"Unsupported language '{language}'. "
-                    f"Supported languages are: {supported}. "
+                    f"Supported languages are: {list(get_args(SupportedLanguage))}. "
                     "Or set language='auto'."
                 ) from e
 
