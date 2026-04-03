@@ -94,13 +94,14 @@ code = [
 neural = ["transformers>=4.0.0", "torch>=2.0.0, <3.0"]
 
 # Optional dependencies for the embeddings
-
 model2vec = ["tokenizers>=0.16.0", "model2vec>=0.7.0", "numpy>=2.0.0, <3.0"]
 
 st = ["tokenizers>=0.16.0", "sentence-transformers>=3.0.0", "accelerate>=1.6.0"]
 openai = ["tiktoken>=0.5.0", "openai>=1.0.0", "pydantic>=2.0.0"]
 
 semantic = ["tokenizers>=0.16.0", "model2vec>=0.3.0"]
+
+teraflopai = ["teraflopai>=0.1.0"]
 
 gemini = ["pydantic>=2.0.0", "google-genai>=1.0.0"]
 azure-openai = [
@@ -167,6 +168,7 @@ all = [
     "chonkie[elastic]",
     "chonkie[milvus]",
     "chonkie[genie]",
+    "chonkie[teraflopai]",
 ]
 dev = [
     "datasets>=1.14.0",
