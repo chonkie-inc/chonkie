@@ -3,7 +3,7 @@
 import os
 import re
 from dataclasses import dataclass
-from typing import Iterator, Literal, Optional, Union
+from typing import Iterator, Optional, Union
 
 from chonkie.utils import Hubbie
 
@@ -15,17 +15,15 @@ class RecursiveLevel:
     Attributes:
         whitespace (bool): Whether to use whitespace as a delimiter.
         delimiters (Optional[Union[str, list[str]]]): Custom delimiters for chunking.
-        include_delim (Optional[Literal["prev", "next"]]): Whether to include the delimiter at all, or in the previous chunk, or the next chunk.
-        pattern (Optional[str]): Regex pattern for advanced splitting/extraction.
-        pattern_mode (Literal["split", "extract"]): Whether to split on pattern matches or extract pattern matches.
+        include_delim (Optional[str]): Whether to include the delimiter in the previous chunk ("prev"), next chunk ("next"), or not at all (None).
+        pattern (Optional[str]): Regex pattern for splitting. Matches are treated as delimiters.
 
     """
 
     delimiters: Optional[Union[str, list[str]]] = None
     whitespace: bool = False
-    include_delim: Optional[Literal["prev", "next"]] = "prev"
+    include_delim: Optional[str] = "prev"
     pattern: Optional[str] = None
-    pattern_mode: Literal["split", "extract"] = "split"
 
     def _validate_fields(self) -> None:
         """Validate all fields have legal values."""
@@ -51,13 +49,18 @@ class RecursiveLevel:
         if self.pattern is not None:
             if not isinstance(self.pattern, str) or len(self.pattern) == 0:
                 raise ValueError("Pattern must be a non-empty string.")
+            if len(self.pattern) > 1024:
+                raise ValueError("Regex pattern is too long (max 1024 characters)")
+            if re.search(r"\\[1-9]", self.pattern):
+                raise ValueError("Regex backreferences are not supported for safety reasons")
+            if re.search(r"\((?:[^()\\]|\\.)*[+*](?:[^()\\]|\\.)*\)[+*{]", self.pattern):
+                raise ValueError(
+                    "Regex pattern appears to use nested quantifiers that may cause excessive backtracking",
+                )
             try:
                 re.compile(self.pattern)
             except re.error as e:
                 raise ValueError(f"Invalid regex pattern: {e}") from e
-
-        if self.pattern_mode not in ["split", "extract"]:
-            raise ValueError("pattern_mode must be either 'split' or 'extract'.")
 
     def __post_init__(self) -> None:
         """Validate attributes."""
@@ -68,7 +71,7 @@ class RecursiveLevel:
         return (
             f"RecursiveLevel(delimiters={self.delimiters}, "
             f"whitespace={self.whitespace}, include_delim={self.include_delim}, "
-            f"pattern={self.pattern}, pattern_mode={self.pattern_mode})"
+            f"pattern={self.pattern})"
         )
 
     def to_dict(self) -> dict:

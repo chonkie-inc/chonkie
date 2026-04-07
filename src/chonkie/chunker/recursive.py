@@ -118,90 +118,62 @@ class RecursiveChunker(BaseChunker):
         # The estimate was only used as an optimization hint
         return self.tokenizer.count_tokens(text)
 
-    def _validate_regex_safety(self, pattern: str) -> None:
-        """Apply conservative safety checks for user-provided regex patterns."""
-        if len(pattern) > 1024:
-            raise ValueError("Regex pattern is too long (max 1024 characters)")
-
-        # Backreferences can be expensive and are not required for chunk splitting.
-        if re.search(r"\\[1-9]", pattern):
-            raise ValueError("Regex backreferences are not supported for safety reasons")
-
-        # Heuristic guard against catastrophic backtracking like (a+)+ or (.*)+.
-        if re.search(r"\((?:[^()\\]|\\.)*[+*](?:[^()\\]|\\.)*\)[+*{]", pattern):
-            raise ValueError(
-                "Regex pattern appears to use nested quantifiers that may cause excessive backtracking",
-            )
+    @lru_cache(maxsize=256)
+    def _compile_pattern(self, pattern: str) -> re.Pattern:
+        """Compile and cache a regex pattern. Safety validation is done at RecursiveLevel init."""
+        return re.compile(pattern)
 
     def _split_text_pattern(self, text: str, recursive_level: RecursiveLevel) -> list[str]:
-        """Split text using regex pattern.
+        """Split text using a regex pattern, treating matches as delimiters.
 
         Args:
             text: Text to split
-            recursive_level: RecursiveLevel with pattern and pattern_mode set
+            recursive_level: RecursiveLevel with pattern set
 
         Returns:
-            List of text splits
-
-        Raises:
-            ValueError: If regex pattern is invalid
+            List of contiguous text splits that together reconstruct the full input.
 
         """
         if not recursive_level.pattern:
             return []
 
-        try:
-            # Compile the pattern to validate it
-            pattern = recursive_level.pattern
-            self._validate_regex_safety(pattern)
-            compiled = re.compile(pattern)
-        except re.error as e:
-            raise ValueError(f"Invalid regex pattern '{recursive_level.pattern}': {e}") from e
-
+        compiled = self._compile_pattern(recursive_level.pattern)
         include_mode = recursive_level.include_delim or "prev"
-        pattern_mode = recursive_level.pattern_mode or "split"
 
-        if pattern_mode == "extract":
-            # Extract full matches to avoid tuple outputs with capturing groups.
-            splits = [m.group(0) for m in compiled.finditer(text) if m.group(0)]
-        else:
-            # Split mode: reconstruct from match spans to avoid captured-group index shifts.
-            splits = []
-            cursor = 0
-            carry_next_delim = ""
-            for match in compiled.finditer(text):
-                start, end = match.span()
-                if start < cursor:
-                    continue
+        splits: list[str] = []
+        cursor = 0
+        carry_next_delim = ""
+        for match in compiled.finditer(text):
+            start, end = match.span()
+            if start < cursor:
+                continue
 
-                content = text[cursor:start]
-                delim = text[start:end]
+            content = text[cursor:start]
+            delim = text[start:end]
 
-                if include_mode == "prev":
-                    if content:
-                        splits.append(content + delim)
-                    elif splits:
-                        splits[-1] += delim
-                    elif delim:
-                        splits.append(delim)
-                elif include_mode == "next":
-                    if content or carry_next_delim:
-                        splits.append(carry_next_delim + content)
-                    carry_next_delim = delim
-                else:
-                    if content:
-                        splits.append(content)
+            if include_mode == "prev":
+                if content:
+                    splits.append(content + delim)
+                elif splits:
+                    splits[-1] += delim
+                elif delim:
+                    splits.append(delim)
+            elif include_mode == "next":
+                if content or carry_next_delim:
+                    splits.append(carry_next_delim + content)
+                carry_next_delim = delim
+            else:
+                if content:
+                    splits.append(content)
 
-                cursor = end
+            cursor = end
 
-            tail = text[cursor:]
-            if include_mode == "next":
-                if tail or carry_next_delim:
-                    splits.append(carry_next_delim + tail)
-            elif tail:
-                splits.append(tail)
-
-        # Keep all splits; tiny segments are merged later to preserve full reconstruction.
+        tail = text[cursor:]
+        if include_mode == "next":
+            if tail or carry_next_delim:
+                splits.append(carry_next_delim + tail)
+        elif tail:
+            splits.append(tail)
 
         return splits
 

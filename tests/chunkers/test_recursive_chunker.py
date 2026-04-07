@@ -440,7 +440,6 @@ def regex_paragraph_rules() -> RecursiveRules:
     """Return rules using regex pattern for paragraph splitting."""
     paragraph_level = RecursiveLevel(
         pattern=r"\n\n|\r\n\r\n",  # Match paragraph breaks
-        pattern_mode="split",
         include_delim="prev",
     )
     return RecursiveRules(levels=[paragraph_level])
@@ -451,7 +450,6 @@ def regex_sentence_rules() -> RecursiveRules:
     """Return rules using regex pattern for sentence splitting."""
     sentence_level = RecursiveLevel(
         pattern=r"(?<=[.!?])\s+",  # Split after sentence-ending punctuation
-        pattern_mode="split",
         include_delim="prev",
     )
     return RecursiveRules(levels=[sentence_level])
@@ -464,7 +462,6 @@ def test_recursive_chunker_regex_split_basic() -> None:
         levels=[
             RecursiveLevel(
                 pattern=r"\.\s+",  # Split on period followed by whitespace
-                pattern_mode="split",
                 include_delim="prev",
             )
         ]
@@ -486,7 +483,6 @@ def test_recursive_chunker_regex_split_include_next() -> None:
         levels=[
             RecursiveLevel(
                 pattern=r"\.\s+",  # Split on period followed by whitespace
-                pattern_mode="split",
                 include_delim="next",
             )
         ]
@@ -500,28 +496,6 @@ def test_recursive_chunker_regex_split_include_next() -> None:
     assert chunks[1].text.startswith(". ")
 
 
-def test_recursive_chunker_regex_extract_mode() -> None:
-    """Test regex extract mode - extracts pattern matches."""
-    text = "Contact: email@example.com and another@test.org for info."
-    rules = RecursiveRules(
-        levels=[
-            RecursiveLevel(
-                pattern=r"[\w.+-]+@[\w-]+\.[\w.-]+",  # Email pattern
-                pattern_mode="extract",
-            )
-        ]
-    )
-    # Use small chunk_size to prevent merging of extracted matches
-    chunker = RecursiveChunker(rules=rules, chunk_size=20, min_characters_per_chunk=1)
-    chunks = chunker.chunk(text)
-
-    # Should extract the email addresses
-    assert len(chunks) == 2
-    texts = [c.text for c in chunks]
-    assert "email@example.com" in texts
-    assert "another@test.org" in texts
-
-
 def test_recursive_chunker_regex_split_with_capturing_groups_reconstructs() -> None:
     """Split mode should handle user capturing groups without corrupting text."""
     text = "One! Two? Three."
@@ -529,7 +503,6 @@ def test_recursive_chunker_regex_split_with_capturing_groups_reconstructs() -> N
         levels=[
             RecursiveLevel(
                 pattern=r"([!?]\s+)",  # User pattern with an internal capturing group
-                pattern_mode="split",
                 include_delim="prev",
             )
         ]
@@ -538,24 +511,6 @@ def test_recursive_chunker_regex_split_with_capturing_groups_reconstructs() -> N
     chunks = chunker.chunk(text)
 
     assert "".join(chunk.text for chunk in chunks) == text
-
-
-def test_recursive_chunker_regex_extract_mode_with_capturing_groups() -> None:
-    """Extract mode should return full matches, not tuple fragments from capture groups."""
-    text = "Order #123 and #456 are done."
-    rules = RecursiveRules(
-        levels=[
-            RecursiveLevel(
-                pattern=r"#(\d+)",
-                pattern_mode="extract",
-            )
-        ]
-    )
-    # Keep chunk_size tiny so extracted matches are not merged together.
-    chunker = RecursiveChunker(rules=rules, chunk_size=1, min_characters_per_chunk=1)
-    chunks = chunker.chunk(text)
-
-    assert [c.text for c in chunks] == ["#123", "#456"]
 
 
 def test_recursive_chunker_regex_paragraph_reconstruction(
@@ -580,7 +535,6 @@ def test_recursive_chunker_regex_split_does_not_drop_small_splits() -> None:
         levels=[
             RecursiveLevel(
                 pattern=r"\n\n",
-                pattern_mode="split",
                 include_delim="prev",
             )
         ]
@@ -597,7 +551,6 @@ def test_recursive_chunker_regex_indices(sample_text: str) -> None:
         levels=[
             RecursiveLevel(
                 pattern=r"\n\n",
-                pattern_mode="split",
                 include_delim="prev",
             )
         ]
@@ -619,7 +572,6 @@ def test_recursive_chunker_regex_token_count() -> None:
         levels=[
             RecursiveLevel(
                 pattern=r"\n\n",
-                pattern_mode="split",
                 include_delim="prev",
             )
         ]
@@ -635,26 +587,16 @@ def test_recursive_chunker_regex_invalid_pattern() -> None:
     with pytest.raises(ValueError, match="Invalid regex pattern"):
         RecursiveLevel(
             pattern=r"[invalid",  # Unclosed bracket
-            pattern_mode="split",
         )
 
 
 def test_recursive_chunker_regex_nested_quantifier_rejected() -> None:
-    """Potentially catastrophic nested quantifiers should be rejected."""
-    text = "aaaaaaaaaaaaaaaaaaaa"
-    rules = RecursiveRules(
-        levels=[
-            RecursiveLevel(
-                pattern=r"(a+)+",
-                pattern_mode="split",
-                include_delim="prev",
-            )
-        ]
-    )
-    chunker = RecursiveChunker(rules=rules, chunk_size=128, min_characters_per_chunk=1)
-
+    """Potentially catastrophic nested quantifiers should be rejected at RecursiveLevel init."""
     with pytest.raises(ValueError, match="nested quantifiers"):
-        chunker.chunk(text)
+        RecursiveLevel(
+            pattern=r"(a+)+",
+            include_delim="prev",
+        )
 
 
 def test_recursive_chunker_regex_and_delimiters_mutually_exclusive() -> None:
@@ -663,7 +605,6 @@ def test_recursive_chunker_regex_and_delimiters_mutually_exclusive() -> None:
         RecursiveLevel(
             pattern=r"\n\n",
             delimiters=["\n\n"],  # Both pattern and delimiters set
-            pattern_mode="split",
         )
 
 
@@ -673,7 +614,6 @@ def test_recursive_chunker_regex_and_whitespace_mutually_exclusive() -> None:
         RecursiveLevel(
             pattern=r"\s+",
             whitespace=True,  # Both pattern and whitespace set
-            pattern_mode="split",
         )
 
 
@@ -684,12 +624,10 @@ def test_recursive_chunker_regex_multilevel() -> None:
         levels=[
             RecursiveLevel(
                 pattern=r"\n\n",  # First split on paragraphs
-                pattern_mode="split",
                 include_delim="prev",
             ),
             RecursiveLevel(
                 pattern=r"(?<=[.!?])\s+",  # Then split on sentences
-                pattern_mode="split",
                 include_delim="prev",
             ),
         ]
