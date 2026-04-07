@@ -70,10 +70,15 @@ chunker = TeraflopAIChunker(client=client)
 ### Single Text Chunking
 
 ```python
-text = """UNITED STATES of America, Appellee, v. Daniel Dee VEON, Appellant.
-No. 72-1889.
-United States Court of Appeals, Ninth Circuit.
-Feb. 12, 1973."""
+text = """
+Global warming refers to the long-term increase in Earth’s average surface temperature due to human activities, primarily the emission of greenhouse gases such as carbon dioxide and methane. These gases trap heat in the atmosphere, leading to significant changes in climate patterns across the globe.
+
+Scientists have observed rising temperatures, melting polar ice caps, and increasing sea levels, all of which pose serious risks to ecosystems and human societies. Extreme weather events such as hurricanes, droughts, and heatwaves are becoming more frequent and intense as a result of these changes.
+
+Governments and organizations around the world are working to reduce emissions, transition to renewable energy sources, and promote sustainable practices. However, global cooperation and immediate action are essential to mitigate the long-term impacts and protect future generations from the most severe consequences of climate change.
+
+Public awareness and individual responsibility also play a crucial role in addressing global warming. Simple actions like reducing energy consumption, minimizing waste, and supporting environmentally friendly initiatives can collectively make a meaningful difference in slowing down this global crisis.
+"""
 
 chunks = chunker.chunk(text)
 
