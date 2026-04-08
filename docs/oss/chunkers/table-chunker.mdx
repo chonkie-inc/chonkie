@@ -198,7 +198,7 @@ const table = `
 `;
 
 const chunker = await TableChunker.create({ tokenizer: "row", chunkSize: 3 });
-const chunks = chunker.chunk(table);
+const chunks = await chunker.chunk(table);
 for (const chunk of chunks) {
   console.log(chunk.text);
 }
@@ -217,7 +217,7 @@ const table = `
 `;
 
 const chunker = await TableChunker.create({ tokenizer: "character", chunkSize: 16 });
-const chunks = chunker.chunk(table);
+const chunks = await chunker.chunk(table);
 for (const chunk of chunks) {
   console.log(chunk.text);
 }
@@ -242,7 +242,7 @@ const htmlTable = `
 
 // HTML tables are chunked while preserving <table>, <thead>, and <tbody> tags
 const chunker = await TableChunker.create({ tokenizer: "row", chunkSize: 2 });
-const chunks = chunker.chunk(htmlTable);
+const chunks = await chunker.chunk(htmlTable);
 
 for (const chunk of chunks) {
   console.log(`--- HTML Chunk ---\n${chunk.text}\n`);

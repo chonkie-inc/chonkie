@@ -144,7 +144,7 @@ const texts = [
   "First document. With multiple sentences.",
   "Second document. Also with sentences. And more context."
 ];
-const batchChunks = chunker.chunkBatch(texts);
+const batchChunks = await chunker.chunkBatch(texts);
 
 for (const docChunks of batchChunks) {
   for (const chunk of docChunks) {

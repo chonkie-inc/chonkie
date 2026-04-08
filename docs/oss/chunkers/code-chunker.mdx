@@ -208,7 +208,7 @@ class MyClass:
     def __init__(self):
         self.value = 42
 `;
-const chunks = chunker.chunk(code);
+const chunks = await chunker.chunk(code);
 
 for (const chunk of chunks) {
   console.log(`Chunk text: ${chunk.text}`);
@@ -241,7 +241,7 @@ const codes = [
   "def func1():\n    pass",
   "const x = 10;\nfunction add(a, b) { return a + b; }"
 ];
-const batchChunks = chunker.chunkBatch(codes);
+const batchChunks = await chunker.chunkBatch(codes);
 
 for (const docChunks of batchChunks) {
   for (const chunk of docChunks) {

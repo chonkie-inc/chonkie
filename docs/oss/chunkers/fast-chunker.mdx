@@ -131,7 +131,7 @@ const chunker = await FastChunker.create({
 
 // Chunk your text
 const text = "Your long document text here...";
-const chunks = chunker.chunk(text);
+const chunks = await chunker.chunk(text);
 
 // Access chunk information
 for (const chunk of chunks) {
