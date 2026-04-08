@@ -3,6 +3,7 @@
 from .base import BaseHandshake
 from .chroma import ChromaHandshake
 from .elastic import ElasticHandshake
+from .lancedb import LanceDBHandshake
 from .milvus import MilvusHandshake
 from .mongodb import MongoDBHandshake
 from .pgvector import PgvectorHandshake
@@ -15,6 +16,7 @@ __all__ = [
     "BaseHandshake",
     "ChromaHandshake",
     "ElasticHandshake",
+    "LanceDBHandshake",
     "MilvusHandshake",
     "MongoDBHandshake",
     "PgvectorHandshake",

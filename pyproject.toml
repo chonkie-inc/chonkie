@@ -129,6 +129,7 @@ pinecone = ["pinecone"]
 mongodb = ["pymongo"]
 elastic = ["elasticsearch>=8.0.0"]
 milvus = ["pymilvus>=2.1.0"]
+lancedb = ["lancedb>=0.4.0"]
 
 # Optional dependencies for the genie
 genie = ["pydantic>=2.0.0", "google-genai>=1.0.0"]
@@ -167,6 +168,7 @@ all = [
     "chonkie[mongodb]",
     "chonkie[elastic]",
     "chonkie[milvus]",
+    "chonkie[lancedb]",
     "chonkie[genie]",
     "chonkie[teraflopai]",
 ]
