@@ -24,7 +24,7 @@ from .utils import generate_random_collection_name
 logger = get_logger(__name__)
 
 if TYPE_CHECKING:
-    import lancedb as lancedb_module
+    import lancedb as lancedb_module  # type: ignore[import]
 
 
 @handshake("lancedb")
@@ -63,7 +63,7 @@ class LanceDBHandshake(BaseHandshake):
         super().__init__()
 
         try:
-            import lancedb
+            import lancedb  # type: ignore[import]
         except ImportError as ie:
             raise ImportError(
                 "LanceDB is not installed. Please install it with `pip install chonkie[lancedb]`.",
@@ -98,16 +98,14 @@ class LanceDBHandshake(BaseHandshake):
         if self.table_name not in existing_tables:
             import pyarrow as pa
 
-            schema = pa.schema(
-                [
-                    pa.field("id", pa.utf8()),
-                    pa.field("text", pa.utf8()),
-                    pa.field("start_index", pa.int32()),
-                    pa.field("end_index", pa.int32()),
-                    pa.field("token_count", pa.int32()),
-                    pa.field("vector", pa.list_(pa.float32(), self.dimension)),
-                ]
-            )
+            schema = pa.schema([
+                pa.field("id", pa.utf8()),
+                pa.field("text", pa.utf8()),
+                pa.field("start_index", pa.int32()),
+                pa.field("end_index", pa.int32()),
+                pa.field("token_count", pa.int32()),
+                pa.field("vector", pa.list_(pa.float32(), self.dimension)),
+            ])
             self.table = self.connection.create_table(self.table_name, schema=schema)
         else:
             self.table = self.connection.open_table(self.table_name)
@@ -187,12 +185,7 @@ class LanceDBHandshake(BaseHandshake):
         if query is not None:
             embedding = self.embedding_model.embed(query).tolist()
 
-        results = (
-            self.table.search(embedding)
-            .metric("cosine")
-            .limit(limit)
-            .to_list()
-        )
+        results = self.table.search(embedding).metric("cosine").limit(limit).to_list()
 
         matches = [
             {

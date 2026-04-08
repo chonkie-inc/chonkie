@@ -34,10 +34,12 @@ def mock_embeddings():
 
             def embed(self, text):
                 import numpy as np
+
                 return np.array([0.1] * 512, dtype=np.float32)
 
             def embed_batch(self, texts):
                 import numpy as np
+
                 return [np.array([0.1] * 512, dtype=np.float32) for _ in texts]
 
             def get_tokenizer(self):
@@ -55,6 +57,7 @@ def mock_embeddings():
 def real_embeddings() -> BaseEmbeddings:
     """Load the actual default embedding model (skipped if unavailable)."""
     import os
+
     os.environ["HF_HUB_DISABLE_PROGRESS_BARS"] = "1"
     try:
         return AutoEmbeddings.get_embeddings(DEFAULT_EMBEDDING_MODEL)
@@ -118,16 +121,14 @@ def test_lancedb_handshake_init_existing_table(real_embeddings: BaseEmbeddings) 
     import pyarrow as pa
 
     conn = lancedb.connect("memory://")
-    schema = pa.schema(
-        [
-            pa.field("id", pa.utf8()),
-            pa.field("text", pa.utf8()),
-            pa.field("start_index", pa.int32()),
-            pa.field("end_index", pa.int32()),
-            pa.field("token_count", pa.int32()),
-            pa.field("vector", pa.list_(pa.float32(), real_embeddings.dimension)),
-        ]
-    )
+    schema = pa.schema([
+        pa.field("id", pa.utf8()),
+        pa.field("text", pa.utf8()),
+        pa.field("start_index", pa.int32()),
+        pa.field("end_index", pa.int32()),
+        pa.field("token_count", pa.int32()),
+        pa.field("vector", pa.list_(pa.float32(), real_embeddings.dimension)),
+    ])
     conn.create_table("existing-table", schema=schema)
 
     handshake = LanceDBHandshake(
@@ -193,9 +194,7 @@ def test_lancedb_handshake_write_upsert(
     assert len(handshake.table.to_pandas()) == 1
 
     # Write again — same text → same ID → upsert
-    modified = Chunk(
-        text=sample_chunk.text, start_index=1, end_index=23, token_count=6
-    )
+    modified = Chunk(text=sample_chunk.text, start_index=1, end_index=23, token_count=6)
     handshake.write(modified)
 
     rows = handshake.table.to_pandas()
@@ -274,14 +273,10 @@ def test_lancedb_handshake_search(
 
 def test_lancedb_handshake_search_no_query_raises() -> None:
     """Test that search raises ValueError when neither query nor embedding is provided."""
-    conn = lancedb.connect("memory://")
-    handshake = LanceDBHandshake.__new__(LanceDBHandshake)
-    # Manually set the minimal attributes needed
     with pytest.raises(ValueError, match="Either query or embedding must be provided"):
-        # Call search logic directly via an initialized instance
-        conn2 = lancedb.connect("memory://")
+        conn = lancedb.connect("memory://")
         h = LanceDBHandshake(
-            connection=conn2,
+            connection=conn,
             table_name="test-search-err",
             embedding_model="minishlab/potion-retrieval-32M",
         )
