@@ -7,6 +7,8 @@ from unittest.mock import MagicMock, patch
 import numpy as np
 import pytest
 
+from tests.embeddings.utils import make_mock_catsu_client
+
 # Try to import CatsuEmbeddings, skip all tests if not available
 try:
     from chonkie.embeddings.catsu import CatsuEmbeddings, CatsuTokenizerWrapper
@@ -18,26 +20,7 @@ except ImportError:
 
 @pytest.fixture
 def mock_catsu_client():
-    """Fixture to create a mock Catsu client."""
-    mock_client = MagicMock()
-
-    # Mock embed response
-    mock_embed_response = MagicMock()
-    mock_embed_response.to_numpy.return_value = np.random.rand(2, 1024).astype(np.float32)
-    mock_client.embed.return_value = mock_embed_response
-
-    # Mock list_models response
-    mock_model_info = MagicMock()
-    mock_model_info.name = "voyage-3"
-    mock_model_info.dimensions = 1024
-    mock_client.list_models.return_value = [mock_model_info]
-
-    # Mock tokenize response
-    mock_tokenize_response = MagicMock()
-    mock_tokenize_response.token_count = 10
-    mock_client.tokenize.return_value = mock_tokenize_response
-
-    return mock_client
+    return make_mock_catsu_client(dimension=1024, model_name="voyage-3")
 
 
 @pytest.fixture
@@ -105,7 +88,8 @@ def test_initialization_with_config_params(mock_catsu_client) -> None:
         call_kwargs = mock_client_class.call_args[1]
         assert call_kwargs["max_retries"] == 5
         assert call_kwargs["timeout"] == 60
-        assert call_kwargs["verbose"] is True
+        assert "verbose" not in call_kwargs
+        assert embeddings._verbose is True
         assert embeddings._batch_size == 64
 
 

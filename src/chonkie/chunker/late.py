@@ -1,7 +1,7 @@
 """Module containing the LateChunker class."""
 
 import os
-from typing import Any, Optional, Union
+from typing import Any, Optional, Union, cast
 
 import numpy as np
 
@@ -10,6 +10,7 @@ from chonkie.chunker.recursive import RecursiveChunker
 from chonkie.embeddings.sentence_transformer import SentenceTransformerEmbeddings
 from chonkie.logger import get_logger
 from chonkie.pipeline import chunker
+from chonkie.tokenizer import TokenizerProtocol
 from chonkie.types import Chunk, RecursiveRules
 
 logger = get_logger(__name__)
@@ -67,7 +68,7 @@ class LateChunker(RecursiveChunker):
 
         # Initialize the RecursiveChunker with the embedding_model's tokenizer
         super().__init__(
-            tokenizer=self.embedding_model.get_tokenizer(),
+            tokenizer=cast(TokenizerProtocol, self.embedding_model.get_tokenizer()),
             chunk_size=chunk_size,
             rules=rules,
             min_characters_per_chunk=min_characters_per_chunk,
@@ -148,7 +149,7 @@ class LateChunker(RecursiveChunker):
         token_embeddings = self.embedding_model.embed_as_tokens(text)
 
         # Get the token_counts for all the chunks
-        token_counts = [c.token_count for c in chunks]  # type: ignore[union-attr]
+        token_counts = [c.token_count for c in chunks]
 
         # If fallback was used, token_embeddings may be fewer than sum(token_counts)
         if token_embeddings.shape[0] < sum(token_counts):
@@ -180,9 +181,9 @@ class LateChunker(RecursiveChunker):
             # Note: LateChunker always returns chunks, so chunk is always a Chunk
             result.append(
                 Chunk(
-                    text=chunk.text,  # type: ignore[attr-defined]
-                    start_index=chunk.start_index,  # type: ignore[attr-defined]
-                    end_index=chunk.end_index,  # type: ignore[attr-defined]
+                    text=chunk.text,
+                    start_index=chunk.start_index,
+                    end_index=chunk.end_index,
                     token_count=token_count,
                     embedding=embedding,
                 ),

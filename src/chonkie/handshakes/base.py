@@ -1,5 +1,6 @@
 """Base class for Handshakes."""
 
+import asyncio
 from abc import ABC, abstractmethod
 from typing import (
     Any,
@@ -23,17 +24,30 @@ class BaseHandshake(ABC):
     """Abstract base class for Handshakes."""
 
     @abstractmethod
-    def write(self, chunk: Union[Chunk, list[Chunk]]) -> Any:
-        """Write a single chunk to the vector database.
+    def write(self, chunks: Union[Chunk, list[Chunk]]) -> Any:
+        """Write chunk(s) to the vector database.
 
         Args:
-            chunk (Union[Chunk, list[Chunk]]): The chunk to write.
+            chunks (Union[Chunk, list[Chunk]]): The chunk(s) to write.
 
         Returns:
             Any: The result from the database write operation.
 
         """
         raise NotImplementedError
+
+    async def awrite(self, chunk: Union[Chunk, list[Chunk]], **kwargs: Any) -> Any:
+        """Write chunks to the vector database asynchronously.
+
+        Args:
+            chunk (Union[Chunk, list[Chunk]]): The chunk(s) to write.
+            **kwargs: Additional keyword arguments.
+
+        Returns:
+            Any: The result from the database write operation.
+
+        """
+        return await asyncio.to_thread(self.write, chunk, **kwargs)
 
     def __call__(self, chunks: Union[Chunk, list[Chunk]]) -> Any:
         """Write chunks using the default batch method when the instance is called.

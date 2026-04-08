@@ -115,7 +115,7 @@ class SlumberChunker(BaseChunker):
                     "Please install it using `pip install chonkie[genie]` or use extract_mode='text'.",
                 ) from ie
 
-            class Split(BaseModel):  # type: ignore
+            class Split(BaseModel):
                 split_index: int
 
             self.Split = Split

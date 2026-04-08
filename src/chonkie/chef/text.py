@@ -2,7 +2,7 @@
 
 import os
 from pathlib import Path
-from typing import Union
+from typing import Union, cast
 
 from chonkie.logger import get_logger
 from chonkie.pipeline import chef
@@ -70,7 +70,7 @@ class TextChef(BaseChef):
 
         """
         if isinstance(path, (list, tuple)):
-            return self.process_batch(path)
+            return self.process_batch(cast("list[str | os.PathLike]", list(path)))
         elif isinstance(path, (str, Path)):
             return self.process(path)
         else:

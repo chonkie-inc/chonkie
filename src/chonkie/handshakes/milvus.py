@@ -44,13 +44,13 @@ class MilvusHandshake(BaseHandshake):
     def __init__(
         self,
         client: Optional[Any] = None,
-        uri: Optional[str] = None,
+        uri: str = "",
         collection_name: Union[str, Literal["random"]] = "random",
         embedding_model: Union[str, BaseEmbeddings] = "minishlab/potion-retrieval-32M",
         host: str = "localhost",
         port: str = "19530",
-        user: Optional[str] = "",
-        api_key: Optional[str] = "",
+        user: str = "",
+        api_key: str = "",
         alias: str = "default",
         **kwargs: Any,
     ) -> None:
@@ -81,6 +81,9 @@ class MilvusHandshake(BaseHandshake):
 
         # 1. Establish connection using the ORM's global connection manager
         if client is not None:
+            assert isinstance(client, pymilvus.MilvusClient), (
+                "Client must be an instance of pymilvus.MilvusClient"
+            )
             self.client = client
         else:
             self.client = pymilvus.MilvusClient(
@@ -189,16 +192,19 @@ class MilvusHandshake(BaseHandshake):
     def search(
         self,
         query: Optional[str] = None,
-        embedding: Optional[Union[list[float], "np.ndarray"]] = None,
+        embedding: Optional[Union[list[float], np.ndarray]] = None,
         limit: int = 5,
     ) -> list[dict[str, Any]]:
         """Retrieve the top_k most similar chunks to the query."""
         if embedding is None and query is None:
             raise ValueError("Either 'query' or 'embedding' must be provided.")
 
+        query_vectors: list[list[float]]
+
         if query:
             query_embedding = self.embedding_model.embed(query)
             # Milvus expects a list of vectors for searching
+            assert isinstance(query_embedding, np.ndarray), "Embedding must be a numpy array"
             query_vectors = [query_embedding.tolist()]
         else:
             # Ensure embedding is in the correct format (list of lists)
@@ -206,9 +212,14 @@ class MilvusHandshake(BaseHandshake):
                 embedding = embedding.tolist()
             # If it's a flat list, wrap it in another list
             if embedding and len(embedding) > 0 and isinstance(embedding[0], float):
+                assert isinstance(embedding, list), "Embedding must be a list of floats"
                 query_vectors = [embedding]
             else:
-                query_vectors = embedding  # type: ignore
+                assert embedding is not None, "Embedding cannot be None"
+                assert isinstance(embedding, list) and all(
+                    isinstance(vec, list) for vec in embedding
+                ), ("Embedding must be a list of lists of floats.",)
+                query_vectors = [embedding]
 
         # Default search parameters for HNSW index
         search_params = {"metric_type": "L2", "params": {"ef": 64}}

@@ -93,9 +93,14 @@ class QdrantHandshake(BaseHandshake):
 
         # Initialize the embedding model
         if isinstance(embedding_model, str):
-            self.embedding_model = AutoEmbeddings.get_embeddings(embedding_model)
-        else:
-            self.embedding_model = embedding_model
+            embedding_model = AutoEmbeddings.get_embeddings(embedding_model)
+        # enforce linting
+        if not isinstance(embedding_model, BaseEmbeddings):
+            raise ValueError(
+                "The provided embedding model is not a valid BaseEmbeddings instance."
+            )
+
+        self.embedding_model = embedding_model
 
         self.dimension = self.embedding_model.dimension
 
@@ -152,7 +157,7 @@ class QdrantHandshake(BaseHandshake):
             points.append(
                 PointStruct(
                     id=self._generate_id(index, chunk),
-                    vector=self.embedding_model.embed(chunk.text).tolist(),  # type: ignore[arg-type] # Since this passes a numpy array, we need to convert it to a list
+                    vector=self.embedding_model.embed(chunk.text).tolist(),
                     payload=self._generate_payload(chunk),
                 ),
             )

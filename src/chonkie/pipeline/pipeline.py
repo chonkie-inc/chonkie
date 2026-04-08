@@ -1,5 +1,6 @@
 """Core Pipeline class for chonkie."""
 
+import asyncio
 import inspect
 import json
 import os
@@ -417,6 +418,41 @@ class Pipeline:
 
         return data  # type: ignore[return-value]
 
+    async def arun(
+        self,
+        texts: Optional[Union[str, list[str]]] = None,
+    ) -> Union[Document, list[Document]]:
+        """Run the pipeline asynchronously and return the final result.
+
+        Args:
+            texts: Optional text input.
+
+        Returns:
+            Document or list[Document] with processed chunks.
+
+        """
+        if not self._steps:
+            raise ValueError("Pipeline has no steps to execute")
+
+        ordered_steps = self._reorder_steps()
+        self._validate_pipeline(ordered_steps, has_text_input=(texts is not None))
+
+        # handle empty list input gracefully (issue #460)
+        if isinstance(texts, list) and len(texts) == 0:
+            return []
+
+        data = texts
+        for i, step in enumerate(ordered_steps):
+            if texts is not None and step["type"] == "fetch":
+                continue
+
+            try:
+                data = await self._aexecute_step(step, data)
+            except Exception as e:
+                raise RuntimeError(f"Pipeline failed at step {i + 1} ({step['type']}): {e}") from e
+
+        return data  # type: ignore[return-value]
+
     def _reorder_steps(self) -> list[dict[str, Any]]:
         """Reorder pipeline steps according to CHOMP flow.
 
@@ -487,15 +523,14 @@ class Pipeline:
                 f"Multiple process steps found ({user_process_count}). Only one chef is allowed per pipeline.",
             )
 
-    def _execute_step(self, step: dict[str, Any], input_data: Any) -> Any:
-        """Execute a single pipeline step.
+    def _prepare_step_execution(self, step: dict[str, Any]) -> tuple[Any, dict[str, Any]]:
+        """Prepare a step for execution by returning the component instance and call kwargs.
 
         Args:
             step: Step configuration dictionary
-            input_data: Input data from previous step
 
         Returns:
-            Output data from this step
+            Tuple of (component_instance, call_kwargs)
 
         """
         component_info = step["component"]
@@ -536,10 +571,36 @@ class Pipeline:
                     **init_kwargs,
                 )
 
+        return self._component_instances[component_key], call_kwargs
+
+    def _execute_step(self, step: dict[str, Any], input_data: Any) -> Any:
+        """Execute a single pipeline step.
+
+        Args:
+            step: Step configuration dictionary
+            input_data: Input data from previous step
+
+        Returns:
+            Output data from this step
+
+        """
+        component, call_kwargs = self._prepare_step_execution(step)
+
         # Execute the component
         return self._call_component(
-            self._component_instances[component_key],
-            step_type,
+            component,
+            step["type"],
+            input_data,
+            call_kwargs,
+        )
+
+    async def _aexecute_step(self, step: dict[str, Any], input_data: Any) -> Any:
+        """Execute a single pipeline step asynchronously."""
+        component, call_kwargs = self._prepare_step_execution(step)
+
+        return await self._acall_component(
+            component,
+            step["type"],
             input_data,
             call_kwargs,
         )
@@ -686,6 +747,65 @@ class Pipeline:
                 else input_data.chunks
             )
             return component.write(chunks, **kwargs)
+
+        raise ValueError(f"Unknown step type: {step_type}")
+
+    async def _acall_component(
+        self,
+        component: Any,
+        step_type: str,
+        input_data: Any,
+        kwargs: dict[str, Any],
+    ) -> Any:
+        """Call the appropriate method on a component asynchronously."""
+        if step_type == "fetch":
+            return await component.afetch(**kwargs)
+
+        if step_type == "process":
+            if isinstance(input_data, list):
+                # Use gather for list input
+                return await asyncio.gather(*[
+                    component.aprocess(item) if isinstance(item, Path) else component.aparse(item)
+                    for item in input_data
+                ])
+            return (
+                await component.aprocess(input_data)
+                if isinstance(input_data, Path)
+                else await component.aparse(input_data)
+            )
+
+        if step_type == "chunk":
+            if isinstance(input_data, list):
+                return await asyncio.gather(*[
+                    component.achunk_document(doc) for doc in input_data
+                ])
+            else:
+                return await component.achunk_document(input_data)
+
+        if step_type == "refine":
+            if isinstance(input_data, list):
+                return await asyncio.gather(*[
+                    component.arefine_document(doc) for doc in input_data
+                ])
+            else:
+                return await component.arefine_document(input_data)
+
+        if step_type == "export":
+            chunks = (
+                [c for doc in input_data for c in doc.chunks]
+                if isinstance(input_data, list)
+                else input_data.chunks
+            )
+            await component.aexport(chunks, **kwargs)
+            return input_data
+
+        if step_type == "write":
+            chunks = (
+                [c for doc in input_data for c in doc.chunks]
+                if isinstance(input_data, list)
+                else input_data.chunks
+            )
+            return await component.awrite(chunks, **kwargs)
 
         raise ValueError(f"Unknown step type: {step_type}")
 

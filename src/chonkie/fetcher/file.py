@@ -80,7 +80,7 @@ class FileFetcher(BaseFetcher):
         else:
             raise ValueError("Must provide either 'path' or 'dir'")
 
-    def fetch_file(self, dir: str | os.PathLike, name: str) -> Path:  # type: ignore[override]
+    def fetch_file(self, dir: str | os.PathLike, name: str) -> Path:
         """Given a directory and a file name, return the path to the file.
 
         NOTE: This method is mostly for uniformity across fetchers since one may require to
@@ -97,7 +97,7 @@ class FileFetcher(BaseFetcher):
         path: str | os.PathLike | None = None,
         dir: str | os.PathLike | None = None,
         ext: Optional[list[str]] = None,
-    ) -> Union[Path, list[Path]]:  # type: ignore[override]
+    ) -> Union[Path, list[Path]]:
         """Fetch a single file or files from a directory.
 
         Args:

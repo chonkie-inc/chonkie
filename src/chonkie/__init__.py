@@ -12,6 +12,7 @@ from .chunker import (
     SentenceChunker,
     SlumberChunker,
     TableChunker,
+    TeraflopAIChunker,
     TokenChunker,
 )
 from .cloud import chunker, refineries
@@ -87,6 +88,7 @@ __all__ = (
     "SentenceChunker",
     "SlumberChunker",
     "TableChunker",
+    "TeraflopAIChunker",
     "TokenChunker",
     # cloud
     "chunker",
@@ -161,6 +163,6 @@ __all__ = (
 )
 
 # This hippo grows with every release 🦛✨~
-__version__ = "1.5.6"
+__version__ = "1.6.2"
 __name__ = "chonkie"
 __author__ = "🦛 Chonkie Inc"

@@ -6,10 +6,11 @@ It trains an encoder style model on the task of token-classification (think: NER
 """
 
 import importlib.util as importutil
-from typing import Any, Optional, Union
+from typing import Any, Optional, Union, cast
 
 from chonkie.logger import get_logger
 from chonkie.pipeline import chunker
+from chonkie.tokenizer import TokenizerProtocol
 from chonkie.types import Chunk
 
 from .base import BaseChunker
@@ -91,7 +92,7 @@ class NeuralChunker(BaseChunker):
             raise ValueError(f"Error initializing tokenizer: {e}") from e
 
         # Initialize the Parent class with the tokenizer
-        super().__init__(tokenizer)  # type: ignore[arg-type]
+        super().__init__(cast(TokenizerProtocol, tokenizer))
 
         # Initialize the model and stride
         try:

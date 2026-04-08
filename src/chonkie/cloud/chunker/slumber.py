@@ -132,14 +132,13 @@ class SlumberChunker(CloudChunker):
                 "Oh no! The Chonkie API returned an error while trying to chunk with Slumber."
                 + " Please try again in a short while."
             )
-            if hasattr(e, "response") and e.response is not None:
+            resp = getattr(e, "response", None)
+            if resp is not None:
                 try:
-                    error_detail = e.response.json()
+                    error_detail = resp.json()
                     error_message += f" Details: {error_detail}"
                 except ValueError:  # if response is not JSON
-                    error_message += (
-                        f" Status Code: {e.response.status_code}. Response: {e.response.text}"
-                    )
+                    error_message += f" Status Code: {resp.status_code}. Response: {resp.text}"
             error_message += (
                 " If the issue persists, please contact support at support@chonkie.ai."
             )
