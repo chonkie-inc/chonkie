@@ -34,7 +34,7 @@ After loading the embeddings handler, you can use it in the same way you would u
 
 ```python
 from chonkie import SemanticChunker
-chunker = SemanticChunker(embeddings=embeddings, similarity_threshold=0.7)
+chunker = SemanticChunker(embedding_model=embeddings, threshold=0.7)
 
 # Chunk the text
 chunks = chunker(text)
