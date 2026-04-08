@@ -24,7 +24,7 @@ from .utils import generate_random_collection_name
 logger = get_logger(__name__)
 
 if TYPE_CHECKING:
-    import lancedb as lancedb_module  # type: ignore[import]
+    import lancedb as lancedb_module  # ty: ignore
 
 
 @handshake("lancedb")
@@ -63,7 +63,8 @@ class LanceDBHandshake(BaseHandshake):
         super().__init__()
 
         try:
-            import lancedb  # type: ignore[import]
+            import lancedb  # ty: ignore
+
         except ImportError as ie:
             raise ImportError(
                 "LanceDB is not installed. Please install it with `pip install chonkie[lancedb]`.",
@@ -186,7 +187,8 @@ class LanceDBHandshake(BaseHandshake):
         if query is not None:
             embedding = self.embedding_model.embed(query).tolist()
 
-        results = self.table.search(embedding).metric("cosine").limit(limit).to_list()
+        query_builder: Any = self.table.search(embedding)
+        results = query_builder.metric("cosine").limit(limit).to_list()
 
         matches = [
             {
