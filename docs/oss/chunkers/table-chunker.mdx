@@ -26,6 +26,8 @@ TableChunker is included in the base installation of Chonkie. No additional depe
 
 ## Initialization
 
+<Tabs>
+<Tab title="Python">
 <CodeGroup>
 ```python row chunker
 from chonkie import TableChunker
@@ -47,6 +49,32 @@ chunker = TableChunker(
 )
 ```
 </CodeGroup>
+</Tab>
+
+<Tab title="JavaScript">
+<CodeGroup>
+```javascript row chunker
+import { TableChunker } from "@chonkiejs/core";
+
+// Basic initialization with custom parameters
+const chunker = await TableChunker.create({
+  tokenizer: "row", // Chunk by rows, valid only for TableChunker
+  chunkSize: 3      // Maximum number of rows per chunk (not including header)
+});
+```
+
+```javascript token chunker
+import { TableChunker } from "@chonkiejs/core";
+
+// Basic initialization
+const chunker = await TableChunker.create({
+  tokenizer: "character",  // using Character chunker
+  chunkSize: 16            // Maximum number of tokens/characters per chunk
+});
+```
+</CodeGroup>
+</Tab>
+</Tabs>
 
 ## Parameters
 
@@ -64,6 +92,9 @@ chunker = TableChunker(
 </ParamField>
 
 ## Usage
+
+<Tabs>
+<Tab title="Python">
 <CodeGroup>
 ```python Markdown (Row-Based)
 from chonkie import TableChunker
@@ -150,6 +181,76 @@ for chunk in chunks:
     print(f"--- HTML Chunk ---\n{chunk.text}\n")
 ```
 </CodeGroup>
+</Tab>
+
+<Tab title="JavaScript">
+<CodeGroup>
+```javascript Markdown (Row-Based)
+import { TableChunker } from "@chonkiejs/core";
+
+const table = `
+| Name   | Age | City     |
+|--------|-----|----------|
+| Alice  | 30  | New York |
+| Bob    | 25  | London   |
+| Carol  | 28  | Paris    |
+| Dave   | 35  | Berlin   |
+`;
+
+const chunker = await TableChunker.create({ tokenizer: "row", chunkSize: 3 });
+const chunks = chunker.chunk(table);
+for (const chunk of chunks) {
+  console.log(chunk.text);
+}
+```
+
+```javascript Markdown (Token-Based)
+import { TableChunker } from "@chonkiejs/core";
+
+const table = `
+| Name   | Age | City     |
+|--------|-----|----------|
+| Alice  | 30  | New York |
+| Bob    | 25  | London   |
+| Carol  | 28  | Paris    |
+| Dave   | 35  | Berlin   |
+`;
+
+const chunker = await TableChunker.create({ tokenizer: "character", chunkSize: 16 });
+const chunks = chunker.chunk(table);
+for (const chunk of chunks) {
+  console.log(chunk.text);
+}
+```
+
+```javascript HTML Tables
+import { TableChunker } from "@chonkiejs/core";
+
+const htmlTable = `
+<table>
+  <thead>
+    <tr><th>ID</th><th>Status</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>1</td><td>Active</td></tr>
+    <tr><td>2</td><td>Pending</td></tr>
+    <tr><td>3</td><td>Inactive</td></tr>
+    <tr><td>4</td><td>Active</td></tr>
+  </tbody>
+</table>
+`;
+
+// HTML tables are chunked while preserving <table>, <thead>, and <tbody> tags
+const chunker = await TableChunker.create({ tokenizer: "row", chunkSize: 2 });
+const chunks = chunker.chunk(htmlTable);
+
+for (const chunk of chunks) {
+  console.log(`--- HTML Chunk ---\n${chunk.text}\n`);
+}
+```
+</CodeGroup>
+</Tab>
+</Tabs>
 ## Methods
 
 - `chunk(table: str) -> list[Chunk]`: Chunk a markdown table string.
