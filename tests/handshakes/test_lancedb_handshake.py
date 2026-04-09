@@ -193,13 +193,14 @@ def test_lancedb_handshake_write_upsert(
     handshake.write(sample_chunk)
     assert len(handshake.table.to_pandas()) == 1
 
-    # Write again — same text → same ID → upsert
-    modified = Chunk(text=sample_chunk.text, start_index=1, end_index=23, token_count=6)
+    # Write again — same text + start_index → same ID → upsert
+    modified = Chunk(
+        text=sample_chunk.text, start_index=sample_chunk.start_index, end_index=23, token_count=6
+    )
     handshake.write(modified)
 
     rows = handshake.table.to_pandas()
     assert len(rows) == 1
-    assert rows.iloc[0]["start_index"] == modified.start_index
     assert rows.iloc[0]["end_index"] == modified.end_index
     assert rows.iloc[0]["token_count"] == modified.token_count
 
@@ -220,10 +221,13 @@ def test_generate_id(sample_chunk: Chunk, real_embeddings: BaseEmbeddings) -> No
     uuid.UUID(generated_id)  # raises ValueError if not valid UUID
 
     assert handshake._generate_id(0, sample_chunk) == generated_id
-    assert handshake._generate_id(1, sample_chunk) != generated_id
+    assert handshake._generate_id(1, sample_chunk) == generated_id  # index is not used in the ID
 
     diff_chunk = Chunk(text="Different text", start_index=0, end_index=14, token_count=2)
     assert handshake._generate_id(0, diff_chunk) != generated_id
+
+    diff_start_chunk = Chunk(text=sample_chunk.text, start_index=5, end_index=27, token_count=5)
+    assert handshake._generate_id(0, diff_start_chunk) != generated_id
 
 
 def test_generate_row(sample_chunk: Chunk, real_embeddings: BaseEmbeddings) -> None:
