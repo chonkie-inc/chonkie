@@ -118,7 +118,7 @@ class LanceDBHandshake(BaseHandshake):
 
     def _generate_id(self, index: int, chunk: Chunk) -> str:
         """Generate a deterministic unique id for the chunk."""
-        return str(uuid5(NAMESPACE_OID, f"{self.table_name}::chunk-{index}:{chunk.text}"))
+        return str(uuid5(NAMESPACE_OID, f"{self.table_name}:{chunk.start_index}:{chunk.text}"))
 
     def _generate_row(self, index: int, chunk: Chunk, embedding: list[float]) -> dict:
         """Generate a row dict for the chunk."""
