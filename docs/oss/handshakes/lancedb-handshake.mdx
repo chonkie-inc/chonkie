@@ -96,22 +96,6 @@ results = handshake.search(embedding=embedding, limit=5)
 for result in results:
     print(result["score"], result["text"])
 ```
-
-```python search using Chonkie chunks
-from chonkie import LanceDBHandshake, SemanticChunker
-
-handshake = LanceDBHandshake(uri="./my_lancedb", table_name="my_documents")
-
-chunker = SemanticChunker(embedding_model=handshake.embedding_model)
-chunks = chunker("Chonkie loves to chonk your texts!")
-
-results = handshake.search(
-    embedding=chunks[0].sentences[0].embedding,
-    limit=5,
-)
-for result in results:
-    print(result["score"], result["text"])
-```
 </CodeGroup>
 
 ## Parameters
