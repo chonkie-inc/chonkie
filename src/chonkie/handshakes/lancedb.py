@@ -174,7 +174,7 @@ class LanceDBHandshake(BaseHandshake):
 
         Args:
             query: The query string to search for.
-            embedding: The embedding vector to search for. If provided, `query` is ignored.
+            embedding: The embedding vector to search for. Only used if `query` is not provided.
             limit: The number of top similar chunks to retrieve.
 
         Returns:
