@@ -173,6 +173,7 @@ all = [
     "chonkie[teraflopai]",
 ]
 dev = [
+    "chonkie[all]",
     "datasets>=1.14.0",
     "transformers>=4.0.0",
     "pytest>=6.2.0",
