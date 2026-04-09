@@ -24,7 +24,7 @@ from .utils import generate_random_collection_name
 logger = get_logger(__name__)
 
 if TYPE_CHECKING:
-    import lancedb as lancedb_module  # ty: ignore
+    import lancedb as lancedb_module
 
 
 @handshake("lancedb")
@@ -63,7 +63,7 @@ class LanceDBHandshake(BaseHandshake):
         super().__init__()
 
         try:
-            import lancedb  # ty: ignore
+            import lancedb
 
         except ImportError as ie:
             raise ImportError(
@@ -149,8 +149,7 @@ class LanceDBHandshake(BaseHandshake):
 
         # Upsert: update if id matches, insert otherwise
         (
-            self.table
-            .merge_insert("id")
+            self.table.merge_insert("id")
             .when_matched_update_all()
             .when_not_matched_insert_all()
             .execute(rows)
@@ -188,7 +187,7 @@ class LanceDBHandshake(BaseHandshake):
             embedding = self.embedding_model.embed(query).tolist()
 
         query_builder: Any = self.table.search(embedding)
-        results = query_builder.metric("cosine").limit(limit).to_list()
+        results = query_builder.metric("cosine").limit(limit).to_list()  # ty: ignore[unresolved-attribute]
 
         matches = [
             {
