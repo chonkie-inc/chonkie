@@ -149,7 +149,8 @@ class LanceDBHandshake(BaseHandshake):
 
         # Upsert: update if id matches, insert otherwise
         (
-            self.table.merge_insert("id")
+            self.table
+            .merge_insert("id")
             .when_matched_update_all()
             .when_not_matched_insert_all()
             .execute(rows)
