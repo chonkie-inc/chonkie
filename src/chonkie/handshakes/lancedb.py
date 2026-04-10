@@ -114,14 +114,14 @@ class LanceDBHandshake(BaseHandshake):
         """Check if the dependencies are installed."""
         return importutil.find_spec("lancedb") is not None
 
-    def _generate_id(self, index: int, chunk: Chunk) -> str:
+    def _generate_id(self, chunk: Chunk) -> str:
         """Generate a deterministic unique id for the chunk."""
         return str(uuid5(NAMESPACE_OID, f"{self.table_name}:{chunk.start_index}:{chunk.text}"))
 
-    def _generate_row(self, index: int, chunk: Chunk, embedding: list[float]) -> dict:
+    def _generate_row(self, chunk: Chunk, embedding: list[float]) -> dict:
         """Generate a row dict for the chunk."""
         return {
-            "id": self._generate_id(index, chunk),
+            "id": self._generate_id(chunk),
             "text": chunk.text,
             "start_index": chunk.start_index,
             "end_index": chunk.end_index,
@@ -140,10 +140,10 @@ class LanceDBHandshake(BaseHandshake):
         embeddings = self.embedding_model.embed_batch(texts)
 
         rows = []
-        for index, (chunk, embedding) in enumerate(zip(chunks, embeddings)):
+        for chunk, embedding in zip(chunks, embeddings):
             if isinstance(embedding, np.ndarray):
                 embedding = embedding.tolist()
-            rows.append(self._generate_row(index, chunk, embedding))
+            rows.append(self._generate_row(chunk, embedding))
 
         # Upsert: update if id matches, insert otherwise
         (
