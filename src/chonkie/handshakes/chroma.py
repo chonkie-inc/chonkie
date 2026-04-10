@@ -190,7 +190,7 @@ class ChromaHandshake(BaseHandshake):
         self.collection.upsert(
             ids=ids,
             documents=texts,
-            metadatas=cast(Any, metadata),
+            metadatas=metadata,  # type: ignore[arg-type]
         )
 
         logger.info(
