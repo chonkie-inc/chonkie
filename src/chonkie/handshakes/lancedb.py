@@ -31,8 +31,6 @@ if TYPE_CHECKING:
 class LanceDBHandshake(BaseHandshake):
     """LanceDB Handshake to export Chonkie's Chunks into a LanceDB table.
 
-    This handshake is experimental and may change in the future. Not all Chonkie features are supported yet.
-
     Args:
         connection: Optional LanceDB connection. If None, a new connection is created.
         uri: The URI to the LanceDB database. Defaults to "memory://" for an in-memory DB.
