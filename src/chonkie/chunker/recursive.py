@@ -7,6 +7,8 @@ import os
 from functools import lru_cache
 from typing import Optional, Union
 
+import chonkie_core
+
 from chonkie.chunker.base import BaseChunker, split_text_by_delimiters
 from chonkie.logger import get_logger
 from chonkie.pipeline import chunker
@@ -16,8 +18,6 @@ from chonkie.types import (
     RecursiveLevel,
     RecursiveRules,
 )
-
-import chonkie_core
 
 logger = get_logger(__name__)
 
