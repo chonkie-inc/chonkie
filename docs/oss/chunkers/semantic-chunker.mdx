@@ -13,14 +13,22 @@ To use the `SemanticChunker` via the API, check out the [API reference documenta
 
 SemanticChunker requires additional dependencies for semantic capabilities. You can install it with:
 
-```bash
+<CodeGroup>
+```bash Python
 pip install "chonkie[semantic]"
 ```
 
-<Info>For installation instructions, see the [Installation Guide](/python-sdk/getting-started/installation).</Info>
+```bash JavaScript
+npm install @chonkiejs/core
+```
+</CodeGroup>
+
+<Info>For installation instructions, see the [Installation Guide](/oss/installation).</Info>
 
 ## Initialization
 
+<Tabs>
+<Tab title="Python">
 ```python
 from chonkie import SemanticChunker
 
@@ -41,6 +49,28 @@ chunker = SemanticChunker(
     skip_window=1  # Enable merging of similar non-consecutive groups
 )
 ```
+</Tab>
+
+<Tab title="JavaScript">
+```javascript
+import { SemanticChunker } from "@chonkiejs/core";
+
+// Basic initialization with custom embedding function
+const embedFn = async (texts) => {
+  // Your embedding logic here
+  // Return array of embeddings for each text
+};
+
+const chunker = await SemanticChunker.create({
+  embedFunction: embedFn,      // Custom embedding function
+  threshold: 0.8,              // Similarity threshold (0-1)
+  chunkSize: 2048,             // Maximum tokens per chunk
+  similarityWindow: 3,         // Window for similarity calculation
+  skipWindow: 0                // Skip-and-merge window (0=disabled)
+});
+```
+</Tab>
+</Tabs>
 
 ## Parameters
 
@@ -147,6 +177,8 @@ chunker = SemanticChunker(
 
 ## Basic Usage
 
+<Tabs>
+<Tab title="Python">
 ```python
 from chonkie import SemanticChunker
 
@@ -165,6 +197,36 @@ for chunk in chunks:
     print(f"Chunk: {chunk.text[:50]}...")
     print(f"Tokens: {chunk.token_count}")
 ```
+</Tab>
+
+<Tab title="JavaScript">
+```javascript
+import { SemanticChunker } from "@chonkiejs/core";
+
+// Define custom embedding function
+const embedFn = async (texts) => {
+  // Your embedding logic here (e.g., call to an API)
+  // Return array of embeddings for each text
+};
+
+// Initialize with semantic similarity grouping
+const chunker = await SemanticChunker.create({
+  embedFunction: embedFn,
+  threshold: 0.7,  // Similarity threshold
+  chunkSize: 512
+});
+
+const text = "Your document text with multiple topics and themes...";
+const chunks = await chunker.chunk(text);
+
+// Process chunks
+for (const chunk of chunks) {
+  console.log(`Chunk: ${chunk.text.slice(0, 50)}...`);
+  console.log(`Tokens: ${chunk.tokenCount}`);
+}
+```
+</Tab>
+</Tabs>
 
 ## Examples
 
