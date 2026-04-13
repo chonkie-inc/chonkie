@@ -61,7 +61,7 @@ Chonkie OSS includes a comprehensive suite of chunking algorithms, each designed
 
     Chunks at sentence boundaries while respecting token limits. Ensures sentences are never split mid-thought.
 
-    Available in: Python
+    Available in: Python, JavaScript
   </Accordion>
 
   <Accordion title="RecursiveChunker" icon="chart-tree-map">
@@ -72,12 +72,20 @@ Chonkie OSS includes a comprehensive suite of chunking algorithms, each designed
     Available in: Python, JavaScript
   </Accordion>
 
+  <Accordion title="FastChunker" icon="bolt">
+    **Best for**: High-throughput pipelines, large-scale document processing
+
+    SIMD-accelerated chunking with 100+ GB/s throughput. Uses byte-size limits for extreme performance without tokenization overhead.
+
+    Available in: Python, JavaScript
+  </Accordion>
+
   <Accordion title="TableChunker" icon="table-cells">
     **Best for**: Markdown tables, tabular data
 
     Splits large tables into manageable chunks by rows while preserving headers. Perfect for data-heavy documents.
 
-    Available in: Python
+    Available in: Python, JavaScript
   </Accordion>
 
   <Accordion title="SemanticChunker" icon="magnet">
@@ -85,7 +93,7 @@ Chonkie OSS includes a comprehensive suite of chunking algorithms, each designed
 
     Uses embeddings to identify natural topic boundaries. Creates chunks based on semantic similarity, not just structure. Includes Savitzky-Golay filtering and skip-window merging for advanced boundary detection.
 
-    Available in: Python
+    Available in: Python, JavaScript
   </Accordion>
 
   <Accordion title="LateChunker" icon="clock">
@@ -101,7 +109,7 @@ Chonkie OSS includes a comprehensive suite of chunking algorithms, each designed
 
     Language-aware chunking using Abstract Syntax Trees (AST). Preserves function and class boundaries for better code understanding.
 
-    Available in: Python
+    Available in: Python, JavaScript
   </Accordion>
 
   <Accordion title="NeuralChunker" icon="brain">
@@ -221,11 +229,16 @@ Export chunks to common formats:
 
     JavaScript support includes the most commonly used chunkers:
     - TokenChunker
+    - SentenceChunker
     - RecursiveChunker
+    - FastChunker
+    - TableChunker
+    - SemanticChunker
+    - CodeChunker
 
     Available via `@chonkiejs/core` package with full TypeScript support. Other chunkers available through the Chonkie Cloud API via `@chonkiejs/cloud`.
 
-    <Info> To use custom tokenizers with either chunker, install `@chonkiejs/token` </Info>
+    <Info> To use custom tokenizers with the chunkers, install `@chonkiejs/token` </Info>
   </Tab>
 </Tabs>
 

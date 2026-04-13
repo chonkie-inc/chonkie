@@ -10,6 +10,7 @@ from .semantic import SemanticChunker
 from .sentence import SentenceChunker
 from .slumber import SlumberChunker
 from .table import TableChunker
+from .teraflopai import TeraflopAIChunker
 from .token import TokenChunker
 
 __all__ = [
@@ -24,4 +25,5 @@ __all__ = [
     "TableChunker",
     "NeuralChunker",
     "FastChunker",
+    "TeraflopAIChunker",
 ]

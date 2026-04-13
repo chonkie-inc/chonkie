@@ -6,7 +6,7 @@ This module provides a CodeChunker class for splitting code into chunks of a spe
 
 from bisect import bisect_left
 from itertools import accumulate
-from typing import TYPE_CHECKING, Any, Literal, Union
+from typing import TYPE_CHECKING, Any, Literal, cast, get_args
 
 from chonkie.chunker.base import BaseChunker
 from chonkie.logger import get_logger
@@ -17,8 +17,6 @@ from chonkie.types import Chunk
 logger = get_logger(__name__)
 
 if TYPE_CHECKING:
-    from typing import Any
-
     from tree_sitter import Node, Tree
 
 
@@ -36,9 +34,9 @@ class CodeChunker(BaseChunker):
 
     def __init__(
         self,
-        tokenizer: Union[str, TokenizerProtocol] = "character",
+        tokenizer: str | TokenizerProtocol = "character",
         chunk_size: int = 2048,
-        language: Union[Literal["auto"], Any] = "auto",
+        language: Literal["auto"] | str = "auto",
         include_nodes: bool = False,
     ) -> None:
         """Initialize a CodeChunker object.
@@ -61,9 +59,6 @@ class CodeChunker(BaseChunker):
         self.chunk_size = chunk_size
         self.include_nodes = include_nodes
 
-        # TODO: Figure out a way to check if the language is supported by tree-sitter-language-pack
-        #       Currently, we're just assuming that the language is supported.
-
         # NOTE: Magika is a language detection library made by Google, that uses a
         #       deep-learning model to detect the language of the code.
 
@@ -82,9 +77,16 @@ class CodeChunker(BaseChunker):
             self.magika = Magika()
             self.parser = None
         else:
-            from tree_sitter_language_pack import get_parser
+            from tree_sitter_language_pack import SupportedLanguage, get_parser
 
-            self.parser = get_parser(language)
+            try:
+                self.parser = get_parser(cast(SupportedLanguage, language))
+            except LookupError as e:
+                raise ValueError(
+                    f"Unsupported language '{language}'. "
+                    f"Supported languages are: {list(get_args(SupportedLanguage))}. "
+                    "Or set language='auto'."
+                ) from e
 
         # Set the use_multiprocessing flag
         self._use_multiprocessing = False

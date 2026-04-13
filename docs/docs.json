@@ -80,7 +80,8 @@
               "oss/chunkers/semantic-chunker",
               "oss/chunkers/late-chunker",
               "oss/chunkers/neural-chunker",
-              "oss/chunkers/slumber-chunker"
+              "oss/chunkers/slumber-chunker",
+              "oss/chunkers/teraflopai-chunker"
             ]
           },
           {
@@ -113,6 +114,7 @@
               "oss/handshakes/overview",
               "oss/handshakes/chroma-handshake",
               "oss/handshakes/elastic-handshake",
+              "oss/handshakes/lancedb-handshake",
               "oss/handshakes/milvus-handshake",
               "oss/handshakes/mongodb-handshake",
               "oss/handshakes/pgvector-handshake",
