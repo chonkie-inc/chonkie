@@ -467,7 +467,9 @@ def test_recursive_chunker_cjk_punctuation_token_count(
     cjk_sentence_rules: RecursiveRules,
 ) -> None:
     """Test that the RecursiveChunker respects chunk_size when splitting on CJK punctuation."""
-    chunker = RecursiveChunker(rules=cjk_sentence_rules, chunk_size=512, min_characters_per_chunk=1)
+    chunker = RecursiveChunker(
+        rules=cjk_sentence_rules, chunk_size=512, min_characters_per_chunk=1
+    )
     chunks = chunker.chunk(cjk_text)
     assert len(chunks) > 0
     assert all(isinstance(chunk, Chunk) for chunk in chunks)
@@ -479,7 +481,9 @@ def test_recursive_chunker_cjk_punctuation_reconstruction(
     cjk_sentence_rules: RecursiveRules,
 ) -> None:
     """Test that concatenating chunks recovers the original CJK text exactly."""
-    chunker = RecursiveChunker(rules=cjk_sentence_rules, chunk_size=512, min_characters_per_chunk=1)
+    chunker = RecursiveChunker(
+        rules=cjk_sentence_rules, chunk_size=512, min_characters_per_chunk=1
+    )
     chunks = chunker.chunk(cjk_text)
     assert len(chunks) > 0
     assert cjk_text == "".join(chunk.text for chunk in chunks)
@@ -490,7 +494,9 @@ def test_recursive_chunker_cjk_punctuation_indices(
     cjk_sentence_rules: RecursiveRules,
 ) -> None:
     """Test that chunk start/end indices correctly map into the original CJK text."""
-    chunker = RecursiveChunker(rules=cjk_sentence_rules, chunk_size=512, min_characters_per_chunk=1)
+    chunker = RecursiveChunker(
+        rules=cjk_sentence_rules, chunk_size=512, min_characters_per_chunk=1
+    )
     chunks = chunker.chunk(cjk_text)
     assert len(chunks) > 0
     assert all(chunk.start_index < chunk.end_index for chunk in chunks)
@@ -499,7 +505,9 @@ def test_recursive_chunker_cjk_punctuation_indices(
     assert all(chunk.text == cjk_text[chunk.start_index : chunk.end_index] for chunk in chunks)
 
 
-def test_recursive_chunker_cjk_default_rules_reconstruction(cjk_text: str, default_rules: RecursiveRules) -> None:
+def test_recursive_chunker_cjk_default_rules_reconstruction(
+    cjk_text: str, default_rules: RecursiveRules
+) -> None:
     """Test that CJK text is reconstructed correctly when using the default (non-CJK-specific) rules."""
     chunker = RecursiveChunker(rules=default_rules, chunk_size=512, min_characters_per_chunk=1)
     chunks = chunker.chunk(cjk_text)
