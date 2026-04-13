@@ -10,12 +10,11 @@ import pandas as pd
 
 def _read_markdown_table(table_content: str):
     """Read markdown table into DataFrame."""
-    lines = [line.strip() for line in table_content.strip().split("\n") if line.strip()]
+    lines = [line.strip("|").strip() for line in table_content.split("\n") if line.strip()]
     if len(lines) < 2:
         return pd.DataFrame()
 
-    cleaned_lines = [line.strip("|").strip() for line in lines]
-    csv_content = "\n".join([cleaned_lines[0]] + cleaned_lines[2:])
+    csv_content = "\n".join([lines[0]] + lines[2:])
     df = pd.read_csv(StringIO(csv_content), sep="|", skipinitialspace=True)
     df.columns = df.columns.str.strip()
     df = df.apply(lambda x: x.str.strip() if x.dtype == "object" else x)
@@ -42,8 +41,6 @@ def _clean_for_json(value):
         return None
     if isinstance(value, float) and value.is_integer():
         return int(value)
-    if isinstance(value, str):
-        return value.strip()
     return value
 
 
