@@ -41,7 +41,7 @@ def split_text_by_delimiters(
         delimiters = [delimiters]
 
     text_bytes = text.encode("utf-8")
-    has_complex_delimiters = any(len(d) > 1 or len(d.encode("utf-8")) > 1 for d in delimiters)
+    has_complex_delimiters = any(len(d) > 1 or not d.isascii() for d in delimiters)
 
     if has_complex_delimiters:
         patterns: list[bytes] = [d.encode("utf-8") for d in delimiters]
