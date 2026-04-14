@@ -9,7 +9,6 @@ from typing import (
     Union,
 )
 from urllib.parse import urlparse
-from uuid import NAMESPACE_OID, uuid5
 
 import numpy as np
 
@@ -251,19 +250,6 @@ class WeaviateHandshake(BaseHandshake):
         except Exception:
             raise
 
-    def _generate_id(self, index: int, chunk: Chunk) -> str:
-        """Generate a unique ID for the chunk.
-
-        Args:
-            index: The index of the chunk in the batch.
-            chunk: The chunk to generate an ID for.
-
-        Returns:
-            str: A unique ID for the chunk.
-
-        """
-        return str(uuid5(NAMESPACE_OID, f"{self.collection_name}::chunk-{index}:{chunk.text}"))
-
     def _generate_properties(self, chunk: Chunk) -> dict[str, Any]:
         """Generate properties for the chunk.
 
@@ -335,7 +321,9 @@ class WeaviateHandshake(BaseHandshake):
 
                 try:
                     # Generate ID and properties
-                    chunk_id = self._generate_id(index, chunk)
+                    chunk_id = self._generate_id(
+                        f"{self.collection_name}::chunk-{index}:{chunk.text}"
+                    )
                     properties = self._generate_properties(chunk)
 
                     # Generate embedding

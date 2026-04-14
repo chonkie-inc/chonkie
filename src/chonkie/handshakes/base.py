@@ -1,6 +1,7 @@
 """Base class for Handshakes."""
 
 import asyncio
+import uuid
 from abc import ABC, abstractmethod
 from typing import (
     Any,
@@ -13,15 +14,14 @@ from chonkie.types import Chunk
 
 logger = get_logger(__name__)
 
-# TODO: Move this to inside the BaseHandshake class
-# Why is this even outside the class?
-# def _generate_default_id(*args: Any) -> str:
-#     """Generate a default UUID."""
-#     return str(uuid.uuid4())
-
 
 class BaseHandshake(ABC):
     """Abstract base class for Handshakes."""
+
+    @staticmethod
+    def _generate_id(text: str) -> str:
+        """Generate a deterministic UUID from a string."""
+        return str(uuid.uuid5(uuid.NAMESPACE_OID, text))
 
     @abstractmethod
     def write(self, chunks: Union[Chunk, list[Chunk]]) -> Any:

@@ -3,7 +3,6 @@
 import importlib.util as importutil
 import os
 from typing import Any, Literal, Optional, Union
-from uuid import NAMESPACE_OID, uuid5
 
 from chonkie.embeddings import AutoEmbeddings, BaseEmbeddings
 from chonkie.logger import get_logger
@@ -87,15 +86,6 @@ class TurbopufferHandshake(BaseHandshake):
         """Check if Turbopuffer is available."""
         return importutil.find_spec("turbopuffer") is not None
 
-    def _generate_id(self, index: int, chunk: Chunk) -> str:
-        """Generate a unique ID for the chunk."""
-        return str(
-            uuid5(
-                NAMESPACE_OID,
-                f"{self.namespace.id}::chunk-{index}:{chunk.text}",
-            ),
-        )
-
     def write(self, chunks: Union[Chunk, list[Chunk]]) -> None:
         """Write the chunks to the Turbopuffer database."""
         if isinstance(chunks, Chunk):
@@ -103,7 +93,10 @@ class TurbopufferHandshake(BaseHandshake):
 
         logger.debug(f"Writing {len(chunks)} chunks to Turbopuffer namespace: {self.namespace.id}")
         # Embed the chunks
-        ids = [self._generate_id(index, chunk) for (index, chunk) in enumerate(chunks)]
+        ids = [
+            self._generate_id(f"{self.namespace.id}::chunk-{index}:{chunk.text}")
+            for (index, chunk) in enumerate(chunks)
+        ]
         texts = [chunk.text for chunk in chunks]
         embeddings = [embedding.tolist() for embedding in self.embedding_model.embed_batch(texts)]
         start_indices = [chunk.start_index for chunk in chunks]

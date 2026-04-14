@@ -9,7 +9,6 @@ from typing import (
     Optional,
     Union,
 )
-from uuid import NAMESPACE_OID, uuid5
 
 import numpy as np
 
@@ -114,14 +113,10 @@ class LanceDBHandshake(BaseHandshake):
         """Check if the dependencies are installed."""
         return importutil.find_spec("lancedb") is not None
 
-    def _generate_id(self, chunk: Chunk) -> str:
-        """Generate a deterministic unique id for the chunk."""
-        return str(uuid5(NAMESPACE_OID, f"{self.table_name}:{chunk.start_index}:{chunk.text}"))
-
     def _generate_row(self, chunk: Chunk, embedding: list[float]) -> dict:
         """Generate a row dict for the chunk."""
         return {
-            "id": self._generate_id(chunk),
+            "id": self._generate_id(f"{self.table_name}:{chunk.start_index}:{chunk.text}"),
             "text": chunk.text,
             "start_index": chunk.start_index,
             "end_index": chunk.end_index,

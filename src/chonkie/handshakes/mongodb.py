@@ -8,7 +8,6 @@ from typing import (
     Optional,
     Union,
 )
-from uuid import NAMESPACE_OID, uuid5
 
 import numpy as np
 
@@ -134,12 +133,9 @@ class MongoDBHandshake(BaseHandshake):
     def _is_available(cls) -> bool:
         return importutil.find_spec("pymongo") is not None
 
-    def _generate_id(self, index: int, chunk: Chunk) -> str:
-        return str(uuid5(NAMESPACE_OID, f"{self.collection_name}::chunk-{index}:{chunk.text}"))
-
     def _generate_document(self, index: int, chunk: Chunk, embedding: list[float]) -> dict:
         return {
-            "_id": self._generate_id(index, chunk),
+            "_id": self._generate_id(f"{self.collection_name}::chunk-{index}:{chunk.text}"),
             "text": chunk.text,
             "start_index": chunk.start_index,
             "end_index": chunk.end_index,

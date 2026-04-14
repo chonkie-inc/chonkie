@@ -2,7 +2,6 @@
 
 import importlib.util as importutil
 from typing import TYPE_CHECKING, Any, Literal, Optional, Union, cast
-from uuid import NAMESPACE_OID, uuid5
 
 from chonkie.embeddings import AutoEmbeddings, BaseEmbeddings
 from chonkie.logger import get_logger
@@ -124,10 +123,6 @@ class PgvectorHandshake(BaseHandshake):
         """Check if the dependencies are available."""
         return importutil.find_spec("vecs") is not None
 
-    def _generate_id(self, index: int, chunk: Chunk) -> str:
-        """Generate a unique ID for the chunk."""
-        return str(uuid5(NAMESPACE_OID, f"{self.collection_name}::chunk-{index}:{chunk.text}"))
-
     def _generate_metadata(self, chunk: Chunk) -> dict[str, Any]:
         """Generate metadata for the chunk."""
         metadata = {
@@ -171,7 +166,7 @@ class PgvectorHandshake(BaseHandshake):
 
         for index, chunk in enumerate(chunks):
             # Generate ID and metadata
-            chunk_id = self._generate_id(index, chunk)
+            chunk_id = self._generate_id(f"{self.collection_name}::chunk-{index}:{chunk.text}")
             metadata = self._generate_metadata(chunk)
 
             # Generate embedding
