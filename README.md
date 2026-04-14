@@ -173,8 +173,6 @@ curl http://localhost:8000/v1/pipelines
 
 Interactive documentation is available at `/docs` when the server is running.
 
-📚 **Full API documentation**: [docs.chonkie.ai/api](https://docs.chonkie.ai/api)
-
 ## ✂️ Chunkers
 
 Chonkie provides several chunkers to help you split your text efficiently for RAG applications. Here's a quick overview of the available chunkers:

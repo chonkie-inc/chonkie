@@ -141,7 +141,7 @@ class PgvectorHandshake(BaseHandshake):
             metadata["word_count"] = len(cast(list, chunk.words))
 
         if hasattr(chunk, "language") and chunk.language:
-            metadata["language"] = chunk.language
+            metadata["language"] = cast(str, chunk.language)
 
         return metadata
 

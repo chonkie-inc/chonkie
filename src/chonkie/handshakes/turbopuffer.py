@@ -70,7 +70,8 @@ class TurbopufferHandshake(BaseHandshake):
             namespace = self.tpuf.namespace(namespace_name)
             logger.info(f"Chonkie has created a new namespace: {namespace.id}")
         # enforce linting
-        if not isinstance(namespace, turbopuffer.Namespace):
+        _Namespace = getattr(turbopuffer, "Namespace")
+        if not isinstance(namespace, _Namespace):
             raise ValueError(
                 "The provided namespace is not a valid Turbopuffer Namespace instance."
             )
@@ -148,7 +149,7 @@ class TurbopufferHandshake(BaseHandshake):
 
         # Use include_attributes to request extra fields
         results = self.namespace.query(
-            rank_by=("vector", "ANN", embedding),  # type: ignore[arg-type]
+            rank_by=("vector", "ANN", embedding),
             top_k=limit,
             include_attributes=["text", "start_index", "end_index", "token_count"],
         )

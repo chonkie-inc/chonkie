@@ -9,7 +9,7 @@ from typing import (
     Union,
 )
 
-from flatbuffers.builder import np
+import numpy as np
 
 from chonkie.embeddings import AutoEmbeddings, BaseEmbeddings
 from chonkie.logger import get_logger

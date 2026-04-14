@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "chonkie"
-version = "1.6.0"
+version = "1.6.2"
 description = "🦛 CHONK your texts with Chonkie ✨ - The no-nonsense chunking library"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -50,6 +50,7 @@ dependencies = [
     "numpy>=2.0.0",
     "chonkie-core>=0.8.0",
     "tenacity>=8.0.0",
+    "httpx>=0.28.1",
 ]
 
 [project.urls]
@@ -78,7 +79,7 @@ api = [
 ]
 
 # Optional dependencies for table chef
-table = ["pandas", "tabulate", "openpyxl"]
+table = ["pandas", "tabulate", "openpyxl", "lxml"]
 
 # Optional dependencies for tokenizers
 tokenizers = ["tokenizers>=0.16.0"]
@@ -93,13 +94,14 @@ code = [
 neural = ["transformers>=4.0.0", "torch>=2.0.0, <3.0"]
 
 # Optional dependencies for the embeddings
-
 model2vec = ["tokenizers>=0.16.0", "model2vec>=0.7.0", "numpy>=2.0.0, <3.0"]
 
 st = ["tokenizers>=0.16.0", "sentence-transformers>=3.0.0", "accelerate>=1.6.0"]
 openai = ["tiktoken>=0.5.0", "openai>=1.0.0", "pydantic>=2.0.0"]
 
 semantic = ["tokenizers>=0.16.0", "model2vec>=0.3.0"]
+
+teraflopai = ["teraflopai>=0.1.0"]
 
 gemini = ["pydantic>=2.0.0", "google-genai>=1.0.0"]
 azure-openai = [
@@ -127,52 +129,51 @@ pinecone = ["pinecone"]
 mongodb = ["pymongo"]
 elastic = ["elasticsearch>=8.0.0"]
 milvus = ["pymilvus>=2.1.0"]
+lancedb = ["lancedb>=0.4.0"]
 
 # Optional dependencies for the genie
 genie = ["pydantic>=2.0.0", "google-genai>=1.0.0"]
 
 # All dependencies
 all = [
-    "httpx",
-    "tokenizers>=0.16.0",
-    "tiktoken>=0.5.0",
-    "rich>=13.0.0",
-    "tree-sitter>=0.20.0",
-    "tree-sitter-language-pack>=0.7.0",
-    "magika>=0.6.0, <1.1.0",
-    "sentence-transformers>=3.0.0",
-    "openai>=1.0.0",
-    "model2vec>=0.7.0",
-    "cohere>=5.13.0",
-    "voyageai>=0.3.2",
-    "accelerate>=1.6.0",
-    "huggingface-hub>=0.24.0",
-    "jsonschema>=4.23.0",
-    "pydantic>=2.0.0",
-    "google-genai>=1.0.0",
-    "groq>=0.4.0",
-    "cerebras-cloud-sdk>=1.0.0",
-    "transformers>=4.0.0",
-    "torch>=2.0.0, <3.0",
-    "chromadb>=1.0.0",
-    "qdrant-client>=1.0.0",
-    "turbopuffer~=1.0",
-    "weaviate-client>=4.16.7",
-    "azure-identity>=1.23.0",
-    "pinecone",
-    "pymongo",
-    "voyageai>=0.3.2",
-    "vecs>=0.4.0",
-    "pandas",
-    "tabulate",
-    "openpyxl",
-    "elasticsearch>=8.0.0",
-    "pymilvus>=2.1.0",
-    "catsu>=0.0.1",
-    "litellm>=1.0.0",
-    "datasets>=1.14.0",
+    "chonkie[hub]",
+    "chonkie[viz]",
+    "chonkie[cli]",
+    "chonkie[api]",
+    "chonkie[table]",
+    "chonkie[tokenizers]",
+    "chonkie[tiktoken]",
+    "chonkie[code]",
+    "chonkie[neural]",
+    "chonkie[model2vec]",
+    "chonkie[st]",
+    "chonkie[openai]",
+    "chonkie[semantic]",
+    "chonkie[gemini]",
+    "chonkie[azure-openai]",
+    "chonkie[groq]",
+    "chonkie[cerebras]",
+    "chonkie[voyageai]",
+    "chonkie[cohere]",
+    "chonkie[jina]",
+    "chonkie[catsu]",
+    "chonkie[litellm]",
+    "chonkie[chroma]",
+    "chonkie[qdrant]",
+    "chonkie[tpuf]",
+    "chonkie[pgvector]",
+    "chonkie[weaviate]",
+    "chonkie[datasets]",
+    "chonkie[pinecone]",
+    "chonkie[mongodb]",
+    "chonkie[elastic]",
+    "chonkie[milvus]",
+    "chonkie[lancedb]",
+    "chonkie[genie]",
+    "chonkie[teraflopai]",
 ]
 dev = [
+    "chonkie[all]",
     "datasets>=1.14.0",
     "transformers>=4.0.0",
     "pytest>=6.2.0",

@@ -12,6 +12,7 @@ from .chunker import (
     SentenceChunker,
     SlumberChunker,
     TableChunker,
+    TeraflopAIChunker,
     TokenChunker,
 )
 from .cloud import chunker, refineries
@@ -34,6 +35,7 @@ from .handshakes import (
     BaseHandshake,
     ChromaHandshake,
     ElasticHandshake,
+    LanceDBHandshake,
     MilvusHandshake,
     MongoDBHandshake,
     PgvectorHandshake,
@@ -69,6 +71,7 @@ from .types import (
     SplitRule,
 )
 from .utils import Hubbie, Visualizer
+from .utils.table_converter import html_table_to_json, markdown_table_to_json
 
 __all__ = (
     # chef
@@ -87,6 +90,7 @@ __all__ = (
     "SentenceChunker",
     "SlumberChunker",
     "TableChunker",
+    "TeraflopAIChunker",
     "TokenChunker",
     # cloud
     "chunker",
@@ -117,6 +121,7 @@ __all__ = (
     "BaseHandshake",
     "ChromaHandshake",
     "ElasticHandshake",
+    "LanceDBHandshake",
     "MilvusHandshake",
     "MongoDBHandshake",
     "PgvectorHandshake",
@@ -158,9 +163,11 @@ __all__ = (
     # utils
     "Hubbie",
     "Visualizer",
+    "html_table_to_json",
+    "markdown_table_to_json",
 )
 
 # This hippo grows with every release 🦛✨~
-__version__ = "1.6.0"
+__version__ = "1.6.2"
 __name__ = "chonkie"
 __author__ = "🦛 Chonkie Inc"

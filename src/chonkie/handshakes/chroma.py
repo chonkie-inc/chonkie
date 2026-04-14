@@ -161,7 +161,7 @@ class ChromaHandshake(BaseHandshake):
         """Check if the dependencies are available."""
         return importutil.find_spec("chromadb") is not None
 
-    def _generate_metadata(self, chunk: Chunk) -> dict:
+    def _generate_metadata(self, chunk: Chunk) -> dict[str, str | int | float | bool]:
         """Generate the metadata for the Chunk."""
         return {
             "start_index": chunk.start_index,
@@ -188,7 +188,7 @@ class ChromaHandshake(BaseHandshake):
         self.collection.upsert(
             ids=ids,
             documents=texts,
-            metadatas=metadata,
+            metadatas=metadata,  # type: ignore[arg-type]
         )
 
         logger.info(
