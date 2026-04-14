@@ -216,17 +216,34 @@ def test_generate_id(sample_chunk: Chunk, real_embeddings: BaseEmbeddings) -> No
         table_name="test-id-gen",
         embedding_model=real_embeddings,
     )
-    generated_id = handshake._generate_id(sample_chunk)
+    generated_id = handshake._generate_id(
+        f"{handshake.table_name}:{sample_chunk.start_index}:{sample_chunk.text}"
+    )
     assert isinstance(generated_id, str)
     uuid.UUID(generated_id)  # raises ValueError if not valid UUID
 
-    assert handshake._generate_id(sample_chunk) == generated_id
+    assert (
+        handshake._generate_id(
+            f"{handshake.table_name}:{sample_chunk.start_index}:{sample_chunk.text}"
+        )
+        == generated_id
+    )
 
     diff_chunk = Chunk(text="Different text", start_index=0, end_index=14, token_count=2)
-    assert handshake._generate_id(diff_chunk) != generated_id
+    assert (
+        handshake._generate_id(
+            f"{handshake.table_name}:{diff_chunk.start_index}:{diff_chunk.text}"
+        )
+        != generated_id
+    )
 
     diff_start_chunk = Chunk(text=sample_chunk.text, start_index=5, end_index=27, token_count=5)
-    assert handshake._generate_id(diff_start_chunk) != generated_id
+    assert (
+        handshake._generate_id(
+            f"{handshake.table_name}:{diff_start_chunk.start_index}:{diff_start_chunk.text}"
+        )
+        != generated_id
+    )
 
 
 def test_generate_row(sample_chunk: Chunk, real_embeddings: BaseEmbeddings) -> None:
@@ -240,7 +257,9 @@ def test_generate_row(sample_chunk: Chunk, real_embeddings: BaseEmbeddings) -> N
     embedding = [0.1] * real_embeddings.dimension
     row = handshake._generate_row(sample_chunk, embedding)
 
-    assert row["id"] == handshake._generate_id(sample_chunk)
+    assert row["id"] == handshake._generate_id(
+        f"{handshake.table_name}:{sample_chunk.start_index}:{sample_chunk.text}"
+    )
     assert row["text"] == sample_chunk.text
     assert row["start_index"] == sample_chunk.start_index
     assert row["end_index"] == sample_chunk.end_index

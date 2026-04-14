@@ -143,7 +143,9 @@ def test_generate_id(sample_chunk):
         mock_client.return_value.create_index.return_value = None
         mock_client.return_value.Index.return_value = MagicMock()
         handshake = PineconeHandshake(api_key="fake-key", index_name="test-id-gen")
-        generated_id = handshake._generate_id(0, sample_chunk)
+        generated_id = handshake._generate_id(
+            f"{handshake.index_name}::chunk-0:{sample_chunk.text}"
+        )
         import uuid
 
         assert isinstance(generated_id, str)
@@ -151,10 +153,19 @@ def test_generate_id(sample_chunk):
             uuid.UUID(generated_id)
         except ValueError:
             pytest.fail(f"Generated ID '{generated_id}' is not a valid UUID.")
-        assert handshake._generate_id(0, sample_chunk) == generated_id
-        assert handshake._generate_id(1, sample_chunk) != generated_id
+        assert (
+            handshake._generate_id(f"{handshake.index_name}::chunk-0:{sample_chunk.text}")
+            == generated_id
+        )
+        assert (
+            handshake._generate_id(f"{handshake.index_name}::chunk-1:{sample_chunk.text}")
+            != generated_id
+        )
         diff_chunk = Chunk(text="Different text", start_index=0, end_index=14, token_count=2)
-        assert handshake._generate_id(0, diff_chunk) != generated_id
+        assert (
+            handshake._generate_id(f"{handshake.index_name}::chunk-0:{diff_chunk.text}")
+            != generated_id
+        )
 
 
 def test_generate_metadata(sample_chunk):
