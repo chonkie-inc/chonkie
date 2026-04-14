@@ -321,7 +321,9 @@ class WeaviateHandshake(BaseHandshake):
 
                 try:
                     # Generate ID and properties
-                    chunk_id = self._generate_id(f"{self.collection_name}::chunk-{index}:{chunk.text}")
+                    chunk_id = self._generate_id(
+                        f"{self.collection_name}::chunk-{index}:{chunk.text}"
+                    )
                     properties = self._generate_properties(chunk)
 
                     # Generate embedding

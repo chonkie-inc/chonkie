@@ -92,7 +92,10 @@ class TurbopufferHandshake(BaseHandshake):
 
         logger.debug(f"Writing {len(chunks)} chunks to Turbopuffer namespace: {self.namespace.id}")
         # Embed the chunks
-        ids = [self._generate_id(f"{self.namespace.id}::chunk-{index}:{chunk.text}") for (index, chunk) in enumerate(chunks)]
+        ids = [
+            self._generate_id(f"{self.namespace.id}::chunk-{index}:{chunk.text}")
+            for (index, chunk) in enumerate(chunks)
+        ]
         texts = [chunk.text for chunk in chunks]
         embeddings = [embedding.tolist() for embedding in self.embedding_model.embed_batch(texts)]
         start_indices = [chunk.start_index for chunk in chunks]

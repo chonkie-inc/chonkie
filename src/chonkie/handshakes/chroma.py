@@ -176,7 +176,10 @@ class ChromaHandshake(BaseHandshake):
 
         logger.debug(f"Writing {len(chunks)} chunks to Chroma collection: {self.collection_name}")
         # Generate the ids and metadata
-        ids = [self._generate_id(f"{self.collection_name}::chunk-{index}:{chunk.text}") for (index, chunk) in enumerate(chunks)]
+        ids = [
+            self._generate_id(f"{self.collection_name}::chunk-{index}:{chunk.text}")
+            for (index, chunk) in enumerate(chunks)
+        ]
         metadata = [self._generate_metadata(chunk) for chunk in chunks]
         texts = [chunk.text for chunk in chunks]
 
