@@ -79,7 +79,7 @@ api = [
 ]
 
 # Optional dependencies for table chef
-table = ["pandas", "tabulate", "openpyxl"]
+table = ["pandas", "tabulate", "openpyxl", "lxml"]
 
 # Optional dependencies for tokenizers
 tokenizers = ["tokenizers>=0.16.0"]
