@@ -10,7 +10,6 @@ from typing import (
     Union,
     cast,
 )
-from uuid import NAMESPACE_OID, uuid5
 
 from chonkie.embeddings import AutoEmbeddings, BaseEmbeddings
 from chonkie.logger import get_logger
@@ -162,10 +161,6 @@ class ChromaHandshake(BaseHandshake):
         """Check if the dependencies are available."""
         return importutil.find_spec("chromadb") is not None
 
-    def _generate_id(self, index: int, chunk: Chunk) -> str:
-        """Generate a unique index name for the Chunk."""
-        return str(uuid5(NAMESPACE_OID, f"{self.collection_name}::chunk-{index}:{chunk.text}"))
-
     def _generate_metadata(self, chunk: Chunk) -> dict:
         """Generate the metadata for the Chunk."""
         return {
@@ -181,7 +176,7 @@ class ChromaHandshake(BaseHandshake):
 
         logger.debug(f"Writing {len(chunks)} chunks to Chroma collection: {self.collection_name}")
         # Generate the ids and metadata
-        ids = [self._generate_id(index, chunk) for (index, chunk) in enumerate(chunks)]
+        ids = [self._generate_id(f"{self.collection_name}::chunk-{index}:{chunk.text}") for (index, chunk) in enumerate(chunks)]
         metadata = [self._generate_metadata(chunk) for chunk in chunks]
         texts = [chunk.text for chunk in chunks]
 

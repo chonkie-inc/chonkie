@@ -19,9 +19,9 @@ class BaseHandshake(ABC):
     """Abstract base class for Handshakes."""
 
     @staticmethod
-    def _generate_default_id() -> str:
-        """Generate a default UUID."""
-        return str(uuid.uuid4())
+    def _generate_id(text: str) -> str:
+        """Generate a deterministic UUID from a string."""
+        return str(uuid.uuid5(uuid.NAMESPACE_OID, text))
 
     @abstractmethod
     def write(self, chunks: Union[Chunk, list[Chunk]]) -> Any:
