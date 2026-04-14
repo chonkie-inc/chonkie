@@ -1,7 +1,4 @@
 """Table converter utilities for transforming tables to different formats."""
-
-from __future__ import annotations
-
 import math
 from io import StringIO
 
