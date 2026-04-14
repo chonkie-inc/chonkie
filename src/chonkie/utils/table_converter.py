@@ -1,4 +1,5 @@
 """Table converter utilities for transforming tables to different formats."""
+
 import math
 from io import StringIO
 
@@ -68,7 +69,13 @@ def markdown_table_to_json(table_content: str) -> list[dict]:
     if df.empty:
         return []
     records = df.to_dict(orient="records")
-    return [{k: _clean_for_json(v) for k, v in record.items()} for record in records]
+    return [
+        {
+            k.strip(): _clean_for_json(v.strip() if isinstance(v, str) else v)
+            for k, v in record.items()
+        }
+        for record in records
+    ]
 
 
 def html_table_to_json(table_content: str) -> list[dict] | None:
@@ -93,4 +100,10 @@ def html_table_to_json(table_content: str) -> list[dict] | None:
     if df is None or df.empty:
         return None
     records = df.to_dict(orient="records")
-    return [{k: _clean_for_json(v) for k, v in record.items()} for record in records]
+    return [
+        {
+            k.strip(): _clean_for_json(v.strip() if isinstance(v, str) else v)
+            for k, v in record.items()
+        }
+        for record in records
+    ]
