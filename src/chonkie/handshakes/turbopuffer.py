@@ -104,7 +104,7 @@ class TurbopufferHandshake(BaseHandshake):
         end_indices = [chunk.end_index for chunk in chunks]
         token_counts = [chunk.token_count for chunk in chunks]
         chunk_metadata = [
-            json.dumps(chunk.metadata, sort_keys=True) if chunk.metadata else ""
+            json.dumps(chunk.metadata, sort_keys=True, default=str) if chunk.metadata else ""
             for chunk in chunks
         ]
 
