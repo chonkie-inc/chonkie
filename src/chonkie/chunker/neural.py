@@ -76,11 +76,33 @@ class NeuralChunker(BaseChunker):
             raise ImportError(
                 "transformers is not installed. Please install it with `pip install chonkie[neural]`.",
             ) from e
+        
+        # Initialize the model and stride
+        if isinstance(model, str):
+            # Check if the model is supported
+            if model not in self.SUPPORTED_MODELS:
+                raise ValueError(
+                    f"Model {model} is not supported. Please choose from one of the following: {self.SUPPORTED_MODELS}"
+                )
+            model_id = model
+            if stride is None:
+                stride = self.SUPPORTED_MODEL_STRIDES[model]
+        elif model is not None and "transformers" in str(type(model)):
+            # Assuming that the model is a transformers model already, since it has transformers in the name, teehee~
+            self.model = model
+            model_id = None
+            # Since a custom model is provided, we need to set the stride to 0
+            stride = 0 if stride is None else stride
+        else:
+            raise ValueError(
+                "Invalid model provided. Please provide a string or a transformers.AutoModelForTokenClassification object."
+            )
+
         # Initialize the tokenizer to pass in to the parent class
         if isinstance(tokenizer, str):
             tokenizer_id = tokenizer
-        elif tokenizer is None and isinstance(model, str):
-            tokenizer_id = model
+        elif tokenizer is None and model_id is not None:
+            tokenizer_id = model_id
         elif isinstance(tokenizer, PreTrainedTokenizerFast):
             tokenizer_id = None  # already loaded
         else:
@@ -100,32 +122,15 @@ class NeuralChunker(BaseChunker):
         # Initialize the Parent class with the tokenizer
         super().__init__(cast(TokenizerProtocol, tokenizer))
 
-        # Initialize the model and stride
-        if isinstance(model, str):
-            # Check if the model is supported
-            if model not in self.SUPPORTED_MODELS:
-                raise ValueError(
-                    f"Model {model} is not supported. Please choose from one of the following: {self.SUPPORTED_MODELS}"
-                )
-            model_id = model
-        elif model is not None and "transformers" in str(type(model)):
-            # Assuming that the model is a transformers model already, since it has transformers in the name, teehee~
-            self.model = model
-            model_id = None
-            # Since a custom model is provided, we need to set the stride to 0
-            stride = 0 if stride is None else stride
-        else:
-            raise ValueError(
-                "Invalid model provided. Please provide a string or a transformers.AutoModelForTokenClassification object."
-            )
-
         if model_id is not None:
             try:
                 self.model = AutoModelForTokenClassification.from_pretrained(
                     model_id, device_map=device_map
                 )
             except OSError as e:
-                raise ValueError("The model is not compatible with token-classification.") from e
+                raise ValueError(
+                    f"Failed to load model '{model_id}' for token-classification: {e}"
+                ) from e
         # Set the attributes
         self.min_characters_per_chunk = min_characters_per_chunk
 
@@ -133,7 +138,7 @@ class NeuralChunker(BaseChunker):
         try:
             self.pipe = pipeline(
                 "token-classification",
-                model=model,
+                model=self.model,
                 tokenizer=tokenizer,
                 device_map=device_map,
                 aggregation_strategy="simple",
