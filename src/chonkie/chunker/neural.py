@@ -76,7 +76,7 @@ class NeuralChunker(BaseChunker):
             raise ImportError(
                 "transformers is not installed. Please install it with `pip install chonkie[neural]`.",
             ) from e
-        
+
         # Initialize the model and stride
         if isinstance(model, str):
             # Check if the model is supported
