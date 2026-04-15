@@ -3,6 +3,7 @@
 import asyncio
 import os
 from abc import ABC, abstractmethod
+from pathlib import Path
 
 from chonkie.logger import get_logger
 from chonkie.types import Document
@@ -12,6 +13,11 @@ logger = get_logger(__name__)
 
 class BaseChef(ABC):
     """Base class for chefs."""
+
+    @staticmethod
+    def _set_source_filename(doc: Document, path: str | os.PathLike) -> None:
+        """Set the filename key in doc.metadata to the basename of `path`."""
+        doc.metadata["filename"] = Path(path).name
 
     @abstractmethod
     def process(self, path: str | os.PathLike) -> Document:

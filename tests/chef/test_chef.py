@@ -41,6 +41,7 @@ class TestTextChef:
                     assert all(r.content == sample_text for r in result)
                 else:
                     assert result.content == sample_text
+                    assert result.metadata["filename"] == "test_file.txt"
 
     def test_process_single_file_path_object(
         self: "TestTextChef",
@@ -55,6 +56,7 @@ class TestTextChef:
                 assert all(r.content == sample_text for r in result)
             else:
                 assert result.content == sample_text
+                assert result.metadata["filename"] == "test_file.txt"
 
     def test_process_batch_string_paths(
         self: "TestTextChef",
@@ -67,6 +69,11 @@ class TestTextChef:
             results = text_chef.process_batch(paths)
             assert len(results) == 3
             assert all(result.content == sample_text for result in results)
+            assert [r.metadata["filename"] for r in results] == [
+                "file1.txt",
+                "file2.txt",
+                "file3.txt",
+            ]
 
     def test_process_batch_path_objects(
         self: "TestTextChef",
@@ -79,6 +86,11 @@ class TestTextChef:
             results = text_chef.process_batch(paths)
             assert len(results) == 3
             assert all(result.content == sample_text for result in results)
+            assert [r.metadata["filename"] for r in results] == [
+                "file1.txt",
+                "file2.txt",
+                "file3.txt",
+            ]
 
     def test_process_batch_mixed_path_types(
         self: "TestTextChef",
@@ -91,6 +103,11 @@ class TestTextChef:
             results = text_chef.process_batch([str(p) for p in paths])
             assert len(results) == 3
             assert all(result.content == sample_text for result in results)
+            assert [r.metadata["filename"] for r in results] == [
+                "file1.txt",
+                "file2.txt",
+                "file3.txt",
+            ]
 
     def test_call_single_string_path(
         self: "TestTextChef",
@@ -106,6 +123,7 @@ class TestTextChef:
             else:
                 assert result.content == sample_text
                 assert isinstance(result, Document)
+                assert result.metadata["filename"] == "test_file.txt"
 
     def test_call_single_path_object(
         self: "TestTextChef",
@@ -121,6 +139,7 @@ class TestTextChef:
             else:
                 assert result.content == sample_text
                 assert isinstance(result, Document)
+                assert result.metadata["filename"] == "test_file.txt"
 
     def test_call_list_of_strings(
         self: "TestTextChef",
@@ -134,6 +153,7 @@ class TestTextChef:
             assert isinstance(results, list)
             assert len(results) == 2
             assert all(result.content == sample_text for result in results)
+            assert [r.metadata["filename"] for r in results] == ["file1.txt", "file2.txt"]
 
     def test_call_list_of_path_objects(
         self: "TestTextChef",
@@ -147,6 +167,7 @@ class TestTextChef:
             assert isinstance(results, list)
             assert len(results) == 2
             assert all(result.content == sample_text for result in results)
+            assert [r.metadata["filename"] for r in results] == ["file1.txt", "file2.txt"]
 
     def test_call_tuple_of_paths(
         self: "TestTextChef",
@@ -160,6 +181,7 @@ class TestTextChef:
             assert isinstance(results, list)
             assert len(results) == 2
             assert all(result.content == sample_text for result in results)
+            assert [r.metadata["filename"] for r in results] == ["file1.txt", "file2.txt"]
 
     def test_call_invalid_type_raises_error(self: "TestTextChef", text_chef: TextChef) -> None:
         """Test __call__ method with invalid input type raises TypeError."""
@@ -191,6 +213,7 @@ class TestTextChef:
         with patch("builtins.open", mock_open(read_data="")):
             result = text_chef.process("empty_file.txt")
             assert result.content == ""
+            assert result.metadata["filename"] == "empty_file.txt"
 
     def test_file_with_unicode_content(self: "TestTextChef", text_chef: TextChef) -> None:
         """Test processing file with unicode content."""
@@ -198,6 +221,13 @@ class TestTextChef:
         with patch("builtins.open", mock_open(read_data=unicode_text)):
             result = text_chef.process("unicode_file.txt")
             assert result.content == unicode_text
+            assert result.metadata["filename"] == "unicode_file.txt"
+
+    def test_parse_does_not_set_source_filename(self: "TestTextChef", text_chef: TextChef) -> None:
+        """parse() has no file path, so metadata must not include a synthetic filename."""
+        result = text_chef.parse("hello")
+        assert result.content == "hello"
+        assert "filename" not in result.metadata
 
     def test_repr_method(self: "TestTextChef", text_chef: TextChef) -> None:
         """Test __repr__ method returns correct string."""
