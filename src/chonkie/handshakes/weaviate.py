@@ -287,7 +287,7 @@ class WeaviateHandshake(BaseHandshake):
             properties["language"] = str(chunk.language)
 
         if chunk.metadata:
-            properties["chunk_metadata"] = json.dumps(chunk.metadata, sort_keys=True)
+            properties["chunk_metadata"] = json.dumps(chunk.metadata, sort_keys=True, default=str)
         else:
             properties["chunk_metadata"] = ""
 

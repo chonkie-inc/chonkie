@@ -121,7 +121,9 @@ class LanceDBHandshake(BaseHandshake):
 
     def _generate_row(self, chunk: Chunk, embedding: list[float]) -> dict:
         """Generate a row dict for the chunk."""
-        meta_str = json.dumps(chunk.metadata, sort_keys=True) if chunk.metadata else ""
+        meta_str = (
+            json.dumps(chunk.metadata, sort_keys=True, default=str) if chunk.metadata else ""
+        )
         return {
             "id": self._generate_id(f"{self.table_name}:{chunk.start_index}:{chunk.text}"),
             "text": chunk.text,
