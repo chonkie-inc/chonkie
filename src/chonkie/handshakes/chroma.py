@@ -1,6 +1,7 @@
 """Chroma Handshake to export Chonkie's Chunks into a Chroma collection."""
 
 import importlib.util as importutil
+import os
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -9,7 +10,6 @@ from typing import (
     Union,
     cast,
 )
-from uuid import NAMESPACE_OID, uuid5
 
 from chonkie.embeddings import AutoEmbeddings, BaseEmbeddings
 from chonkie.logger import get_logger
@@ -99,7 +99,7 @@ class ChromaHandshake(BaseHandshake):
         client: Optional[Any] = None,  # chromadb.Client
         collection_name: Union[str, Literal["random"]] = "random",
         embedding_model: Union[str, BaseEmbeddings] = "minishlab/potion-retrieval-32M",
-        path: Optional[str] = None,
+        path: str | os.PathLike | None = None,
     ) -> None:
         """Initialize the Chroma Handshake.
 
@@ -123,9 +123,12 @@ class ChromaHandshake(BaseHandshake):
         if client is None and path is None:
             self.client = chromadb.Client()
         elif client is None and path is not None:
-            self.client = chromadb.PersistentClient(path=path)
+            self.client = chromadb.PersistentClient(path=str(path))
         else:
-            self.client = client  # type: ignore[assignment]
+            assert isinstance(client, chromadb.api.ClientAPI), (
+                "Client must be an instance of chromadb.Client or chromadb.PersistentClient"
+            )
+            self.client = client
 
         # Initialize the EmbeddingRefinery internally!
         self.embedding_function = ChromaEmbeddingFunction(embedding_model)
@@ -136,7 +139,7 @@ class ChromaHandshake(BaseHandshake):
             self.collection = self.client.get_or_create_collection(
                 self.collection_name,
                 embedding_function=self.embedding_function,  # type: ignore[arg-type]
-            )  # type: ignore[arg-type]
+            )
         else:
             # Keep generating random collection names until we find one that doesn't exist
             while True:
@@ -145,7 +148,7 @@ class ChromaHandshake(BaseHandshake):
                     self.collection = self.client.create_collection(
                         self.collection_name,
                         embedding_function=self.embedding_function,  # type: ignore[arg-type]
-                    )  # type: ignore[arg-type]
+                    )
                     break
                 except Exception:
                     pass
@@ -158,11 +161,7 @@ class ChromaHandshake(BaseHandshake):
         """Check if the dependencies are available."""
         return importutil.find_spec("chromadb") is not None
 
-    def _generate_id(self, index: int, chunk: Chunk) -> str:
-        """Generate a unique index name for the Chunk."""
-        return str(uuid5(NAMESPACE_OID, f"{self.collection_name}::chunk-{index}:{chunk.text}"))
-
-    def _generate_metadata(self, chunk: Chunk) -> dict:
+    def _generate_metadata(self, chunk: Chunk) -> dict[str, str | int | float | bool]:
         """Generate the metadata for the Chunk."""
         return {
             "start_index": chunk.start_index,
@@ -177,7 +176,10 @@ class ChromaHandshake(BaseHandshake):
 
         logger.debug(f"Writing {len(chunks)} chunks to Chroma collection: {self.collection_name}")
         # Generate the ids and metadata
-        ids = [self._generate_id(index, chunk) for (index, chunk) in enumerate(chunks)]
+        ids = [
+            self._generate_id(f"{self.collection_name}::chunk-{index}:{chunk.text}")
+            for (index, chunk) in enumerate(chunks)
+        ]
         metadata = [self._generate_metadata(chunk) for chunk in chunks]
         texts = [chunk.text for chunk in chunks]
 
@@ -186,7 +188,7 @@ class ChromaHandshake(BaseHandshake):
         self.collection.upsert(
             ids=ids,
             documents=texts,
-            metadatas=metadata,  # type: ignore
+            metadatas=metadata,  # type: ignore[arg-type]
         )
 
         logger.info(
@@ -220,14 +222,14 @@ class ChromaHandshake(BaseHandshake):
 
         # Determine the query embeddings based on the input
         if query:
-            query_embedding_result = cast("np.ndarray", self.embedding_function(query))
+            query_embedding_result = cast(np.ndarray, self.embedding_function(query))
             query_embeddings = [query_embedding_result.tolist()]
         else:
-            query_embeddings = [embedding]  # type: ignore[list-item]
+            query_embeddings = [embedding]
 
         # Perform the query
         results = self.collection.query(
-            query_embeddings=query_embeddings,
+            query_embeddings=query_embeddings,  # ty:ignore[invalid-argument-type]
             n_results=limit,
             include=["metadatas", "documents", "distances"],
         )

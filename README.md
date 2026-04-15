@@ -116,9 +116,62 @@ doc = pipe.run(texts="Chonkie is the goodest boi! My favorite chunking hippo heh
 # Access the processed chunks in the `doc` object
 for chunk in doc.chunks:
     print(chunk.text)
+
+# Run asynchronously for high-throughput applications
+import asyncio
+
+async def main():
+    doc = await pipe.arun(texts="Chonkie runs fast!")
+    print(len(doc.chunks))
+
+asyncio.run(main())
 ```
 
 Check out more usage examples in the [docs](https://docs.chonkie.ai)!
+
+## 🌐 API Server
+
+Run Chonkie as a self-hosted REST API for easy integration into any application:
+
+```bash
+# Install with API dependencies (includes catsu for multi-provider embeddings)
+pip install "chonkie[api,semantic,code,catsu]"
+
+# Start the server using the CLI
+chonkie serve
+
+# Or with custom options
+chonkie serve --port 3000 --reload --log-level debug
+
+# Or directly with uvicorn
+uvicorn chonkie.api.main:app --host 0.0.0.0 --port 8000
+```
+
+Or use Docker:
+
+```bash
+docker compose up
+```
+
+The API provides endpoints for all chunkers, refineries, and **pipelines** — reusable workflow configurations stored in a local SQLite database.
+
+```bash
+# Create a reusable pipeline
+curl -X POST http://localhost:8000/v1/pipelines \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "rag-chunker",
+    "steps": [
+      {"type": "chunk", "chunker": "semantic", "config": {"chunk_size": 512}},
+      {"type": "refine", "refinery": "embeddings", "config": {"embedding_model": "text-embedding-3-small"}}
+    ]
+  }'
+
+# List your pipelines
+curl http://localhost:8000/v1/pipelines
+```
+
+Interactive documentation is available at `/docs` when the server is running.
 
 ## ✂️ Chunkers
 
@@ -127,7 +180,7 @@ Chonkie provides several chunkers to help you split your text efficiently for RA
 | Name               | Alias       | Description                                                                                                                |
 | ------------------ | ----------- | -------------------------------------------------------------------------------------------------------------------------- |
 | `TokenChunker`     | `token`     | Splits text into fixed-size token chunks.                                                                                  |
-| `FastChunker`      | `fast`      | SIMD-accelerated byte-based chunking at 100+ GB/s. Install with `chonkie[fast]`.                                           |
+| `FastChunker`      | `fast`      | SIMD-accelerated byte-based chunking at 100+ GB/s. Included in the default install.                                        |
 | `SentenceChunker`  | `sentence`  | Splits text into chunks based on sentences.                                                                                |
 | `RecursiveChunker` | `recursive` | Splits text hierarchically using customizable rules to create semantically meaningful chunks.                              |
 | `SemanticChunker`  | `semantic`  | Splits text into chunks based on semantic similarity. Inspired by the work of [Greg Kamradt](https://github.com/gkamradt). |
@@ -267,8 +320,6 @@ genie = OpenAIGenie(model="meta-llama/llama-4-maverick",
 
 </details>
 
-
-
 <details>
 <summary><strong>🛠️ Utilities & Helpers! Chonkie includes handy tools!</strong></summary>
 
@@ -280,8 +331,6 @@ Additional utilities to enhance your chunking workflow.
 | `viz`        | `Visualizer` | Rich console visualizations for chunks.        | `chonkie[viz]`   |
 
 </details>
-
-
 
 With Chonkie's wide range of integrations, you can easily plug it into your existing infrastructure and start CHONKING!
 

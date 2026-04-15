@@ -1,5 +1,7 @@
 """Base class for Handshakes."""
 
+import asyncio
+import uuid
 from abc import ABC, abstractmethod
 from typing import (
     Any,
@@ -12,28 +14,40 @@ from chonkie.types import Chunk
 
 logger = get_logger(__name__)
 
-# TODO: Move this to inside the BaseHandshake class
-# Why is this even outside the class?
-# def _generate_default_id(*args: Any) -> str:
-#     """Generate a default UUID."""
-#     return str(uuid.uuid4())
-
 
 class BaseHandshake(ABC):
     """Abstract base class for Handshakes."""
 
+    @staticmethod
+    def _generate_id(text: str) -> str:
+        """Generate a deterministic UUID from a string."""
+        return str(uuid.uuid5(uuid.NAMESPACE_OID, text))
+
     @abstractmethod
-    def write(self, chunk: Union[Chunk, list[Chunk]]) -> Any:
-        """Write a single chunk to the vector database.
+    def write(self, chunks: Union[Chunk, list[Chunk]]) -> Any:
+        """Write chunk(s) to the vector database.
 
         Args:
-            chunk (Union[Chunk, list[Chunk]]): The chunk to write.
+            chunks (Union[Chunk, list[Chunk]]): The chunk(s) to write.
 
         Returns:
             Any: The result from the database write operation.
 
         """
         raise NotImplementedError
+
+    async def awrite(self, chunk: Union[Chunk, list[Chunk]], **kwargs: Any) -> Any:
+        """Write chunks to the vector database asynchronously.
+
+        Args:
+            chunk (Union[Chunk, list[Chunk]]): The chunk(s) to write.
+            **kwargs: Additional keyword arguments.
+
+        Returns:
+            Any: The result from the database write operation.
+
+        """
+        return await asyncio.to_thread(self.write, chunk, **kwargs)
 
     def __call__(self, chunks: Union[Chunk, list[Chunk]]) -> Any:
         """Write chunks using the default batch method when the instance is called.
@@ -56,9 +70,8 @@ class BaseHandshake(ABC):
                 return result
             except Exception as e:
                 logger.error(
-                    f"Failed to write {chunk_count} chunk(s) to database",
-                    error=str(e),
-                    error_type=type(e).__name__,
+                    f"Failed to write {chunk_count} chunk(s) to database: {e}",
+                    exc_info=True,
                 )
                 raise
         else:

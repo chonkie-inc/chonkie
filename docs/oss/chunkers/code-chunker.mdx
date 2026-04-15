@@ -179,6 +179,8 @@ Automatic language detection using Magika can impact performance. For best resul
 
 ### Single Code Chunking
 
+<Tabs>
+<Tab title="Python">
 ```python
 code = """
 def hello_world():
@@ -193,13 +195,33 @@ chunks = chunker.chunk(code)
 for chunk in chunks:
     print(f"Chunk text: {chunk.text}")
     print(f"Token count: {chunk.token_count}")
-    print(f"Language: {chunk.lang}")
-    if chunk.nodes:
-        print(f"Node count: {len(chunk.nodes)}")
 ```
+</Tab>
+
+<Tab title="JavaScript">
+```javascript
+const code = `
+def hello_world():
+    print("Hello, Chonkie!")
+
+class MyClass:
+    def __init__(self):
+        self.value = 42
+`;
+const chunks = await chunker.chunk(code);
+
+for (const chunk of chunks) {
+  console.log(`Chunk text: ${chunk.text}`);
+  console.log(`Token count: ${chunk.tokenCount}`);
+}
+```
+</Tab>
+</Tabs>
 
 ### Batch Chunking
 
+<Tabs>
+<Tab title="Python">
 ```python
 codes = [
     "def func1():\n    pass",
@@ -211,6 +233,24 @@ for doc_chunks in batch_chunks:
     for chunk in doc_chunks:
         print(f"Chunk: {chunk.text}")
 ```
+</Tab>
+
+<Tab title="JavaScript">
+```javascript
+const codes = [
+  "def func1():\n    pass",
+  "const x = 10;\nfunction add(a, b) { return a + b; }"
+];
+const batchChunks = await chunker.chunkBatch(codes);
+
+for (const docChunks of batchChunks) {
+  for (const chunk of docChunks) {
+    console.log(`Chunk: ${chunk.text}`);
+  }
+}
+```
+</Tab>
+</Tabs>
 
 ### Using as a Callable
 

@@ -1,8 +1,7 @@
 """Pgvector Handshake to export Chonkie's Chunks into a PostgreSQL database with pgvector using vecs."""
 
 import importlib.util as importutil
-from typing import TYPE_CHECKING, Any, Optional, Union
-from uuid import NAMESPACE_OID, uuid5
+from typing import TYPE_CHECKING, Any, Literal, Optional, Union, cast
 
 from chonkie.embeddings import AutoEmbeddings, BaseEmbeddings
 from chonkie.logger import get_logger
@@ -70,6 +69,7 @@ class PgvectorHandshake(BaseHandshake):
 
         try:
             import vecs
+
         except ImportError as ie:
             raise ImportError(
                 "vecs is not installed. Please install it with `pip install chonkie[pgvector]`.",
@@ -123,10 +123,6 @@ class PgvectorHandshake(BaseHandshake):
         """Check if the dependencies are available."""
         return importutil.find_spec("vecs") is not None
 
-    def _generate_id(self, index: int, chunk: Chunk) -> str:
-        """Generate a unique ID for the chunk."""
-        return str(uuid5(NAMESPACE_OID, f"{self.collection_name}::chunk-{index}:{chunk.text}"))
-
     def _generate_metadata(self, chunk: Chunk) -> dict[str, Any]:
         """Generate metadata for the chunk."""
         metadata = {
@@ -139,13 +135,13 @@ class PgvectorHandshake(BaseHandshake):
 
         # Add chunk-specific metadata
         if hasattr(chunk, "sentences") and chunk.sentences:
-            metadata["sentence_count"] = len(chunk.sentences)
+            metadata["sentence_count"] = len(cast(list, chunk.sentences))
 
         if hasattr(chunk, "words") and chunk.words:
-            metadata["word_count"] = len(chunk.words)
+            metadata["word_count"] = len(cast(list, chunk.words))
 
         if hasattr(chunk, "language") and chunk.language:
-            metadata["language"] = chunk.language
+            metadata["language"] = cast(str, chunk.language)
 
         return metadata
 
@@ -170,7 +166,7 @@ class PgvectorHandshake(BaseHandshake):
 
         for index, chunk in enumerate(chunks):
             # Generate ID and metadata
-            chunk_id = self._generate_id(index, chunk)
+            chunk_id = self._generate_id(f"{self.collection_name}::chunk-{index}:{chunk.text}")
             metadata = self._generate_metadata(chunk)
 
             # Generate embedding
@@ -232,7 +228,7 @@ class PgvectorHandshake(BaseHandshake):
                 result_dict["similarity"] = result[1]
 
             if include_metadata and len(result) > 2:
-                metadata = result[2]
+                metadata = cast(dict[str, Any], result[2])
                 result_dict.update(metadata)
 
             formatted_results.append(result_dict)
@@ -240,7 +236,9 @@ class PgvectorHandshake(BaseHandshake):
         logger.info(f"Search complete: found {len(formatted_results)} matching chunks")
         return formatted_results
 
-    def create_index(self, method: str = "hnsw", **index_params: Any) -> None:
+    def create_index(
+        self, method: Literal["auto", "hnsw", "ivfflat"] = "hnsw", **index_params: Any
+    ) -> None:
         """Create a vector index for improved search performance.
 
         Args:
@@ -249,7 +247,9 @@ class PgvectorHandshake(BaseHandshake):
 
         """
         # Create index using vecs (vecs handles the specifics)
-        self.collection.create_index(method=method, **index_params)
+        from vecs.collection import IndexMethod
+
+        self.collection.create_index(method=IndexMethod[method], **index_params)
 
         logger.info(f"Created {method} index on collection: {self.collection_name}")
 

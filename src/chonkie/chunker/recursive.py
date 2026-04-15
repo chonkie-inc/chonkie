@@ -3,10 +3,13 @@
 Splits text into smaller chunks recursively. Express chunking logic through RecursiveLevel objects.
 """
 
+import os
 from functools import lru_cache
 from typing import Optional, Union
 
-from chonkie.chunker.base import BaseChunker
+import chonkie_core
+
+from chonkie.chunker.base import BaseChunker, split_text_by_delimiters
 from chonkie.logger import get_logger
 from chonkie.pipeline import chunker
 from chonkie.tokenizer import TokenizerProtocol
@@ -18,8 +21,6 @@ from chonkie.types import (
 
 logger = get_logger(__name__)
 
-import chonkie_core
-
 
 @chunker("recursive")
 class RecursiveChunker(BaseChunker):
@@ -27,8 +28,8 @@ class RecursiveChunker(BaseChunker):
 
     Args:
         tokenizer: Tokenizer to use
-        rules (list[RecursiveLevel]): List of RecursiveLevel objects defining chunking rules at a level.
         chunk_size (int): Maximum size of each chunk.
+        rules: Recursive rules to use for chunking.
         min_characters_per_chunk (int): Minimum number of characters per chunk.
 
     """
@@ -44,14 +45,14 @@ class RecursiveChunker(BaseChunker):
 
         Args:
             tokenizer: Tokenizer to use
-            rules (list[RecursiveLevel]): List of RecursiveLevel objects defining chunking rules at a level.
             chunk_size (int): Maximum size of each chunk.
+            rules: Recursive rules to use for chunking.
             min_characters_per_chunk (int): Minimum number of characters per chunk.
 
         Raises:
             ValueError: If chunk_size <=0
             ValueError: If min_characters_per_chunk < 1
-            ValueError: If recursive_rules is not a RecursiveRules object.
+            ValueError: If rules is not a RecursiveRules object.
 
         """
         super().__init__(tokenizer=tokenizer)
@@ -75,7 +76,7 @@ class RecursiveChunker(BaseChunker):
         cls,
         name: Optional[str] = "default",
         lang: Optional[str] = "en",
-        path: Optional[str] = None,
+        path: str | os.PathLike | None = None,
         tokenizer: Union[str, TokenizerProtocol] = "character",
         chunk_size: int = 2048,
         min_characters_per_chunk: int = 24,
@@ -119,50 +120,19 @@ class RecursiveChunker(BaseChunker):
     def _split_text(self, text: str, recursive_level: RecursiveLevel) -> list[str]:
         """Split the text into chunks using the delimiters."""
         if recursive_level.delimiters:
-            include_mode = recursive_level.include_delim or "prev"
-            text_bytes = text.encode("utf-8")
-
-            # Check if we have multi-byte delimiters
-            delimiters = recursive_level.delimiters
-            if isinstance(delimiters, str):
-                delimiters = [delimiters]
-
-            has_multibyte = any(len(d) > 1 for d in delimiters)
-
-            if has_multibyte:
-                # Use split_pattern_offsets for multi-byte patterns
-                patterns = [d.encode("utf-8") for d in delimiters]
-                offsets = chonkie_core.split_pattern_offsets(
-                    text_bytes,
-                    patterns=patterns,
-                    include_delim=include_mode,
-                    min_chars=self.min_characters_per_chunk,
-                )
-            else:
-                # Use faster split_offsets for single-byte delimiters
-                delim_bytes = "".join(delimiters).encode("utf-8")
-                offsets = chonkie_core.split_offsets(
-                    text_bytes,
-                    delimiters=delim_bytes,
-                    include_delim=include_mode,
-                    min_chars=self.min_characters_per_chunk,
-                )
-
-            # Convert offsets to strings
-            splits = [text_bytes[start:end].decode("utf-8") for start, end in offsets]
-            return [s for s in splits if s]  # Filter empty strings
-        elif recursive_level.whitespace:
-            # Split on whitespace using split_offsets (preserves spaces for reconstruction)
-            text_bytes = text.encode("utf-8")
-            include_mode = recursive_level.include_delim or "prev"
-            offsets = chonkie_core.split_offsets(
-                text_bytes,
-                delimiters=b" ",
-                include_delim=include_mode,
+            return split_text_by_delimiters(
+                text,
+                delimiters=recursive_level.delimiters,
+                include_delim=recursive_level.include_delim or "prev",
                 min_chars=self.min_characters_per_chunk,
             )
-            splits = [text_bytes[start:end].decode("utf-8") for start, end in offsets]
-            return [s for s in splits if s]
+        elif recursive_level.whitespace:
+            return split_text_by_delimiters(
+                text,
+                delimiters=" ",
+                include_delim=recursive_level.include_delim or "prev",
+                min_chars=self.min_characters_per_chunk,
+            )
         else:
             # Encode, Split, and Decode
             encoded = self.tokenizer.encode(text)

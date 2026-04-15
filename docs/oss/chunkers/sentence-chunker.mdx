@@ -21,7 +21,8 @@ SentenceChunker is included in the base installation of Chonkie. No additional d
 
 ## Initialization
 
-```python
+<CodeGroup>
+```python Python
 from chonkie import SentenceChunker
 
 # Basic initialization with default parameters
@@ -32,6 +33,19 @@ chunker = SentenceChunker(
     min_sentences_per_chunk=1  # Minimum sentences in each chunk
 )
 ```
+
+```javascript JavaScript
+import { SentenceChunker } from "@chonkiejs/core";
+
+// Basic initialization with default parameters
+const chunker = await SentenceChunker.create({
+  tokenizer: "character",     // Default tokenizer
+  chunkSize: 2048,            // Maximum tokens per chunk
+  chunkOverlap: 128,          // Overlap between chunks
+  minSentencesPerChunk: 1     // Minimum sentences in each chunk
+});
+```
+</CodeGroup>
 
 ## Parameters
 
@@ -87,7 +101,8 @@ chunker = SentenceChunker(
 
 ### Single Text Chunking
 
-```python
+<CodeGroup>
+```python Python
 text = """This is the first sentence. This is the second sentence.
 And here's a third one with some additional context."""
 chunks = chunker.chunk(text)
@@ -95,12 +110,24 @@ chunks = chunker.chunk(text)
 for chunk in chunks:
     print(f"Chunk text: {chunk.text}")
     print(f"Token count: {chunk.token_count}")
-    print(f"Number of sentences: {len(chunk.sentences)}")
 ```
+
+```javascript JavaScript
+const text = `This is the first sentence. This is the second sentence.
+And here's a third one with some additional context.`;
+const chunks = await chunker.chunk(text);
+
+for (const chunk of chunks) {
+  console.log(`Chunk text: ${chunk.text}`);
+  console.log(`Token count: ${chunk.tokenCount}`);
+}
+```
+</CodeGroup>
 
 ### Batch Chunking
 
-```python
+<CodeGroup>
+```python Python
 texts = [
     "First document. With multiple sentences.",
     "Second document. Also with sentences. And more context."
@@ -111,6 +138,21 @@ for doc_chunks in batch_chunks:
     for chunk in doc_chunks:
         print(f"Chunk: {chunk.text}")
 ```
+
+```javascript JavaScript
+const texts = [
+  "First document. With multiple sentences.",
+  "Second document. Also with sentences. And more context."
+];
+const batchChunks = await chunker.chunkBatch(texts);
+
+for (const docChunks of batchChunks) {
+  for (const chunk of docChunks) {
+    console.log(`Chunk: ${chunk.text}`);
+  }
+}
+```
+</CodeGroup>
 
 ### Using as a Callable
 
@@ -160,8 +202,10 @@ SentenceChunker returns chunks as `Chunk` objects:
 ```python
 @dataclass
 class Chunk:
-    text: str           # The chunk text
-    start_index: int    # Starting position in original text
-    end_index: int      # Ending position in original text
-    token_count: int    # Number of tokens in chunk
+    text: str                                           # The chunk text
+    start_index: int                                    # Starting position in original text
+    end_index: int                                      # Ending position in original text
+    token_count: int                                    # Number of tokens in chunk
+    context: Optional[str] = None                       # Optional overlap context text
+    embedding: Union[list[float], "np.ndarray", None] = None  # Optional embedding vector
 ```

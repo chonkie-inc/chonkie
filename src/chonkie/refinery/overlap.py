@@ -1,6 +1,5 @@
 """Refinery for adding overlap to chunks."""
 
-import warnings
 from functools import lru_cache
 from typing import Literal, Union
 
@@ -192,7 +191,7 @@ class OverlapRefinery(BaseRefinery):
         tokens = self._get_tokens_cached(chunk.text)
 
         if effective_context_size > len(tokens):
-            warnings.warn(
+            logger.warning(
                 "Context size is greater than the chunk size. The entire chunk will be returned as the context.",
             )
             return chunk.text
@@ -299,6 +298,10 @@ class OverlapRefinery(BaseRefinery):
             # Get the previous chunk, since i starts from 0
             prev_chunk = chunks[i]
 
+            # Calculate effective context size per chunk if context_size is a float
+            if isinstance(self.context_size, float):
+                effective_context_size = int(self.context_size * prev_chunk.token_count)
+
             # Calculate the overlap context
             context = self._get_prefix_overlap_context(prev_chunk, effective_context_size)
 
@@ -337,7 +340,7 @@ class OverlapRefinery(BaseRefinery):
         tokens = self._get_tokens_cached(chunk.text)
 
         if effective_context_size > len(tokens):
-            warnings.warn(
+            logger.warning(
                 "Context size is greater than the chunk size. The entire chunk will be returned as the context.",
             )
             return chunk.text
@@ -391,6 +394,10 @@ class OverlapRefinery(BaseRefinery):
         for i, chunk in enumerate(chunks[:-1]):
             # Get the previous chunk
             prev_chunk = chunks[i + 1]
+
+            # Calculate effective context size per chunk if context_size is a float
+            if isinstance(self.context_size, float):
+                effective_context_size = int(self.context_size * prev_chunk.token_count)
 
             # Calculate the overlap context
             context = self._get_suffix_overlap_context(prev_chunk, effective_context_size)

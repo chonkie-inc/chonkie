@@ -57,8 +57,7 @@ yarn add @chonkiejs/core
 </CodeGroup>
 
 <Note>
-  Chonkie JS provides local support for token and recursive chunking. Other
-  chunkers and features are available through the API.
+  Chonkie JS provides local support for TokenChunker, SentenceChunker, RecursiveChunker, FastChunker, TableChunker, SemanticChunker, and CodeChunker. Other chunkers are available through the API.
 </Note>
 
 ## CHONK! 🦛✨
@@ -70,7 +69,7 @@ yarn add @chonkiejs/core
 from chonkie import TokenChunker
 
 # Initialize the chunker
-chunker = TokenChunker() # defaults to using GPT2 tokenizer
+chunker = TokenChunker() # defaults to using character tokenizer
 
 # Here's some text to chunk
 text = """Woah! Chonkie, the chunking library is so cool!"""

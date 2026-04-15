@@ -160,7 +160,9 @@ def test_chroma_handshake_generate_id() -> None:
     expected_id_str = str(
         uuid.uuid5(uuid.NAMESPACE_OID, f"{handshake.collection_name}::chunk-{index}:{chunk.text}"),
     )
-    generated_id = handshake._generate_id(index, chunk)
+    generated_id = handshake._generate_id(
+        f"{handshake.collection_name}::chunk-{index}:{chunk.text}"
+    )
     assert generated_id == expected_id_str
     # Clean up
     handshake.client.delete_collection(handshake.collection_name)

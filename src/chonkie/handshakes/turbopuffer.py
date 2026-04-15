@@ -3,7 +3,6 @@
 import importlib.util as importutil
 import os
 from typing import Any, Literal, Optional, Union
-from uuid import NAMESPACE_OID, uuid5
 
 from chonkie.embeddings import AutoEmbeddings, BaseEmbeddings
 from chonkie.logger import get_logger
@@ -55,7 +54,6 @@ class TurbopufferHandshake(BaseHandshake):
             ) from ie
 
         # Setting the tpuf api key
-        # self.tpuf.api_key = api_key  # type: ignore[attr-defined]
         self.tpuf = turbopuffer.Turbopuffer(api_key=api_key, region=region)
 
         # Get a list of namespaces
@@ -69,10 +67,16 @@ class TurbopufferHandshake(BaseHandshake):
                     namespace_name = generate_random_collection_name()
                     if namespace_name not in namespaces:
                         break
-            self.namespace = self.tpuf.namespace(namespace_name)
-            logger.info(f"Chonkie has created a new namespace: {self.namespace.id}")  # type: ignore[misc]
-        else:
-            self.namespace = namespace
+            namespace = self.tpuf.namespace(namespace_name)
+            logger.info(f"Chonkie has created a new namespace: {namespace.id}")
+        # enforce linting
+        _Namespace = getattr(turbopuffer, "Namespace")
+        if not isinstance(namespace, _Namespace):
+            raise ValueError(
+                "The provided namespace is not a valid Turbopuffer Namespace instance."
+            )
+
+        self.namespace = namespace
 
         # Initialize the embedding model
         self.embedding_model = AutoEmbeddings.get_embeddings(embedding_model)
@@ -82,23 +86,17 @@ class TurbopufferHandshake(BaseHandshake):
         """Check if Turbopuffer is available."""
         return importutil.find_spec("turbopuffer") is not None
 
-    def _generate_id(self, index: int, chunk: Chunk) -> str:
-        """Generate a unique ID for the chunk."""
-        return str(
-            uuid5(
-                NAMESPACE_OID,
-                f"{self.namespace.id}::chunk-{index}:{chunk.text}",  # type: ignore[misc]
-            ),
-        )
-
     def write(self, chunks: Union[Chunk, list[Chunk]]) -> None:
         """Write the chunks to the Turbopuffer database."""
         if isinstance(chunks, Chunk):
             chunks = [chunks]
 
-        logger.debug(f"Writing {len(chunks)} chunks to Turbopuffer namespace: {self.namespace.id}")  # type: ignore[misc]
+        logger.debug(f"Writing {len(chunks)} chunks to Turbopuffer namespace: {self.namespace.id}")
         # Embed the chunks
-        ids = [self._generate_id(index, chunk) for (index, chunk) in enumerate(chunks)]
+        ids = [
+            self._generate_id(f"{self.namespace.id}::chunk-{index}:{chunk.text}")
+            for (index, chunk) in enumerate(chunks)
+        ]
         texts = [chunk.text for chunk in chunks]
         embeddings = [embedding.tolist() for embedding in self.embedding_model.embed_batch(texts)]
         start_indices = [chunk.start_index for chunk in chunks]
@@ -106,7 +104,7 @@ class TurbopufferHandshake(BaseHandshake):
         token_counts = [chunk.token_count for chunk in chunks]
 
         # Write the chunks to the database
-        self.namespace.write(  # type: ignore[attr-defined]
+        self.namespace.write(
             upsert_columns={
                 "id": ids,
                 "vector": embeddings,
@@ -119,12 +117,12 @@ class TurbopufferHandshake(BaseHandshake):
         )
 
         logger.info(
-            f"Chonkie has written {len(chunks)} chunks to the namespace: {self.namespace.id}",  # type: ignore[misc]
+            f"Chonkie has written {len(chunks)} chunks to the namespace: {self.namespace.id}",
         )
 
     def __repr__(self) -> str:
         """Return the representation of the Turbopuffer Handshake."""
-        return f"TurbopufferHandshake(namespace={self.namespace.id})"  # type: ignore[misc]
+        return f"TurbopufferHandshake(namespace={(self.namespace.id)})"
 
     def search(
         self,
@@ -151,7 +149,7 @@ class TurbopufferHandshake(BaseHandshake):
 
         # Use include_attributes to request extra fields
         results = self.namespace.query(
-            rank_by=("vector", "ANN", embedding),  # type: ignore[arg-type]
+            rank_by=("vector", "ANN", embedding),
             top_k=limit,
             include_attributes=["text", "start_index", "end_index", "token_count"],
         )

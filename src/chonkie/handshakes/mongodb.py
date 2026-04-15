@@ -8,7 +8,8 @@ from typing import (
     Optional,
     Union,
 )
-from uuid import NAMESPACE_OID, uuid5
+
+import numpy as np
 
 from chonkie.embeddings import AutoEmbeddings, BaseEmbeddings
 from chonkie.logger import get_logger
@@ -132,12 +133,9 @@ class MongoDBHandshake(BaseHandshake):
     def _is_available(cls) -> bool:
         return importutil.find_spec("pymongo") is not None
 
-    def _generate_id(self, index: int, chunk: Chunk) -> str:
-        return str(uuid5(NAMESPACE_OID, f"{self.collection_name}::chunk-{index}:{chunk.text}"))
-
     def _generate_document(self, index: int, chunk: Chunk, embedding: list[float]) -> dict:
         return {
-            "_id": self._generate_id(index, chunk),
+            "_id": self._generate_id(f"{self.collection_name}::chunk-{index}:{chunk.text}"),
             "text": chunk.text,
             "start_index": chunk.start_index,
             "end_index": chunk.end_index,
@@ -155,10 +153,10 @@ class MongoDBHandshake(BaseHandshake):
         documents = []
         for index, chunk in enumerate(chunks):
             embedding = embeddings[index]
-            if hasattr(embedding, "tolist"):
-                embedding_list: list[float] = embedding.tolist()
-            else:
-                embedding_list = embedding  # type: ignore[assignment]
+            if isinstance(embedding, np.ndarray):
+                embedding = embedding.tolist()
+            assert isinstance(embedding, list), "Embedding must be a list of floats"
+            embedding_list: list[float] = embedding
             documents.append(self._generate_document(index, chunk, embedding_list))
         if documents:
             self.collection.insert_many(documents)

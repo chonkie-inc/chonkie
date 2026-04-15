@@ -4,10 +4,9 @@ This module provides a CodeChunker class for splitting code into chunks of a spe
 
 """
 
-import warnings
 from bisect import bisect_left
 from itertools import accumulate
-from typing import TYPE_CHECKING, Any, Literal, Union
+from typing import TYPE_CHECKING, Any, Literal, cast, get_args
 
 from chonkie.chunker.base import BaseChunker
 from chonkie.logger import get_logger
@@ -18,8 +17,6 @@ from chonkie.types import Chunk
 logger = get_logger(__name__)
 
 if TYPE_CHECKING:
-    from typing import Any
-
     from tree_sitter import Node, Tree
 
 
@@ -37,9 +34,9 @@ class CodeChunker(BaseChunker):
 
     def __init__(
         self,
-        tokenizer: Union[str, TokenizerProtocol] = "character",
+        tokenizer: str | TokenizerProtocol = "character",
         chunk_size: int = 2048,
-        language: Union[Literal["auto"], Any] = "auto",
+        language: Literal["auto"] | str = "auto",
         include_nodes: bool = False,
     ) -> None:
         """Initialize a CodeChunker object.
@@ -62,9 +59,6 @@ class CodeChunker(BaseChunker):
         self.chunk_size = chunk_size
         self.include_nodes = include_nodes
 
-        # TODO: Figure out a way to check if the language is supported by tree-sitter-language-pack
-        #       Currently, we're just assuming that the language is supported.
-
         # NOTE: Magika is a language detection library made by Google, that uses a
         #       deep-learning model to detect the language of the code.
 
@@ -72,10 +66,10 @@ class CodeChunker(BaseChunker):
         self.language = language
         if language == "auto":
             # Set a warning to the user that the language is auto and this might
-            # affect the performance of the chunker.
-            warnings.warn(
+            # effect the performance of the chunker.
+            logger.warning(
                 "The language is set to `auto`. This would adversely affect the performance of the chunker. "
-                + "Consider setting the `language` parameter to a specific language to improve performance.",
+                "Consider setting the `language` parameter to a specific language to improve performance.",
             )
             from magika import Magika
 
@@ -84,10 +78,16 @@ class CodeChunker(BaseChunker):
             self._cached_language = None
             self._cached_parser = None
         else:
-            from tree_sitter_language_pack import get_parser
-            self.parser = get_parser(language)  # type: ignore[arg-type]
-            self._cached_language = language
-            self._cached_parser = self.parser
+            from tree_sitter_language_pack import SupportedLanguage, get_parser
+
+            try:
+                self.parser = get_parser(cast(SupportedLanguage, language))
+            except LookupError as e:
+                raise ValueError(
+                    f"Unsupported language '{language}'. "
+                    f"Supported languages are: {list(get_args(SupportedLanguage))}. "
+                    "Or set language='auto'."
+                ) from e
 
         # Set the use_multiprocessing flag
         self._use_multiprocessing = False
@@ -258,13 +258,13 @@ class CodeChunker(BaseChunker):
 
             # Basic validation for byte offsets
             if start_byte > end_byte:
-                warnings.warn(
-                    f"Warning: Skipping group due to invalid byte order. Start: {start_byte}, End: {end_byte}",
+                logger.warning(
+                    f"Skipping group due to invalid byte order. Start: {start_byte}, End: {end_byte}",
                 )
                 continue
             if start_byte < 0 or end_byte > len(original_text_bytes):
-                warnings.warn(
-                    f"Warning: Skipping group due to out-of-bounds byte offsets. Start: {start_byte}, End: {end_byte}, Text Length: {len(original_text_bytes)}",
+                logger.warning(
+                    f"Skipping group due to out-of-bounds byte offsets. Start: {start_byte}, End: {end_byte}, Text Length: {len(original_text_bytes)}",
                 )
                 continue
 
@@ -280,8 +280,9 @@ class CodeChunker(BaseChunker):
                 text = chunk_bytes.decode("utf-8", errors="ignore")  # Or 'replace'
                 chunk_texts.append(text)
             except Exception as e:
-                warnings.warn(
-                    f"Warning: Error decoding bytes for chunk ({start_byte}-{end_byte}): {e}",
+                logger.warning(
+                    f"Error decoding bytes for chunk ({start_byte}-{end_byte}): {e}",
+                    exc_info=True,
                 )
                 # Append an empty string or placeholder if decoding fails
                 chunk_texts.append("")
@@ -324,7 +325,7 @@ class CodeChunker(BaseChunker):
                     end_index=current_index + len(text),
                     token_count=token_count,
                 ),
-            )  # type: ignore[attr-defined]
+            )
             current_index += len(text)
         return chunks
 
