@@ -412,7 +412,7 @@ class TestPipelineDescribe:
         assert " -> " in desc
 
     def test_describe_auto_adds_chef(self):
-        """describe (via _reorder_steps) adds a default TextChef if none."""
+        """Describe (via _reorder_steps) adds a default TextChef if none."""
         pipeline = Pipeline().chunk_with("recursive")
         desc = pipeline.describe()
         assert "process(text)" in desc
@@ -528,19 +528,19 @@ class TestPipelineAsync:
 
     @pytest.mark.asyncio
     async def test_arun_no_steps(self):
-        """arun with no steps raises ValueError."""
+        """Arun with no steps raises ValueError."""
         with pytest.raises(ValueError, match="no steps"):
             await Pipeline().arun(texts="test")
 
     @pytest.mark.asyncio
     async def test_arun_empty_list(self):
-        """arun with empty list returns empty list."""
+        """Arun with empty list returns empty list."""
         result = await Pipeline().chunk_with("recursive").arun(texts=[])
         assert result == []
 
     @pytest.mark.asyncio
     async def test_arun_single_text(self):
-        """arun with single text returns Document."""
+        """Arun with single text returns Document."""
         pipeline = Pipeline().chunk_with("token", chunk_size=512)
         doc = await pipeline.arun(texts="Async test text.")
         assert isinstance(doc, Document)
@@ -548,7 +548,7 @@ class TestPipelineAsync:
 
     @pytest.mark.asyncio
     async def test_arun_multiple_texts(self):
-        """arun with multiple texts returns list[Document]."""
+        """Arun with multiple texts returns list[Document]."""
         pipeline = Pipeline().chunk_with("token", chunk_size=512)
         docs = await pipeline.arun(texts=["Text A.", "Text B."])
         assert isinstance(docs, list)
@@ -556,7 +556,7 @@ class TestPipelineAsync:
 
     @pytest.mark.asyncio
     async def test_arun_skips_fetcher_with_text(self):
-        """arun skips fetcher when texts is provided."""
+        """Arun skips fetcher when texts is provided."""
         pipeline = (
             Pipeline()
             .fetch_from("file", path="/nonexistent/file.txt")
@@ -567,7 +567,7 @@ class TestPipelineAsync:
 
     @pytest.mark.asyncio
     async def test_arun_step_failure(self):
-        """arun wraps step exceptions in RuntimeError."""
+        """Arun wraps step exceptions in RuntimeError."""
         pipeline = Pipeline().chunk_with("recursive", chunk_size=512)
         # Pass an invalid type as input to force a failure
         with patch.object(Pipeline, "_reorder_steps") as mock_reorder:
