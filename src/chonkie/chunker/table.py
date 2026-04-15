@@ -255,6 +255,7 @@ class TableChunker(BaseChunker):
             document.chunks = self.chunk(document.content)
             document.chunks.sort(key=lambda x: x.start_index)
         logger.info(f"Document chunking complete: {len(document.chunks)} chunks created")
+        BaseChunker._propagate_document_metadata(document)
         return document
 
     def __repr__(self) -> str:

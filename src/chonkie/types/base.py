@@ -1,7 +1,7 @@
 """Custom base types for Chonkie."""
 
 from dataclasses import dataclass, field
-from typing import Iterator, Optional, Union
+from typing import Any, Iterator, Optional, Union
 from uuid import uuid4
 
 import numpy as np
@@ -25,6 +25,9 @@ class Chunk:
         context (Optional[str]): Optional context metadata for the chunk.
         embedding (Union[list[float], np.ndarray, None]): Optional embedding vector for the chunk,
             either as a list of floats or a numpy array.
+        metadata (dict[str, Any]): Arbitrary per-chunk metadata; ``BaseChunker.chunk_document``
+            merges in the parent :class:`~chonkie.types.Document` metadata (chunk keys win
+            on duplicate keys).
 
     """
 
@@ -35,6 +38,7 @@ class Chunk:
     token_count: int = field(default=0)
     context: Optional[str] = field(default=None)
     embedding: Union[list[float], np.ndarray, None] = field(default=None)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     def __len__(self) -> int:
         """Return the length of the text."""
@@ -121,6 +125,7 @@ class Chunk:
             token_count=data["token_count"],
             context=data.get("context", None),
             embedding=data.get("embedding", None),
+            metadata=dict(data.get("metadata") or {}),
         )
 
     def copy(self) -> "Chunk":

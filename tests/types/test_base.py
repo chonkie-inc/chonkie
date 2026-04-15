@@ -45,12 +45,14 @@ def test_chunk_serialization():
         end_index=10,
         token_count=2,
         context="context string",
+        metadata={"filename": "a.md"},
     )
     chunk_dict = chunk.to_dict()
     restored = Chunk.from_dict(chunk_dict)
     assert chunk.text == restored.text
     assert chunk.token_count == restored.token_count
     assert chunk.context == restored.context
+    assert restored.metadata == {"filename": "a.md"}
 
 
 def test_chunk_with_embedding():
