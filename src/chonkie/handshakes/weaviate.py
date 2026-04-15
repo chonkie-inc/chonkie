@@ -486,7 +486,7 @@ class WeaviateHandshake(BaseHandshake):
                 "chunk_type": obj.properties.get("chunk_type"),
             }
             raw_meta = obj.properties.get("chunk_metadata")
-            if raw_meta:
+            if isinstance(raw_meta, (str, bytes, bytearray)) and raw_meta:
                 try:
                     parsed = json.loads(raw_meta)
                     if isinstance(parsed, dict):
