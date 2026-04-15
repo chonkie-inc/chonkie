@@ -16,7 +16,13 @@ def pytest_configure() -> None:
     """Point the API at an isolated SQLite file before any test imports the app."""
     if os.environ.get("_CHONKIE_API_TEST_DB_READY"):
         return
+
+    import atexit
+    import shutil
+
     db_dir = Path(tempfile.mkdtemp(prefix="chonkie_api_"))
+    atexit.register(shutil.rmtree, db_dir, ignore_errors=True)
+
     db_path = db_dir / "test.db"
     url_path = db_path.resolve().as_posix()
     os.environ["DATABASE_URL"] = f"sqlite+aiosqlite:///{url_path}"
