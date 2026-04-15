@@ -30,7 +30,9 @@ class TextChef(BaseChef):
         logger.debug(f"Processing text file: {path}")
         content = self.read(path)
         logger.info(f"Text processing complete: read {len(content)} characters from {path}")
-        return Document(content=content)
+        doc = Document(content=content)
+        self._set_source_filename(doc, path)
+        return doc
 
     def parse(self, text: str) -> Document:
         """Parse raw text into a Document.

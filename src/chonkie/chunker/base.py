@@ -283,8 +283,20 @@ class BaseChunker(ABC):
             for c in new_chunks
         ]
 
+    @staticmethod
+    def _propagate_document_metadata(document: Document) -> None:
+        """Merge ``document.metadata`` into each chunk (existing chunk keys take precedence)."""
+        if not document.metadata or not document.chunks:
+            return
+        doc_meta = document.metadata
+        for chunk in document.chunks:
+            chunk.metadata = {**doc_meta, **chunk.metadata}
+
     def chunk_document(self, document: Document) -> Document:
         """Chunk a document.
+
+        After chunking, non-empty ``document.metadata`` is shallow-merged into each
+        chunk's :attr:`~chonkie.types.Chunk.metadata` (chunk keys override on conflict).
 
         Args:
             document: The document to chunk.
@@ -299,6 +311,7 @@ class BaseChunker(ABC):
             document.chunks = self._merge_new_chunks(document.chunks, chunk_results)
         else:
             document.chunks = self.chunk(document.content)
+        self._propagate_document_metadata(document)
         return document
 
     async def achunk_document(self, document: Document) -> Document:
@@ -318,4 +331,5 @@ class BaseChunker(ABC):
             document.chunks = self._merge_new_chunks(document.chunks, chunk_results)
         else:
             document.chunks = await self.achunk(document.content)
+        self._propagate_document_metadata(document)
         return document

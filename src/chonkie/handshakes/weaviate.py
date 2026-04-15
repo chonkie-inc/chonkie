@@ -1,6 +1,7 @@
 """Weaviate Handshake to export Chonkie's Chunks into a Weaviate collection."""
 
 import importlib.util as importutil
+import json
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -243,6 +244,11 @@ class WeaviateHandshake(BaseHandshake):
                         "data_type": DataType.TEXT,
                         "description": "The type of the chunk",
                     }),
+                    Property.model_validate({
+                        "name": "chunk_metadata",
+                        "data_type": DataType.TEXT,
+                        "description": "JSON-serialized :attr:`~chonkie.types.Chunk.metadata`",
+                    }),
                 ],
             )
 
@@ -279,6 +285,11 @@ class WeaviateHandshake(BaseHandshake):
 
         if hasattr(chunk, "language") and chunk.language:
             properties["language"] = str(chunk.language)
+
+        if chunk.metadata:
+            properties["chunk_metadata"] = json.dumps(chunk.metadata, sort_keys=True, default=str)
+        else:
+            properties["chunk_metadata"] = ""
 
         return properties
 
@@ -390,6 +401,7 @@ class WeaviateHandshake(BaseHandshake):
             "end_index",
             "token_count",
             "chunk_type",
+            "chunk_metadata",
         ]
 
         if hasattr(schema, "properties") and schema.properties:
@@ -464,7 +476,7 @@ class WeaviateHandshake(BaseHandshake):
             score = getattr(obj.metadata, "distance", None) if obj.metadata else None
             # Weaviate returns distance, convert to similarity (1 - distance) if needed
             similarity = 1.0 - score if score is not None else None
-            match = {
+            match: dict[str, Any] = {
                 "id": obj.uuid,
                 "score": similarity,
                 "text": obj.properties.get("text"),
@@ -473,6 +485,14 @@ class WeaviateHandshake(BaseHandshake):
                 "token_count": obj.properties.get("token_count"),
                 "chunk_type": obj.properties.get("chunk_type"),
             }
+            raw_meta = obj.properties.get("chunk_metadata")
+            if isinstance(raw_meta, (str, bytes, bytearray)) and raw_meta:
+                try:
+                    parsed = json.loads(raw_meta)
+                    if isinstance(parsed, dict):
+                        match = {**parsed, **match}
+                except json.JSONDecodeError:
+                    pass
             matches.append(match)
         logger.info(f"Search complete: found {len(matches)} matching chunks")
         return matches

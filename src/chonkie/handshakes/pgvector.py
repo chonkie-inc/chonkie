@@ -143,7 +143,7 @@ class PgvectorHandshake(BaseHandshake):
         if hasattr(chunk, "language") and chunk.language:
             metadata["language"] = cast(str, chunk.language)
 
-        return metadata
+        return self._merge_chunk_metadata(chunk, metadata)
 
     def write(self, chunks: Union[Chunk, list[Chunk]]) -> list[str]:
         """Write chunks to the PostgreSQL database using vecs.

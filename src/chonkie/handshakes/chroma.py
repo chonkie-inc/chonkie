@@ -84,8 +84,6 @@ class ChromaEmbeddingFunction:
 class ChromaHandshake(BaseHandshake):
     """Chroma Handshake to export Chonkie's Chunks into a Chroma collection.
 
-    This handshake is experimental and may change in the future. Not all Chonkie features are supported yet.
-
     Args:
         client: The Chroma client to use.
         collection_name: The name of the collection to use.
@@ -163,11 +161,15 @@ class ChromaHandshake(BaseHandshake):
 
     def _generate_metadata(self, chunk: Chunk) -> dict[str, str | int | float | bool]:
         """Generate the metadata for the Chunk."""
-        return {
-            "start_index": chunk.start_index,
-            "end_index": chunk.end_index,
-            "token_count": chunk.token_count,
-        }
+        merged = self._merge_chunk_metadata(
+            chunk,
+            {
+                "start_index": chunk.start_index,
+                "end_index": chunk.end_index,
+                "token_count": chunk.token_count,
+            },
+        )
+        return self._coerce_flat_metadata(merged)
 
     def write(self, chunks: Union[Chunk, list[Chunk]]) -> None:
         """Write the Chunks to the Chroma collection."""

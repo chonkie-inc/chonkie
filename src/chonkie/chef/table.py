@@ -67,7 +67,9 @@ class TableChef(BaseChef):
                 logger.info(f"CSV processing complete: converted {len(df)} rows to markdown")
                 # CSV always produces a single table
                 table = MarkdownTable(content=markdown, start_index=0, end_index=len(markdown))
-                return MarkdownDocument(content=markdown, tables=[table])
+                doc = MarkdownDocument(content=markdown, tables=[table])
+                self._set_source_filename(doc, path)
+                return doc
             elif str_path.endswith(".xls") or str_path.endswith(".xlsx"):
                 logger.debug("Processing Excel file")
                 all_df = pd.read_excel(str_path, sheet_name=None)
@@ -82,7 +84,9 @@ class TableChef(BaseChef):
                 logger.info(
                     f"Excel processing complete: converted {len(all_df)} sheets to markdown",
                 )
-                return MarkdownDocument(content=content, tables=tables)
+                doc = MarkdownDocument(content=content, tables=tables)
+                self._set_source_filename(doc, path)
+                return doc
         # Not a file, treat as markdown string and extract tables
         logger.debug("Extracting tables from markdown string")
         return self.parse(str(path))

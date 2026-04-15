@@ -55,6 +55,7 @@ def test_dataset_structure_and_content(sample_chunks):  # noqa
         "token_count",
         "context",
         "embedding",
+        "metadata",
     }
     assert set(ds.column_names) == expected_columns
     # Check content
@@ -65,6 +66,7 @@ def test_dataset_structure_and_content(sample_chunks):  # noqa
         assert row["end_index"] == chunk.end_index
         assert row["token_count"] == chunk.token_count
         assert row["context"] is None
+        assert row["metadata"] == chunk.metadata
 
 
 @patch("datasets.Dataset.save_to_disk")

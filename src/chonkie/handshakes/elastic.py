@@ -113,13 +113,16 @@ class ElasticHandshake(BaseHandshake):
             actions.append({
                 "_index": self.index_name,
                 "_id": self._generate_id(f"{self.index_name}::chunk-{i}:{chunk.text}"),
-                "_source": {
-                    "text": chunk.text,
-                    "embedding": embeddings[i],
-                    "start_index": chunk.start_index,
-                    "end_index": chunk.end_index,
-                    "token_count": chunk.token_count,
-                },
+                "_source": self._merge_chunk_metadata(
+                    chunk,
+                    {
+                        "text": chunk.text,
+                        "embedding": embeddings[i],
+                        "start_index": chunk.start_index,
+                        "end_index": chunk.end_index,
+                        "token_count": chunk.token_count,
+                    },
+                ),
             })
         return actions
 
@@ -182,12 +185,13 @@ class ElasticHandshake(BaseHandshake):
         matches = []
         for hit in results["hits"]["hits"]:
             source = hit["_source"]
-            matches.append({
+            row: dict[str, Any] = {
                 "id": hit["_id"],
                 "score": hit["_score"],
-                "text": source.get("text"),
-                "start_index": source.get("start_index"),
-                "end_index": source.get("end_index"),
-                "token_count": source.get("token_count"),
-            })
+            }
+            for key, val in source.items():
+                if key == "embedding":
+                    continue
+                row[key] = val
+            matches.append(row)
         return matches

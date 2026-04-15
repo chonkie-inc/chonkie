@@ -130,11 +130,12 @@ def test_write_multiple_chunks(mock_pymilvus_modules, mock_embeddings, sample_ch
     # Verify the data was passed in the correct columnar format
     args, _ = handshake.collection.insert.call_args
     inserted_data = args[0]
-    assert len(inserted_data) == 5  # pk (auto) + 4 metadata fields + embedding
+    assert len(inserted_data) == 6  # text, indices, token_count, chunk_metadata, embedding
     # Check texts
     assert inserted_data[0] == [c.text for c in sample_chunks]
+    assert inserted_data[4] == ["", ""]
     # Check embeddings
-    assert np.array_equal(inserted_data[4], mock_embeddings.embed_batch.return_value)
+    assert np.array_equal(inserted_data[5], mock_embeddings.embed_batch.return_value)
 
 
 def test_search_with_query(mock_pymilvus_modules, mock_embeddings):

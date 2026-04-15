@@ -15,6 +15,7 @@ import pytest
 
 from chonkie import (
     Chunk,
+    Document,
     RecursiveChunker,
     RecursiveLevel,
     RecursiveRules,
@@ -513,3 +514,26 @@ def test_recursive_chunker_cjk_default_rules_reconstruction(
     chunks = chunker.chunk(cjk_text)
     assert len(chunks) > 0
     assert cjk_text == "".join(chunk.text for chunk in chunks)
+
+
+def test_chunk_document_propagates_metadata(
+    sample_text: str,
+    default_rules: RecursiveRules,
+) -> None:
+    """Document metadata is merged into every chunk (chunk keys win on conflict)."""
+    chunker = RecursiveChunker(rules=default_rules, chunk_size=512, min_characters_per_chunk=1)
+    doc = Document(
+        content=sample_text[:2000],
+        metadata={"filename": "paper.md", "source": "test"},
+    )
+    chunker.chunk_document(doc)
+    assert doc.chunks
+    for c in doc.chunks:
+        assert c.metadata["filename"] == "paper.md"
+        assert c.metadata["source"] == "test"
+
+    doc.chunks[0].metadata["filename"] = "override.md"
+    assert doc.chunks[0].metadata["filename"] == "override.md"
+    chunker.chunk_document(doc)
+    assert doc.chunks[0].metadata["filename"] == "paper.md"
+    assert doc.chunks[0].metadata["source"] == "test"

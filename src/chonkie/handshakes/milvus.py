@@ -1,6 +1,7 @@
 """Milvus Handshake to export Chonkie's Chunks into a Milvus collection."""
 
 import importlib.util as importutil
+import json
 from typing import (
     Any,
     Literal,
@@ -149,6 +150,7 @@ class MilvusHandshake(BaseHandshake):
             FieldSchema(name="start_index", dtype=DataType.INT64),
             FieldSchema(name="end_index", dtype=DataType.INT64),
             FieldSchema(name="token_count", dtype=DataType.INT64),
+            FieldSchema(name="chunk_metadata", dtype=DataType.VARCHAR, max_length=65_535),
             FieldSchema(name="embedding", dtype=DataType.FLOAT_VECTOR, dim=self.dimension),
         ]
         schema = CollectionSchema(fields, description="Chonkie Handshake Collection")
@@ -174,9 +176,20 @@ class MilvusHandshake(BaseHandshake):
         start_indices = [chunk.start_index for chunk in chunks]
         end_indices = [chunk.end_index for chunk in chunks]
         token_counts = [chunk.token_count for chunk in chunks]
+        chunk_metadata = [
+            json.dumps(chunk.metadata, sort_keys=True) if chunk.metadata else ""
+            for chunk in chunks
+        ]
         embeddings = self.embedding_model.embed_batch(texts)
 
-        data_to_insert = [texts, start_indices, end_indices, token_counts, embeddings]
+        data_to_insert = [
+            texts,
+            start_indices,
+            end_indices,
+            token_counts,
+            chunk_metadata,
+            embeddings,
+        ]
 
         mutation_result = self.collection.insert(data_to_insert)
         self.collection.flush()  # Essential to make data searchable
@@ -223,7 +236,7 @@ class MilvusHandshake(BaseHandshake):
 
         # Default search parameters for HNSW index
         search_params = {"metric_type": "L2", "params": {"ef": 64}}
-        output_fields = ["text", "start_index", "end_index", "token_count"]
+        output_fields = ["text", "start_index", "end_index", "token_count", "chunk_metadata"]
 
         results = self.collection.search(
             data=query_vectors,
@@ -237,10 +250,19 @@ class MilvusHandshake(BaseHandshake):
         matches = []
         # Results are for the first query vector (index 0)
         for hit in results[0]:
-            match_data = {
+            entity = dict(hit.entity) if hit.entity else {}
+            raw_meta = entity.pop("chunk_metadata", None)
+            match_data: dict[str, Any] = {
                 "id": hit.id,
                 "score": hit.distance,  # Milvus uses 'distance', which is analogous to score
-                **hit.entity,
+                **entity,
             }
+            if raw_meta:
+                try:
+                    parsed = json.loads(raw_meta)
+                    if isinstance(parsed, dict):
+                        match_data = {**parsed, **match_data}
+                except json.JSONDecodeError:
+                    pass
             matches.append(match_data)
         return matches

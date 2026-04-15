@@ -69,6 +69,7 @@ class TestTableChef:
             "1" in content_str and "2" in content_str and "3" in content_str and "4" in content_str
         )
         assert called["called"]
+        assert result.metadata["filename"] == "test.csv"
 
     def test_process_excel_file(
         self: "TestTableChef",
@@ -98,6 +99,7 @@ class TestTableChef:
             "1" in content_str and "2" in content_str and "3" in content_str and "4" in content_str
         )
         assert called["called"]
+        assert result.metadata["filename"] == "test.xlsx"
 
     def test_process_markdown_table_string(
         self: "TestTableChef",
@@ -109,6 +111,7 @@ class TestTableChef:
         assert isinstance(result, MarkdownDocument)
         assert len(result.tables) == 1
         assert hasattr(result.tables[0], "content")
+        assert "filename" not in result.metadata
 
     def test_process_batch(
         self: "TestTableChef",
@@ -124,6 +127,7 @@ class TestTableChef:
         results = table_chef.process_batch([file1, file2])
         assert isinstance(results, list)
         assert len(results) == 2
+        assert [r.metadata["filename"] for r in results] == ["a.csv", "b.csv"]
         for r in results:
             if hasattr(r, "content"):
                 content_str = str(r.content)
@@ -155,6 +159,7 @@ class TestTableChef:
         results = table_chef([file1, file2])
         assert isinstance(results, list)
         assert len(results) == 2
+        assert [r.metadata["filename"] for r in results] == ["a.csv", "b.csv"]
         for r in results:
             if hasattr(r, "content"):
                 content_str = str(r.content)
@@ -188,6 +193,7 @@ class TestTableChef:
         assert (
             "1" in content_str and "2" in content_str and "3" in content_str and "4" in content_str
         )
+        assert result.metadata["filename"] == "a.csv"
 
     def test_call_invalid_type(self: "TestTableChef", table_chef: TableChef) -> None:
         """Test that TableChef raises TypeError on invalid input type."""
