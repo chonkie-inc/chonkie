@@ -28,7 +28,10 @@ from chonkie.api.routes.pipelines import router as pipelines_router
 from chonkie.api.routes.refineries import router as refineries_router
 from chonkie.logger import configure
 
-configure(level=os.getenv("LOG_LEVEL", "INFO"))
+# Tests set CHONKIE_LOG=unconfigured so logging stays on the root logger (pytest caplog).
+# Do not attach a non-propagating chonkie handler in that mode.
+if os.getenv("CHONKIE_LOG", "").strip().lower() != "unconfigured":
+    configure(level=os.getenv("LOG_LEVEL", "INFO"))
 
 try:
     _chonkie_version = version("chonkie")

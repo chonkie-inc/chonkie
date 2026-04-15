@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock, patch
 
+import numpy as np
 import pytest
 
 from chonkie.embeddings import BaseEmbeddings
@@ -173,3 +174,53 @@ def test_generate_document(sample_chunk):
         assert doc["end_index"] == sample_chunk.end_index
         assert doc["token_count"] == sample_chunk.token_count
         assert doc["embedding"] == embedding
+
+
+def test_mongodb_handshake_search_with_query_orders_by_similarity(mock_embeddings):
+    """search() scores stored documents against the query embedding."""
+    with patch("pymongo.MongoClient"):
+        handshake = MongoDBHandshake(db_name="testdb", collection_name="testcol")
+        handshake.embedding_model.embed = MagicMock(
+            return_value=np.array([0.1] * 8, dtype=np.float64)
+        )
+        handshake.collection = MagicMock()
+        handshake.collection.find.return_value = [
+            {
+                "_id": "a",
+                "text": "hello",
+                "start_index": 0,
+                "end_index": 5,
+                "token_count": 1,
+                "embedding": [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+            },
+            {
+                "_id": "b",
+                "text": "world",
+                "start_index": 0,
+                "end_index": 5,
+                "token_count": 1,
+                "embedding": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+            },
+        ]
+        results = handshake.search(query="hello", limit=1)
+        assert len(results) == 1
+        assert results[0]["id"] == "a"
+        assert results[0]["score"] > 0
+
+
+def test_mongodb_handshake_search_with_embedding_vector(mock_embeddings):
+    """search() accepts a precomputed embedding list."""
+    with patch("pymongo.MongoClient"):
+        handshake = MongoDBHandshake(db_name="testdb", collection_name="testcol")
+        handshake.collection = MagicMock()
+        handshake.collection.find.return_value = [
+            {
+                "_id": "x",
+                "text": "t",
+                "embedding": [0.5] * 8,
+            },
+        ]
+        q = [0.5] * 8
+        results = handshake.search(embedding=q, limit=5)
+        assert len(results) == 1
+        assert results[0]["id"] == "x"

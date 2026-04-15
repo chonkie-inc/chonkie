@@ -3,13 +3,14 @@
 import importlib.util as importutil
 import os
 from typing import (
-    TYPE_CHECKING,
     Any,
     Literal,
     Optional,
     Union,
     cast,
 )
+
+import numpy as np
 
 from chonkie.embeddings import AutoEmbeddings, BaseEmbeddings
 from chonkie.logger import get_logger
@@ -20,9 +21,6 @@ from .base import BaseHandshake
 from .utils import generate_random_collection_name
 
 logger = get_logger(__name__)
-
-if TYPE_CHECKING:
-    import numpy as np
 
 
 # NOTE: This is a bit of a hack to work with Chroma's EmbeddingFunction interface
