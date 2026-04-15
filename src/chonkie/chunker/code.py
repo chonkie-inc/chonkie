@@ -346,6 +346,7 @@ class CodeChunker(BaseChunker):
             logger.info(f"Auto-detected code language: {language}")
             if self._cached_language != language or self._cached_parser is None:
                 from tree_sitter_language_pack import get_parser
+
                 self._cached_parser = get_parser(language)
                 self._cached_language = language
             self.parser = self._cached_parser
