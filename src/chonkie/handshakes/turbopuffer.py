@@ -1,6 +1,7 @@
 """Turbopuffer Handshake to export Chonkie's Chunks into a Turbopuffer database."""
 
 import importlib.util as importutil
+import json
 import os
 from typing import Any, Literal, Optional, Union
 
@@ -102,6 +103,10 @@ class TurbopufferHandshake(BaseHandshake):
         start_indices = [chunk.start_index for chunk in chunks]
         end_indices = [chunk.end_index for chunk in chunks]
         token_counts = [chunk.token_count for chunk in chunks]
+        chunk_metadata = [
+            json.dumps(chunk.metadata, sort_keys=True) if chunk.metadata else ""
+            for chunk in chunks
+        ]
 
         # Write the chunks to the database
         self.namespace.write(
@@ -112,6 +117,7 @@ class TurbopufferHandshake(BaseHandshake):
                 "start_index": start_indices,
                 "end_index": end_indices,
                 "token_count": token_counts,
+                "chunk_metadata": chunk_metadata,
             },
             distance_metric="cosine_distance",
         )
@@ -151,11 +157,18 @@ class TurbopufferHandshake(BaseHandshake):
         results = self.namespace.query(
             rank_by=("vector", "ANN", embedding),
             top_k=limit,
-            include_attributes=["text", "start_index", "end_index", "token_count"],
+            include_attributes=[
+                "text",
+                "start_index",
+                "end_index",
+                "token_count",
+                "chunk_metadata",
+            ],
         )
         assert results.rows is not None
-        return [
-            {
+        out: list[dict[str, Any]] = []
+        for result in results.rows:
+            row: dict[str, Any] = {
                 "id": result["id"],
                 "score": 1.0 - result["$dist"],
                 "token_count": result["token_count"],
@@ -163,5 +176,13 @@ class TurbopufferHandshake(BaseHandshake):
                 "start_index": result["start_index"],
                 "end_index": result["end_index"],
             }
-            for result in results.rows
-        ]
+            raw_meta = result.get("chunk_metadata")
+            if raw_meta:
+                try:
+                    parsed = json.loads(raw_meta)
+                    if isinstance(parsed, dict):
+                        row = {**parsed, **row}
+                except json.JSONDecodeError:
+                    pass
+            out.append(row)
+        return out

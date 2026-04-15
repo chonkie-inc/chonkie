@@ -1,6 +1,7 @@
 """LanceDB Handshake to export Chonkie's Chunks into a LanceDB table."""
 
 import importlib.util as importutil
+import json
 import os
 from typing import (
     TYPE_CHECKING,
@@ -102,6 +103,11 @@ class LanceDBHandshake(BaseHandshake):
                 pa.field("start_index", pa.int32()),
                 pa.field("end_index", pa.int32()),
                 pa.field("token_count", pa.int32()),
+                pa.field(
+                    "chunk_metadata",
+                    pa.utf8(),
+                    metadata={"description": "JSON-serialized Chunk.metadata"},
+                ),
                 pa.field("vector", pa.list_(pa.float32(), self.dimension)),
             ])
             self.table = self.connection.create_table(self.table_name, schema=schema)
@@ -115,12 +121,14 @@ class LanceDBHandshake(BaseHandshake):
 
     def _generate_row(self, chunk: Chunk, embedding: list[float]) -> dict:
         """Generate a row dict for the chunk."""
+        meta_str = json.dumps(chunk.metadata, sort_keys=True) if chunk.metadata else ""
         return {
             "id": self._generate_id(f"{self.table_name}:{chunk.start_index}:{chunk.text}"),
             "text": chunk.text,
             "start_index": chunk.start_index,
             "end_index": chunk.end_index,
             "token_count": chunk.token_count,
+            "chunk_metadata": meta_str,
             "vector": embedding,
         }
 
@@ -183,8 +191,9 @@ class LanceDBHandshake(BaseHandshake):
         query_builder: Any = self.table.search(embedding)
         results = query_builder.metric("cosine").limit(limit).to_list()  # ty: ignore[unresolved-attribute]
 
-        matches = [
-            {
+        matches: list[dict[str, Any]] = []
+        for r in results:
+            row: dict[str, Any] = {
                 "id": r["id"],
                 "score": 1.0 - r["_distance"],  # cosine distance -> similarity
                 "text": r["text"],
@@ -192,7 +201,14 @@ class LanceDBHandshake(BaseHandshake):
                 "end_index": r["end_index"],
                 "token_count": r["token_count"],
             }
-            for r in results
-        ]
+            raw_meta = r.get("chunk_metadata")
+            if raw_meta:
+                try:
+                    parsed = json.loads(raw_meta)
+                    if isinstance(parsed, dict):
+                        row = {**parsed, **row}
+                except json.JSONDecodeError:
+                    pass
+            matches.append(row)
         logger.info(f"Search complete: found {len(matches)} matching chunks")
         return matches

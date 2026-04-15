@@ -380,3 +380,28 @@ def test_generate_payload(sample_chunk: Chunk, real_embeddings: BaseEmbeddings) 
     }
     # Cleanup client implicitly created by handshake
     handshake.client.delete_collection(collection_name="test-payload-gen-real")
+
+
+def test_qdrant_chunk_metadata_roundtrip(real_embeddings: BaseEmbeddings) -> None:
+    """Chunk.metadata is stored in the payload and returned by search."""
+    collection_name = "test-metadata-roundtrip"
+    client = qdrant_client.QdrantClient(":memory:")
+    handshake = QdrantHandshake(
+        client=client,
+        collection_name=collection_name,
+        embedding_model=real_embeddings,
+    )
+    chunk = Chunk(
+        text="metadata roundtrip text",
+        start_index=0,
+        end_index=25,
+        token_count=4,
+        metadata={"filename": "readme.md", "source": "test"},
+    )
+    handshake.write(chunk)
+    hits = handshake.search(query=chunk.text, limit=3)
+    assert len(hits) >= 1
+    assert hits[0]["filename"] == "readme.md"
+    assert hits[0]["source"] == "test"
+    assert hits[0]["text"] == chunk.text
+    client.delete_collection(collection_name=collection_name)

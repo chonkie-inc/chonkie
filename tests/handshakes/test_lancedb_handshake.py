@@ -264,6 +264,7 @@ def test_generate_row(sample_chunk: Chunk, real_embeddings: BaseEmbeddings) -> N
     assert row["start_index"] == sample_chunk.start_index
     assert row["end_index"] == sample_chunk.end_index
     assert row["token_count"] == sample_chunk.token_count
+    assert row["chunk_metadata"] == ""
     assert row["vector"] == embedding
 
 
