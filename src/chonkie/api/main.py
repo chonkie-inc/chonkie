@@ -30,7 +30,8 @@ from chonkie.logger import configure
 
 # Tests set CHONKIE_LOG=unconfigured so logging stays on the root logger (pytest caplog).
 # Do not attach a non-propagating chonkie handler in that mode.
-if os.getenv("CHONKIE_LOG", "").strip().lower() != "unconfigured":
+# Match chonkie.logger._configure_default() semantics exactly.
+if os.getenv("CHONKIE_LOG") != "unconfigured":
     configure(level=os.getenv("LOG_LEVEL", "INFO"))
 
 try:
