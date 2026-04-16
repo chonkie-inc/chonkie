@@ -404,7 +404,8 @@ class TestBaseGenieAsync:
         prompts = ["a", "b", "c"]
         results = await concrete_genie.agenerate_batch(prompts, max_concurrency=2)
         assert results == ["test response", "test response", "test response"]
-        assert concrete_genie.prompts == prompts
+        # sort because the order may not be guaranteed due to concurrency
+        assert sorted(concrete_genie.prompts) == sorted(prompts)
 
     async def test_agenerate_json_delegates(self, concrete_genie: ConcreteGenie) -> None:
         schema = Mock()
