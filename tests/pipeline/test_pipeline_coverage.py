@@ -223,9 +223,7 @@ class TestPipelineComponentDecorator:
 
     def test_decorator_adds_metadata(self, monkeypatch):
         """Decorator sets _pipeline_component_info on the class."""
-        monkeypatch.setattr(
-            ComponentRegistry, "_components", dict(ComponentRegistry._components)
-        )
+        monkeypatch.setattr(ComponentRegistry, "_components", dict(ComponentRegistry._components))
         monkeypatch.setattr(ComponentRegistry, "_aliases", dict(ComponentRegistry._aliases))
         monkeypatch.setattr(
             ComponentRegistry,
