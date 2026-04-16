@@ -393,7 +393,7 @@ class OverlapRefinery(BaseRefinery):
             if isinstance(self.context_size, float):
                 effective_context_size = int(self.context_size * chunk.token_count)
 
-            # Get context from the previous chunk
+            # Get context from the next chunk
             context = self._get_suffix_overlap_context(prev_chunk, effective_context_size)
 
             # Set it as a part of the chunk
