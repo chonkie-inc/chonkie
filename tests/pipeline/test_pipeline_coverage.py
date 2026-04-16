@@ -221,25 +221,24 @@ class TestPipelineComponentDecorator:
         with pytest.raises(ValueError, match="must implement"):
             pipeline_component("bad", ComponentType.FETCHER)(BadFetcher)
 
-    def test_decorator_adds_metadata(self):
+    def test_decorator_adds_metadata(self, monkeypatch):
         """Decorator sets _pipeline_component_info on the class."""
-        reg_backup_components = dict(ComponentRegistry._components)
-        reg_backup_aliases = dict(ComponentRegistry._aliases)
-        reg_backup_types = {k: list(v) for k, v in ComponentRegistry._component_types.items()}
+        monkeypatch.setattr(
+            ComponentRegistry, "_components", dict(ComponentRegistry._components)
+        )
+        monkeypatch.setattr(ComponentRegistry, "_aliases", dict(ComponentRegistry._aliases))
+        monkeypatch.setattr(
+            ComponentRegistry,
+            "_component_types",
+            {k: list(v) for k, v in ComponentRegistry._component_types.items()},
+        )
 
-        try:
+        @pipeline_component("test_deco_fetcher", ComponentType.FETCHER)
+        class DecoTestFetcher:
+            def fetch(self): ...
 
-            @pipeline_component("test_deco_fetcher", ComponentType.FETCHER)
-            class DecoTestFetcher:
-                def fetch(self): ...
-
-            assert hasattr(DecoTestFetcher, "_pipeline_component_info")
-            assert DecoTestFetcher._pipeline_component_info["alias"] == "test_deco_fetcher"
-        finally:
-            # Restore global registry
-            ComponentRegistry._components = reg_backup_components
-            ComponentRegistry._aliases = reg_backup_aliases
-            ComponentRegistry._component_types = reg_backup_types
+        assert hasattr(DecoTestFetcher, "_pipeline_component_info")
+        assert DecoTestFetcher._pipeline_component_info["alias"] == "test_deco_fetcher"
 
 
 # ===========================================================================
