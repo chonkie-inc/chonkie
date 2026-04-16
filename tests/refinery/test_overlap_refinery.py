@@ -751,17 +751,16 @@ def test_overlap_refinery_invalid_modes() -> None:
 
 def test_overlap_refinery_context_size_reuse_correctness() -> None:
     """Test that reusing OverlapRefinery with float context_size works correctly with different chunk sets."""
-    # This tests the fix for a bug where _calculated_context_size was incorrectly cached
     refinery = OverlapRefinery(context_size=0.3, mode="token", method="suffix")
 
-    # First set: small token counts -> context_size should be 0.3 * 5 = 1.5 -> 1
+    # First set: enough tokens so context is not empty (0.3 * 10 = 3)
     small_chunks = [
-        Chunk(text="Short text", start_index=0, end_index=9, token_count=2),
+        Chunk(text="Short text", start_index=0, end_index=9, token_count=10),
         Chunk(text="Another brief chunk here", start_index=10, end_index=33, token_count=5),
     ]
     refined_small = refinery.refine([c.copy() for c in small_chunks])
 
-    # Second set: large token counts -> context_size should be 0.3 * 20 = 6, NOT cached 1
+    # Second set: large token counts
     large_chunks = [
         Chunk(
             text="This is a significantly longer text chunk with many more tokens",
@@ -783,18 +782,12 @@ def test_overlap_refinery_context_size_reuse_correctness() -> None:
     large_context = getattr(refined_large[0], "context", "")
 
     # Verify that different context sizes were actually calculated
-    # We can't directly access the calculated context size, but we can verify behavior
-    # by checking that the chunks were processed correctly
     assert len(refined_small) == 2
     assert len(refined_large) == 2
 
-    # At minimum, ensure both contexts exist and are reasonable
+    # Each chunk gets context proportional to its own size
     assert small_context is not None and small_context != ""
     assert large_context is not None and large_context != ""
-
-    # The key test: if the bug existed, both would use the same context size
-    # With the fix, they should use different context sizes based on their respective max token counts
-    # This is hard to test directly, but we've verified the calculation is correct above
 
 
 def test_overlap_refinery_repr() -> None:
