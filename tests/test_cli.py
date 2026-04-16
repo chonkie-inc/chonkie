@@ -392,7 +392,7 @@ def test_chunk_file_open_oserror(tmp_path) -> None:
     p = tmp_path / "x.txt"
     p.write_text("ok")
 
-    with patch("builtins.open", side_effect=OSError("permission denied")):
+    with patch("chonkie.cli.cli_utils.open", side_effect=OSError("permission denied")):
         result = runner.invoke(
             app,
             ["chunk", str(p), "--chunker", "token", "--chunk-size", "5"],
