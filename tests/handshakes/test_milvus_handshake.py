@@ -138,6 +138,13 @@ def test_write_multiple_chunks(mock_pymilvus_modules, mock_embeddings, sample_ch
     assert np.array_equal(inserted_data[5], mock_embeddings.embed_batch.return_value)
 
 
+def test_search_requires_query_or_embedding(mock_pymilvus_modules, mock_embeddings):
+    """search() requires at least one of query or embedding."""
+    handshake = MilvusHandshake()
+    with pytest.raises(ValueError, match="Either"):
+        handshake.search()
+
+
 def test_search_with_query(mock_pymilvus_modules, mock_embeddings):
     """Test the search method formats the query and parses results correctly."""
     # Define a mock Milvus search response
@@ -170,3 +177,42 @@ def test_search_with_query(mock_pymilvus_modules, mock_embeddings):
     assert result["score"] == 0.98
     assert result["text"] == "A relevant doc"
     assert result["start_index"] == 0
+
+
+def test_write_single_chunk_expands_to_list(mock_pymilvus_modules, mock_embeddings, sample_chunks):
+    """Passing a single Chunk still calls insert with one row."""
+    handshake = MilvusHandshake()
+    handshake.write(sample_chunks[0])
+    handshake.collection.insert.assert_called_once()
+
+
+def test_search_with_numpy_embedding(mock_pymilvus_modules, mock_embeddings):
+    """Search accepts a query vector as numpy array."""
+    mock_hit = MagicMock()
+    mock_hit.id = "id-2"
+    mock_hit.distance = 0.5
+    mock_hit.entity = {"text": "from np", "chunk_metadata": '{"src": "x"}'}
+    handshake = MilvusHandshake()
+    handshake.collection.search.return_value = [[mock_hit]]
+
+    vec = np.array([0.3] * 128, dtype=np.float32)
+    results = handshake.search(embedding=vec, limit=3)
+
+    assert len(results) == 1
+    assert results[0]["src"] == "x"
+    call_kw = handshake.collection.search.call_args.kwargs
+    assert len(call_kw["data"][0]) == 128
+
+
+def test_search_metadata_json_decode_error_is_ignored(mock_pymilvus_modules, mock_embeddings):
+    """Invalid JSON in chunk_metadata is skipped without failing."""
+    mock_hit = MagicMock()
+    mock_hit.id = "id-4"
+    mock_hit.distance = 0.2
+    mock_hit.entity = {"text": "t", "chunk_metadata": "not-json{"}
+    handshake = MilvusHandshake()
+    handshake.collection.search.return_value = [[mock_hit]]
+
+    results = handshake.search(query="q")
+    assert results[0]["text"] == "t"
+    assert "chunk_metadata" not in results[0] or results[0].get("chunk_metadata") == "not-json{"

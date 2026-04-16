@@ -1,8 +1,9 @@
 """Test the ChromaHandshake class."""
 
 import uuid
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 
+import numpy as np
 import pytest
 
 # Try to import chromadb, skip tests if unavailable
@@ -21,8 +22,6 @@ except ImportError:
     NotFoundError = type(None)  # type: ignore
     ChromaClientType = type(None)
     ChromaPersistentClientType = type(None)
-
-import chromadb
 
 from chonkie import ChromaHandshake
 from chonkie.handshakes.chroma import ChromaEmbeddingFunction
@@ -265,6 +264,114 @@ def test_chroma_handshake_repr() -> None:
     assert repr(handshake) == expected_repr
     # Clean up
     handshake.client.delete_collection(handshake.collection_name)
+
+
+def test_chroma_handshake_persistent_client(tmp_path, mock_embeddings) -> None:
+    """``path=`` creates a client scoped to the given directory."""
+    persist = tmp_path / "chroma_persist_cli"
+    persist.mkdir()
+    name = f"persist-collection-{uuid.uuid4().hex[:10]}"
+    handshake = ChromaHandshake(path=str(persist.resolve()), collection_name=name)
+    assert handshake.client is not None
+    assert handshake.collection_name == name
+    handshake.client.delete_collection(name)
+
+
+def test_chroma_embedding_function_string_model(mock_embeddings) -> None:
+    """ChromaEmbeddingFunction embeds a single string."""
+    cef = ChromaEmbeddingFunction("minishlab/potion-retrieval-32M")
+    out = cef("hello")
+    assert isinstance(out, (list, np.ndarray))
+
+
+def test_chroma_embedding_function_list_input(mock_embeddings) -> None:
+    """ChromaEmbeddingFunction dispatches list input to embed_batch."""
+    cef = ChromaEmbeddingFunction("minishlab/potion-retrieval-32M")
+    out = cef(["a", "b"])
+    assert isinstance(out, list)
+    assert len(out) == 2
+
+
+def test_chroma_embedding_function_invalid_input(mock_embeddings) -> None:
+    """Invalid input type raises ValueError."""
+    cef = ChromaEmbeddingFunction("minishlab/potion-retrieval-32M")
+    with pytest.raises(ValueError, match="string or a list"):
+        cef(123)  # type: ignore[arg-type]
+
+
+def test_chroma_embedding_function_invalid_model_type(mock_embeddings) -> None:
+    """Constructor rejects non-string, non-BaseEmbeddings model."""
+    with pytest.raises(ValueError, match="string or a BaseEmbeddings"):
+        ChromaEmbeddingFunction(12345)  # type: ignore[arg-type]
+
+
+def _search_probe_handshake() -> ChromaHandshake:
+    """Build a ChromaHandshake shell with a mocked collection for ``search``."""
+    h = ChromaHandshake.__new__(ChromaHandshake)
+    h.collection_name = "probe"
+    h.collection = MagicMock()
+    h.embedding_function = MagicMock(return_value=np.array([0.1, 0.2], dtype=np.float64))
+    return h
+
+
+def test_chroma_search_requires_query_or_embedding(mock_embeddings) -> None:
+    h = _search_probe_handshake()
+    with pytest.raises(ValueError, match="Either"):
+        h.search(query=None, embedding=None)
+
+
+def test_chroma_search_returns_empty_when_result_lists_incomplete(mock_embeddings) -> None:
+    h = _search_probe_handshake()
+    h.collection.query.return_value = {
+        "ids": None,
+        "distances": [[]],
+        "metadatas": [[]],
+        "documents": [[]],
+    }
+    assert h.search(query="q") == []
+
+
+def test_chroma_search_cosine_metric(mock_embeddings) -> None:
+    h = _search_probe_handshake()
+    h.collection.metadata = {"hnsw:space": "cosine"}
+    h.collection.query.return_value = {
+        "ids": [["a"]],
+        "distances": [[0.25]],
+        "metadatas": [[{"token_count": 3}]],
+        "documents": [["doc text"]],
+    }
+    matches = h.search(query="q", limit=1)
+    assert len(matches) == 1
+    assert matches[0]["score"] == pytest.approx(0.75)
+    assert matches[0]["text"] == "doc text"
+
+
+def test_chroma_search_l2_metric(mock_embeddings) -> None:
+    h = _search_probe_handshake()
+    h.collection.metadata = {"hnsw:space": "l2"}
+    dist = 0.5
+    h.collection.query.return_value = {
+        "ids": [["b"]],
+        "distances": [[dist]],
+        "metadatas": [[{}]],
+        "documents": [["x"]],
+    }
+    matches = h.search(embedding=[0.1, 0.2], limit=2)
+    expected = 1.0 - (dist**2 / 2)
+    assert matches[0]["score"] == pytest.approx(expected)
+
+
+def test_chroma_search_ip_metric(mock_embeddings) -> None:
+    h = _search_probe_handshake()
+    h.collection.metadata = {"hnsw:space": "ip"}
+    h.collection.query.return_value = {
+        "ids": [["c"]],
+        "distances": [[0.42]],
+        "metadatas": [[{}]],
+        "documents": [["y"]],
+    }
+    matches = h.search(query="q")
+    assert matches[0]["score"] == pytest.approx(0.42)
 
 
 # Note: Testing the embedding function directly might require significant setup

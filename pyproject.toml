@@ -238,6 +238,16 @@ lint.per-file-ignores = { "tests/**" = ["D100", "D102", "D103", "D104"] }
 preview = true
 indent-style = "space"
 
+[tool.coverage.run]
+omit = [
+    "*/chonkie/api/migrations/*",
+]
+
+[tool.coverage.report]
+omit = [
+    "*/chonkie/api/migrations/*",
+]
+
 [tool.mypy]
 disallow_untyped_defs = true
 ignore_missing_imports = true
