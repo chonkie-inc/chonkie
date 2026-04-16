@@ -1,6 +1,7 @@
 """Milvus Handshake to export Chonkie's Chunks into a Milvus collection."""
 
-import importlib.util
+import importlib.util as importutil
+import json
 from typing import (
     Any,
     Literal,
@@ -44,13 +45,13 @@ class MilvusHandshake(BaseHandshake):
     def __init__(
         self,
         client: Optional[Any] = None,
-        uri: Optional[str] = None,
+        uri: str = "",
         collection_name: Union[str, Literal["random"]] = "random",
         embedding_model: Union[str, BaseEmbeddings] = "minishlab/potion-retrieval-32M",
         host: str = "localhost",
         port: str = "19530",
-        user: Optional[str] = "",
-        api_key: Optional[str] = "",
+        user: str = "",
+        api_key: str = "",
         alias: str = "default",
         **kwargs: Any,
     ) -> None:
@@ -81,6 +82,9 @@ class MilvusHandshake(BaseHandshake):
 
         # 1. Establish connection using the ORM's global connection manager
         if client is not None:
+            assert isinstance(client, pymilvus.MilvusClient), (
+                "Client must be an instance of pymilvus.MilvusClient"
+            )
             self.client = client
         else:
             self.client = pymilvus.MilvusClient(
@@ -133,7 +137,7 @@ class MilvusHandshake(BaseHandshake):
     @classmethod
     def _is_available(cls) -> bool:
         """Check if the dependencies are installed."""
-        return importlib.util.find_spec("pymilvus") is not None
+        return importutil.find_spec("pymilvus") is not None
 
     def _create_collection_with_schema(self) -> None:
         """Create a new collection with a predefined schema and index."""
@@ -146,6 +150,7 @@ class MilvusHandshake(BaseHandshake):
             FieldSchema(name="start_index", dtype=DataType.INT64),
             FieldSchema(name="end_index", dtype=DataType.INT64),
             FieldSchema(name="token_count", dtype=DataType.INT64),
+            FieldSchema(name="chunk_metadata", dtype=DataType.VARCHAR, max_length=65_535),
             FieldSchema(name="embedding", dtype=DataType.FLOAT_VECTOR, dim=self.dimension),
         ]
         schema = CollectionSchema(fields, description="Chonkie Handshake Collection")
@@ -171,9 +176,20 @@ class MilvusHandshake(BaseHandshake):
         start_indices = [chunk.start_index for chunk in chunks]
         end_indices = [chunk.end_index for chunk in chunks]
         token_counts = [chunk.token_count for chunk in chunks]
+        chunk_metadata = [
+            json.dumps(chunk.metadata, sort_keys=True) if chunk.metadata else ""
+            for chunk in chunks
+        ]
         embeddings = self.embedding_model.embed_batch(texts)
 
-        data_to_insert = [texts, start_indices, end_indices, token_counts, embeddings]
+        data_to_insert = [
+            texts,
+            start_indices,
+            end_indices,
+            token_counts,
+            chunk_metadata,
+            embeddings,
+        ]
 
         mutation_result = self.collection.insert(data_to_insert)
         self.collection.flush()  # Essential to make data searchable
@@ -189,16 +205,19 @@ class MilvusHandshake(BaseHandshake):
     def search(
         self,
         query: Optional[str] = None,
-        embedding: Optional[Union[list[float], "np.ndarray"]] = None,
+        embedding: Optional[Union[list[float], np.ndarray]] = None,
         limit: int = 5,
     ) -> list[dict[str, Any]]:
         """Retrieve the top_k most similar chunks to the query."""
         if embedding is None and query is None:
             raise ValueError("Either 'query' or 'embedding' must be provided.")
 
+        query_vectors: list[list[float]]
+
         if query:
             query_embedding = self.embedding_model.embed(query)
             # Milvus expects a list of vectors for searching
+            assert isinstance(query_embedding, np.ndarray), "Embedding must be a numpy array"
             query_vectors = [query_embedding.tolist()]
         else:
             # Ensure embedding is in the correct format (list of lists)
@@ -206,13 +225,18 @@ class MilvusHandshake(BaseHandshake):
                 embedding = embedding.tolist()
             # If it's a flat list, wrap it in another list
             if embedding and len(embedding) > 0 and isinstance(embedding[0], float):
+                assert isinstance(embedding, list), "Embedding must be a list of floats"
                 query_vectors = [embedding]
             else:
-                query_vectors = embedding  # type: ignore
+                assert embedding is not None, "Embedding cannot be None"
+                assert isinstance(embedding, list) and all(
+                    isinstance(vec, list) for vec in embedding
+                ), ("Embedding must be a list of lists of floats.",)
+                query_vectors = [embedding]
 
         # Default search parameters for HNSW index
         search_params = {"metric_type": "L2", "params": {"ef": 64}}
-        output_fields = ["text", "start_index", "end_index", "token_count"]
+        output_fields = ["text", "start_index", "end_index", "token_count", "chunk_metadata"]
 
         results = self.collection.search(
             data=query_vectors,
@@ -226,10 +250,19 @@ class MilvusHandshake(BaseHandshake):
         matches = []
         # Results are for the first query vector (index 0)
         for hit in results[0]:
-            match_data = {
+            entity = dict(hit.entity) if hit.entity else {}
+            raw_meta = entity.pop("chunk_metadata", None)
+            match_data: dict[str, Any] = {
                 "id": hit.id,
                 "score": hit.distance,  # Milvus uses 'distance', which is analogous to score
-                **hit.entity,
+                **entity,
             }
+            if raw_meta:
+                try:
+                    parsed = json.loads(raw_meta)
+                    if isinstance(parsed, dict):
+                        match_data = {**parsed, **match_data}
+                except json.JSONDecodeError:
+                    pass
             matches.append(match_data)
         return matches

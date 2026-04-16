@@ -6,16 +6,6 @@ import pytest
 
 from chonkie import Chunk
 
-# Skip all tests if memchunk is not installed
-try:
-    import memchunk  # noqa: F401
-
-    MEMCHUNK_AVAILABLE = True
-except ImportError:
-    MEMCHUNK_AVAILABLE = False
-
-pytestmark = pytest.mark.skipif(not MEMCHUNK_AVAILABLE, reason="memchunk not installed")
-
 
 @pytest.fixture
 def sample_text() -> str:

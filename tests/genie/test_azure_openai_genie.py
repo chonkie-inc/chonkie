@@ -1,7 +1,7 @@
 """Tests for AzureOpenAIGenie class."""
 
 import sys
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
@@ -78,8 +78,9 @@ class TestAzureAIGenieMocked:
         mock_client = Mock()
         mock_client.chat.completions.create.return_value = mock_response
         mock_class = Mock(return_value=mock_client)
+        mock_async_class = Mock(return_value=Mock())
 
-        mock_openai = Mock(AzureOpenAI=mock_class)
+        mock_openai = Mock(AzureOpenAI=mock_class, AsyncAzureOpenAI=mock_async_class)
 
         with (
             patch.object(AzureOpenAIGenie, "_is_available", return_value=True),
@@ -92,6 +93,219 @@ class TestAzureAIGenieMocked:
             )
             result = genie.generate("Hello?")
             assert result == "Test response"
+
+    def test_generate_none_content_raises(self) -> None:
+        mock_msg = Mock()
+        mock_msg.content = None
+        mock_choice = Mock()
+        mock_choice.message = mock_msg
+        mock_response = Mock()
+        mock_response.choices = [mock_choice]
+
+        mock_client = Mock()
+        mock_client.chat.completions.create.return_value = mock_response
+        mock_openai = Mock(
+            AzureOpenAI=Mock(return_value=mock_client),
+            AsyncAzureOpenAI=Mock(return_value=Mock()),
+        )
+        with (
+            patch.object(AzureOpenAIGenie, "_is_available", return_value=True),
+            patch.dict(sys.modules, openai=mock_openai),
+        ):
+            genie = AzureOpenAIGenie(
+                azure_api_key="test",
+                azure_endpoint="https://test.openai.azure.com",
+                deployment="deployment",
+            )
+            with pytest.raises(ValueError, match="Azure OpenAI response content is None"):
+                genie.generate("x")
+
+    @pytest.mark.asyncio
+    async def test_agenerate_returns_text(self) -> None:
+        mock_msg = Mock()
+        mock_msg.content = "async ok"
+        mock_choice = Mock()
+        mock_choice.message = mock_msg
+        mock_response = Mock()
+        mock_response.choices = [mock_choice]
+
+        mock_sync = Mock()
+        mock_async_client = Mock()
+        mock_async_client.chat.completions.create = AsyncMock(return_value=mock_response)
+        mock_openai = Mock(
+            AzureOpenAI=Mock(return_value=mock_sync),
+            AsyncAzureOpenAI=Mock(return_value=mock_async_client),
+        )
+        with (
+            patch.object(AzureOpenAIGenie, "_is_available", return_value=True),
+            patch.dict(sys.modules, openai=mock_openai),
+        ):
+            genie = AzureOpenAIGenie(
+                azure_api_key="test",
+                azure_endpoint="https://test.openai.azure.com",
+                deployment="deployment",
+            )
+            assert await genie.agenerate("p") == "async ok"
+
+    @pytest.mark.asyncio
+    async def test_agenerate_none_content_raises(self) -> None:
+        mock_msg = Mock()
+        mock_msg.content = None
+        mock_choice = Mock()
+        mock_choice.message = mock_msg
+        mock_response = Mock()
+        mock_response.choices = [mock_choice]
+
+        mock_async_client = Mock()
+        mock_async_client.chat.completions.create = AsyncMock(return_value=mock_response)
+        mock_openai = Mock(
+            AzureOpenAI=Mock(return_value=Mock()),
+            AsyncAzureOpenAI=Mock(return_value=mock_async_client),
+        )
+        with (
+            patch.object(AzureOpenAIGenie, "_is_available", return_value=True),
+            patch.dict(sys.modules, openai=mock_openai),
+        ):
+            genie = AzureOpenAIGenie(
+                azure_api_key="test",
+                azure_endpoint="https://test.openai.azure.com",
+                deployment="deployment",
+            )
+            with pytest.raises(ValueError, match="Azure OpenAI response content is None"):
+                await genie.agenerate("p")
+
+    def test_generate_json_returns_dump(self) -> None:
+        mock_parsed = Mock()
+        mock_parsed.model_dump.return_value = {"k": 1}
+        mock_message = Mock()
+        mock_message.parsed = mock_parsed
+        mock_choice = Mock()
+        mock_choice.message = mock_message
+        mock_response = Mock()
+        mock_response.choices = [mock_choice]
+
+        mock_client = Mock()
+        mock_client.beta.chat.completions.parse.return_value = mock_response
+        mock_openai = Mock(
+            AzureOpenAI=Mock(return_value=mock_client),
+            AsyncAzureOpenAI=Mock(return_value=Mock()),
+        )
+        schema = Mock()
+        with (
+            patch.object(AzureOpenAIGenie, "_is_available", return_value=True),
+            patch.dict(sys.modules, openai=mock_openai),
+        ):
+            genie = AzureOpenAIGenie(
+                azure_api_key="test",
+                azure_endpoint="https://test.openai.azure.com",
+                deployment="deployment",
+            )
+            assert genie.generate_json("p", schema) == {"k": 1}
+
+    def test_generate_json_none_parsed_raises(self) -> None:
+        mock_message = Mock()
+        mock_message.parsed = None
+        mock_choice = Mock()
+        mock_choice.message = mock_message
+        mock_response = Mock()
+        mock_response.choices = [mock_choice]
+
+        mock_client = Mock()
+        mock_client.beta.chat.completions.parse.return_value = mock_response
+        mock_openai = Mock(
+            AzureOpenAI=Mock(return_value=mock_client),
+            AsyncAzureOpenAI=Mock(return_value=Mock()),
+        )
+        with (
+            patch.object(AzureOpenAIGenie, "_is_available", return_value=True),
+            patch.dict(sys.modules, openai=mock_openai),
+        ):
+            genie = AzureOpenAIGenie(
+                azure_api_key="test",
+                azure_endpoint="https://test.openai.azure.com",
+                deployment="deployment",
+            )
+            with pytest.raises(ValueError, match="Azure OpenAI response content is None"):
+                genie.generate_json("p", Mock())
+
+    @pytest.mark.asyncio
+    async def test_agenerate_json_returns_dump(self) -> None:
+        mock_parsed = Mock()
+        mock_parsed.model_dump.return_value = {"z": 2}
+        mock_message = Mock()
+        mock_message.parsed = mock_parsed
+        mock_choice = Mock()
+        mock_choice.message = mock_message
+        mock_response = Mock()
+        mock_response.choices = [mock_choice]
+
+        mock_async = Mock()
+        mock_async.beta.chat.completions.parse = AsyncMock(return_value=mock_response)
+        mock_openai = Mock(
+            AzureOpenAI=Mock(return_value=Mock()),
+            AsyncAzureOpenAI=Mock(return_value=mock_async),
+        )
+        schema = Mock()
+        with (
+            patch.object(AzureOpenAIGenie, "_is_available", return_value=True),
+            patch.dict(sys.modules, openai=mock_openai),
+        ):
+            genie = AzureOpenAIGenie(
+                azure_api_key="test",
+                azure_endpoint="https://test.openai.azure.com",
+                deployment="deployment",
+            )
+            assert await genie.agenerate_json("p", schema) == {"z": 2}
+
+    @pytest.mark.asyncio
+    async def test_agenerate_json_none_parsed_raises(self) -> None:
+        mock_message = Mock()
+        mock_message.parsed = None
+        mock_choice = Mock()
+        mock_choice.message = mock_message
+        mock_response = Mock()
+        mock_response.choices = [mock_choice]
+
+        mock_async = Mock()
+        mock_async.beta.chat.completions.parse = AsyncMock(return_value=mock_response)
+        mock_openai = Mock(
+            AzureOpenAI=Mock(return_value=Mock()),
+            AsyncAzureOpenAI=Mock(return_value=mock_async),
+        )
+        with (
+            patch.object(AzureOpenAIGenie, "_is_available", return_value=True),
+            patch.dict(sys.modules, openai=mock_openai),
+        ):
+            genie = AzureOpenAIGenie(
+                azure_api_key="test",
+                azure_endpoint="https://test.openai.azure.com",
+                deployment="deployment",
+            )
+            with pytest.raises(ValueError, match="Azure OpenAI response content is None"):
+                await genie.agenerate_json("p", Mock())
+
+    def test_initialization_without_api_key_uses_token_provider(self) -> None:
+        mock_openai = Mock()
+        mock_identity = Mock()
+        mock_identity.DefaultAzureCredential = Mock(return_value=object())
+        mock_identity.get_bearer_token_provider = Mock(return_value=lambda: "token")
+
+        with (
+            patch.object(AzureOpenAIGenie, "_is_available", return_value=True),
+            patch.dict(sys.modules, {"openai": mock_openai, "azure.identity": mock_identity}),
+        ):
+            AzureOpenAIGenie(
+                azure_endpoint="https://entra.openai.azure.com",
+                deployment="dep",
+                azure_api_key=None,
+            )
+
+        sync_kwargs = mock_openai.AzureOpenAI.call_args.kwargs
+        async_kwargs = mock_openai.AsyncAzureOpenAI.call_args.kwargs
+        assert "azure_ad_token_provider" in sync_kwargs
+        assert "azure_ad_token_provider" in async_kwargs
+        assert "api_key" not in sync_kwargs
+        mock_identity.get_bearer_token_provider.assert_called_once()
 
     def test_repr(self):
         """Test AzureOpenAIGenie string representation."""
@@ -118,9 +332,9 @@ class TestAzureOpenAIGenieUtilities:
 
     def test_azure_genie_is_available_true(self) -> None:
         """Test _is_available returns True when dependencies are installed."""
-        with patch("chonkie.genie.openai.importutil.find_spec") as mock_find_spec:
-            mock_find_spec.side_effect = (
-                lambda x: Mock() if x in ["openai", "pydantic", "azure.identity"] else None
+        with patch("chonkie.genie.azure_openai.importutil.find_spec") as mock_find_spec:
+            mock_find_spec.side_effect = lambda x: (
+                Mock() if x in ["openai", "pydantic", "azure.identity"] else None
             )
             assert AzureOpenAIGenie._is_available()
 

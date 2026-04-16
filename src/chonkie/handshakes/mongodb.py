@@ -8,7 +8,8 @@ from typing import (
     Optional,
     Union,
 )
-from uuid import NAMESPACE_OID, uuid5
+
+import numpy as np
 
 from chonkie.embeddings import AutoEmbeddings, BaseEmbeddings
 from chonkie.logger import get_logger
@@ -132,18 +133,19 @@ class MongoDBHandshake(BaseHandshake):
     def _is_available(cls) -> bool:
         return importutil.find_spec("pymongo") is not None
 
-    def _generate_id(self, index: int, chunk: Chunk) -> str:
-        return str(uuid5(NAMESPACE_OID, f"{self.collection_name}::chunk-{index}:{chunk.text}"))
-
     def _generate_document(self, index: int, chunk: Chunk, embedding: list[float]) -> dict:
-        return {
-            "_id": self._generate_id(index, chunk),
-            "text": chunk.text,
-            "start_index": chunk.start_index,
-            "end_index": chunk.end_index,
-            "token_count": chunk.token_count,
-            "embedding": embedding,
-        }
+        doc_id = self._generate_id(f"{self.collection_name}::chunk-{index}:{chunk.text}")
+        body = self._merge_chunk_metadata(
+            chunk,
+            {
+                "text": chunk.text,
+                "start_index": chunk.start_index,
+                "end_index": chunk.end_index,
+                "token_count": chunk.token_count,
+                "embedding": embedding,
+            },
+        )
+        return {"_id": doc_id, **body}
 
     def write(self, chunks: Union[Chunk, list[Chunk]]) -> None:
         """Write chunks to the MongoDB collection."""
@@ -155,10 +157,10 @@ class MongoDBHandshake(BaseHandshake):
         documents = []
         for index, chunk in enumerate(chunks):
             embedding = embeddings[index]
-            if hasattr(embedding, "tolist"):
-                embedding_list: list[float] = embedding.tolist()
-            else:
-                embedding_list = embedding  # type: ignore[assignment]
+            if isinstance(embedding, np.ndarray):
+                embedding = embedding.tolist()
+            assert isinstance(embedding, list), "Embedding must be a list of floats"
+            embedding_list: list[float] = embedding
             documents.append(self._generate_document(index, chunk, embedding_list))
         if documents:
             self.collection.insert_many(documents)
@@ -194,19 +196,7 @@ class MongoDBHandshake(BaseHandshake):
         if query is not None:
             embedding = self.embedding_model.embed(query).tolist()
         # Get all documents with embeddings
-        docs = list(
-            self.collection.find(
-                {},
-                {
-                    "_id": 1,
-                    "text": 1,
-                    "embedding": 1,
-                    "start_index": 1,
-                    "end_index": 1,
-                    "token_count": 1,
-                },
-            ),
-        )
+        docs = list(self.collection.find({}))
 
         def cosine_similarity(a: list[float], b: list[float]) -> float:
             """Compute cosine similarity between two vectors."""
@@ -225,14 +215,14 @@ class MongoDBHandshake(BaseHandshake):
             emb = doc.get("embedding")
             if emb is not None:
                 score = cosine_similarity(embedding, emb)  # type: ignore[arg-type]
-                result = {
+                result: dict[str, Any] = {
                     "id": doc["_id"],
                     "score": score,
-                    "text": doc["text"],
-                    "start_index": doc.get("start_index"),
-                    "end_index": doc.get("end_index"),
-                    "token_count": doc.get("token_count"),
                 }
+                for key, val in doc.items():
+                    if key in ("_id", "embedding"):
+                        continue
+                    result[key] = val
                 results.append(result)
         # Sort by score descending and return limit
         results.sort(key=lambda x: x["score"], reverse=True)

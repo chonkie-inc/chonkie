@@ -15,6 +15,7 @@ import pytest
 
 from chonkie import (
     Chunk,
+    Document,
     RecursiveChunker,
     RecursiveLevel,
     RecursiveRules,
@@ -88,6 +89,38 @@ def token_rules() -> RecursiveRules:
     """Return a token set of rules."""
     token_level = RecursiveLevel(delimiters=None, whitespace=False)
     return RecursiveRules(levels=[token_level])
+
+
+@pytest.fixture
+def cjk_text() -> str:
+    """Return a sample text that uses CJK punctuation characters."""
+    return (
+        "自然言語処理は、コンピューターが人間の言語を理解し、生成するための技術です。"
+        "この分野は急速に発展しており、多くの応用が生まれています！"
+        "テキスト分類、機械翻訳、質問応答などが代表的な例です。"
+        "最近では、大規模言語モデルが注目を集めています？"
+        "これらのモデルは、膨大なデータで学習されています。\n\n"
+        "検索拡張生成（RAG）は、言語モデルと外部知識を組み合わせた手法です。"
+        "この手法では、テキストを適切なサイズに分割することが重要です！"
+        "分割の方法によって、システムの性能が大きく変わります。"
+        "適切なチャンクサイズを選ぶことが、成功の鍵となります？"
+        "研究者たちは、様々なアプローチを試みています。\n\n"
+        "固定サイズの分割は、最もシンプルな方法です。"
+        "しかし、意味的なまとまりを無視してしまうことがあります！"
+        "意味的な分割は、文書の自然な構造を尊重します。"
+        "段落、文、単語などを単位として分割します。"
+        "どの方法が最適かは、用途によって異なります？"
+    )
+
+
+@pytest.fixture
+def cjk_sentence_rules() -> RecursiveRules:
+    """Return sentence-level rules using CJK punctuation as delimiters."""
+    cjk_level = RecursiveLevel(
+        delimiters=["。", "、", "！", "？"],
+        whitespace=False,
+    )
+    return RecursiveRules(levels=[cjk_level])
 
 
 def test_recursive_chunker_initialization(sample_text: str, default_rules: RecursiveRules) -> None:
@@ -428,3 +461,79 @@ def test_recursive_chunker_from_recipe_nonexistent() -> None:
 
     with pytest.raises(ValueError):
         RecursiveChunker.from_recipe(name="default", lang="invalid")
+
+
+def test_recursive_chunker_cjk_punctuation_token_count(
+    cjk_text: str,
+    cjk_sentence_rules: RecursiveRules,
+) -> None:
+    """Test that the RecursiveChunker respects chunk_size when splitting on CJK punctuation."""
+    chunker = RecursiveChunker(
+        rules=cjk_sentence_rules, chunk_size=512, min_characters_per_chunk=1
+    )
+    chunks = chunker.chunk(cjk_text)
+    assert len(chunks) > 0
+    assert all(isinstance(chunk, Chunk) for chunk in chunks)
+    assert all(chunk.token_count <= 512 for chunk in chunks)
+
+
+def test_recursive_chunker_cjk_punctuation_reconstruction(
+    cjk_text: str,
+    cjk_sentence_rules: RecursiveRules,
+) -> None:
+    """Test that concatenating chunks recovers the original CJK text exactly."""
+    chunker = RecursiveChunker(
+        rules=cjk_sentence_rules, chunk_size=512, min_characters_per_chunk=1
+    )
+    chunks = chunker.chunk(cjk_text)
+    assert len(chunks) > 0
+    assert cjk_text == "".join(chunk.text for chunk in chunks)
+
+
+def test_recursive_chunker_cjk_punctuation_indices(
+    cjk_text: str,
+    cjk_sentence_rules: RecursiveRules,
+) -> None:
+    """Test that chunk start/end indices correctly map into the original CJK text."""
+    chunker = RecursiveChunker(
+        rules=cjk_sentence_rules, chunk_size=512, min_characters_per_chunk=1
+    )
+    chunks = chunker.chunk(cjk_text)
+    assert len(chunks) > 0
+    assert all(chunk.start_index < chunk.end_index for chunk in chunks)
+    assert all(chunk.start_index >= 0 for chunk in chunks)
+    assert all(chunk.end_index <= len(cjk_text) for chunk in chunks)
+    assert all(chunk.text == cjk_text[chunk.start_index : chunk.end_index] for chunk in chunks)
+
+
+def test_recursive_chunker_cjk_default_rules_reconstruction(
+    cjk_text: str, default_rules: RecursiveRules
+) -> None:
+    """Test that CJK text is reconstructed correctly when using the default (non-CJK-specific) rules."""
+    chunker = RecursiveChunker(rules=default_rules, chunk_size=512, min_characters_per_chunk=1)
+    chunks = chunker.chunk(cjk_text)
+    assert len(chunks) > 0
+    assert cjk_text == "".join(chunk.text for chunk in chunks)
+
+
+def test_chunk_document_propagates_metadata(
+    sample_text: str,
+    default_rules: RecursiveRules,
+) -> None:
+    """Document metadata is merged into every chunk (chunk keys win on conflict)."""
+    chunker = RecursiveChunker(rules=default_rules, chunk_size=512, min_characters_per_chunk=1)
+    doc = Document(
+        content=sample_text[:2000],
+        metadata={"filename": "paper.md", "source": "test"},
+    )
+    chunker.chunk_document(doc)
+    assert doc.chunks
+    for c in doc.chunks:
+        assert c.metadata["filename"] == "paper.md"
+        assert c.metadata["source"] == "test"
+
+    doc.chunks[0].metadata["filename"] = "override.md"
+    assert doc.chunks[0].metadata["filename"] == "override.md"
+    chunker.chunk_document(doc)
+    assert doc.chunks[0].metadata["filename"] == "paper.md"
+    assert doc.chunks[0].metadata["source"] == "test"

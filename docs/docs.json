@@ -24,9 +24,7 @@
           {
             "group": "Products",
             "pages": [
-              "common/open-source",
-              "common/chunking-api",
-              "common/labs"
+              "common/open-source"
             ]
           }
         ]
@@ -41,6 +39,16 @@
               "oss/quick-start",
               "oss/installation",
               "oss/pipelines"
+            ]
+          },
+          {
+            "group": "API Server",
+            "pages": [
+              "oss/api/overview",
+              "oss/api/quickstart",
+              "oss/api/endpoints",
+              "oss/api/pipelines",
+              "oss/api/docker"
             ]
           },
           {
@@ -63,16 +71,17 @@
             "group": "Chunkers",
             "pages": [
               "oss/chunkers/overview",
-              "oss/chunkers/token-chunker",
-              "oss/chunkers/fast-chunker",
-              "oss/chunkers/sentence-chunker",
-              "oss/chunkers/recursive-chunker",
-              "oss/chunkers/table-chunker",
-              "oss/chunkers/code-chunker",
-              "oss/chunkers/semantic-chunker",
-              "oss/chunkers/late-chunker",
-              "oss/chunkers/neural-chunker",
-              "oss/chunkers/slumber-chunker"
+                "oss/chunkers/code-chunker",
+                "oss/chunkers/fast-chunker",
+                "oss/chunkers/late-chunker",
+                "oss/chunkers/neural-chunker",
+                "oss/chunkers/recursive-chunker",
+                "oss/chunkers/semantic-chunker",
+                "oss/chunkers/sentence-chunker",
+                "oss/chunkers/slumber-chunker",
+                "oss/chunkers/table-chunker",
+                "oss/chunkers/teraflopai-chunker",
+                "oss/chunkers/token-chunker"
             ]
           },
           {
@@ -105,6 +114,7 @@
               "oss/handshakes/overview",
               "oss/handshakes/chroma-handshake",
               "oss/handshakes/elastic-handshake",
+              "oss/handshakes/lancedb-handshake",
               "oss/handshakes/milvus-handshake",
               "oss/handshakes/mongodb-handshake",
               "oss/handshakes/pgvector-handshake",
@@ -151,88 +161,6 @@
             ]
           }
         ]
-      },
-      {
-        "tab": "API Reference",
-        "icon": "cloud",
-        "groups": [
-          {
-            "group": "Getting Started",
-            "pages": [
-              "api/common/introduction",
-              "api/common/playground"
-            ]
-          },
-          {
-            "group": "Chunkers",
-            "pages": [
-              "api/chunkers/token-chunker",
-              "api/chunkers/sentence-chunker",
-              "api/chunkers/recursive-chunker",
-              "api/chunkers/semantic-chunker",
-              "api/chunkers/late-chunker",
-              "api/chunkers/code-chunker",
-              "api/chunkers/neural-chunker",
-              "api/chunkers/slumber-chunker"
-            ]
-          },
-          {
-            "group": "Refineries",
-            "pages": [
-              "api/refineries/embeddings",
-              "api/refineries/overlap"
-            ]
-          },
-          {
-            "group": "Pipelines",
-            "pages": [
-              "api/pipelines/create",
-              "api/pipelines/list",
-              "api/pipelines/get",
-              "api/pipelines/update",
-              "api/pipelines/delete",
-              "api/pipelines/execute",
-              "api/pipelines/validate"
-            ]
-          },
-          {
-            "group": "Knowledge Bases",
-            "pages": [
-              "api/knowledge/create",
-              "api/knowledge/list",
-              "api/knowledge/get-files",
-              "api/knowledge/upload",
-              "api/knowledge/download",
-              "api/knowledge/delete-file",
-              "api/knowledge/delete"
-            ]
-          },
-          {
-            "group": "Search",
-            "pages": [
-              "api/search/search"
-            ]
-          },
-          {
-            "group": "Agents",
-            "pages": [
-              "api/agents/create",
-              "api/agents/list",
-              "api/agents/get",
-              "api/agents/update",
-              "api/agents/delete",
-              "api/agents/chat",
-              "api/agents/research",
-              "api/agents/mcp"
-            ]
-          },
-          {
-            "group": "Parse",
-            "pages": [
-              "api/parse/parse"
-            ]
-          }
-        ]
       }
     ],
     "global": {
@@ -272,17 +200,7 @@
       "type": "github",
       "href": "https://github.com/chonkie-inc/chonkie"
     },
-    "links": [
-      {
-        "label": "API Dashboard",
-        "href": "https://labs.chonkie.ai"
-      }
-    ]
-  },
-  "api": {
-    "playground": {
-      "display": "none"
-    }
+    "links": []
   },
   "seo": {
     "metatags": {

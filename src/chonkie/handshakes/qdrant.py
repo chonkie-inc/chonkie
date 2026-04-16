@@ -1,6 +1,7 @@
 """Qdrant Handshake to export Chonkie's Chunks into a Qdrant collection."""
 
 import importlib.util as importutil
+import os
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -8,7 +9,6 @@ from typing import (
     Optional,
     Union,
 )
-from uuid import NAMESPACE_OID, uuid5
 
 from chonkie.embeddings import AutoEmbeddings, BaseEmbeddings
 from chonkie.logger import get_logger
@@ -37,7 +37,7 @@ class QdrantHandshake(BaseHandshake):
         embedding_model: Union[str, BaseEmbeddings]: The embedding model to use.
         url: Optional[str]: The URL to the Qdrant Server.
         api_key: Optional[str]: The API key to the Qdrant Server. Only needed for Qdrant Cloud.
-        path: Optional[str]: The path to the Qdrant collection locally. If not provided, will create an ephemeral collection.
+        path: The path to the Qdrant collection locally. If not provided, will create an ephemeral collection.
 
     """
 
@@ -47,7 +47,7 @@ class QdrantHandshake(BaseHandshake):
         collection_name: Union[str, Literal["random"]] = "random",
         embedding_model: Union[str, BaseEmbeddings] = "minishlab/potion-retrieval-32M",
         url: Optional[str] = None,
-        path: Optional[str] = None,
+        path: str | os.PathLike | None = None,
         api_key: Optional[str] = None,
         **kwargs: dict[str, Any],
     ) -> None:
@@ -83,7 +83,7 @@ class QdrantHandshake(BaseHandshake):
             elif url is not None:
                 self.client = qdrant_client.QdrantClient(url=url, **kwargs)  # type: ignore[arg-type]
             elif path is not None:
-                self.client = qdrant_client.QdrantClient(path=path, **kwargs)  # type: ignore[arg-type]
+                self.client = qdrant_client.QdrantClient(path=str(path), **kwargs)  # type: ignore[arg-type]
             else:
                 # If no client is provided, create an ephemeral collection
                 self.client = qdrant_client.QdrantClient(":memory:", **kwargs)  # type: ignore[arg-type]
@@ -92,9 +92,14 @@ class QdrantHandshake(BaseHandshake):
 
         # Initialize the embedding model
         if isinstance(embedding_model, str):
-            self.embedding_model = AutoEmbeddings.get_embeddings(embedding_model)
-        else:
-            self.embedding_model = embedding_model
+            embedding_model = AutoEmbeddings.get_embeddings(embedding_model)
+        # enforce linting
+        if not isinstance(embedding_model, BaseEmbeddings):
+            raise ValueError(
+                "The provided embedding model is not a valid BaseEmbeddings instance."
+            )
+
+        self.embedding_model = embedding_model
 
         self.dimension = self.embedding_model.dimension
 
@@ -125,18 +130,17 @@ class QdrantHandshake(BaseHandshake):
         """Check if the dependencies are installed."""
         return importutil.find_spec("qdrant_client") is not None
 
-    def _generate_id(self, index: int, chunk: Chunk) -> str:
-        """Generate a unique id for the chunk."""
-        return str(uuid5(NAMESPACE_OID, f"{self.collection_name}::chunk-{index}:{chunk.text}"))
-
     def _generate_payload(self, chunk: Chunk) -> dict:
         """Generate the payload for the chunk."""
-        return {
-            "text": chunk.text,
-            "start_index": chunk.start_index,
-            "end_index": chunk.end_index,
-            "token_count": chunk.token_count,
-        }
+        return self._merge_chunk_metadata(
+            chunk,
+            {
+                "text": chunk.text,
+                "start_index": chunk.start_index,
+                "end_index": chunk.end_index,
+                "token_count": chunk.token_count,
+            },
+        )
 
     def _get_points(self, chunks: Union[Chunk, list[Chunk]]) -> list["PointStruct"]:
         """Get the points from the chunks."""
@@ -150,8 +154,8 @@ class QdrantHandshake(BaseHandshake):
         for index, chunk in enumerate(chunks):
             points.append(
                 PointStruct(
-                    id=self._generate_id(index, chunk),
-                    vector=self.embedding_model.embed(chunk.text).tolist(),  # type: ignore[arg-type] # Since this passes a numpy array, we need to convert it to a list
+                    id=self._generate_id(f"{self.collection_name}::chunk-{index}:{chunk.text}"),
+                    vector=self.embedding_model.embed(chunk.text).tolist(),
                     payload=self._generate_payload(chunk),
                 ),
             )

@@ -6,6 +6,7 @@ specified token count limits for each chunk. It also handles overlapping chunks 
 allows customization of sentence boundary delimiters and minimum sentence lengths.
 """
 
+import os
 import warnings
 from typing import Literal, Optional, Sequence, Union
 
@@ -17,7 +18,7 @@ from chonkie.tokenizer import TokenizerProtocol
 from chonkie.types import Chunk, Sentence
 from chonkie.utils import Hubbie
 
-from .base import BaseChunker
+from .base import BaseChunker, split_text_by_delimiters
 
 logger = get_logger(__name__)
 
@@ -87,6 +88,7 @@ class SentenceChunker(BaseChunker):
         if approximate:
             warnings.warn(
                 "Approximate has been deprecated and will be removed from next version onwards!",
+                DeprecationWarning,
             )
 
         # Assign the values if they make sense
@@ -104,7 +106,7 @@ class SentenceChunker(BaseChunker):
         cls,
         name: Optional[str] = "default",
         lang: Optional[str] = "en",
-        path: Optional[str] = None,
+        path: str | os.PathLike | None = None,
         tokenizer: Union[str, TokenizerProtocol] = "character",
         chunk_size: int = 2048,
         chunk_overlap: int = 0,
@@ -156,9 +158,7 @@ class SentenceChunker(BaseChunker):
         )
 
     def _split_text(self, text: str) -> list[str]:
-        """Fast sentence splitting using chonkie-core.
-
-        This method is faster than using regex for sentence splitting and is more accurate than using the spaCy sentence tokenizer.
+        """Split text into sentences using shared delimiter splitting.
 
         Args:
             text: Input text to be split into sentences
@@ -167,40 +167,12 @@ class SentenceChunker(BaseChunker):
             List of sentences
 
         """
-        # Normalize delimiters to a list
-        if isinstance(self.delim, str):
-            delimiters = [self.delim]
-        else:
-            delimiters = self.delim
-
-        text_bytes = text.encode("utf-8")
-        include_mode = self.include_delim or "prev"
-
-        # Check if we have multi-byte delimiters
-        has_multibyte = any(len(d) > 1 for d in delimiters)
-
-        if has_multibyte:
-            # Use split_pattern_offsets for multi-byte patterns
-            patterns = [d.encode("utf-8") for d in delimiters]
-            offsets = chonkie_core.split_pattern_offsets(
-                text_bytes,
-                patterns=patterns,
-                include_delim=include_mode,
-                min_chars=self.min_characters_per_sentence,
-            )
-        else:
-            # Use faster split_offsets for single-byte delimiters
-            delim_bytes = "".join(delimiters).encode("utf-8")
-            offsets = chonkie_core.split_offsets(
-                text_bytes,
-                delimiters=delim_bytes,
-                include_delim=include_mode,
-                min_chars=self.min_characters_per_sentence,
-            )
-
-        # Convert byte offsets to strings
-        splits = [text_bytes[start:end].decode("utf-8") for start, end in offsets]
-        return [s for s in splits if s]
+        return split_text_by_delimiters(
+            text,
+            delimiters=self.delim,
+            include_delim=self.include_delim or "prev",
+            min_chars=self.min_characters_per_sentence,
+        )
 
     def _prepare_sentences(self, text: str) -> list[Sentence]:
         """Split text into sentences and calculate token counts for each sentence.
@@ -310,10 +282,10 @@ class SentenceChunker(BaseChunker):
                 if pos + self.min_sentences_per_chunk <= len(sentences):
                     split_idx = pos + self.min_sentences_per_chunk
                 else:
-                    warnings.warn(
+                    logger.warning(
                         f"Minimum sentences per chunk as {self.min_sentences_per_chunk} could not be met for all chunks. "
-                        + f"Last chunk of the text will have only {len(sentences) - pos} sentences. "
-                        + "Consider increasing the chunk_size or decreasing the min_sentences_per_chunk.",
+                        f"Last chunk of the text will have only {len(sentences) - pos} sentences. "
+                        "Consider increasing the chunk_size or decreasing the min_sentences_per_chunk.",
                     )
                     split_idx = len(sentences)
 

@@ -60,7 +60,7 @@ class TestTableChef:
             return orig_read_csv(path, *args, **kwargs)
 
         monkeypatch.setattr(pd, "read_csv", fake_read_csv)
-        result = table_chef.process(str(csv_file))
+        result = table_chef.process(csv_file)
         assert hasattr(result, "content")
         # Check for column names and values, not exact formatting
         content_str = str(result.content)
@@ -69,6 +69,7 @@ class TestTableChef:
             "1" in content_str and "2" in content_str and "3" in content_str and "4" in content_str
         )
         assert called["called"]
+        assert result.metadata["filename"] == "test.csv"
 
     def test_process_excel_file(
         self: "TestTableChef",
@@ -90,7 +91,7 @@ class TestTableChef:
             return orig_read_excel(path, *args, **kwargs)
 
         monkeypatch.setattr(pd, "read_excel", fake_read_excel)
-        result = table_chef.process(str(excel_file))
+        result = table_chef.process(excel_file)
         assert hasattr(result, "content")
         content_str = str(result.content)
         assert "col1" in content_str and "col2" in content_str
@@ -98,6 +99,7 @@ class TestTableChef:
             "1" in content_str and "2" in content_str and "3" in content_str and "4" in content_str
         )
         assert called["called"]
+        assert result.metadata["filename"] == "test.xlsx"
 
     def test_process_markdown_table_string(
         self: "TestTableChef",
@@ -109,6 +111,7 @@ class TestTableChef:
         assert isinstance(result, MarkdownDocument)
         assert len(result.tables) == 1
         assert hasattr(result.tables[0], "content")
+        assert "filename" not in result.metadata
 
     def test_process_batch(
         self: "TestTableChef",
@@ -121,9 +124,10 @@ class TestTableChef:
         file2 = tmp_path / "b.csv"
         file1.write_text(csv_content)
         file2.write_text(csv_content)
-        results = table_chef.process_batch([str(file1), str(file2)])
+        results = table_chef.process_batch([file1, file2])
         assert isinstance(results, list)
         assert len(results) == 2
+        assert [r.metadata["filename"] for r in results] == ["a.csv", "b.csv"]
         for r in results:
             if hasattr(r, "content"):
                 content_str = str(r.content)
@@ -152,9 +156,10 @@ class TestTableChef:
         file2 = tmp_path / "b.csv"
         file1.write_text(csv_content)
         file2.write_text(csv_content)
-        results = table_chef([str(file1), str(file2)])
+        results = table_chef([file1, file2])
         assert isinstance(results, list)
         assert len(results) == 2
+        assert [r.metadata["filename"] for r in results] == ["a.csv", "b.csv"]
         for r in results:
             if hasattr(r, "content"):
                 content_str = str(r.content)
@@ -181,28 +186,30 @@ class TestTableChef:
         """Test calling TableChef with a single file path."""
         file1 = tmp_path / "a.csv"
         file1.write_text(csv_content)
-        result = table_chef(str(file1))
+        result = table_chef(file1)
         assert hasattr(result, "content")
         content_str = str(result.content)
         assert "col1" in content_str and "col2" in content_str
         assert (
             "1" in content_str and "2" in content_str and "3" in content_str and "4" in content_str
         )
+        assert result.metadata["filename"] == "a.csv"
 
     def test_call_invalid_type(self: "TestTableChef", table_chef: TableChef) -> None:
         """Test that TableChef raises TypeError on invalid input type."""
         with pytest.raises(TypeError, match="Unsupported type"):
             table_chef(123)  # type: ignore
 
-    def test_extract_tables_from_markdown_multiple(
+    def test_extract_tables_from_markdown_html(
         self: "TestTableChef",
         table_chef: TableChef,
     ) -> None:
-        """Test extracting multiple tables from markdown text."""
+        """Test extracting HTML tables from markdown text."""
         md = """
-| a | b |
-|---|---|
-| 1 | 2 |
+<table>
+  <tr><th>Col1</th><th>Col2</th></tr>
+  <tr><td>1</td><td>2</td></tr>
+</table>
 
 Some text
 
@@ -213,7 +220,8 @@ Some text
         tables = table_chef.extract_tables_from_markdown(md)
         assert isinstance(tables, list)
         assert len(tables) == 2
-        assert all(hasattr(t, "content") and "|" in t.content for t in tables)
+        assert any("<table>" in t.content for t in tables)
+        assert any("| c | d |" in t.content for t in tables)
 
     def test_repr(self: "TestTableChef", table_chef: TableChef) -> None:
         """Test the __repr__ method of TableChef."""

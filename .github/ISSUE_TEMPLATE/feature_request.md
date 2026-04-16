@@ -3,7 +3,7 @@ name: Feature request
 about: Suggest an idea for this project
 title: "Feat:"
 labels: enhancement
-assignees: shreyash-chonkie, chonknick
+assignees: shreyash-chonkie, chonk-lain, chonknick
 
 ---
 

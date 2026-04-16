@@ -1,7 +1,6 @@
 """Table chunker for processing markdown tables."""
 
 import re
-import warnings
 from typing import Union
 
 from chonkie.chunker.base import BaseChunker
@@ -38,7 +37,7 @@ class TableChunker(BaseChunker):
         if chunk_size <= 0:
             raise ValueError("Chunk size must be greater than 0.")
         if chunk_size == 3 and tokenizer != "row":
-            warnings.warn(
+            logger.warning(
                 "Using default chunk size of 3 with a token-based tokenizer may not be optimal. "
                 "Consider using a larger chunk_size for token-based chunking.",
             )
@@ -48,7 +47,7 @@ class TableChunker(BaseChunker):
         self.sep = "✄"
         self._is_row_tokenizer = isinstance(self.tokenizer.tokenizer, RowTokenizer)
 
-    def _split_table(self, table: str) -> tuple[str, list[str]]:
+    def _split_markdown_table(self, table: str) -> tuple[str, list[str]]:
         table = table.strip()
         # insert separator right after the newline that precedes a pipe
         raw = self.newline_pattern.sub(rf"\n{self.sep}", table)
@@ -57,32 +56,84 @@ class TableChunker(BaseChunker):
         rows = chunks[2:]  # data rows still contain their trailing \n
         return header, rows
 
+    def _find_html_rows(self, body_content: str) -> list[str]:
+        """Extract <tr>...</tr> rows using plain string search (O(n), no ReDoS)."""
+        rows = []
+        lower = body_content.lower()
+        pos = 0
+        while True:
+            tr_start = lower.find("<tr", pos)
+            if tr_start == -1:
+                break
+            tr_tag_end = lower.find(">", tr_start)
+            if tr_tag_end == -1:
+                break
+            close_start = lower.find("</tr>", tr_tag_end + 1)
+            if close_start == -1:
+                break
+            rows.append(body_content[tr_start : close_start + 5])  # 5 = len("</tr>")
+            pos = close_start + 5
+        return rows
+
+    def _split_html_table(self, table: str) -> tuple[str, list[str]]:
+        table = table.strip()
+        lower = table.lower()
+        # Find the start of <tbody...> using plain string search (O(n), no ReDoS)
+        tbody_start = lower.find("<tbody")
+        if tbody_start != -1:
+            tbody_tag_end = lower.find(">", tbody_start)
+            if tbody_tag_end != -1:
+                header = table[: tbody_tag_end + 1]
+                tbody_close = lower.find("</tbody>", tbody_tag_end + 1)
+                body_end = tbody_close if tbody_close != -1 else len(table)
+                body_content = table[tbody_tag_end + 1 : body_end]
+                rows = self._find_html_rows(body_content)
+                return header, rows
+        # If no tbody, assume everything after the first matching row is data
+        rows = self._find_html_rows(table)
+        if not rows:
+            return table, []
+        header = table[: table.find(rows[0])]
+        return header, rows
+
     def chunk(self, text: str) -> list[Chunk]:
         """Chunk the table into smaller tables based on the chunk size.
 
         Args:
-            text: The input markdown table as a string.
+            text: The input markdown or HTML table as a string.
 
         Returns:
-            list[MarkdownTable]: A list of MarkdownTable chunks.
+            list[Chunk]: A list of table chunks.
 
         """
         logger.debug(f"Starting table chunking for table of length {len(text)}")
         chunks: list[Chunk] = []
         # Basic validation
         if not text.strip():
-            warnings.warn("No table content found. Skipping chunking.")
+            logger.warning("No table content found. Skipping chunking.")
             return []
 
-        rows = text.strip().split("\n")
-        if len(rows) < 3:  # Need header, separator, and at least one data row
-            warnings.warn(
-                "Table must have at least a header, separator, and one data row. Skipping chunking.",
-            )
-            return []
+        # Detect table type (plain string check avoids ReDoS)
+        is_html = "<table" in text.lower()
+
+        if is_html:
+            header, data_rows = self._split_html_table(text)
+            footer = "</tbody></table>" if "</tbody>" in text.lower() else "</table>"
+            if len(data_rows) < 1:
+                logger.warning("HTML table must have at least one data row. Skipping chunking.")
+                return []
+        else:
+            rows = text.strip().split("\n")
+            if len(rows) < 3:  # Need header, separator, and at least one data row
+                logger.warning(
+                    "Table must have at least a header, separator, and one data row. Skipping chunking.",
+                )
+                return []
+            header, data_rows = self._split_markdown_table(text)
+            footer = ""
+
         # row based table chunking
         if self._is_row_tokenizer:
-            header, data_rows = self._split_table(text)
             if len(data_rows) <= self.chunk_size:
                 return [
                     Chunk(
@@ -99,7 +150,7 @@ class TableChunker(BaseChunker):
 
                 for i in range(0, len(data_rows), self.chunk_size):
                     chunk_rows = data_rows[i : i + self.chunk_size]
-                    chunk_text = header + "".join(chunk_rows)
+                    chunk_text = header + "".join(chunk_rows) + footer
                     data_rows_len = len("".join(chunk_rows))
 
                     chunks.append(
@@ -128,9 +179,9 @@ class TableChunker(BaseChunker):
                     ),
                 ]
 
-            header, data_rows = self._split_table(text)
             header_token_count = self.tokenizer.count_tokens(header)
-            current_token_count = header_token_count
+            footer_token_count = self.tokenizer.count_tokens(footer) if footer else 0
+            current_token_count = header_token_count + footer_token_count
             current_index = 0
             current_chunk = [header]
 
@@ -142,8 +193,9 @@ class TableChunker(BaseChunker):
                     # only create a new chunk if the current chunk has more than just the header
                     # if the current chunk only has the header, we need to add the row anyway
                     if chunks == []:
+                        chunk_text = "".join(current_chunk) + footer
                         chunk = Chunk(
-                            text="".join(current_chunk),
+                            text=chunk_text,
                             start_index=current_index,
                             end_index=current_index + len("".join(current_chunk)),
                             token_count=current_token_count,
@@ -151,9 +203,10 @@ class TableChunker(BaseChunker):
                         chunks.append(chunk)
                         current_index = chunk.end_index
                     else:
+                        chunk_text = "".join(current_chunk) + footer
                         chunk_len = len("".join(current_chunk)) - len(header)
                         chunk = Chunk(
-                            text="".join(current_chunk),
+                            text=chunk_text,
                             start_index=current_index,
                             end_index=current_index + chunk_len,
                             token_count=current_token_count,
@@ -161,7 +214,7 @@ class TableChunker(BaseChunker):
                         chunks.append(chunk)
                         current_index = chunk.end_index
                     current_chunk = [header, row]
-                    current_token_count = header_token_count + row_size
+                    current_token_count = header_token_count + footer_token_count + row_size
                 # if the current chunk is not full, we need to add the row to the current chunk
                 else:
                     current_chunk.append(row)
@@ -169,20 +222,19 @@ class TableChunker(BaseChunker):
 
             # if the current chunk is not full, we need to add the row to the current chunk
             if len(current_chunk) > 1:
+                chunk_text = "".join(current_chunk) + footer
                 chunk_len = (
-                    len("".join(current_chunk)) - len(header)
-                    if chunks != []
-                    else len("".join(current_chunk))
+                    len("".join(current_chunk)) - len(header) if chunks != [] else len(chunk_text)
                 )
                 chunk = Chunk(
-                    text="".join(current_chunk),
+                    text=chunk_text,
                     start_index=current_index,
                     end_index=current_index + chunk_len,
                     token_count=current_token_count,
                 )
                 chunks.append(chunk)
 
-            logger.info(f"Created {len(chunks)} table chunks from markdown table")
+            logger.info(f"Created {len(chunks)} table chunks from table")
             return chunks
 
     def chunk_document(self, document: Document) -> Document:
@@ -203,6 +255,7 @@ class TableChunker(BaseChunker):
             document.chunks = self.chunk(document.content)
             document.chunks.sort(key=lambda x: x.start_index)
         logger.info(f"Document chunking complete: {len(document.chunks)} chunks created")
+        BaseChunker._propagate_document_metadata(document)
         return document
 
     def __repr__(self) -> str:

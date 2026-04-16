@@ -1,6 +1,7 @@
 """Weaviate Handshake to export Chonkie's Chunks into a Weaviate collection."""
 
 import importlib.util as importutil
+import json
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -9,7 +10,8 @@ from typing import (
     Union,
 )
 from urllib.parse import urlparse
-from uuid import NAMESPACE_OID, uuid5
+
+import numpy as np
 
 from chonkie.embeddings import AutoEmbeddings, BaseEmbeddings
 from chonkie.logger import get_logger
@@ -201,7 +203,10 @@ class WeaviateHandshake(BaseHandshake):
             exists = self.client.collections.exists(collection_name)
             return exists
         except Exception as e:
-            logger.warning(f"Failed to check for collection '{collection_name}': {e}")
+            logger.warning(
+                f"Failed to check for collection '{collection_name}': {e}",
+                exc_info=True,
+            )
             return False
 
     def _create_collection(self) -> None:
@@ -214,50 +219,42 @@ class WeaviateHandshake(BaseHandshake):
                 name=self.collection_name,
                 vector_index_config=Configure.VectorIndex.hnsw(),
                 properties=[
-                    Property(
-                        name="text",
-                        data_type=DataType.TEXT,
-                        description="The text content of the chunk",
-                    ),
-                    Property(
-                        name="start_index",
-                        data_type=DataType.INT,
-                        description="The start index of the chunk in the original text",
-                    ),
-                    Property(
-                        name="end_index",
-                        data_type=DataType.INT,
-                        description="The end index of the chunk in the original text",
-                    ),
-                    Property(
-                        name="token_count",
-                        data_type=DataType.INT,
-                        description="The number of tokens in the chunk",
-                    ),
-                    Property(
-                        name="chunk_type",
-                        data_type=DataType.TEXT,
-                        description="The type of the chunk",
-                    ),
+                    Property.model_validate({
+                        "name": "text",
+                        "data_type": DataType.TEXT,
+                        "description": "The text content of the chunk",
+                    }),
+                    Property.model_validate({
+                        "name": "start_index",
+                        "data_type": DataType.INT,
+                        "description": "The start index of the chunk in the original text",
+                    }),
+                    Property.model_validate({
+                        "name": "end_index",
+                        "data_type": DataType.INT,
+                        "description": "The end index of the chunk in the original text",
+                    }),
+                    Property.model_validate({
+                        "name": "token_count",
+                        "data_type": DataType.INT,
+                        "description": "The number of tokens in the chunk",
+                    }),
+                    Property.model_validate({
+                        "name": "chunk_type",
+                        "data_type": DataType.TEXT,
+                        "description": "The type of the chunk",
+                    }),
+                    Property.model_validate({
+                        "name": "chunk_metadata",
+                        "data_type": DataType.TEXT,
+                        "description": "JSON-serialized :attr:`~chonkie.types.Chunk.metadata`",
+                    }),
                 ],
             )
 
             logger.info(f"Created Weaviate collection: {self.collection_name}")
         except Exception:
             raise
-
-    def _generate_id(self, index: int, chunk: Chunk) -> str:
-        """Generate a unique ID for the chunk.
-
-        Args:
-            index: The index of the chunk in the batch.
-            chunk: The chunk to generate an ID for.
-
-        Returns:
-            str: A unique ID for the chunk.
-
-        """
-        return str(uuid5(NAMESPACE_OID, f"{self.collection_name}::chunk-{index}:{chunk.text}"))
 
     def _generate_properties(self, chunk: Chunk) -> dict[str, Any]:
         """Generate properties for the chunk.
@@ -278,14 +275,21 @@ class WeaviateHandshake(BaseHandshake):
         }
 
         # Add chunk-specific properties
-        if hasattr(chunk, "sentences") and chunk.sentences:
-            properties["sentence_count"] = len(chunk.sentences)
+        sentences = getattr(chunk, "sentences", None)
+        if sentences:
+            properties["sentence_count"] = len(sentences)
 
-        if hasattr(chunk, "words") and chunk.words:
-            properties["word_count"] = len(chunk.words)
+        words = getattr(chunk, "words", None)
+        if words:
+            properties["word_count"] = len(words)
 
         if hasattr(chunk, "language") and chunk.language:
-            properties["language"] = chunk.language
+            properties["language"] = str(chunk.language)
+
+        if chunk.metadata:
+            properties["chunk_metadata"] = json.dumps(chunk.metadata, sort_keys=True, default=str)
+        else:
+            properties["chunk_metadata"] = ""
 
         return properties
 
@@ -328,24 +332,26 @@ class WeaviateHandshake(BaseHandshake):
 
                 try:
                     # Generate ID and properties
-                    chunk_id = self._generate_id(index, chunk)
+                    chunk_id = self._generate_id(
+                        f"{self.collection_name}::chunk-{index}:{chunk.text}"
+                    )
                     properties = self._generate_properties(chunk)
 
                     # Generate embedding
                     embedding = self.embedding_model.embed(chunk.text)
 
                     vector: list[float]
-                    if hasattr(embedding, "tolist"):
-                        vector = embedding.tolist()  # type: ignore[assignment]
+                    if isinstance(embedding, np.ndarray):
+                        vector = embedding.tolist()
                     else:
-                        vector = list(embedding)  # type: ignore[arg-type]
+                        vector = list(embedding)
 
                     # Add to batch
                     batch.add_object(properties=properties, uuid=chunk_id, vector=vector)
 
                     chunk_ids.append(chunk_id)
                 except Exception as e:
-                    logger.error(f"Error processing chunk {index}: {str(e)}")
+                    logger.error(f"Error processing chunk {index}: {e}", exc_info=True)
                     # Continue with next chunk
 
             # After batch is complete, check for errors
@@ -395,6 +401,7 @@ class WeaviateHandshake(BaseHandshake):
             "end_index",
             "token_count",
             "chunk_type",
+            "chunk_metadata",
         ]
 
         if hasattr(schema, "properties") and schema.properties:
@@ -453,10 +460,13 @@ class WeaviateHandshake(BaseHandshake):
             raise ValueError("Either query or embedding must be provided")
         if query is not None:
             embedding = self.embedding_model.embed(query).tolist()
+        # enforce typing
+        if not isinstance(embedding, list) or not all(isinstance(x, float) for x in embedding):
+            raise ValueError("Embedding must be a list of floats")
         collection = self.client.collections.get(self.collection_name)
         # Weaviate expects a vector for similarity search
         results = collection.query.near_vector(
-            near_vector=embedding,  # type: ignore[arg-type]
+            near_vector=embedding,
             limit=limit,
             return_metadata=MetadataQuery(distance=True),
         )
@@ -466,7 +476,7 @@ class WeaviateHandshake(BaseHandshake):
             score = getattr(obj.metadata, "distance", None) if obj.metadata else None
             # Weaviate returns distance, convert to similarity (1 - distance) if needed
             similarity = 1.0 - score if score is not None else None
-            match = {
+            match: dict[str, Any] = {
                 "id": obj.uuid,
                 "score": similarity,
                 "text": obj.properties.get("text"),
@@ -475,6 +485,14 @@ class WeaviateHandshake(BaseHandshake):
                 "token_count": obj.properties.get("token_count"),
                 "chunk_type": obj.properties.get("chunk_type"),
             }
+            raw_meta = obj.properties.get("chunk_metadata")
+            if isinstance(raw_meta, (str, bytes, bytearray)) and raw_meta:
+                try:
+                    parsed = json.loads(raw_meta)
+                    if isinstance(parsed, dict):
+                        match = {**parsed, **match}
+                except json.JSONDecodeError:
+                    pass
             matches.append(match)
         logger.info(f"Search complete: found {len(matches)} matching chunks")
         return matches

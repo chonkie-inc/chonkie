@@ -2,13 +2,39 @@
 
 from __future__ import annotations
 
-import tempfile
 from pathlib import Path
 
 import pytest
 
 from chonkie.pipeline import Pipeline
 from chonkie.types import Document
+
+
+@pytest.fixture
+def temp_file(tmp_path: Path) -> Path:
+    """Fixture that creates a temporary file."""
+    file_path = tmp_path / "file.txt"
+    file_path.write_text("This is test content for the file fetcher.")
+    return file_path
+
+
+@pytest.fixture
+def temp_text_file(tmp_path) -> Path:
+    """Create a temporary text file."""
+    file_path = tmp_path / "para.txt"
+    file_path.write_text(
+        "This is content in a text file.\n\nIt has multiple paragraphs.\n\nFor testing purposes.",
+    )
+    return file_path
+
+
+@pytest.fixture
+def temp_dir_with_files(tmp_path: Path) -> Path:
+    """Create a temporary directory with test files."""
+    (tmp_path / "doc1.txt").write_text("Content of document 1.")
+    (tmp_path / "doc2.txt").write_text("Content of document 2.")
+    (tmp_path / "doc3.md").write_text("# Markdown document")
+    return tmp_path
 
 
 class TestPipelineBasics:
@@ -69,36 +95,11 @@ class TestPipelineBasics:
 class TestPipelineFetcher:
     """Test pipeline with file fetcher."""
 
-    @pytest.fixture
-    def temp_file(self) -> Path:
-        """Fixture that creates a temporary file."""
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False) as f:
-            f.write("This is test content for the file fetcher.")
-            temp_path = Path(f.name)
-
-        yield temp_path
-
-        # Cleanup
-        if temp_path.exists():
-            temp_path.unlink()
-
-    @pytest.fixture
-    def temp_dir_with_files(self) -> Path:
-        """Fixture that creates temporary directory with multiple files."""
-        with tempfile.TemporaryDirectory() as temp_dir:
-            temp_path = Path(temp_dir)
-
-            (temp_path / "file1.txt").write_text("Content of first file.")
-            (temp_path / "file2.txt").write_text("Content of second file.")
-            (temp_path / "file3.md").write_text("# Markdown content")
-
-            yield temp_path
-
     def test_pipeline_with_single_file(self, temp_file: Path) -> None:
         """Test pipeline with single file fetcher."""
         doc = (
             Pipeline()
-            .fetch_from("file", path=str(temp_file))
+            .fetch_from("file", path=temp_file)
             .process_with("text")
             .chunk_with("recursive", chunk_size=512)
             .run()
@@ -112,7 +113,7 @@ class TestPipelineFetcher:
         """Test pipeline with directory fetcher."""
         docs = (
             Pipeline()
-            .fetch_from("file", dir=str(temp_dir_with_files))
+            .fetch_from("file", dir=temp_dir_with_files)
             .process_with("text")
             .chunk_with("recursive", chunk_size=512)
             .run()
@@ -125,7 +126,7 @@ class TestPipelineFetcher:
         """Test pipeline with directory and extension filter."""
         docs = (
             Pipeline()
-            .fetch_from("file", dir=str(temp_dir_with_files), ext=[".txt"])
+            .fetch_from("file", dir=temp_dir_with_files, ext=[".txt"])
             .process_with("text")
             .chunk_with("recursive", chunk_size=512)
             .run()
@@ -426,37 +427,11 @@ class TestPipelineComponentCaching:
 class TestPipelineWithFile:
     """Test pipeline with file operations."""
 
-    @pytest.fixture
-    def temp_text_file(self) -> Path:
-        """Create a temporary text file."""
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False) as f:
-            f.write(
-                "This is content in a text file.\n\nIt has multiple paragraphs.\n\nFor testing purposes.",
-            )
-            temp_path = Path(f.name)
-
-        yield temp_path
-
-        if temp_path.exists():
-            temp_path.unlink()
-
-    @pytest.fixture
-    def temp_dir_with_files(self) -> Path:
-        """Create a temporary directory with test files."""
-        with tempfile.TemporaryDirectory() as temp_dir:
-            temp_path = Path(temp_dir)
-
-            (temp_path / "doc1.txt").write_text("Content of document 1.")
-            (temp_path / "doc2.txt").write_text("Content of document 2.")
-            (temp_path / "doc3.md").write_text("# Markdown document")
-
-            yield temp_path
-
     def test_pipeline_single_file_to_chunks(self, temp_text_file: Path) -> None:
         """Test complete pipeline from single file to chunks."""
         doc = (
             Pipeline()
-            .fetch_from("file", path=str(temp_text_file))
+            .fetch_from("file", path=temp_text_file)
             .process_with("text")
             .chunk_with("recursive", chunk_size=512)
             .run()
@@ -470,7 +445,7 @@ class TestPipelineWithFile:
         """Test pipeline processing entire directory."""
         docs = (
             Pipeline()
-            .fetch_from("file", dir=str(temp_dir_with_files))
+            .fetch_from("file", dir=temp_dir_with_files)
             .process_with("text")
             .chunk_with("recursive", chunk_size=512)
             .run()
@@ -487,7 +462,7 @@ class TestPipelineWithFile:
         """Test pipeline with directory and extension filter."""
         docs = (
             Pipeline()
-            .fetch_from("file", dir=str(temp_dir_with_files), ext=[".txt"])
+            .fetch_from("file", dir=temp_dir_with_files, ext=[".txt"])
             .process_with("text")
             .chunk_with("recursive", chunk_size=512)
             .run()
@@ -524,6 +499,13 @@ class TestPipelineChaining:
 
 class TestPipelineEdgeCases:
     """Test edge cases and error conditions."""
+
+    def test_empty_list_input(self) -> None:
+        """Test pipeline with empty list of texts (Issue #460)."""
+        result = Pipeline().chunk_with("recursive", chunk_size=512).run(texts=[])
+
+        assert isinstance(result, list)
+        assert len(result) == 0
 
     def test_empty_text_input(self) -> None:
         """Test pipeline with empty text."""
@@ -575,14 +557,9 @@ class TestPipelineReturnTypes:
         assert len(result) == 2
         assert all(isinstance(doc, Document) for doc in result)
 
-    def test_directory_fetch_returns_list(self) -> None:
+    def test_directory_fetch_returns_list(self, tmp_path: Path) -> None:
         """Test that directory fetch returns list[Document]."""
-        with tempfile.TemporaryDirectory() as temp_dir:
-            temp_path = Path(temp_dir)
-            (temp_path / "file.txt").write_text("Content")
+        (tmp_path / "file.txt").write_text("Content")
+        result = Pipeline().fetch_from("file", dir=tmp_path).chunk_with("recursive").run()
 
-            result = (
-                Pipeline().fetch_from("file", dir=str(temp_path)).chunk_with("recursive").run()
-            )
-
-            assert isinstance(result, list)
+        assert isinstance(result, list)

@@ -5,6 +5,7 @@ and calculates window embeddings directly rather than approximating them from se
 It uses Savitzky-Golay filtering for smoother boundary detection.
 """
 
+import os
 from typing import Any, Literal, Optional, Union
 
 import chonkie_core
@@ -16,10 +17,9 @@ from chonkie.pipeline import chunker
 from chonkie.types import Chunk, Sentence
 from chonkie.utils import Hubbie
 
-from .base import BaseChunker
+from .base import BaseChunker, split_text_by_delimiters
 
 logger = get_logger(__name__)
-
 
 
 @chunker("semantic")
@@ -117,7 +117,7 @@ class SemanticChunker(BaseChunker):
         cls,
         name: str = "default",
         lang: Optional[str] = "en",
-        path: Optional[str] = None,
+        path: str | os.PathLike | None = None,
         embedding_model: Union[str, BaseEmbeddings] = "minishlab/potion-base-32M",
         threshold: float = 0.8,
         chunk_size: int = 2048,
@@ -172,9 +172,7 @@ class SemanticChunker(BaseChunker):
         )
 
     def _split_sentences(self, text: str) -> list[str]:
-        """Fast sentence splitting using chonkie-core.
-
-        This method is faster than using regex for sentence splitting and is more accurate than using the spaCy sentence tokenizer.
+        """Split text into sentences using shared delimiter splitting.
 
         Args:
             text: Input text to be split into sentences
@@ -183,40 +181,12 @@ class SemanticChunker(BaseChunker):
             List of sentences
 
         """
-        # Normalize delimiters to a list
-        if isinstance(self.delim, str):
-            delimiters = [self.delim]
-        else:
-            delimiters = self.delim
-
-        text_bytes = text.encode("utf-8")
-        include_mode = self.include_delim or "prev"
-
-        # Check if we have multi-byte delimiters
-        has_multibyte = any(len(d) > 1 for d in delimiters)
-
-        if has_multibyte:
-            # Use split_pattern_offsets for multi-byte patterns
-            patterns = [d.encode("utf-8") for d in delimiters]
-            offsets = chonkie_core.split_pattern_offsets(
-                text_bytes,
-                patterns=patterns,
-                include_delim=include_mode,
-                min_chars=self.min_characters_per_sentence,
-            )
-        else:
-            # Use faster split_offsets for single-byte delimiters
-            delim_bytes = "".join(delimiters).encode("utf-8")
-            offsets = chonkie_core.split_offsets(
-                text_bytes,
-                delimiters=delim_bytes,
-                include_delim=include_mode,
-                min_chars=self.min_characters_per_sentence,
-            )
-
-        # Convert byte offsets to strings
-        splits = [text_bytes[start:end].decode("utf-8") for start, end in offsets]
-        return [s for s in splits if s]
+        return split_text_by_delimiters(
+            text,
+            delimiters=self.delim,
+            include_delim=self.include_delim or "prev",
+            min_chars=self.min_characters_per_sentence,
+        )
 
     def _prepare_sentences(self, text: str) -> list[Sentence]:
         """Prepare the sentences for chunking."""
@@ -228,7 +198,7 @@ class SemanticChunker(BaseChunker):
         if not sentences:
             return []
 
-        token_counts = self.tokenizer.count_tokens_batch(sentences)  # type: ignore[union-attr]
+        token_counts = self.tokenizer.count_tokens_batch(sentences)
         return [
             Sentence(text=s, start_index=i, end_index=i + len(s), token_count=tc)
             for (i, (s, tc)) in enumerate(zip(sentences, token_counts))

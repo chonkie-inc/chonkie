@@ -2,7 +2,26 @@
 
 import importlib.util as importutil
 import os
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Any, Optional, cast
+
+from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
+
+try:
+    from openai import APIError, APITimeoutError, AsyncOpenAI, OpenAI, RateLimitError
+except ImportError:
+
+    class APIError(Exception):
+        """API error."""
+
+    class APITimeoutError(Exception):
+        """API timeout error."""
+
+    class RateLimitError(Exception):
+        """Rate limit error."""
+
+    OpenAI = None  # type: ignore
+    AsyncOpenAI = None  # type: ignore
+
 
 from .base import BaseGenie
 
@@ -29,13 +48,11 @@ class OpenAIGenie(BaseGenie):
         """
         super().__init__()
 
-        try:
-            from openai import OpenAI
-        except ImportError as ie:
+        if not self._is_available():
             raise ImportError(
                 "One or more of the required modules are not available: [pydantic, openai]. "
                 "Please install the dependencies via `pip install chonkie[openai]`"
-            ) from ie
+            )
 
         # Initialize the API key
         self.api_key = api_key or os.environ.get("OPENAI_API_KEY")
@@ -45,12 +62,22 @@ class OpenAIGenie(BaseGenie):
             )
 
         # Initialize the client and model
+        assert OpenAI is not None, "openai package is required but not installed"
         if base_url is None:
             self.client = OpenAI(api_key=self.api_key)
+            self.async_client = AsyncOpenAI(api_key=self.api_key)
         else:
             self.client = OpenAI(api_key=self.api_key, base_url=base_url)
+            self.async_client = AsyncOpenAI(api_key=self.api_key, base_url=base_url)
         self.model = model
 
+    @retry(
+        stop=stop_after_attempt(5),
+        wait=wait_exponential(multiplier=2, max=60),
+        retry=retry_if_exception_type(
+            cast(tuple[type[BaseException], ...], (RateLimitError, APIError, APITimeoutError))
+        ),
+    )
     def generate(self, prompt: str) -> str:
         """Generate a response based on the given prompt."""
         response = self.client.chat.completions.create(
@@ -62,9 +89,53 @@ class OpenAIGenie(BaseGenie):
             raise ValueError("OpenAI response content is None")
         return content
 
+    @retry(
+        stop=stop_after_attempt(5),
+        wait=wait_exponential(multiplier=2, max=60),
+        retry=retry_if_exception_type(
+            cast(tuple[type[BaseException], ...], (RateLimitError, APIError, APITimeoutError))
+        ),
+    )
+    async def agenerate(self, prompt: str) -> str:
+        """Generate a response asynchronously."""
+        response = await self.async_client.chat.completions.create(
+            model=self.model,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        content = response.choices[0].message.content
+        if content is None:
+            raise ValueError("OpenAI response content is None")
+        return content
+
+    @retry(
+        stop=stop_after_attempt(5),
+        wait=wait_exponential(multiplier=2, max=60),
+        retry=retry_if_exception_type(
+            cast(tuple[type[BaseException], ...], (RateLimitError, APIError, APITimeoutError))
+        ),
+    )
     def generate_json(self, prompt: str, schema: "BaseModel") -> dict[str, Any]:
         """Generate a JSON response based on the given prompt and schema."""
         response = self.client.beta.chat.completions.parse(
+            model=self.model,
+            messages=[{"role": "user", "content": prompt}],
+            response_format=schema,  # type: ignore[arg-type]
+        )
+        content = response.choices[0].message.parsed
+        if content is None:
+            raise ValueError("OpenAI response content is None")
+        return content.model_dump()
+
+    @retry(
+        stop=stop_after_attempt(5),
+        wait=wait_exponential(multiplier=2, max=60),
+        retry=retry_if_exception_type(
+            cast(tuple[type[BaseException], ...], (RateLimitError, APIError, APITimeoutError))
+        ),
+    )
+    async def agenerate_json(self, prompt: str, schema: "BaseModel") -> dict[str, Any]:
+        """Generate a JSON response asynchronously."""
+        response = await self.async_client.beta.chat.completions.parse(
             model=self.model,
             messages=[{"role": "user", "content": prompt}],
             response_format=schema,  # type: ignore[arg-type]

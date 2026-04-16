@@ -70,6 +70,6 @@ embeddings = AutoEmbeddings.get_embeddings("custom/my-custom-embeddings")
 Finally, we can use our custom embeddings handler in the same way we would use any other embeddings handler.
 
 ```python
-chunker = SemanticChunker(embeddings=embeddings, similarity_threshold=0.7)
+chunker = SemanticChunker(embedding_model=embeddings, threshold=0.7)
 chunks = chunker(text)
 ```

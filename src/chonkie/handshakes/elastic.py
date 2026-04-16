@@ -2,7 +2,6 @@
 
 import importlib.util as importutil
 from typing import TYPE_CHECKING, Any, Literal, Optional, Union
-from uuid import NAMESPACE_OID, uuid5
 
 from chonkie.embeddings import AutoEmbeddings, BaseEmbeddings
 from chonkie.logger import get_logger
@@ -104,10 +103,6 @@ class ElasticHandshake(BaseHandshake):
         """Check if the dependencies are installed."""
         return importutil.find_spec("elasticsearch") is not None
 
-    def _generate_id(self, index: int, chunk: Chunk) -> str:
-        """Generate a unique id for the chunk."""
-        return str(uuid5(NAMESPACE_OID, f"{self.index_name}::chunk-{index}:{chunk.text}"))
-
     def _create_bulk_actions(self, chunks: list[Chunk]) -> list[dict[str, Any]]:
         """Generate a list of actions for the Elasticsearch bulk API."""
         actions = []
@@ -117,14 +112,17 @@ class ElasticHandshake(BaseHandshake):
         for i, chunk in enumerate(chunks):
             actions.append({
                 "_index": self.index_name,
-                "_id": self._generate_id(i, chunk),
-                "_source": {
-                    "text": chunk.text,
-                    "embedding": embeddings[i],
-                    "start_index": chunk.start_index,
-                    "end_index": chunk.end_index,
-                    "token_count": chunk.token_count,
-                },
+                "_id": self._generate_id(f"{self.index_name}::chunk-{i}:{chunk.text}"),
+                "_source": self._merge_chunk_metadata(
+                    chunk,
+                    {
+                        "text": chunk.text,
+                        "embedding": embeddings[i],
+                        "start_index": chunk.start_index,
+                        "end_index": chunk.end_index,
+                        "token_count": chunk.token_count,
+                    },
+                ),
             })
         return actions
 
@@ -187,12 +185,13 @@ class ElasticHandshake(BaseHandshake):
         matches = []
         for hit in results["hits"]["hits"]:
             source = hit["_source"]
-            matches.append({
+            row: dict[str, Any] = {
                 "id": hit["_id"],
                 "score": hit["_score"],
-                "text": source.get("text"),
-                "start_index": source.get("start_index"),
-                "end_index": source.get("end_index"),
-                "token_count": source.get("token_count"),
-            })
+            }
+            for key, val in source.items():
+                if key == "embedding":
+                    continue
+                row[key] = val
+            matches.append(row)
         return matches

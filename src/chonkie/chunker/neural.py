@@ -6,26 +6,16 @@ It trains an encoder style model on the task of token-classification (think: NER
 """
 
 import importlib.util as importutil
-from typing import Any, Optional, Union
+from typing import Any, Optional, Union, cast
 
 from chonkie.logger import get_logger
 from chonkie.pipeline import chunker
+from chonkie.tokenizer import TokenizerProtocol
 from chonkie.types import Chunk
 
 from .base import BaseChunker
 
 logger = get_logger(__name__)
-
-# TODO: Add a check to see if the model is supported
-
-# TODO: Add try/except block to catch if the model is not loaded correctly
-
-# TODO: Add a list of supported models to choose from
-
-# TODO: Allow for loading a custom model by passing in the model + tokenizer directly
-
-# TODO: Add stride parameters for the pipeline (also does the pipeline do it sequentially or in parallel?)
-# If they do it sequentially, then we are making a huge mistake by not batching and processing multiple texts at once.
 
 
 @chunker("neural")
@@ -86,50 +76,61 @@ class NeuralChunker(BaseChunker):
             raise ImportError(
                 "transformers is not installed. Please install it with `pip install chonkie[neural]`.",
             ) from e
-        # Initialize the tokenizer to pass in to the parent class
-        try:
-            if isinstance(tokenizer, str):
-                tokenizer = AutoTokenizer.from_pretrained(tokenizer)
-            elif tokenizer is None and isinstance(model, str):
-                tokenizer = AutoTokenizer.from_pretrained(model)
-            elif isinstance(tokenizer, PreTrainedTokenizerFast):
-                tokenizer = tokenizer
-            else:
-                raise ValueError(
-                    "Invalid tokenizer provided. Please provide a string or a transformers.PreTrainedTokenizerFast object.",
-                )
-        except Exception as e:
-            raise ValueError(f"Error initializing tokenizer: {e}") from e
-
-        # Initialize the Parent class with the tokenizer
-        super().__init__(tokenizer)  # type: ignore[arg-type]
 
         # Initialize the model and stride
-        try:
-            if isinstance(model, str):
-                # Check if the model is supported
-                if model not in self.SUPPORTED_MODELS:
-                    raise ValueError(
-                        f"Model {model} is not supported. Please choose from one of the following: {self.SUPPORTED_MODELS}",
-                    )
-                # Initialize the model
-                self.model = AutoModelForTokenClassification.from_pretrained(
-                    model, device_map=device_map
-                )
-                # Set the stride
-                stride = self.SUPPORTED_MODEL_STRIDES[model] if stride is None else stride
-            elif model is not None and "transformers" in str(type(model)):
-                # Assuming that the model is a transformers model already, since it has transformers in the name, teehee~
-                self.model = model
-                # Since a custom model is provided, we need to set the stride to 0
-                stride = 0 if stride is None else stride
-            else:
+        if isinstance(model, str):
+            # Check if the model is supported
+            if model not in self.SUPPORTED_MODELS:
                 raise ValueError(
-                    "Invalid model provided. Please provide a string or a transformers.AutoModelForTokenClassification object.",
+                    f"Model {model} is not supported. Please choose from one of the following: {self.SUPPORTED_MODELS}"
                 )
-        except Exception as e:
-            raise ValueError(f"Error initializing model: {e}") from e
+            model_id = model
+            if stride is None:
+                stride = self.SUPPORTED_MODEL_STRIDES[model]
+        elif model is not None and "transformers" in str(type(model)):
+            # Assuming that the model is a transformers model already, since it has transformers in the name, teehee~
+            self.model = model
+            model_id = None
+            # Since a custom model is provided, we need to set the stride to 0
+            stride = 0 if stride is None else stride
+        else:
+            raise ValueError(
+                "Invalid model provided. Please provide a string or a transformers.AutoModelForTokenClassification object."
+            )
 
+        # Initialize the tokenizer to pass in to the parent class
+        if isinstance(tokenizer, str):
+            tokenizer_id = tokenizer
+        elif tokenizer is None and model_id is not None:
+            tokenizer_id = model_id
+        elif isinstance(tokenizer, PreTrainedTokenizerFast):
+            tokenizer_id = None  # already loaded
+        else:
+            raise ValueError(
+                "Invalid tokenizer provided. Please provide a string or a transformers.PreTrainedTokenizerFast object."
+            )
+
+        if tokenizer_id is not None:
+            try:
+                tokenizer = AutoTokenizer.from_pretrained(tokenizer_id)
+            except OSError as e:
+                raise ValueError(
+                    f"Failed to load tokenizer '{tokenizer_id}'. "
+                    "Check that the tokenizer name is correct."
+                ) from e
+
+        # Initialize the Parent class with the tokenizer
+        super().__init__(cast(TokenizerProtocol, tokenizer))
+
+        if model_id is not None:
+            try:
+                self.model = AutoModelForTokenClassification.from_pretrained(
+                    model_id, device_map=device_map
+                )
+            except OSError as e:
+                raise ValueError(
+                    f"Failed to load model '{model_id}' for token-classification: {e}"
+                ) from e
         # Set the attributes
         self.min_characters_per_chunk = min_characters_per_chunk
 
@@ -137,7 +138,7 @@ class NeuralChunker(BaseChunker):
         try:
             self.pipe = pipeline(
                 "token-classification",
-                model=model,
+                model=self.model,
                 tokenizer=tokenizer,
                 device_map=device_map,
                 aggregation_strategy="simple",

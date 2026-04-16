@@ -199,7 +199,9 @@ def test_qdrant_handshake_write_single_chunk(
     assert len(points) == 1
 
     point = points[0]
-    expected_id = handshake._generate_id(0, sample_chunk)  # Index is 0 for single/first chunk
+    expected_id = handshake._generate_id(
+        f"{handshake.collection_name}::chunk-0:{sample_chunk.text}"
+    )  # Index is 0 for single/first chunk
     expected_payload = handshake._generate_payload(sample_chunk)
     # expected_vector = real_embeddings.embed(sample_chunk.text) # Calculate expected vector
 
@@ -243,7 +245,9 @@ def test_qdrant_handshake_write_multiple_chunks(
     assert retrieved_payloads == expected_payloads
 
     for i, chunk in enumerate(sample_chunks):
-        expected_id = handshake._generate_id(i, chunk)
+        expected_id = handshake._generate_id(
+            f"{handshake.collection_name}::chunk-{i}:{chunk.text}"
+        )
         expected_payload = handshake._generate_payload(chunk)
         # expected_vector = real_embeddings.embed(chunk.text)
 
@@ -329,7 +333,9 @@ def test_generate_id(sample_chunk: Chunk, real_embeddings: BaseEmbeddings) -> No
         collection_name="test-id-gen-real",
         embedding_model=real_embeddings,
     )
-    generated_id = handshake._generate_id(0, sample_chunk)
+    generated_id = handshake._generate_id(
+        f"{handshake.collection_name}::chunk-0:{sample_chunk.text}"
+    )
     assert isinstance(generated_id, str)
     # Check if it's a valid UUID
     try:
@@ -338,12 +344,21 @@ def test_generate_id(sample_chunk: Chunk, real_embeddings: BaseEmbeddings) -> No
         pytest.fail(f"Generated ID '{generated_id}' is not a valid UUID.")
 
     # Check for consistency
-    assert handshake._generate_id(0, sample_chunk) == generated_id
+    assert (
+        handshake._generate_id(f"{handshake.collection_name}::chunk-0:{sample_chunk.text}")
+        == generated_id
+    )
 
     # Check different index or text yields different ID
-    assert handshake._generate_id(1, sample_chunk) != generated_id
+    assert (
+        handshake._generate_id(f"{handshake.collection_name}::chunk-1:{sample_chunk.text}")
+        != generated_id
+    )
     diff_chunk = Chunk(text="Different text", start_index=0, end_index=14, token_count=2)
-    assert handshake._generate_id(0, diff_chunk) != generated_id
+    assert (
+        handshake._generate_id(f"{handshake.collection_name}::chunk-0:{diff_chunk.text}")
+        != generated_id
+    )
 
     # Cleanup client implicitly created by handshake
     handshake.client.delete_collection(collection_name="test-id-gen-real")
@@ -365,3 +380,28 @@ def test_generate_payload(sample_chunk: Chunk, real_embeddings: BaseEmbeddings) 
     }
     # Cleanup client implicitly created by handshake
     handshake.client.delete_collection(collection_name="test-payload-gen-real")
+
+
+def test_qdrant_chunk_metadata_roundtrip(real_embeddings: BaseEmbeddings) -> None:
+    """Chunk.metadata is stored in the payload and returned by search."""
+    collection_name = "test-metadata-roundtrip"
+    client = qdrant_client.QdrantClient(":memory:")
+    handshake = QdrantHandshake(
+        client=client,
+        collection_name=collection_name,
+        embedding_model=real_embeddings,
+    )
+    chunk = Chunk(
+        text="metadata roundtrip text",
+        start_index=0,
+        end_index=25,
+        token_count=4,
+        metadata={"filename": "readme.md", "source": "test"},
+    )
+    handshake.write(chunk)
+    hits = handshake.search(query=chunk.text, limit=3)
+    assert len(hits) >= 1
+    assert hits[0]["filename"] == "readme.md"
+    assert hits[0]["source"] == "test"
+    assert hits[0]["text"] == chunk.text
+    client.delete_collection(collection_name=collection_name)

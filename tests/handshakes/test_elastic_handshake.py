@@ -144,7 +144,7 @@ def test_generate_id(sample_chunk: Chunk) -> None:
     mock_client = MagicMock()
     mock_client.indices.exists.return_value = True
     handshake = ElasticHandshake(client=mock_client, index_name="test-id-gen")
-    generated_id = handshake._generate_id(0, sample_chunk)
+    generated_id = handshake._generate_id(f"{handshake.index_name}::chunk-0:{sample_chunk.text}")
     assert isinstance(generated_id, str)
     # Check if it's a valid UUID string
     try:
@@ -153,7 +153,10 @@ def test_generate_id(sample_chunk: Chunk) -> None:
         pytest.fail(f"Generated ID '{generated_id}' is not a valid UUID.")
 
     # Check for consistency
-    assert handshake._generate_id(0, sample_chunk) == generated_id
+    assert (
+        handshake._generate_id(f"{handshake.index_name}::chunk-0:{sample_chunk.text}")
+        == generated_id
+    )
 
 
 # ---- Search Tests ----

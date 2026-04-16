@@ -13,28 +13,60 @@ The `FastChunker` uses [chonkie-core](https://github.com/chonkie-inc/chunk) for 
 
 ## Initialization
 
-```python
+<Tabs>
+<Tab title="Python">
+
+<CodeGroup>
+```python Basic initialization with default parameters
 from chonkie import FastChunker
 
-# Basic initialization with default parameters
 chunker = FastChunker(
     chunk_size=4096,      # Target size in BYTES (not tokens)
     delimiters="\n.?",    # Split at newlines, periods, question marks
 )
-
-# Split at paragraph boundaries
+```
+```python Split at paragraph boundaries
 chunker = FastChunker(
     chunk_size=8192,
     delimiters="\n\n",
 )
-
-# Pattern-based splitting (e.g., for SentencePiece tokenizers)
+```
+```python Pattern-based splitting (e.g., for SentencePiece tokenizers)
 chunker = FastChunker(
     chunk_size=4096,
     pattern="▁",          # Metaspace character
     prefix=True,          # Keep pattern at start of next chunk
 )
 ```
+</CodeGroup>
+</Tab>
+
+<Tab title="JavaScript">
+<CodeGroup>
+```javascript Basic initialization with default parameters
+import { FastChunker } from "@chonkiejs/core";
+
+let chunker = await FastChunker.create({
+  chunkSize: 4096,      // Target size in BYTES (not tokens)
+  delimiters: "\n.?",   // Split at newlines, periods, question marks
+});
+```
+```javascript Split at paragraph boundaries
+chunker = await FastChunker.create({
+  chunkSize: 8192,
+  delimiters: "\n\n",
+});
+```
+```javascript Pattern-based splitting (e.g., for SentencePiece tokenizers)
+chunker = await FastChunker.create({
+  chunkSize: 4096,
+  pattern: "▁",         // Metaspace character
+  prefix: true,         // Keep pattern at start of next chunk
+});
+```
+</CodeGroup>
+</Tab>
+</Tabs>
 
 ## Parameters
 
@@ -64,6 +96,8 @@ chunker = FastChunker(
 
 ## Basic Usage
 
+<Tabs>
+<Tab title="Python">
 ```python
 from chonkie import FastChunker
 
@@ -83,6 +117,31 @@ for chunk in chunks:
     print(f"Bytes: {len(chunk.text)}")
     print(f"Position: {chunk.start_index}-{chunk.end_index}")
 ```
+</Tab>
+
+<Tab title="JavaScript">
+```javascript
+import { FastChunker } from "@chonkiejs/core";
+
+// Initialize the chunker
+const chunker = await FastChunker.create({
+  chunkSize: 1024,
+  delimiters: ". \n",
+});
+
+// Chunk your text
+const text = "Your long document text here...";
+const chunks = await chunker.chunk(text);
+
+// Access chunk information
+for (const chunk of chunks) {
+  console.log(`Chunk: ${chunk.text.slice(0, 50)}...`);
+  console.log(`Bytes: ${chunk.text.length}`);
+  console.log(`Position: ${chunk.startIndex}-${chunk.endIndex}`);
+}
+```
+</Tab>
+</Tabs>
 
 ## Examples
 
@@ -272,10 +331,12 @@ FastChunker returns chunks as `Chunk` objects:
 ```python
 @dataclass
 class Chunk:
-    text: str           # The chunk text
-    start_index: int    # Starting byte position in original text
-    end_index: int      # Ending byte position in original text
-    token_count: int    # Always 0 (not computed for speed)
+    text: str                                           # The chunk text
+    start_index: int                                    # Starting character position in original text
+    end_index: int                                      # Ending character position in original text
+    token_count: int                                    # Always 0 (not computed for speed)
+    context: Optional[str] = None                       # Optional overlap context text
+    embedding: Union[list[float], "np.ndarray", None] = None  # Optional embedding vector
 ```
 
 <Note>

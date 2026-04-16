@@ -179,6 +179,7 @@ Conclusion text."""
         assert len(result.tables) == 0
         assert len(result.code) == 0
         assert len(result.images) == 0
+        assert "filename" not in result.metadata
 
     def test_parse_whitespace_only(self, markdown_chef: MarkdownChef) -> None:
         """Test parsing whitespace-only string."""
@@ -333,6 +334,7 @@ This is not a valid table."""
 
             assert isinstance(result, MarkdownDocument)
             assert result.content == simple_markdown
+            assert result.metadata["filename"] == "test.md"
 
     def test_process_file_with_path_object(
         self,
@@ -346,6 +348,7 @@ This is not a valid table."""
 
             assert isinstance(result, MarkdownDocument)
             assert result.content == simple_markdown
+            assert result.metadata["filename"] == "test.md"
 
     def test_process_calls_parse(self, markdown_chef: MarkdownChef, simple_markdown: str) -> None:
         """Test that process() calls parse() internally."""
@@ -371,6 +374,11 @@ This is not a valid table."""
             assert len(results) == 3
             assert all(isinstance(r, MarkdownDocument) for r in results)
             assert all(r.content == simple_markdown for r in results)
+            assert [r.metadata["filename"] for r in results] == [
+                "file1.md",
+                "file2.md",
+                "file3.md",
+            ]
 
     # ==================== Edge Cases ====================
 
