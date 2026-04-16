@@ -1,7 +1,11 @@
 """Tests for OpenAIGenie class."""
 
+import builtins
+import importlib.util
 import os
-from unittest.mock import Mock, patch
+import sys
+from pathlib import Path
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
@@ -142,9 +146,175 @@ class TestOpenAIGenieBasicFunctionality:
                 assert result == {"key": "value"}
                 mock_client.beta.chat.completions.parse.assert_called_once()
 
+    def test_openai_genie_generate_none_content_raises(self) -> None:
+        mock_message = Mock()
+        mock_message.content = None
+        mock_choice = Mock()
+        mock_choice.message = mock_message
+        mock_response = Mock()
+        mock_response.choices = [mock_choice]
+
+        mock_client = Mock()
+        mock_client.chat.completions.create.return_value = mock_response
+        mock_openai_class = Mock(return_value=mock_client)
+        mock_async_class = Mock(return_value=Mock())
+
+        with patch.object(OpenAIGenie, "_is_available", return_value=True):
+            with patch("chonkie.genie.openai.OpenAI", mock_openai_class):
+                with patch("chonkie.genie.openai.AsyncOpenAI", mock_async_class):
+                    with patch.dict(os.environ, {"OPENAI_API_KEY": "test_key"}):
+                        genie = OpenAIGenie()
+                        with pytest.raises(ValueError, match="OpenAI response content is None"):
+                            genie.generate("p")
+
+    def test_openai_genie_generate_json_none_parsed_raises(self) -> None:
+        mock_message = Mock()
+        mock_message.parsed = None
+        mock_choice = Mock()
+        mock_choice.message = mock_message
+        mock_response = Mock()
+        mock_response.choices = [mock_choice]
+
+        mock_client = Mock()
+        mock_client.beta.chat.completions.parse.return_value = mock_response
+        mock_openai_class = Mock(return_value=mock_client)
+        mock_async_class = Mock(return_value=Mock())
+
+        with patch.object(OpenAIGenie, "_is_available", return_value=True):
+            with patch("chonkie.genie.openai.OpenAI", mock_openai_class):
+                with patch("chonkie.genie.openai.AsyncOpenAI", mock_async_class):
+                    with patch.dict(os.environ, {"OPENAI_API_KEY": "test_key"}):
+                        genie = OpenAIGenie()
+                        with pytest.raises(ValueError, match="OpenAI response content is None"):
+                            genie.generate_json("p", Mock())
+
+    @pytest.mark.asyncio
+    async def test_openai_genie_agenerate(self) -> None:
+        mock_message = Mock()
+        mock_message.content = "async text"
+        mock_choice = Mock()
+        mock_choice.message = mock_message
+        mock_response = Mock()
+        mock_response.choices = [mock_choice]
+
+        mock_async_client = Mock()
+        mock_async_client.chat.completions.create = AsyncMock(return_value=mock_response)
+        mock_openai_class = Mock(return_value=Mock())
+        mock_async_class = Mock(return_value=mock_async_client)
+
+        with patch.object(OpenAIGenie, "_is_available", return_value=True):
+            with patch("chonkie.genie.openai.OpenAI", mock_openai_class):
+                with patch("chonkie.genie.openai.AsyncOpenAI", mock_async_class):
+                    with patch.dict(os.environ, {"OPENAI_API_KEY": "test_key"}):
+                        genie = OpenAIGenie()
+                        assert await genie.agenerate("p") == "async text"
+
+    @pytest.mark.asyncio
+    async def test_openai_genie_agenerate_none_content_raises(self) -> None:
+        mock_message = Mock()
+        mock_message.content = None
+        mock_choice = Mock()
+        mock_choice.message = mock_message
+        mock_response = Mock()
+        mock_response.choices = [mock_choice]
+
+        mock_async_client = Mock()
+        mock_async_client.chat.completions.create = AsyncMock(return_value=mock_response)
+        mock_openai_class = Mock(return_value=Mock())
+        mock_async_class = Mock(return_value=mock_async_client)
+
+        with patch.object(OpenAIGenie, "_is_available", return_value=True):
+            with patch("chonkie.genie.openai.OpenAI", mock_openai_class):
+                with patch("chonkie.genie.openai.AsyncOpenAI", mock_async_class):
+                    with patch.dict(os.environ, {"OPENAI_API_KEY": "test_key"}):
+                        genie = OpenAIGenie()
+                        with pytest.raises(ValueError, match="OpenAI response content is None"):
+                            await genie.agenerate("p")
+
+    @pytest.mark.asyncio
+    async def test_openai_genie_agenerate_json(self) -> None:
+        mock_parsed = Mock()
+        mock_parsed.model_dump.return_value = {"a": "b"}
+        mock_message = Mock()
+        mock_message.parsed = mock_parsed
+        mock_choice = Mock()
+        mock_choice.message = mock_message
+        mock_response = Mock()
+        mock_response.choices = [mock_choice]
+
+        mock_async_client = Mock()
+        mock_async_client.beta.chat.completions.parse = AsyncMock(return_value=mock_response)
+        mock_openai_class = Mock(return_value=Mock())
+        mock_async_class = Mock(return_value=mock_async_client)
+        schema = Mock()
+
+        with patch.object(OpenAIGenie, "_is_available", return_value=True):
+            with patch("chonkie.genie.openai.OpenAI", mock_openai_class):
+                with patch("chonkie.genie.openai.AsyncOpenAI", mock_async_class):
+                    with patch.dict(os.environ, {"OPENAI_API_KEY": "test_key"}):
+                        genie = OpenAIGenie()
+                        assert await genie.agenerate_json("p", schema) == {"a": "b"}
+
+    @pytest.mark.asyncio
+    async def test_openai_genie_agenerate_json_none_parsed_raises(self) -> None:
+        mock_message = Mock()
+        mock_message.parsed = None
+        mock_choice = Mock()
+        mock_choice.message = mock_message
+        mock_response = Mock()
+        mock_response.choices = [mock_choice]
+
+        mock_async_client = Mock()
+        mock_async_client.beta.chat.completions.parse = AsyncMock(return_value=mock_response)
+        mock_openai_class = Mock(return_value=Mock())
+        mock_async_class = Mock(return_value=mock_async_client)
+
+        with patch.object(OpenAIGenie, "_is_available", return_value=True):
+            with patch("chonkie.genie.openai.OpenAI", mock_openai_class):
+                with patch("chonkie.genie.openai.AsyncOpenAI", mock_async_class):
+                    with patch.dict(os.environ, {"OPENAI_API_KEY": "test_key"}):
+                        genie = OpenAIGenie()
+                        with pytest.raises(ValueError, match="OpenAI response content is None"):
+                            await genie.agenerate_json("p", Mock())
+
 
 class TestOpenAIGenieUtilities:
     """Test OpenAIGenie utility methods."""
+
+    def test_openai_genie_stub_types_when_openai_import_fails(self) -> None:
+        """Cover the ``except ImportError`` fallback types in ``openai.py``."""
+        genie_dir = Path(__file__).resolve().parents[2] / "src" / "chonkie" / "genie"
+        real_mod = sys.modules["chonkie.genie.openai"]
+        orig_import = builtins.__import__
+
+        def fake_import(
+            name: str,
+            globals: dict | None = None,
+            locals: dict | None = None,
+            fromlist: tuple[str, ...] = (),
+            level: int = 0,
+            **kwargs: object,
+        ) -> object:
+            if name == "openai" and level == 0:
+                raise ImportError("simulated missing openai")
+            return orig_import(name, globals, locals, fromlist, level)
+
+        spec = importlib.util.spec_from_file_location(
+            "chonkie.genie.openai", genie_dir / "openai.py"
+        )
+        stub_mod = importlib.util.module_from_spec(spec)
+        assert spec.loader is not None
+        builtins.__import__ = fake_import
+        try:
+            sys.modules["chonkie.genie.openai"] = stub_mod
+            spec.loader.exec_module(stub_mod)
+            assert stub_mod.OpenAI is None
+            assert stub_mod.AsyncOpenAI is None
+            assert issubclass(stub_mod.APIError, Exception)
+            assert issubclass(stub_mod.RateLimitError, Exception)
+        finally:
+            builtins.__import__ = orig_import
+            sys.modules["chonkie.genie.openai"] = real_mod
 
     def test_openai_genie_is_available_true(self) -> None:
         """Test _is_available returns True when dependencies are installed."""

@@ -54,6 +54,13 @@ class IncompleteGenie(BaseGenie):
         return f"Response to: {prompt}"
 
 
+class SuperCallsBaseGenerate(BaseGenie):
+    """Concrete genie that forwards ``generate`` to ``BaseGenie`` (hits default body)."""
+
+    def generate(self, prompt: str) -> str:
+        return super().generate(prompt)
+
+
 @pytest.fixture
 def concrete_genie() -> ConcreteGenie:
     """Fixture providing a concrete genie implementation."""
@@ -76,6 +83,10 @@ class TestBaseGenieAbstractMethods:
         """Test that BaseGenie cannot be instantiated directly."""
         with pytest.raises(TypeError):
             BaseGenie()
+
+    def test_default_generate_body_raises_not_implemented(self) -> None:
+        with pytest.raises(NotImplementedError):
+            SuperCallsBaseGenerate().generate("x")
 
     def test_concrete_implementation_works(self, concrete_genie: ConcreteGenie) -> None:
         """Test that concrete implementation can be instantiated."""
@@ -376,3 +387,33 @@ class TestBaseGenieTypeHints:
         concrete_genie.generate_batch(["prompt1", "prompt2"])
         concrete_genie.generate_json("json prompt", Mock())
         concrete_genie.generate_json_batch(["json1", "json2"], Mock())
+
+
+@pytest.mark.asyncio
+class TestBaseGenieAsync:
+    """Exercise async helpers on BaseGenie."""
+
+    async def test_agenerate_delegates_to_generate(self, concrete_genie: ConcreteGenie) -> None:
+        out = await concrete_genie.agenerate("async-prompt")
+        assert out == "test response"
+        assert concrete_genie.prompts == ["async-prompt"]
+
+    async def test_agenerate_batch_respects_max_concurrency(
+        self, concrete_genie: ConcreteGenie
+    ) -> None:
+        prompts = ["a", "b", "c"]
+        results = await concrete_genie.agenerate_batch(prompts, max_concurrency=2)
+        assert results == ["test response", "test response", "test response"]
+        assert concrete_genie.prompts == prompts
+
+    async def test_agenerate_json_delegates(self, concrete_genie: ConcreteGenie) -> None:
+        schema = Mock()
+        out = await concrete_genie.agenerate_json("jp", schema)
+        assert out == {"key": "value"}
+        assert concrete_genie.json_prompts == ["jp"]
+
+    async def test_agenerate_json_batch(self, concrete_genie: ConcreteGenie) -> None:
+        schema = Mock()
+        out = await concrete_genie.agenerate_json_batch(["x", "y"], schema, max_concurrency=1)
+        assert out == [{"key": "value"}, {"key": "value"}]
+        assert concrete_genie.json_prompts == ["x", "y"]
