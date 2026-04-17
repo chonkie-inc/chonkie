@@ -563,3 +563,80 @@ class TestPipelineReturnTypes:
         result = Pipeline().fetch_from("file", dir=tmp_path).chunk_with("recursive").run()
 
         assert isinstance(result, list)
+
+
+class TestPipelineMarkdownModalities:
+    """Test pipeline with multiple chunkers for different markdown modalities."""
+
+    MARKDOWN_WITH_CODE = """
+# Machine Learning Guide
+
+Machine learning is a subset of artificial intelligence that focuses on building
+systems that learn from data. There are three main types.
+
+```python
+from sklearn.linear_model import LogisticRegression
+
+model = LogisticRegression()
+model.fit(X_train, y_train)
+accuracy = model.score(X_test, y_test)
+print(f"Accuracy: {accuracy:.2f}")
+```
+
+## Evaluation
+
+After training, you should evaluate on a held-out test set.
+
+```javascript
+function evaluate(model, testData) {
+    const predictions = model.predict(testData.features);
+    return accuracy(predictions, testData.labels);
+}
+```
+
+More text after the code blocks to ensure prose chunking works properly.
+"""
+
+    def test_markdown_with_recursive_and_code_chunkers(self) -> None:
+        """Test pipeline with markdown chef, recursive chunker for prose, and code chunker for code blocks."""
+        from chonkie.types.markdown import MarkdownDocument
+
+        doc = (
+            Pipeline()
+            .process_with("markdown")
+            .chunk_with("recursive", tokenizer="word", chunk_size=512)
+            .chunk_with("code", chunk_size=512)
+            .run(texts=self.MARKDOWN_WITH_CODE)
+        )
+
+        assert isinstance(doc, MarkdownDocument)
+        assert len(doc.chunks) > 0
+        # Should have chunks from both prose and code
+        assert len(doc.code) > 0
+
+    def test_markdown_all_modalities(self) -> None:
+        """Test pipeline with all three modality chunkers."""
+        from chonkie.types.markdown import MarkdownDocument
+
+        md_with_table = self.MARKDOWN_WITH_CODE + """
+| Metric | Value |
+|--------|-------|
+| Accuracy | 0.95 |
+| Precision | 0.93 |
+| Recall | 0.91 |
+"""
+
+        doc = (
+            Pipeline()
+            .process_with("markdown")
+            .chunk_with("recursive", tokenizer="word", chunk_size=512)
+            .chunk_with("code", chunk_size=512)
+            .chunk_with("table")
+            .refine_with("overlap", tokenizer="word", context_size=16)
+            .run(texts=md_with_table)
+        )
+
+        assert isinstance(doc, MarkdownDocument)
+        assert len(doc.chunks) > 0
+        assert len(doc.code) > 0
+        assert len(doc.tables) > 0

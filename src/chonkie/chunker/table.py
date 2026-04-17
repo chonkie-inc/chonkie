@@ -242,18 +242,20 @@ class TableChunker(BaseChunker):
         logger.debug(
             f"Chunking document with {len(document.content) if hasattr(document, 'content') else 0} characters",
         )
-        if isinstance(document, MarkdownDocument) and document.tables:
-            logger.debug(f"Processing MarkdownDocument with {len(document.tables)} tables")
-            for table in document.tables:
-                chunks = self.chunk(table.content)
-                for chunk in chunks:
-                    chunk.start_index = table.start_index + chunk.start_index
-                    chunk.end_index = table.start_index + chunk.end_index
-                document.chunks.extend(chunks)
-            document.chunks.sort(key=lambda x: x.start_index)
-        else:
-            document.chunks = self.chunk(document.content)
-            document.chunks.sort(key=lambda x: x.start_index)
+        if isinstance(document, MarkdownDocument):
+            if document.tables:
+                logger.debug(f"Processing MarkdownDocument with {len(document.tables)} tables")
+                for table in document.tables:
+                    chunks = self.chunk(table.content)
+                    for chunk in chunks:
+                        chunk.start_index = table.start_index + chunk.start_index
+                        chunk.end_index = table.start_index + chunk.end_index
+                    document.chunks.extend(chunks)
+                document.chunks.sort(key=lambda x: x.start_index)
+            BaseChunker._propagate_document_metadata(document)
+            return document
+        document.chunks = self.chunk(document.content)
+        document.chunks.sort(key=lambda x: x.start_index)
         logger.info(f"Document chunking complete: {len(document.chunks)} chunks created")
         BaseChunker._propagate_document_metadata(document)
         return document

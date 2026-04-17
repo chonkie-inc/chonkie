@@ -12,7 +12,7 @@ from chonkie.chunker.base import BaseChunker
 from chonkie.logger import get_logger
 from chonkie.pipeline import chunker
 from chonkie.tokenizer import TokenizerProtocol
-from chonkie.types import Chunk
+from chonkie.types import Chunk, Document, MarkdownDocument
 
 logger = get_logger(__name__)
 
@@ -367,6 +367,38 @@ class CodeChunker(BaseChunker):
         chunks = self._create_chunks(texts, token_counts, node_groups)
         logger.info(f"Created {len(chunks)} code chunks from parsed syntax tree")
         return chunks
+
+    def chunk_document(self, document: Document) -> Document:
+        """Chunk a document, with special handling for MarkdownDocument code blocks."""
+        if isinstance(document, MarkdownDocument):
+            if document.code:
+                logger.debug(f"Processing MarkdownDocument with {len(document.code)} code blocks")
+                for code_block in document.code:
+                    if not code_block.content.strip():
+                        continue
+                    try:
+                        chunks = self.chunk(code_block.content)
+                    except Exception as e:
+                        logger.warning(
+                            f"CodeChunker failed for code block at index {code_block.start_index}: {e}"
+                        )
+                        chunks = [Chunk(
+                            text=code_block.content,
+                            start_index=0,
+                            end_index=len(code_block.content),
+                            token_count=self.tokenizer.count_tokens(code_block.content),
+                        )]
+                    for chunk in chunks:
+                        chunk.start_index = code_block.start_index + chunk.start_index
+                        chunk.end_index = code_block.start_index + chunk.end_index
+                    document.chunks.extend(chunks)
+                document.chunks.sort(key=lambda x: x.start_index)
+            BaseChunker._propagate_document_metadata(document)
+            return document
+        document.chunks = self.chunk(document.content)
+        logger.info(f"Document chunking complete: {len(document.chunks)} chunks created")
+        BaseChunker._propagate_document_metadata(document)
+        return document
 
     def __repr__(self) -> str:
         """Return the string representation of the CodeChunker."""

@@ -4,6 +4,7 @@ import pytest
 
 from chonkie import CodeChunker
 from chonkie.types import Chunk
+from chonkie.types.markdown import MarkdownCode, MarkdownDocument
 
 
 @pytest.fixture
@@ -169,3 +170,82 @@ def test_code_chunker_chunk_size_javascript(js_code: str) -> None:
     # Allow for some leeway
     assert all(chunk.token_count < chunk_size + 15 for chunk in chunks[:-1])
     assert chunks[-1].token_count > 0
+
+
+def test_code_chunker_markdown_document() -> None:
+    """Test that CodeChunker handles MarkdownDocument code blocks."""
+    python_block = 'def hello():\n    print("world")\n\ndef foo():\n    for i in range(100):\n        print(i)\n'
+    js_block = 'function greet(name) {\n  console.log(`Hello, ${name}!`);\n}\n'
+
+    doc = MarkdownDocument(
+        content=f"# Title\n\nSome text.\n\n```python\n{python_block}```\n\nMore text.\n\n```javascript\n{js_block}```\n",
+        chunks=[Chunk(text="Some text.", start_index=10, end_index=20, token_count=2)],
+        code=[
+            MarkdownCode(content=python_block, language="python", start_index=35, end_index=35 + len(python_block)),
+            MarkdownCode(content=js_block, language="javascript", start_index=150, end_index=150 + len(js_block)),
+        ],
+    )
+
+    chunker = CodeChunker(language="auto", chunk_size=50)
+    result = chunker.chunk_document(doc)
+
+    # Original text chunks should be preserved
+    assert any(c.text == "Some text." for c in result.chunks)
+    # Code blocks should be chunked and added
+    assert len(result.chunks) > 1
+    # All code chunk indices should be offset by the code block's start_index
+    code_chunks = [c for c in result.chunks if c.text != "Some text."]
+    assert len(code_chunks) > 0
+    for c in code_chunks:
+        assert c.start_index >= 35
+    # Chunks should be sorted by start_index
+    for i in range(len(result.chunks) - 1):
+        assert result.chunks[i].start_index <= result.chunks[i + 1].start_index
+
+
+def test_code_chunker_markdown_document_empty_code() -> None:
+    """Test that CodeChunker skips empty code blocks in MarkdownDocument."""
+    doc = MarkdownDocument(
+        content="# Title\n\nSome text.\n",
+        chunks=[Chunk(text="Some text.", start_index=10, end_index=20, token_count=2)],
+        code=[
+            MarkdownCode(content="   \n  ", language="python", start_index=50, end_index=60),
+        ],
+    )
+
+    chunker = CodeChunker(language="python", chunk_size=50)
+    result = chunker.chunk_document(doc)
+
+    # Only the original text chunk should remain
+    assert len(result.chunks) == 1
+    assert result.chunks[0].text == "Some text."
+
+
+def test_code_chunker_markdown_document_no_code() -> None:
+    """Test that CodeChunker with MarkdownDocument falls through when no code blocks."""
+    doc = MarkdownDocument(
+        content="# Title\n\nSome text.\n",
+        chunks=[Chunk(text="Some text.", start_index=10, end_index=20, token_count=2)],
+        code=[],
+    )
+
+    chunker = CodeChunker(language="python", chunk_size=50)
+    result = chunker.chunk_document(doc)
+
+    # Should fall through to base class behavior (re-chunk existing chunks)
+    assert len(result.chunks) >= 1
+
+
+def test_code_chunker_plain_document() -> None:
+    """Test that CodeChunker still works with plain Document (non-markdown)."""
+    from chonkie.types import Document
+
+    code = 'def hello():\n    print("world")\n'
+    doc = Document(content=code)
+
+    chunker = CodeChunker(language="python", chunk_size=512)
+    result = chunker.chunk_document(doc)
+
+    assert len(result.chunks) > 0
+    reconstructed = "".join(c.text for c in result.chunks)
+    assert reconstructed == code
