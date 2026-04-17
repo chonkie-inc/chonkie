@@ -384,8 +384,8 @@ class CodeChunker(BaseChunker):
                 finally:
                     self.parser = original_parser
                     self.language = original_language
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug(f"Language hint '{language}' failed, falling back to auto: {e}")
         return self.chunk(content)
 
     def chunk_document(self, document: Document) -> Document:
@@ -397,17 +397,14 @@ class CodeChunker(BaseChunker):
                     if not code_block.content.strip():
                         continue
 
-                    # MarkdownChef sets start_index/end_index to the full fenced block
-                    # (including ```lang and ```), but content is the inner code.
-                    # Compute the actual content offset within the document.
+                    # Fenced block indices include the ``` delimiters; content starts after first newline.
                     fenced_block = document.content[code_block.start_index : code_block.end_index]
                     first_newline = fenced_block.find("\n")
-                    search_start = first_newline if first_newline != -1 else 0
-                    content_offset = fenced_block.find(code_block.content, search_start)
-                    if content_offset == -1:
-                        content_start = code_block.start_index
-                    else:
-                        content_start = code_block.start_index + content_offset
+                    content_start = (
+                        code_block.start_index + first_newline + 1
+                        if first_newline != -1
+                        else code_block.start_index
+                    )
 
                     try:
                         chunks = self._chunk_code_block(code_block.content, code_block.language)
