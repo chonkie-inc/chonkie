@@ -844,3 +844,20 @@ def test_table_chunker_html_table_malformed_no_closing_tag() -> None:
     all_content = "".join(c.text for c in chunks)
     assert "Alice" in all_content
     assert "Charlie" in all_content
+
+
+def test_table_chunker_markdown_document_no_tables_preserves_chunks() -> None:
+    """Test that TableChunker is a no-op on MarkdownDocument with no tables."""
+    doc = MarkdownDocument(
+        content="# Title\n\nSome prose text here.\n",
+        chunks=[
+            Chunk(text="Some prose text here.", start_index=10, end_index=30, token_count=4),
+        ],
+        tables=[],
+    )
+
+    chunker = TableChunker(tokenizer="row", chunk_size=3)
+    result = chunker.chunk_document(doc)
+
+    assert len(result.chunks) == 1
+    assert result.chunks[0].text == "Some prose text here."

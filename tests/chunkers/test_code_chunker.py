@@ -232,7 +232,7 @@ def test_code_chunker_markdown_document_empty_code() -> None:
 
 
 def test_code_chunker_markdown_document_no_code() -> None:
-    """Test that CodeChunker with MarkdownDocument falls through when no code blocks."""
+    """Test that CodeChunker is a no-op on MarkdownDocument with no code blocks."""
     doc = MarkdownDocument(
         content="# Title\n\nSome text.\n",
         chunks=[Chunk(text="Some text.", start_index=10, end_index=20, token_count=2)],
@@ -242,8 +242,9 @@ def test_code_chunker_markdown_document_no_code() -> None:
     chunker = CodeChunker(language="python", chunk_size=50)
     result = chunker.chunk_document(doc)
 
-    # Should fall through to base class behavior (re-chunk existing chunks)
-    assert len(result.chunks) >= 1
+    # Existing chunks should be preserved untouched
+    assert len(result.chunks) == 1
+    assert result.chunks[0].text == "Some text."
 
 
 def test_code_chunker_plain_document() -> None:

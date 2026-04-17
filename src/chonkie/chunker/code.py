@@ -368,6 +368,23 @@ class CodeChunker(BaseChunker):
         logger.info(f"Created {len(chunks)} code chunks from parsed syntax tree")
         return chunks
 
+    def _chunk_code_block(self, content: str, language: str | None) -> list[Chunk]:
+        """Chunk a single code block, using the block's language hint when available."""
+        if language and self.language == "auto":
+            from tree_sitter_language_pack import get_parser
+
+            try:
+                parser = get_parser(language)
+                original_parser = self.parser
+                self.parser = parser
+                try:
+                    return self.chunk(content)
+                finally:
+                    self.parser = original_parser
+            except Exception:
+                pass
+        return self.chunk(content)
+
     def chunk_document(self, document: Document) -> Document:
         """Chunk a document, with special handling for MarkdownDocument code blocks."""
         if isinstance(document, MarkdownDocument):
@@ -376,8 +393,19 @@ class CodeChunker(BaseChunker):
                 for code_block in document.code:
                     if not code_block.content.strip():
                         continue
+
+                    # MarkdownChef sets start_index/end_index to the full fenced block
+                    # (including ```lang and ```), but content is the inner code.
+                    # Compute the actual content offset within the document.
+                    fenced_block = document.content[code_block.start_index : code_block.end_index]
+                    content_offset = fenced_block.find(code_block.content)
+                    if content_offset == -1:
+                        content_start = code_block.start_index
+                    else:
+                        content_start = code_block.start_index + content_offset
+
                     try:
-                        chunks = self.chunk(code_block.content)
+                        chunks = self._chunk_code_block(code_block.content, code_block.language)
                     except Exception as e:
                         logger.warning(
                             f"CodeChunker failed for code block at index {code_block.start_index}: {e}"
@@ -391,8 +419,8 @@ class CodeChunker(BaseChunker):
                             )
                         ]
                     for chunk in chunks:
-                        chunk.start_index = code_block.start_index + chunk.start_index
-                        chunk.end_index = code_block.start_index + chunk.end_index
+                        chunk.start_index = content_start + chunk.start_index
+                        chunk.end_index = content_start + chunk.end_index
                     document.chunks.extend(chunks)
                 document.chunks.sort(key=lambda x: x.start_index)
             BaseChunker._propagate_document_metadata(document)
