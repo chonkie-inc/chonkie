@@ -376,11 +376,14 @@ class CodeChunker(BaseChunker):
             try:
                 parser = get_parser(cast(SupportedLanguage, language))
                 original_parser = self.parser
+                original_language = self.language
                 self.parser = parser
+                self.language = language
                 try:
                     return self.chunk(content)
                 finally:
                     self.parser = original_parser
+                    self.language = original_language
             except Exception:
                 pass
         return self.chunk(content)
@@ -398,7 +401,9 @@ class CodeChunker(BaseChunker):
                     # (including ```lang and ```), but content is the inner code.
                     # Compute the actual content offset within the document.
                     fenced_block = document.content[code_block.start_index : code_block.end_index]
-                    content_offset = fenced_block.find(code_block.content)
+                    first_newline = fenced_block.find("\n")
+                    search_start = first_newline if first_newline != -1 else 0
+                    content_offset = fenced_block.find(code_block.content, search_start)
                     if content_offset == -1:
                         content_start = code_block.start_index
                     else:
