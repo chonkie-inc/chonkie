@@ -382,12 +382,14 @@ class CodeChunker(BaseChunker):
                         logger.warning(
                             f"CodeChunker failed for code block at index {code_block.start_index}: {e}"
                         )
-                        chunks = [Chunk(
-                            text=code_block.content,
-                            start_index=0,
-                            end_index=len(code_block.content),
-                            token_count=self.tokenizer.count_tokens(code_block.content),
-                        )]
+                        chunks = [
+                            Chunk(
+                                text=code_block.content,
+                                start_index=0,
+                                end_index=len(code_block.content),
+                                token_count=self.tokenizer.count_tokens(code_block.content),
+                            )
+                        ]
                     for chunk in chunks:
                         chunk.start_index = code_block.start_index + chunk.start_index
                         chunk.end_index = code_block.start_index + chunk.end_index
@@ -395,10 +397,7 @@ class CodeChunker(BaseChunker):
                 document.chunks.sort(key=lambda x: x.start_index)
             BaseChunker._propagate_document_metadata(document)
             return document
-        document.chunks = self.chunk(document.content)
-        logger.info(f"Document chunking complete: {len(document.chunks)} chunks created")
-        BaseChunker._propagate_document_metadata(document)
-        return document
+        return super().chunk_document(document)
 
     def __repr__(self) -> str:
         """Return the string representation of the CodeChunker."""

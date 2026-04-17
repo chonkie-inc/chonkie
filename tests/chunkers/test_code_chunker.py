@@ -175,14 +175,24 @@ def test_code_chunker_chunk_size_javascript(js_code: str) -> None:
 def test_code_chunker_markdown_document() -> None:
     """Test that CodeChunker handles MarkdownDocument code blocks."""
     python_block = 'def hello():\n    print("world")\n\ndef foo():\n    for i in range(100):\n        print(i)\n'
-    js_block = 'function greet(name) {\n  console.log(`Hello, ${name}!`);\n}\n'
+    js_block = "function greet(name) {\n  console.log(`Hello, ${name}!`);\n}\n"
 
     doc = MarkdownDocument(
         content=f"# Title\n\nSome text.\n\n```python\n{python_block}```\n\nMore text.\n\n```javascript\n{js_block}```\n",
         chunks=[Chunk(text="Some text.", start_index=10, end_index=20, token_count=2)],
         code=[
-            MarkdownCode(content=python_block, language="python", start_index=35, end_index=35 + len(python_block)),
-            MarkdownCode(content=js_block, language="javascript", start_index=150, end_index=150 + len(js_block)),
+            MarkdownCode(
+                content=python_block,
+                language="python",
+                start_index=35,
+                end_index=35 + len(python_block),
+            ),
+            MarkdownCode(
+                content=js_block,
+                language="javascript",
+                start_index=150,
+                end_index=150 + len(js_block),
+            ),
         ],
     )
 

@@ -254,11 +254,7 @@ class TableChunker(BaseChunker):
                 document.chunks.sort(key=lambda x: x.start_index)
             BaseChunker._propagate_document_metadata(document)
             return document
-        document.chunks = self.chunk(document.content)
-        document.chunks.sort(key=lambda x: x.start_index)
-        logger.info(f"Document chunking complete: {len(document.chunks)} chunks created")
-        BaseChunker._propagate_document_metadata(document)
-        return document
+        return super().chunk_document(document)
 
     def __repr__(self) -> str:
         """Return a string representation of the TableChunker."""

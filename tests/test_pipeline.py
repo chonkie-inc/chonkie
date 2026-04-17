@@ -618,13 +618,16 @@ More text after the code blocks to ensure prose chunking works properly.
         """Test pipeline with all three modality chunkers."""
         from chonkie.types.markdown import MarkdownDocument
 
-        md_with_table = self.MARKDOWN_WITH_CODE + """
+        md_with_table = (
+            self.MARKDOWN_WITH_CODE
+            + """
 | Metric | Value |
 |--------|-------|
 | Accuracy | 0.95 |
 | Precision | 0.93 |
 | Recall | 0.91 |
 """
+        )
 
         doc = (
             Pipeline()
