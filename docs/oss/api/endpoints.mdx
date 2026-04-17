@@ -275,8 +275,8 @@ curl -X POST http://localhost:8000/v1/refine/overlap \
     <ParamField body="mode" type='"token" | "recursive"' default='"token"'>
       Strategy used to create the overlap window.
     </ParamField>
-    <ParamField body="method" type='"suffix" | "prefix"' default='"suffix"'>
-      `"suffix"` appends context from the previous chunk; `"prefix"` prepends context from the next chunk.
+    <ParamField body="method" type='"suffix" | "prefix" | "justified"' default='"suffix"'>
+      `"suffix"` appends context from the previous chunk; `"prefix"` prepends context from the next chunk; `"justified"` adds context from both sides.
     </ParamField>
     <ParamField body="merge" type="boolean" default="true">
       Merge the overlap context into the chunk text field.
