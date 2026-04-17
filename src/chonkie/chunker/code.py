@@ -371,10 +371,10 @@ class CodeChunker(BaseChunker):
     def _chunk_code_block(self, content: str, language: str | None) -> list[Chunk]:
         """Chunk a single code block, using the block's language hint when available."""
         if language and self.language == "auto":
-            from tree_sitter_language_pack import get_parser
+            from tree_sitter_language_pack import SupportedLanguage, get_parser
 
             try:
-                parser = get_parser(language)
+                parser = get_parser(cast(SupportedLanguage, language))
                 original_parser = self.parser
                 self.parser = parser
                 try:
