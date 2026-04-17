@@ -12,7 +12,7 @@ from chonkie.chunker.base import BaseChunker
 from chonkie.logger import get_logger
 from chonkie.pipeline import chunker
 from chonkie.tokenizer import TokenizerProtocol
-from chonkie.types import Chunk
+from chonkie.types import Chunk, Document, MarkdownDocument
 
 logger = get_logger(__name__)
 
@@ -367,6 +367,67 @@ class CodeChunker(BaseChunker):
         chunks = self._create_chunks(texts, token_counts, node_groups)
         logger.info(f"Created {len(chunks)} code chunks from parsed syntax tree")
         return chunks
+
+    def _chunk_code_block(self, content: str, language: str | None) -> list[Chunk]:
+        """Chunk a single code block, using the block's language hint when available."""
+        if language and self.language == "auto":
+            from tree_sitter_language_pack import SupportedLanguage, get_parser
+
+            try:
+                parser = get_parser(cast(SupportedLanguage, language))
+                original_parser = self.parser
+                original_language = self.language
+                self.parser = parser
+                self.language = language
+                try:
+                    return self.chunk(content)
+                finally:
+                    self.parser = original_parser
+                    self.language = original_language
+            except Exception as e:
+                logger.debug(f"Language hint '{language}' failed, falling back to auto: {e}")
+        return self.chunk(content)
+
+    def chunk_document(self, document: Document) -> Document:
+        """Chunk a document, with special handling for MarkdownDocument code blocks."""
+        if isinstance(document, MarkdownDocument):
+            if document.code:
+                logger.debug(f"Processing MarkdownDocument with {len(document.code)} code blocks")
+                for code_block in document.code:
+                    if not code_block.content.strip():
+                        continue
+
+                    # Fenced block indices include the ``` delimiters; content starts after first newline.
+                    fenced_block = document.content[code_block.start_index : code_block.end_index]
+                    first_newline = fenced_block.find("\n")
+                    content_start = (
+                        code_block.start_index + first_newline + 1
+                        if first_newline != -1
+                        else code_block.start_index
+                    )
+
+                    try:
+                        chunks = self._chunk_code_block(code_block.content, code_block.language)
+                    except Exception as e:
+                        logger.warning(
+                            f"CodeChunker failed for code block at index {code_block.start_index}: {e}"
+                        )
+                        chunks = [
+                            Chunk(
+                                text=code_block.content,
+                                start_index=0,
+                                end_index=len(code_block.content),
+                                token_count=self.tokenizer.count_tokens(code_block.content),
+                            )
+                        ]
+                    for chunk in chunks:
+                        chunk.start_index = content_start + chunk.start_index
+                        chunk.end_index = content_start + chunk.end_index
+                    document.chunks.extend(chunks)
+                document.chunks.sort(key=lambda x: x.start_index)
+            BaseChunker._propagate_document_metadata(document)
+            return document
+        return super().chunk_document(document)
 
     def __repr__(self) -> str:
         """Return the string representation of the CodeChunker."""
