@@ -8,7 +8,7 @@ name = "chonkie"
 version = "1.6.3"
 description = "🦛 CHONK your texts with Chonkie ✨ - The no-nonsense chunking library"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 license = { file = "LICENSE" }
 keywords = [
     "chunking",
@@ -35,7 +35,6 @@ maintainers = [
 classifiers = [
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
@@ -52,6 +51,7 @@ dependencies = [
     "chonkie-core>=0.8.0",
     "tenacity>=8.0.0",
     "httpx>=0.28.1",
+    "tokie>=0.0.8",
 ]
 
 [project.urls]
@@ -82,7 +82,7 @@ api = [
 # Optional dependencies for table chef
 table = ["pandas", "tabulate", "openpyxl", "lxml"]
 
-# Optional dependencies for tokenizers
+# Legacy tokenizer extras (tokie is now the default, these are for backward compat)
 tokenizers = ["tokenizers>=0.16.0"]
 tiktoken = ["tiktoken>=0.5.0"]
 
@@ -142,8 +142,6 @@ all = [
     "chonkie[cli]",
     "chonkie[api]",
     "chonkie[table]",
-    "chonkie[tokenizers]",
-    "chonkie[tiktoken]",
     "chonkie[code]",
     "chonkie[neural]",
     "chonkie[model2vec]",
