@@ -1,6 +1,5 @@
 """Module for abstracting tokeinization logic."""
 
-import importlib.util as importutil
 import inspect
 from abc import ABC, abstractmethod
 from collections import defaultdict
@@ -530,11 +529,10 @@ class AutoTokenizer:
         if isinstance(tokenizer, str):
             return _create_auto_tokenizer_from_string(tokenizer)
 
-        if importutil.find_spec("tokie") is not None:
-            from tokie import Tokenizer as TokieTokenizer
+        from tokie import Tokenizer as TokieTokenizer
 
-            if isinstance(tokenizer, TokieTokenizer):
-                return TokieAutoTokenizer(tokenizer)
+        if isinstance(tokenizer, TokieTokenizer):
+            return TokieAutoTokenizer(tokenizer)
 
         supported_backends = [
             ("transformers", TransformersAutoTokenizer),
@@ -670,10 +668,8 @@ class TokieAutoTokenizer(AutoTokenizer):
 
     def encode_batch(self, texts: Sequence[str]) -> list[list[int]]:
         """Batch encode texts and extract token IDs."""
-        return [
-            enc.ids
-            for enc in self.tokenizer.encode_batch(list(texts), add_special_tokens=False)
-        ]
+        encodings = self.tokenizer.encode_batch(list(texts), add_special_tokens=False)
+        return [enc.ids for enc in encodings]
 
     def decode_batch(self, token_sequences: Sequence[Sequence[int]]) -> list[str]:
         """Batch decode token IDs back to text."""
