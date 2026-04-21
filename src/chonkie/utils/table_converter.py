@@ -3,11 +3,16 @@
 import math
 from io import StringIO
 
-import pandas as pd
-
 
 def _read_markdown_table(table_content: str):
     """Read markdown table into DataFrame."""
+    try:
+        import pandas as pd
+    except ImportError as e:
+        raise ImportError(
+            "Pandas is required to use the table converter. Please install it with `pip install chonkie[table]`.",
+        ) from e
+
     lines = [line.strip("|").strip() for line in table_content.split("\n") if line.strip()]
     if len(lines) < 2:
         return pd.DataFrame()
@@ -21,6 +26,13 @@ def _read_markdown_table(table_content: str):
 
 def _read_html_table(table_content: str):
     """Read HTML table into DataFrame."""
+    try:
+        import pandas as pd
+    except ImportError as e:
+        raise ImportError(
+            "Pandas is required to use the table converter. Please install it with `pip install chonkie[table]`.",
+        ) from e
+
     try:
         tables = pd.read_html(StringIO(table_content))
         if not tables:
