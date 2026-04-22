@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock, patch
 
+import numpy as np
 import pytest
 
 from chonkie.embeddings import BaseEmbeddings
@@ -134,7 +135,9 @@ def test_generate_id(sample_chunk):
     """Test the _generate_id method."""
     with patch("pymongo.MongoClient"):
         handshake = MongoDBHandshake(db_name="testdb", collection_name="testcol")
-        generated_id = handshake._generate_id(0, sample_chunk)
+        generated_id = handshake._generate_id(
+            f"{handshake.collection_name}::chunk-0:{sample_chunk.text}"
+        )
         import uuid
 
         assert isinstance(generated_id, str)
@@ -142,10 +145,19 @@ def test_generate_id(sample_chunk):
             uuid.UUID(generated_id)
         except ValueError:
             pytest.fail(f"Generated ID '{generated_id}' is not a valid UUID.")
-        assert handshake._generate_id(0, sample_chunk) == generated_id
-        assert handshake._generate_id(1, sample_chunk) != generated_id
+        assert (
+            handshake._generate_id(f"{handshake.collection_name}::chunk-0:{sample_chunk.text}")
+            == generated_id
+        )
+        assert (
+            handshake._generate_id(f"{handshake.collection_name}::chunk-1:{sample_chunk.text}")
+            != generated_id
+        )
         diff_chunk = Chunk(text="Different text", start_index=0, end_index=14, token_count=2)
-        assert handshake._generate_id(0, diff_chunk) != generated_id
+        assert (
+            handshake._generate_id(f"{handshake.collection_name}::chunk-0:{diff_chunk.text}")
+            != generated_id
+        )
 
 
 def test_generate_document(sample_chunk):
@@ -154,9 +166,61 @@ def test_generate_document(sample_chunk):
         handshake = MongoDBHandshake(db_name="testdb", collection_name="testcol")
         embedding = [0.1] * handshake.dimension
         doc = handshake._generate_document(0, sample_chunk, embedding)
-        assert doc["_id"] == handshake._generate_id(0, sample_chunk)
+        assert doc["_id"] == handshake._generate_id(
+            f"{handshake.collection_name}::chunk-0:{sample_chunk.text}"
+        )
         assert doc["text"] == sample_chunk.text
         assert doc["start_index"] == sample_chunk.start_index
         assert doc["end_index"] == sample_chunk.end_index
         assert doc["token_count"] == sample_chunk.token_count
         assert doc["embedding"] == embedding
+
+
+def test_mongodb_handshake_search_with_query_orders_by_similarity(mock_embeddings):
+    """search() scores stored documents against the query embedding."""
+    with patch("pymongo.MongoClient"):
+        handshake = MongoDBHandshake(db_name="testdb", collection_name="testcol")
+        handshake.embedding_model.embed = MagicMock(
+            return_value=np.array([0.1] * 8, dtype=np.float64)
+        )
+        handshake.collection = MagicMock()
+        handshake.collection.find.return_value = [
+            {
+                "_id": "a",
+                "text": "hello",
+                "start_index": 0,
+                "end_index": 5,
+                "token_count": 1,
+                "embedding": [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+            },
+            {
+                "_id": "b",
+                "text": "world",
+                "start_index": 0,
+                "end_index": 5,
+                "token_count": 1,
+                "embedding": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+            },
+        ]
+        results = handshake.search(query="hello", limit=1)
+        assert len(results) == 1
+        assert results[0]["id"] == "a"
+        assert results[0]["score"] > 0
+
+
+def test_mongodb_handshake_search_with_embedding_vector(mock_embeddings):
+    """search() accepts a precomputed embedding list."""
+    with patch("pymongo.MongoClient"):
+        handshake = MongoDBHandshake(db_name="testdb", collection_name="testcol")
+        handshake.collection = MagicMock()
+        handshake.collection.find.return_value = [
+            {
+                "_id": "x",
+                "text": "t",
+                "embedding": [0.5] * 8,
+            },
+        ]
+        q = [0.5] * 8
+        results = handshake.search(embedding=q, limit=5)
+        assert len(results) == 1
+        assert results[0]["id"] == "x"

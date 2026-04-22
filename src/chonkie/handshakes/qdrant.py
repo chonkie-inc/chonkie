@@ -9,7 +9,6 @@ from typing import (
     Optional,
     Union,
 )
-from uuid import NAMESPACE_OID, uuid5
 
 from chonkie.embeddings import AutoEmbeddings, BaseEmbeddings
 from chonkie.logger import get_logger
@@ -131,18 +130,17 @@ class QdrantHandshake(BaseHandshake):
         """Check if the dependencies are installed."""
         return importutil.find_spec("qdrant_client") is not None
 
-    def _generate_id(self, index: int, chunk: Chunk) -> str:
-        """Generate a unique id for the chunk."""
-        return str(uuid5(NAMESPACE_OID, f"{self.collection_name}::chunk-{index}:{chunk.text}"))
-
     def _generate_payload(self, chunk: Chunk) -> dict:
         """Generate the payload for the chunk."""
-        return {
-            "text": chunk.text,
-            "start_index": chunk.start_index,
-            "end_index": chunk.end_index,
-            "token_count": chunk.token_count,
-        }
+        return self._merge_chunk_metadata(
+            chunk,
+            {
+                "text": chunk.text,
+                "start_index": chunk.start_index,
+                "end_index": chunk.end_index,
+                "token_count": chunk.token_count,
+            },
+        )
 
     def _get_points(self, chunks: Union[Chunk, list[Chunk]]) -> list["PointStruct"]:
         """Get the points from the chunks."""
@@ -156,7 +154,7 @@ class QdrantHandshake(BaseHandshake):
         for index, chunk in enumerate(chunks):
             points.append(
                 PointStruct(
-                    id=self._generate_id(index, chunk),
+                    id=self._generate_id(f"{self.collection_name}::chunk-{index}:{chunk.text}"),
                     vector=self.embedding_model.embed(chunk.text).tolist(),
                     payload=self._generate_payload(chunk),
                 ),

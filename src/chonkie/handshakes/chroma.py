@@ -3,14 +3,14 @@
 import importlib.util as importutil
 import os
 from typing import (
-    TYPE_CHECKING,
     Any,
     Literal,
     Optional,
     Union,
     cast,
 )
-from uuid import NAMESPACE_OID, uuid5
+
+import numpy as np
 
 from chonkie.embeddings import AutoEmbeddings, BaseEmbeddings
 from chonkie.logger import get_logger
@@ -21,9 +21,6 @@ from .base import BaseHandshake
 from .utils import generate_random_collection_name
 
 logger = get_logger(__name__)
-
-if TYPE_CHECKING:
-    import numpy as np
 
 
 # NOTE: This is a bit of a hack to work with Chroma's EmbeddingFunction interface
@@ -84,8 +81,6 @@ class ChromaEmbeddingFunction:
 @handshake("chroma")
 class ChromaHandshake(BaseHandshake):
     """Chroma Handshake to export Chonkie's Chunks into a Chroma collection.
-
-    This handshake is experimental and may change in the future. Not all Chonkie features are supported yet.
 
     Args:
         client: The Chroma client to use.
@@ -162,17 +157,17 @@ class ChromaHandshake(BaseHandshake):
         """Check if the dependencies are available."""
         return importutil.find_spec("chromadb") is not None
 
-    def _generate_id(self, index: int, chunk: Chunk) -> str:
-        """Generate a unique index name for the Chunk."""
-        return str(uuid5(NAMESPACE_OID, f"{self.collection_name}::chunk-{index}:{chunk.text}"))
-
     def _generate_metadata(self, chunk: Chunk) -> dict[str, str | int | float | bool]:
         """Generate the metadata for the Chunk."""
-        return {
-            "start_index": chunk.start_index,
-            "end_index": chunk.end_index,
-            "token_count": chunk.token_count,
-        }
+        merged = self._merge_chunk_metadata(
+            chunk,
+            {
+                "start_index": chunk.start_index,
+                "end_index": chunk.end_index,
+                "token_count": chunk.token_count,
+            },
+        )
+        return self._coerce_flat_metadata(merged)
 
     def write(self, chunks: Union[Chunk, list[Chunk]]) -> None:
         """Write the Chunks to the Chroma collection."""
@@ -181,7 +176,10 @@ class ChromaHandshake(BaseHandshake):
 
         logger.debug(f"Writing {len(chunks)} chunks to Chroma collection: {self.collection_name}")
         # Generate the ids and metadata
-        ids = [self._generate_id(index, chunk) for (index, chunk) in enumerate(chunks)]
+        ids = [
+            self._generate_id(f"{self.collection_name}::chunk-{index}:{chunk.text}")
+            for (index, chunk) in enumerate(chunks)
+        ]
         metadata = [self._generate_metadata(chunk) for chunk in chunks]
         texts = [chunk.text for chunk in chunks]
 

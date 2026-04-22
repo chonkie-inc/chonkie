@@ -185,7 +185,9 @@ def test_weaviate_handshake_generate_id(mock_weaviate_client) -> None:
             f"{handshake.collection_name}::chunk-{index}:{chunk.text}",
         ),
     )
-    generated_id = handshake._generate_id(index, chunk)
+    generated_id = handshake._generate_id(
+        f"{handshake.collection_name}::chunk-{index}:{chunk.text}"
+    )
     assert generated_id == expected_id_str
 
 
@@ -199,6 +201,7 @@ def test_weaviate_handshake_generate_properties(mock_weaviate_client) -> None:
         "end_index": chunk.end_index,
         "token_count": chunk.token_count,
         "chunk_type": type(chunk).__name__,
+        "chunk_metadata": "",
     }
     generated_properties = handshake._generate_properties(chunk)
     assert generated_properties == expected_properties

@@ -245,4 +245,6 @@ class MarkdownChef(BaseChef):
         markdown = self.read(path)
 
         # Use parse to process the content
-        return self.parse(markdown)
+        doc = self.parse(markdown)
+        self._set_source_filename(doc, path)
+        return doc

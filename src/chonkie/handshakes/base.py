@@ -1,6 +1,8 @@
 """Base class for Handshakes."""
 
 import asyncio
+import json
+import uuid
 from abc import ABC, abstractmethod
 from typing import (
     Any,
@@ -13,15 +15,38 @@ from chonkie.types import Chunk
 
 logger = get_logger(__name__)
 
-# TODO: Move this to inside the BaseHandshake class
-# Why is this even outside the class?
-# def _generate_default_id(*args: Any) -> str:
-#     """Generate a default UUID."""
-#     return str(uuid.uuid4())
-
 
 class BaseHandshake(ABC):
-    """Abstract base class for Handshakes."""
+    """Abstract base class for Handshakes.
+
+    Implementations merge :attr:`~chonkie.types.Chunk.metadata` into stored records
+    where supported; handshake fields (``text``, indices, etc.) override user keys.
+    """
+
+    @staticmethod
+    def _merge_chunk_metadata(chunk: Chunk, fields: dict[str, Any]) -> dict[str, Any]:
+        """Merge ``chunk.metadata`` under ``fields`` (``fields`` wins on key conflicts)."""
+        raw = getattr(chunk, "metadata", None)
+        extra: dict[str, Any] = raw if isinstance(raw, dict) else {}
+        return {**extra, **fields}
+
+    @staticmethod
+    def _coerce_flat_metadata(merged: dict[str, Any]) -> dict[str, Union[str, int, float, bool]]:
+        """Coerce values for stores that only accept primitives (e.g. Chroma, Pinecone metadata)."""
+        out: dict[str, Union[str, int, float, bool]] = {}
+        for key, val in merged.items():
+            if isinstance(val, (str, int, float, bool)):
+                out[key] = val
+            elif val is None:
+                continue
+            else:
+                out[key] = json.dumps(val, default=str)
+        return out
+
+    @staticmethod
+    def _generate_id(text: str) -> str:
+        """Generate a deterministic UUID from a string."""
+        return str(uuid.uuid5(uuid.NAMESPACE_OID, text))
 
     @abstractmethod
     def write(self, chunks: Union[Chunk, list[Chunk]]) -> Any:

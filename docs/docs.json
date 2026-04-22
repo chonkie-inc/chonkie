@@ -71,16 +71,17 @@
             "group": "Chunkers",
             "pages": [
               "oss/chunkers/overview",
-              "oss/chunkers/token-chunker",
-              "oss/chunkers/fast-chunker",
-              "oss/chunkers/sentence-chunker",
-              "oss/chunkers/recursive-chunker",
-              "oss/chunkers/table-chunker",
-              "oss/chunkers/code-chunker",
-              "oss/chunkers/semantic-chunker",
-              "oss/chunkers/late-chunker",
-              "oss/chunkers/neural-chunker",
-              "oss/chunkers/slumber-chunker"
+                "oss/chunkers/code-chunker",
+                "oss/chunkers/fast-chunker",
+                "oss/chunkers/late-chunker",
+                "oss/chunkers/neural-chunker",
+                "oss/chunkers/recursive-chunker",
+                "oss/chunkers/semantic-chunker",
+                "oss/chunkers/sentence-chunker",
+                "oss/chunkers/slumber-chunker",
+                "oss/chunkers/table-chunker",
+                "oss/chunkers/teraflopai-chunker",
+                "oss/chunkers/token-chunker"
             ]
           },
           {
@@ -113,6 +114,7 @@
               "oss/handshakes/overview",
               "oss/handshakes/chroma-handshake",
               "oss/handshakes/elastic-handshake",
+              "oss/handshakes/lancedb-handshake",
               "oss/handshakes/milvus-handshake",
               "oss/handshakes/mongodb-handshake",
               "oss/handshakes/pgvector-handshake",

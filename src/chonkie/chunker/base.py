@@ -3,8 +3,9 @@
 import asyncio
 from abc import ABC, abstractmethod
 from dataclasses import replace
-from typing import Sequence, Union
+from typing import Optional, Sequence, Union
 
+import chonkie_core
 from tqdm import tqdm
 
 from chonkie.logger import get_logger
@@ -12,6 +13,55 @@ from chonkie.tokenizer import AutoTokenizer, TokenizerProtocol
 from chonkie.types import Chunk, Document
 
 logger = get_logger(__name__)
+
+
+def split_text_by_delimiters(
+    text: str,
+    delimiters: Union[str, list[str]],
+    include_delim: Optional[str] = "prev",
+    min_chars: int = 1,
+) -> list[str]:
+    """Split text at delimiter boundaries using chonkie-core.
+
+    This is the shared implementation used by SentenceChunker,
+    SemanticChunker, RecursiveChunker, and SlumberChunker.
+
+    Args:
+        text: Input text to be split.
+        delimiters: Delimiter(s) to split on. Can be a single string or list of strings.
+        include_delim: Whether to include delimiters in the current chunk ("prev")
+            or the next chunk ("next").
+        min_chars: Minimum number of characters per split.
+
+    Returns:
+        List of non-empty text splits.
+
+    """
+    if isinstance(delimiters, str):
+        delimiters = [delimiters]
+
+    text_bytes = text.encode("utf-8")
+    has_complex_delimiters = any(len(d) > 1 or not d.isascii() for d in delimiters)
+
+    if has_complex_delimiters:
+        patterns: list[bytes] = [d.encode("utf-8") for d in delimiters]
+        offsets = chonkie_core.split_pattern_offsets(
+            text_bytes,
+            patterns=patterns,
+            include_delim=include_delim,
+            min_chars=min_chars,
+        )
+    else:
+        delim_bytes = "".join(delimiters).encode("utf-8")
+        offsets = chonkie_core.split_offsets(
+            text_bytes,
+            delimiters=delim_bytes,
+            include_delim=include_delim,
+            min_chars=min_chars,
+        )
+
+    splits = [text_bytes[start:end].decode("utf-8") for start, end in offsets]
+    return [s for s in splits if s]
 
 
 class BaseChunker(ABC):
@@ -233,8 +283,20 @@ class BaseChunker(ABC):
             for c in new_chunks
         ]
 
+    @staticmethod
+    def _propagate_document_metadata(document: Document) -> None:
+        """Merge ``document.metadata`` into each chunk (existing chunk keys take precedence)."""
+        if not document.metadata or not document.chunks:
+            return
+        doc_meta = document.metadata
+        for chunk in document.chunks:
+            chunk.metadata = {**doc_meta, **chunk.metadata}
+
     def chunk_document(self, document: Document) -> Document:
         """Chunk a document.
+
+        After chunking, non-empty ``document.metadata`` is shallow-merged into each
+        chunk's :attr:`~chonkie.types.Chunk.metadata` (chunk keys override on conflict).
 
         Args:
             document: The document to chunk.
@@ -249,6 +311,7 @@ class BaseChunker(ABC):
             document.chunks = self._merge_new_chunks(document.chunks, chunk_results)
         else:
             document.chunks = self.chunk(document.content)
+        self._propagate_document_metadata(document)
         return document
 
     async def achunk_document(self, document: Document) -> Document:
@@ -268,4 +331,5 @@ class BaseChunker(ABC):
             document.chunks = self._merge_new_chunks(document.chunks, chunk_results)
         else:
             document.chunks = await self.achunk(document.content)
+        self._propagate_document_metadata(document)
         return document

@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "chonkie"
-version = "1.6.1"
+version = "1.6.4"
 description = "🦛 CHONK your texts with Chonkie ✨ - The no-nonsense chunking library"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -29,6 +29,7 @@ authors = [
 maintainers = [
     { name = "Bhavnick Minhas", email = "bhavnick@chonkie.ai" },
     { name = "Shreyash Nigam", email = "shreyash@chonkie.ai" },
+    { name = "Hafedh Hichri", email = "lain@chonkie.ai" },
 ]
 
 classifiers = [
@@ -79,7 +80,7 @@ api = [
 ]
 
 # Optional dependencies for table chef
-table = ["pandas", "tabulate", "openpyxl"]
+table = ["pandas", "tabulate", "openpyxl", "lxml"]
 
 # Optional dependencies for tokenizers
 tokenizers = ["tokenizers>=0.16.0"]
@@ -94,13 +95,14 @@ code = [
 neural = ["transformers>=4.0.0", "torch>=2.0.0, <3.0"]
 
 # Optional dependencies for the embeddings
-
 model2vec = ["tokenizers>=0.16.0", "model2vec>=0.7.0", "numpy>=2.0.0, <3.0"]
 
 st = ["tokenizers>=0.16.0", "sentence-transformers>=3.0.0", "accelerate>=1.6.0"]
 openai = ["tiktoken>=0.5.0", "openai>=1.0.0", "pydantic>=2.0.0"]
 
 semantic = ["tokenizers>=0.16.0", "model2vec>=0.3.0"]
+
+teraflopai = ["teraflopai>=0.1.0"]
 
 gemini = ["pydantic>=2.0.0", "google-genai>=1.0.0"]
 azure-openai = [
@@ -128,6 +130,7 @@ pinecone = ["pinecone"]
 mongodb = ["pymongo"]
 elastic = ["elasticsearch>=8.0.0"]
 milvus = ["pymilvus>=2.1.0"]
+lancedb = ["lancedb>=0.4.0"]
 
 # Optional dependencies for the genie
 genie = ["pydantic>=2.0.0", "google-genai>=1.0.0"]
@@ -166,9 +169,12 @@ all = [
     "chonkie[mongodb]",
     "chonkie[elastic]",
     "chonkie[milvus]",
+    "chonkie[lancedb]",
     "chonkie[genie]",
+    "chonkie[teraflopai]",
 ]
 dev = [
+    "chonkie[all]",
     "datasets>=1.14.0",
     "transformers>=4.0.0",
     "pytest>=6.2.0",
@@ -232,6 +238,16 @@ lint.per-file-ignores = { "tests/**" = ["D100", "D102", "D103", "D104"] }
 [tool.ruff.format]
 preview = true
 indent-style = "space"
+
+[tool.coverage.run]
+omit = [
+    "*/chonkie/api/migrations/*",
+]
+
+[tool.coverage.report]
+omit = [
+    "*/chonkie/api/migrations/*",
+]
 
 [tool.mypy]
 disallow_untyped_defs = true

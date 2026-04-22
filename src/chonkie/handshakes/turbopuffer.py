@@ -1,9 +1,9 @@
 """Turbopuffer Handshake to export Chonkie's Chunks into a Turbopuffer database."""
 
 import importlib.util as importutil
+import json
 import os
 from typing import Any, Literal, Optional, Union
-from uuid import NAMESPACE_OID, uuid5
 
 from chonkie.embeddings import AutoEmbeddings, BaseEmbeddings
 from chonkie.logger import get_logger
@@ -87,15 +87,6 @@ class TurbopufferHandshake(BaseHandshake):
         """Check if Turbopuffer is available."""
         return importutil.find_spec("turbopuffer") is not None
 
-    def _generate_id(self, index: int, chunk: Chunk) -> str:
-        """Generate a unique ID for the chunk."""
-        return str(
-            uuid5(
-                NAMESPACE_OID,
-                f"{self.namespace.id}::chunk-{index}:{chunk.text}",
-            ),
-        )
-
     def write(self, chunks: Union[Chunk, list[Chunk]]) -> None:
         """Write the chunks to the Turbopuffer database."""
         if isinstance(chunks, Chunk):
@@ -103,12 +94,19 @@ class TurbopufferHandshake(BaseHandshake):
 
         logger.debug(f"Writing {len(chunks)} chunks to Turbopuffer namespace: {self.namespace.id}")
         # Embed the chunks
-        ids = [self._generate_id(index, chunk) for (index, chunk) in enumerate(chunks)]
+        ids = [
+            self._generate_id(f"{self.namespace.id}::chunk-{index}:{chunk.text}")
+            for (index, chunk) in enumerate(chunks)
+        ]
         texts = [chunk.text for chunk in chunks]
         embeddings = [embedding.tolist() for embedding in self.embedding_model.embed_batch(texts)]
         start_indices = [chunk.start_index for chunk in chunks]
         end_indices = [chunk.end_index for chunk in chunks]
         token_counts = [chunk.token_count for chunk in chunks]
+        chunk_metadata = [
+            json.dumps(chunk.metadata, sort_keys=True, default=str) if chunk.metadata else ""
+            for chunk in chunks
+        ]
 
         # Write the chunks to the database
         self.namespace.write(
@@ -119,6 +117,7 @@ class TurbopufferHandshake(BaseHandshake):
                 "start_index": start_indices,
                 "end_index": end_indices,
                 "token_count": token_counts,
+                "chunk_metadata": chunk_metadata,
             },
             distance_metric="cosine_distance",
         )
@@ -158,11 +157,18 @@ class TurbopufferHandshake(BaseHandshake):
         results = self.namespace.query(
             rank_by=("vector", "ANN", embedding),
             top_k=limit,
-            include_attributes=["text", "start_index", "end_index", "token_count"],
+            include_attributes=[
+                "text",
+                "start_index",
+                "end_index",
+                "token_count",
+                "chunk_metadata",
+            ],
         )
         assert results.rows is not None
-        return [
-            {
+        out: list[dict[str, Any]] = []
+        for result in results.rows:
+            row: dict[str, Any] = {
                 "id": result["id"],
                 "score": 1.0 - result["$dist"],
                 "token_count": result["token_count"],
@@ -170,5 +176,13 @@ class TurbopufferHandshake(BaseHandshake):
                 "start_index": result["start_index"],
                 "end_index": result["end_index"],
             }
-            for result in results.rows
-        ]
+            raw_meta = result.get("chunk_metadata")
+            if raw_meta:
+                try:
+                    parsed = json.loads(raw_meta)
+                    if isinstance(parsed, dict):
+                        row = {**parsed, **row}
+                except json.JSONDecodeError:
+                    pass
+            out.append(row)
+        return out
