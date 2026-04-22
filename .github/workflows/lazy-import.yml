@@ -7,6 +7,9 @@ on:
       - main
       - dev
 
+permissions:
+  contents: read
+
 jobs:
   lazy-import:
     runs-on: ubuntu-latest
