@@ -11,10 +11,6 @@ from chonkie.types import Chunk, RecursiveLevel, RecursiveRules
 
 logger = get_logger(__name__)
 
-# TODO: Fix the way that float context size is handled.
-# Currently, it just estimates the context size to token count
-# but it should ideally handle it on a chunk by chunk basis.
-
 # TODO: Add support for `justified` method which is the best of
 # both prefix and suffix overlap.
 
@@ -293,16 +289,15 @@ class OverlapRefinery(BaseRefinery):
             The refined chunks.
 
         """
-        # Iterate over the chunks till the second to last chunk
         for i, chunk in enumerate(chunks[1:]):
-            # Get the previous chunk, since i starts from 0
             prev_chunk = chunks[i]
 
-            # Calculate effective context size per chunk if context_size is a float
+            # Calculate context size based on the chunk RECEIVING context (its own token count)
+            # This ensures each chunk gets overlap proportional to its own size
             if isinstance(self.context_size, float):
-                effective_context_size = int(self.context_size * prev_chunk.token_count)
+                effective_context_size = int(self.context_size * chunk.token_count)
 
-            # Calculate the overlap context
+            # Get context from the previous chunk
             context = self._get_prefix_overlap_context(prev_chunk, effective_context_size)
 
             # Set it as a part of the chunk
@@ -390,16 +385,15 @@ class OverlapRefinery(BaseRefinery):
             The refined chunks.
 
         """
-        # Iterate over the chunks till the second to last chunk
         for i, chunk in enumerate(chunks[:-1]):
-            # Get the previous chunk
             prev_chunk = chunks[i + 1]
 
-            # Calculate effective context size per chunk if context_size is a float
+            # Calculate context size based on the chunk RECEIVING context (its own token count)
+            # This ensures each chunk gets overlap proportional to its own size
             if isinstance(self.context_size, float):
-                effective_context_size = int(self.context_size * prev_chunk.token_count)
+                effective_context_size = int(self.context_size * chunk.token_count)
 
-            # Calculate the overlap context
+            # Get context from the next chunk
             context = self._get_suffix_overlap_context(prev_chunk, effective_context_size)
 
             # Set it as a part of the chunk
