@@ -3,7 +3,7 @@
 import os
 import re
 from dataclasses import dataclass
-from typing import Iterator, Optional, Union
+from typing import Iterator, Literal, Optional, Union
 
 from chonkie.utils import Hubbie
 
@@ -15,18 +15,21 @@ class RecursiveLevel:
     Attributes:
         whitespace (bool): Whether to use whitespace as a delimiter.
         delimiters (Optional[Union[str, list[str]]]): Custom delimiters for chunking.
-        include_delim (Optional[str]): Whether to include the delimiter in the previous chunk ("prev"), next chunk ("next"), or not at all (None).
+        include_delim (Optional[Literal["prev", "next"]]): Whether to include the delimiter in the previous chunk ("prev"), next chunk ("next"), or not at all (None).
         pattern (Optional[str]): Regex pattern for splitting. Matches are treated as delimiters.
 
     """
 
     delimiters: Optional[Union[str, list[str]]] = None
     whitespace: bool = False
-    include_delim: Optional[str] = "prev"
+    include_delim: Optional[Literal["prev", "next"]] = "prev"
     pattern: Optional[str] = None
 
     def _validate_fields(self) -> None:
         """Validate all fields have legal values."""
+        if self.include_delim not in (None, "prev", "next"):
+            raise ValueError("include_delim must be 'prev', 'next', or None.")
+
         # Check for mutually exclusive options
         active_options = sum([bool(self.delimiters), self.whitespace, bool(self.pattern)])
 
@@ -51,7 +54,7 @@ class RecursiveLevel:
                 raise ValueError("Pattern must be a non-empty string.")
             if len(self.pattern) > 1024:
                 raise ValueError("Regex pattern is too long (max 1024 characters)")
-            if re.search(r"\\[1-9]", self.pattern):
+            if re.search(r"\\[1-9]", self.pattern) or re.search(r"\(\?P=", self.pattern):
                 raise ValueError("Regex backreferences are not supported for safety reasons")
             if re.search(r"\((?:[^()\\]|\\.)*[+*](?:[^()\\]|\\.)*\)[+*{]", self.pattern):
                 raise ValueError(
