@@ -47,7 +47,7 @@ class OverlapRefinery(BaseRefinery):
             tokenizer: The tokenizer to use. Defaults to "character".
             context_size: The size of the context to add to the chunks.
             mode: The mode to use for overlapping. Could be token or recursive.
-            method: The method to use for the context. Could be suffix or prefix.
+            method: The method to use for the context. Could be suffix, prefix, or justified.
             rules: The rules to use for the recursive overlap. Defaults to RecursiveRules().
             merge: Whether to merge the context with the chunk. Defaults to True.
             inplace: Whether to modify the chunks in place or make a copy. Defaults to True.
@@ -60,8 +60,8 @@ class OverlapRefinery(BaseRefinery):
             raise ValueError("Context size must be a positive integer.")
         if mode not in ["token", "recursive"]:
             raise ValueError("Mode must be one of: token, recursive.")
-        if method not in ["suffix", "prefix"]:
-            raise ValueError("Method must be one of: suffix, prefix.")
+        if method not in ["suffix", "prefix", "justified"]:
+            raise ValueError("Method must be one of: suffix, prefix, justified.")
         if not isinstance(merge, bool):
             raise ValueError("Merge must be a boolean.")
         if not isinstance(inplace, bool):
@@ -419,6 +419,71 @@ class OverlapRefinery(BaseRefinery):
 
         return chunks
 
+    def _refine_justified(self, chunks: list[Chunk], effective_context_size: int) -> list[Chunk]:
+        """Refine chunks with context from both prefix and suffix.
+
+        For middle chunks: gets context from both previous and next chunk.
+        For first chunk: gets only suffix from next chunk.
+        For last chunk: gets only prefix from previous chunk.
+
+        Args:
+            chunks: The chunks to refine.
+            effective_context_size: The effective context size to use.
+
+        Returns:
+            The refined chunks.
+
+        """
+        num_chunks = len(chunks)
+
+        for i, chunk in enumerate(chunks):
+            prefix_context = ""
+            suffix_context = ""
+
+            if i > 0:
+                prev_chunk = chunks[i - 1]
+                if isinstance(self.context_size, float):
+                    context_size = int(self.context_size * chunk.token_count)
+                else:
+                    context_size = effective_context_size
+                prefix_context = self._get_prefix_overlap_context(prev_chunk, context_size)
+
+            if i < num_chunks - 1:
+                next_chunk = chunks[i + 1]
+                if isinstance(self.context_size, float):
+                    context_size = int(self.context_size * chunk.token_count)
+                else:
+                    context_size = effective_context_size
+                suffix_context = self._get_suffix_overlap_context(next_chunk, context_size)
+
+            if prefix_context and suffix_context:
+                context = prefix_context + " " + suffix_context
+            elif prefix_context:
+                context = prefix_context
+            elif suffix_context:
+                context = suffix_context
+            else:
+                context = ""
+
+            setattr(chunk, "context", context)
+
+            if self.merge and context:
+                if prefix_context and suffix_context:
+                    # Middle chunk: prefix at start, suffix at end
+                    chunk.text = prefix_context + " " + chunk.text + " " + suffix_context
+                elif prefix_context:
+                    # Last chunk: prefix at start
+                    chunk.text = prefix_context + " " + chunk.text
+                elif suffix_context:
+                    # First chunk: suffix at end
+                    chunk.text = chunk.text + " " + suffix_context
+
+                if self.tokenizer:
+                    context_tokens = self._count_tokens_cached(context)
+                    chunk.token_count += context_tokens
+
+        return chunks
+
     def _get_overlap_context_size(self, chunks: list[Chunk]) -> int:
         """Get the overlap context size.
 
@@ -466,8 +531,10 @@ class OverlapRefinery(BaseRefinery):
             refined_chunks = self._refine_prefix(chunks, effective_context_size)
         elif self.method == "suffix":
             refined_chunks = self._refine_suffix(chunks, effective_context_size)
+        elif self.method == "justified":
+            refined_chunks = self._refine_justified(chunks, effective_context_size)
         else:
-            raise ValueError("Method must be one of: prefix, suffix.")
+            raise ValueError("Method must be one of: prefix, suffix, justified.")
 
         logger.info(f"Overlap refinement complete: added context to {len(refined_chunks)} chunks")
         return refined_chunks
