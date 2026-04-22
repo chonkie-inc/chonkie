@@ -4,6 +4,7 @@ Splits text into smaller chunks recursively. Express chunking logic through Recu
 """
 
 import os
+import re
 from functools import lru_cache
 from typing import Optional, Union
 
@@ -117,9 +118,70 @@ class RecursiveChunker(BaseChunker):
         # The estimate was only used as an optimization hint
         return self.tokenizer.count_tokens(text)
 
+    @lru_cache(maxsize=256)
+    def _compile_pattern(self, pattern: str) -> re.Pattern:
+        """Compile and cache a regex pattern. Safety validation is done at RecursiveLevel init."""
+        return re.compile(pattern)
+
+    def _split_text_pattern(self, text: str, recursive_level: RecursiveLevel) -> list[str]:
+        """Split text using a regex pattern, treating matches as delimiters.
+
+        Args:
+            text: Text to split
+            recursive_level: RecursiveLevel with pattern set
+
+        Returns:
+            List of contiguous text splits that together reconstruct the full input.
+
+        """
+        if not recursive_level.pattern:
+            return []
+
+        compiled = self._compile_pattern(recursive_level.pattern)
+        include_mode = recursive_level.include_delim or "prev"
+
+        splits: list[str] = []
+        cursor = 0
+        carry_next_delim = ""
+        for match in compiled.finditer(text):
+            start, end = match.span()
+            if start < cursor:
+                continue
+
+            content = text[cursor:start]
+            delim = text[start:end]
+
+            if include_mode == "prev":
+                if content:
+                    splits.append(content + delim)
+                elif splits:
+                    splits[-1] += delim
+                elif delim:
+                    splits.append(delim)
+            elif include_mode == "next":
+                if content or carry_next_delim:
+                    splits.append(carry_next_delim + content)
+                carry_next_delim = delim
+            else:
+                if content:
+                    splits.append(content)
+
+            cursor = end
+
+        tail = text[cursor:]
+        if include_mode == "next":
+            if tail or carry_next_delim:
+                splits.append(carry_next_delim + tail)
+        elif tail:
+            splits.append(tail)
+
+        return splits
+
     def _split_text(self, text: str, recursive_level: RecursiveLevel) -> list[str]:
-        """Split the text into chunks using the delimiters."""
-        if recursive_level.delimiters:
+        """Split the text into chunks using the delimiters or pattern."""
+        if recursive_level.pattern:
+            return self._split_text_pattern(text, recursive_level)
+        elif recursive_level.delimiters:
             return split_text_by_delimiters(
                 text,
                 delimiters=recursive_level.delimiters,
@@ -202,16 +264,20 @@ class RecursiveChunker(BaseChunker):
         splits = self._split_text(text, curr_rule)
         token_counts = [self._estimate_token_count(split) for split in splits]
 
-        if curr_rule.delimiters is None and not curr_rule.whitespace:
-            merged, combined_token_counts = splits, token_counts
+        # Determine if we should merge splits
+        # Merge for: pattern-based, delimiters, or whitespace splitting
+        # No merge for: token-level fallback (when none of the above are set)
+        should_merge = (
+            curr_rule.pattern is not None
+            or curr_rule.delimiters is not None
+            or curr_rule.whitespace
+        )
 
-        elif curr_rule.delimiters is None and curr_rule.whitespace:
-            # With split_offsets using include_delim="prev", splits already contain trailing spaces
-            # e.g., ["Hello ", "World ", "Test"] - so we just concatenate them
+        if should_merge:
             merged, combined_token_counts = self._merge_splits(splits, token_counts)
-
         else:
-            merged, combined_token_counts = self._merge_splits(splits, token_counts)
+            # Token-level fallback: no merging needed
+            merged, combined_token_counts = splits, token_counts
 
         # Chunk long merged splits
         chunks: list[Chunk] = []
