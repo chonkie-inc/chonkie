@@ -118,6 +118,7 @@ cohere = ["tokenizers>=0.16.0", "cohere>=5.13.0"]
 jina = ["tokenizers>=0.16.0"]
 catsu = ["catsu>=0.0.1"]
 litellm = ["litellm>=1.0.0", "tiktoken>=0.5.0", "tokenizers>=0.16.0"]
+minimax = []  # uses httpx (core dep) for native MiniMax API
 
 # Optional dependencies for the friends
 chroma = ["chromadb>=1.0.0"]
@@ -159,6 +160,7 @@ all = [
     "chonkie[jina]",
     "chonkie[catsu]",
     "chonkie[litellm]",
+    "chonkie[minimax]",
     "chonkie[chroma]",
     "chonkie[qdrant]",
     "chonkie[tpuf]",

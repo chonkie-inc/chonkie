@@ -24,13 +24,14 @@ from .embeddings import (
     GeminiEmbeddings,
     JinaEmbeddings,
     LiteLLMEmbeddings,
+    MiniMaxEmbeddings,
     Model2VecEmbeddings,
     OpenAIEmbeddings,
     SentenceTransformerEmbeddings,
     VoyageAIEmbeddings,
 )
 from .fetcher import BaseFetcher, FileFetcher
-from .genie import AzureOpenAIGenie, BaseGenie, CerebrasGenie, GeminiGenie, GroqGenie, OpenAIGenie
+from .genie import AzureOpenAIGenie, BaseGenie, CerebrasGenie, GeminiGenie, GroqGenie, MiniMaxGenie, OpenAIGenie
 from .handshakes import (
     BaseHandshake,
     ChromaHandshake,
@@ -103,6 +104,7 @@ __all__ = (
     "GeminiEmbeddings",
     "JinaEmbeddings",
     "LiteLLMEmbeddings",
+    "MiniMaxEmbeddings",
     "Model2VecEmbeddings",
     "OpenAIEmbeddings",
     "SentenceTransformerEmbeddings",
@@ -116,6 +118,7 @@ __all__ = (
     "CerebrasGenie",
     "GeminiGenie",
     "GroqGenie",
+    "MiniMaxGenie",
     "OpenAIGenie",
     # handshakes
     "BaseHandshake",
