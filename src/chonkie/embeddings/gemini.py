@@ -86,6 +86,8 @@ class GeminiEmbeddings(BaseEmbeddings):
             )
 
         self.model = model if model else self.DEFAULT_MODEL
+        if dimensions is not None and (not isinstance(dimensions, int) or dimensions <= 0):
+            raise ValueError("`dimensions` must be a positive integer")
         self.dimensions = dimensions
         self.task_type = task_type
         api_key = api_key or os.getenv("GEMINI_API_KEY")

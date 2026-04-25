@@ -119,6 +119,25 @@ def test_embed_forwards_dimensions(mock_catsu_client) -> None:
     assert call_kwargs["dimensions"] == 768
 
 
+def test_embed_omits_dimensions_when_unconfigured(mock_catsu_client) -> None:
+    """Test that default Gemini embed calls omit dimensions."""
+    with patch("catsu.Client", return_value=mock_catsu_client):
+        embeddings = GeminiEmbeddings(api_key="test-key")
+
+    embeddings.embed("hello world")
+
+    call_kwargs = embeddings._catsu.client.embed.call_args[1]
+    assert "dimensions" not in call_kwargs
+
+
+@pytest.mark.parametrize("dimensions", [0, -1, "768"])
+def test_initialization_rejects_invalid_dimensions(mock_catsu_client, dimensions) -> None:
+    """Test that invalid custom dimensions fail fast."""
+    with patch("catsu.Client", return_value=mock_catsu_client):
+        with pytest.raises(ValueError, match="positive integer"):
+            GeminiEmbeddings(api_key="test-key", dimensions=dimensions)
+
+
 def test_embed_batch_texts(
     embedding_model: GeminiEmbeddings, sample_texts: list, mock_catsu_client
 ) -> None:

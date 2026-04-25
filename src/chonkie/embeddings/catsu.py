@@ -95,7 +95,9 @@ class CatsuEmbeddings(BaseEmbeddings):
         self.provider = provider
         self._batch_size = batch_size
         self._verbose = verbose
-        self._embed_kwargs: Dict[str, Any] = kwargs.copy()
+        self._embed_kwargs: Dict[str, Any] = {
+            key: value for key, value in kwargs.items() if value is not None
+        }
         self._configured_dimension = cast(Optional[int], self._embed_kwargs.get("dimensions"))
 
         # Initialize Catsu client
