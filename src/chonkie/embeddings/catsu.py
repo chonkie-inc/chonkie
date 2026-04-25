@@ -95,6 +95,8 @@ class CatsuEmbeddings(BaseEmbeddings):
         self.provider = provider
         self._batch_size = batch_size
         self._verbose = verbose
+        self._embed_kwargs = kwargs.copy()
+        self._configured_dimension: Optional[int] = self._embed_kwargs.get("dimensions")
 
         # Initialize Catsu client
         try:
@@ -112,7 +114,7 @@ class CatsuEmbeddings(BaseEmbeddings):
         )
 
         # Cache for model metadata
-        self._dimension: Optional[int] = None
+        self._dimension: Optional[int] = self._configured_dimension
         self._model_info: Optional[Any] = None
 
         # Validate model exists and is supported
@@ -131,7 +133,8 @@ class CatsuEmbeddings(BaseEmbeddings):
             for model_info in models:
                 if getattr(model_info, "name", None) == self.model:
                     self._model_info = model_info
-                    self._dimension = getattr(model_info, "dimensions", None)
+                    if self._configured_dimension is None:
+                        self._dimension = getattr(model_info, "dimensions", None)
                     break
 
             if self._model_info is None and self._verbose:
@@ -160,6 +163,7 @@ class CatsuEmbeddings(BaseEmbeddings):
             model=self.model,
             input=text,
             provider=self.provider,
+            **self._embed_kwargs,
         )
 
         # Catsu returns List[List[float]], we need first embedding as 1D array
@@ -196,6 +200,7 @@ class CatsuEmbeddings(BaseEmbeddings):
                     model=self.model,
                     input=batch,
                     provider=self.provider,
+                    **self._embed_kwargs,
                 )
 
                 # Convert to list of 1D numpy arrays
@@ -235,6 +240,7 @@ class CatsuEmbeddings(BaseEmbeddings):
             model=self.model,
             input=text,
             provider=self.provider,
+            **self._embed_kwargs,
         )
         return response.to_numpy()[0]
 
@@ -261,6 +267,7 @@ class CatsuEmbeddings(BaseEmbeddings):
                 model=self.model,
                 input=batch,
                 provider=self.provider,
+                **self._embed_kwargs,
             )
             arr = response.to_numpy()
             all_embeddings.extend([arr[j] for j in range(len(batch))])

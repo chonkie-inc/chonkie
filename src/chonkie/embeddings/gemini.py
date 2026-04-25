@@ -23,6 +23,7 @@ class GeminiEmbeddings(BaseEmbeddings):
     Args:
         model: Gemini embedding model name (default: "gemini-embedding-001").
         api_key: Gemini API key (or set GEMINI_API_KEY env var).
+        dimensions: Optional output dimensionality to request from Gemini.
         task_type: Ignored; kept for backward compatibility.
         max_retries: Maximum retry attempts (default: 3).
         batch_size: Number of texts per API call (default: 100).
@@ -42,6 +43,7 @@ class GeminiEmbeddings(BaseEmbeddings):
         self,
         model: str = DEFAULT_MODEL,
         api_key: Optional[str] = None,
+        dimensions: Optional[int] = None,
         task_type: str = "SEMANTIC_SIMILARITY",
         max_retries: int = 3,
         batch_size: int = 100,
@@ -52,6 +54,7 @@ class GeminiEmbeddings(BaseEmbeddings):
         Args:
             model: Gemini embedding model name.
             api_key: Gemini API key (falls back to GEMINI_API_KEY env var).
+            dimensions: Optional output dimensionality for Gemini embeddings.
             task_type: Ignored; kept for backward compatibility.
             max_retries: Maximum retry attempts.
             batch_size: Number of texts per API call.
@@ -83,6 +86,7 @@ class GeminiEmbeddings(BaseEmbeddings):
             )
 
         self.model = model if model else self.DEFAULT_MODEL
+        self.dimensions = dimensions
         self.task_type = task_type
         api_key = api_key or os.getenv("GEMINI_API_KEY")
         api_keys = {"gemini": api_key} if api_key else None
@@ -93,6 +97,7 @@ class GeminiEmbeddings(BaseEmbeddings):
             api_keys=api_keys,
             max_retries=max_retries,
             batch_size=batch_size,
+            dimensions=dimensions,
         )
 
     def embed(self, text: str) -> np.ndarray:

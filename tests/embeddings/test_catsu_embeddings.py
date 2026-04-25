@@ -106,6 +106,41 @@ def test_embed_single_text(embedding_model: CatsuEmbeddings, sample_text: str) -
     not CATSU_AVAILABLE,
     reason="Skipping test because Catsu is not installed",
 )
+def test_embed_single_text_forwards_dimensions(mock_catsu_client, sample_text: str) -> None:
+    """Test that custom dimensions are forwarded to Catsu embed calls."""
+    with patch("catsu.Client", return_value=mock_catsu_client):
+        embedding_model = CatsuEmbeddings(
+            model="gemini-embedding-001",
+            provider="gemini",
+            dimensions=768,
+        )
+
+    embedding_model.embed(sample_text)
+
+    call_kwargs = embedding_model.client.embed.call_args[1]
+    assert call_kwargs["dimensions"] == 768
+
+
+@pytest.mark.skipif(
+    not CATSU_AVAILABLE,
+    reason="Skipping test because Catsu is not installed",
+)
+def test_dimension_property_prefers_configured_dimensions(mock_catsu_client) -> None:
+    """Test that configured dimensions override catalog dimensions."""
+    with patch("catsu.Client", return_value=mock_catsu_client):
+        embeddings = CatsuEmbeddings(
+            model="gemini-embedding-001",
+            provider="gemini",
+            dimensions=768,
+        )
+
+    assert embeddings.dimension == 768
+
+
+@pytest.mark.skipif(
+    not CATSU_AVAILABLE,
+    reason="Skipping test because Catsu is not installed",
+)
 def test_embed_batch_texts(embedding_model: CatsuEmbeddings, sample_texts: List[str]) -> None:
     """Test that CatsuEmbeddings correctly embeds a batch of texts."""
     # Mock the client to return correct number of embeddings
