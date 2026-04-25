@@ -82,6 +82,14 @@ def test_initialization_with_custom_model(mock_catsu_client) -> None:
         assert embeddings.model == "text-embedding-004"
 
 
+def test_initialization_with_dimensions(mock_catsu_client) -> None:
+    """Test initialization with custom output dimensions."""
+    with patch("catsu.Client", return_value=mock_catsu_client):
+        embeddings = GeminiEmbeddings(api_key="test-key", dimensions=768)
+        assert embeddings.dimensions == 768
+        assert embeddings.dimension == 768
+
+
 def test_default_model() -> None:
     """Test that GeminiEmbeddings has the correct default model."""
     assert GeminiEmbeddings.DEFAULT_MODEL == "gemini-embedding-001"
@@ -98,6 +106,36 @@ def test_embed_single_text(
     result = embedding_model.embed(sample_text)
     assert isinstance(result, np.ndarray)
     assert result.ndim == 1
+
+
+def test_embed_forwards_dimensions(mock_catsu_client) -> None:
+    """Test that Gemini dimensions are forwarded to Catsu embed calls."""
+    with patch("catsu.Client", return_value=mock_catsu_client):
+        embeddings = GeminiEmbeddings(api_key="test-key", dimensions=768)
+
+    embeddings.embed("hello world")
+
+    call_kwargs = embeddings._catsu.client.embed.call_args[1]
+    assert call_kwargs["dimensions"] == 768
+
+
+def test_embed_omits_dimensions_when_unconfigured(mock_catsu_client) -> None:
+    """Test that default Gemini embed calls omit dimensions."""
+    with patch("catsu.Client", return_value=mock_catsu_client):
+        embeddings = GeminiEmbeddings(api_key="test-key")
+
+    embeddings.embed("hello world")
+
+    call_kwargs = embeddings._catsu.client.embed.call_args[1]
+    assert "dimensions" not in call_kwargs
+
+
+@pytest.mark.parametrize("dimensions", [0, -1, "768"])
+def test_initialization_rejects_invalid_dimensions(mock_catsu_client, dimensions) -> None:
+    """Test that invalid custom dimensions fail fast."""
+    with patch("catsu.Client", return_value=mock_catsu_client):
+        with pytest.raises(ValueError, match="positive integer"):
+            GeminiEmbeddings(api_key="test-key", dimensions=dimensions)
 
 
 def test_embed_batch_texts(

@@ -2,7 +2,7 @@
 
 import os
 from typing import List
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import numpy as np
 import pytest
@@ -100,6 +100,85 @@ def test_embed_single_text(embedding_model: CatsuEmbeddings, sample_text: str) -
     assert isinstance(embedding, np.ndarray)
     assert embedding.ndim == 1  # Should be 1D array
     assert len(embedding) == 1024  # voyage-3 dimension
+
+
+@pytest.mark.skipif(
+    not CATSU_AVAILABLE,
+    reason="Skipping test because Catsu is not installed",
+)
+def test_embed_single_text_forwards_dimensions(mock_catsu_client, sample_text: str) -> None:
+    """Test that custom dimensions are forwarded to Catsu embed calls."""
+    with patch("catsu.Client", return_value=mock_catsu_client):
+        embedding_model = CatsuEmbeddings(
+            model="gemini-embedding-001",
+            provider="gemini",
+            dimensions=768,
+        )
+
+    embedding_model.embed(sample_text)
+
+    call_kwargs = embedding_model.client.embed.call_args[1]
+    assert call_kwargs["dimensions"] == 768
+
+
+@pytest.mark.skipif(
+    not CATSU_AVAILABLE,
+    reason="Skipping test because Catsu is not installed",
+)
+@pytest.mark.asyncio
+async def test_aembed_forwards_dimensions(mock_catsu_client, sample_text: str) -> None:
+    """Test that custom dimensions are forwarded to async Catsu embed calls."""
+    mock_catsu_client.aembed = AsyncMock(return_value=mock_catsu_client.embed.return_value)
+
+    with patch("catsu.Client", return_value=mock_catsu_client):
+        embedding_model = CatsuEmbeddings(
+            model="gemini-embedding-001",
+            provider="gemini",
+            dimensions=768,
+        )
+
+    await embedding_model.aembed(sample_text)
+
+    call_kwargs = embedding_model.client.aembed.call_args[1]
+    assert call_kwargs["dimensions"] == 768
+
+
+@pytest.mark.skipif(
+    not CATSU_AVAILABLE,
+    reason="Skipping test because Catsu is not installed",
+)
+def test_dimension_property_prefers_configured_dimensions(mock_catsu_client) -> None:
+    """Test that configured dimensions override catalog dimensions."""
+    with patch("catsu.Client", return_value=mock_catsu_client):
+        embeddings = CatsuEmbeddings(
+            model="gemini-embedding-001",
+            provider="gemini",
+            dimensions=768,
+        )
+
+    assert embeddings.dimension == 768
+
+
+@pytest.mark.skipif(
+    not CATSU_AVAILABLE,
+    reason="Skipping test because Catsu is not installed",
+)
+@pytest.mark.asyncio
+async def test_aembed_batch_forwards_dimensions(mock_catsu_client, sample_text: str) -> None:
+    """Test that custom dimensions are forwarded to async Catsu batch embed calls."""
+    mock_catsu_client.aembed = AsyncMock(return_value=mock_catsu_client.embed.return_value)
+
+    with patch("catsu.Client", return_value=mock_catsu_client):
+        embedding_model = CatsuEmbeddings(
+            model="gemini-embedding-001",
+            provider="gemini",
+            dimensions=768,
+        )
+
+    await embedding_model.aembed_batch([sample_text])
+
+    call_kwargs = embedding_model.client.aembed.call_args[1]
+    assert call_kwargs["dimensions"] == 768
 
 
 @pytest.mark.skipif(
