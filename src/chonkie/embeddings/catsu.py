@@ -8,7 +8,7 @@ Nomic, Cloudflare, MixedBread, DeepInfra, TogetherAI.
 """
 
 import importlib.util as importutil
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, cast
 
 import numpy as np
 
@@ -69,7 +69,7 @@ class CatsuEmbeddings(BaseEmbeddings):
         timeout: int = 30,
         verbose: bool = False,
         batch_size: int = 128,
-        **kwargs: Dict[str, Any],
+        **kwargs: Any,
     ):
         """Initialize Catsu embeddings adapter.
 
@@ -95,8 +95,8 @@ class CatsuEmbeddings(BaseEmbeddings):
         self.provider = provider
         self._batch_size = batch_size
         self._verbose = verbose
-        self._embed_kwargs = kwargs.copy()
-        self._configured_dimension: Optional[int] = self._embed_kwargs.get("dimensions")
+        self._embed_kwargs: Dict[str, Any] = kwargs.copy()
+        self._configured_dimension = cast(Optional[int], self._embed_kwargs.get("dimensions"))
 
         # Initialize Catsu client
         try:
