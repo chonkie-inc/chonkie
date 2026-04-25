@@ -107,7 +107,7 @@ curl -X POST http://localhost:8000/v1/chunk/sentence \
     <ParamField body="delim" type='string | string[]' default='["\n", ". ", "! ", "? "]'>
       Sentence delimiter(s).
     </ParamField>
-    <ParamField body="include_delim" type='"prev" | "next"' default='"prev"'>
+    <ParamField body="include_delim" type={'"prev" | "next"'} default='"prev"'>
       Attach the delimiter to the previous (`"prev"`) or next (`"next"`) sentence.
     </ParamField>
   </Accordion>
@@ -272,11 +272,11 @@ curl -X POST http://localhost:8000/v1/refine/overlap \
     <ParamField body="context_size" type="float | integer" default="0.25">
       Size of the overlap context. A float (0–1) is treated as a fraction of the chunk size; an integer is an absolute token count.
     </ParamField>
-    <ParamField body="mode" type='"token" | "recursive"' default='"token"'>
+    <ParamField body="mode" type={'"token" | "recursive"'} default='"token"'>
       Strategy used to create the overlap window.
     </ParamField>
-    <ParamField body="method" type='"suffix" | "prefix"' default='"suffix"'>
-      `"suffix"` appends context from the previous chunk; `"prefix"` prepends context from the next chunk.
+    <ParamField body="method" type={'"suffix" | "prefix" | "justified"'} default='"suffix"'>
+      `"suffix"` appends context from the next chunk; `"prefix"` prepends context from the previous chunk; `"justified"` splits the overlap budget across both sides.
     </ParamField>
     <ParamField body="merge" type="boolean" default="true">
       Merge the overlap context into the chunk text field.

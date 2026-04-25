@@ -16,7 +16,7 @@ class OverlapRefinery(BaseRefinery):
         tokenizer: str = "gpt2",
         context_size: Union[int, float] = 0.25,
         mode: Literal["token", "recursive"] = "token",
-        method: Literal["suffix", "prefix"] = "suffix",
+        method: Literal["suffix", "prefix", "justified"] = "suffix",
         recipe: str = "default",
         lang: str = "en",
         merge: bool = True,

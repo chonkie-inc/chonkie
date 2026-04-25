@@ -232,11 +232,12 @@ class OverlapRefineryRequest(BaseRefineryRequest):
     mode: Literal["token", "recursive"] = Field(
         default="token", description="Strategy used to create the overlap window"
     )
-    method: Literal["suffix", "prefix"] = Field(
+    method: Literal["suffix", "prefix", "justified"] = Field(
         default="suffix",
         description=(
-            "'suffix' appends context from the *previous* chunk; "
-            "'prefix' prepends context from the *next* chunk."
+            "'suffix' appends context from the *next* chunk; "
+            "'prefix' prepends context from the *previous* chunk; "
+            "'justified' does both by splitting the overlap budget across both sides."
         ),
     )
     merge: bool = Field(

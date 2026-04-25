@@ -5,7 +5,7 @@ icon: "arrows-left-right-to-line"
 iconType: "solid"
 ---
 
-The `OverlapRefinery` enhances chunks by incorporating context from neighboring chunks. This is useful for tasks where maintaining contextual continuity between chunks is important, such as question answering or summarization over long documents. It can add context as a prefix (from the preceding chunk) or a suffix (from the next chunk).
+The `OverlapRefinery` enhances chunks by incorporating context from neighboring chunks. This is useful for tasks where maintaining contextual continuity between chunks is important, such as question answering or summarization over long documents. It can add context as a prefix (from the preceding chunk), a suffix (from the next chunk), or both with justified overlap.
 
 ## API Reference
 
@@ -27,6 +27,14 @@ overlap_refinery_token = OverlapRefinery(
     context_size=0.25,                 # The size of the context to add to the chunks.
     method="prefix",                   # Add context from the previous chunk
     merge=True                         # Merge context directly into chunk text
+)
+
+# Initialize with justified overlap to add context on both sides
+overlap_refinery_justified = OverlapRefinery(
+    tokenizer="character",
+    context_size=20,
+    method="justified",                # Split overlap budget across both sides
+    merge=True
 )
 
 # Initialize for recursive overlap based on rules
@@ -92,10 +100,12 @@ refined_chunks = overlap_refinery(chunks)
   `"recursive"` uses hierarchical splitting based on `rules`.
 </ParamField>
 
-<ParamField path="method" type='Literal["suffix", "prefix"]' default='"suffix"'>
+<ParamField path="method" type='Literal["suffix", "prefix", "justified"]' default='"suffix"'>
   The method for adding context. `"suffix"` adds context from the *next* chunk
   to the end of the current chunk. `"prefix"` adds context from the *previous*
-  chunk to the beginning of the current chunk.
+  chunk to the beginning of the current chunk. `"justified"` splits the overlap
+  budget across both sides so each chunk can receive context from both its
+  previous and next neighbors.
 </ParamField>
 
 <ParamField path="rules" type="RecursiveRules" default="RecursiveRules()">
@@ -106,8 +116,10 @@ refined_chunks = overlap_refinery(chunks)
 
 <ParamField path="merge" type="bool" default="True">
   If `True`, the calculated context is directly prepended (for `prefix`) or
-  appended (for `suffix`) to the `chunk.text`. If `False`, the context is stored
-  in `chunk.context` attribute without modifying `chunk.text`.
+  appended (for `suffix`) to the `chunk.text`. For `"justified"`, the prefix
+  context is prepended and the suffix context is appended. If `False`, the
+  combined context is stored in `chunk.context` attribute without modifying
+  `chunk.text`.
 </ParamField>
 
 <ParamField path="inplace" type="bool" default="True">

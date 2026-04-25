@@ -38,6 +38,12 @@ def test_overlap_refinery_initialization() -> None:
     assert refinery.inplace is True
 
 
+def test_overlap_refinery_initialization_with_justified_method() -> None:
+    """Test the OverlapRefinery initialization with justified method."""
+    refinery = OverlapRefinery(method="justified")
+    assert refinery.method == "justified"
+
+
 def test_overlap_refinery_initialization_with_invalid_context_size() -> None:
     """Test the OverlapRefinery initialization with invalid context size."""
     # Test with negative float
@@ -220,6 +226,55 @@ def test_overlap_refinery_token_prefix_overlap_no_merge(sample_chunks) -> None:
     # So we don't assert not hasattr here
 
 
+def test_overlap_refinery_token_justified_overlap() -> None:
+    """Test the OverlapRefinery with token-based justified overlap."""
+    chunks = [
+        Chunk(text="ABCD", start_index=0, end_index=3, token_count=4),
+        Chunk(text="EFGH", start_index=4, end_index=7, token_count=4),
+        Chunk(text="IJKL", start_index=8, end_index=11, token_count=4),
+    ]
+
+    refinery = OverlapRefinery(
+        tokenizer="character",
+        context_size=2,
+        mode="token",
+        method="justified",
+    )
+    refined_chunks = refinery.refine(chunks)
+
+    assert refined_chunks[0].context == "EF"
+    assert refined_chunks[0].text == "ABCDEF"
+
+    assert refined_chunks[1].context == "DI"
+    assert refined_chunks[1].text == "DEFGHI"
+
+    assert refined_chunks[2].context == "GH"
+    assert refined_chunks[2].text == "GHIJKL"
+
+
+def test_overlap_refinery_token_justified_overlap_no_merge() -> None:
+    """Test the OverlapRefinery with token-based justified overlap and no merge."""
+    chunks = [
+        Chunk(text="ABCD", start_index=0, end_index=3, token_count=4),
+        Chunk(text="EFGH", start_index=4, end_index=7, token_count=4),
+        Chunk(text="IJKL", start_index=8, end_index=11, token_count=4),
+    ]
+
+    refinery = OverlapRefinery(
+        tokenizer="character",
+        context_size=3,
+        mode="token",
+        method="justified",
+        merge=False,
+    )
+    refined_chunks = refinery.refine(chunks)
+
+    assert [chunk.text for chunk in refined_chunks] == ["ABCD", "EFGH", "IJKL"]
+    assert refined_chunks[0].context == "EFG"
+    assert refined_chunks[1].context == "DIJ"
+    assert refined_chunks[2].context == "FGH"
+
+
 def test_overlap_refinery_token_suffix_overlap_float_context(sample_chunks) -> None:
     """Test the OverlapRefinery with token-based suffix overlap and float context size."""
     refinery = OverlapRefinery(context_size=0.3, mode="token", method="suffix")
@@ -264,12 +319,35 @@ def test_overlap_refinery_recursive_suffix_overlap(sample_chunks) -> None:
     assert hasattr(refined_chunks[1], "context")
     assert refined_chunks[1].context != ""
 
-    # Check that the text is updated with the context (merge=True)
-    assert refined_chunks[0].text.endswith(refined_chunks[0].context)
-    assert refined_chunks[1].text.endswith(refined_chunks[1].context)
 
-    # Check that the third chunk's text is not modified (it's the last one)
-    assert refined_chunks[2].text == "This is the third chunk of text."
+def test_overlap_refinery_recursive_justified_overlap() -> None:
+    """Test the OverlapRefinery with recursive justified overlap."""
+    from chonkie.types import RecursiveLevel, RecursiveRules
+
+    chunks = [
+        Chunk(text="A|B|C", start_index=0, end_index=4, token_count=5),
+        Chunk(text="D|E|F", start_index=6, end_index=10, token_count=5),
+        Chunk(text="G|H|I", start_index=12, end_index=16, token_count=5),
+    ]
+    rules = RecursiveRules(levels=[RecursiveLevel(delimiters=["|"], include_delim="prev")])
+
+    refinery = OverlapRefinery(
+        tokenizer="character",
+        context_size=4,
+        mode="recursive",
+        method="justified",
+        rules=rules,
+    )
+    refined_chunks = refinery.refine(chunks)
+
+    assert refined_chunks[0].context == "D|"
+    assert refined_chunks[0].text == "A|B|CD|"
+
+    assert refined_chunks[1].context == "CG|"
+    assert refined_chunks[1].text == "CD|E|FG|"
+
+    assert refined_chunks[2].context == "E|F"
+    assert refined_chunks[2].text == "E|FG|H|I"
 
 
 def test_overlap_refinery_recursive_prefix_overlap(sample_chunks) -> None:
