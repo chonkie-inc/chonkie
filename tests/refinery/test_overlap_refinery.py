@@ -3,6 +3,7 @@
 import pytest
 
 from chonkie.refinery import OverlapRefinery
+from chonkie.tokenizer import Tokenizer
 from chonkie.types import Chunk
 
 
@@ -273,6 +274,55 @@ def test_overlap_refinery_token_justified_overlap_no_merge() -> None:
     assert refined_chunks[0].context == "EFG"
     assert refined_chunks[1].context == "DIJ"
     assert refined_chunks[2].context == "FGH"
+
+
+def test_overlap_refinery_token_justified_recomputes_token_count_after_merge() -> None:
+    """Test justified overlap recalculates token count from merged text."""
+
+    class BoundarySensitiveTokenizer(Tokenizer):
+        """Tokenizer whose tokenization changes when strings are concatenated."""
+
+        def encode(self, text: str) -> list[int]:
+            if text == "abc":
+                return [100, 101]
+            return [ord(char) for char in text]
+
+        def __repr__(self) -> str:
+            return "BoundarySensitiveTokenizer()"
+
+        def decode(self, tokens: list[int]) -> str:
+            decoded_chars = []
+            for token in tokens:
+                if token == 100:
+                    decoded_chars.append("ab")
+                elif token == 101:
+                    decoded_chars.append("c")
+                else:
+                    decoded_chars.append(chr(token))
+            return "".join(decoded_chars)
+
+        def tokenize(self, text: str) -> list[int]:
+            return list(self.encode(text))
+
+        def decode_batch(self, token_sequences: list[list[int]]) -> list[str]:
+            return [self.decode(tokens) for tokens in token_sequences]
+
+    chunks = [
+        Chunk(text="a", start_index=0, end_index=0, token_count=1),
+        Chunk(text="b", start_index=1, end_index=1, token_count=1),
+        Chunk(text="c", start_index=2, end_index=2, token_count=1),
+    ]
+
+    refinery = OverlapRefinery(
+        tokenizer=BoundarySensitiveTokenizer(),
+        context_size=2,
+        mode="token",
+        method="justified",
+    )
+    refined_chunks = refinery.refine(chunks)
+
+    assert refined_chunks[1].text == "abc"
+    assert refined_chunks[1].token_count == 2
 
 
 def test_overlap_refinery_token_suffix_overlap_float_context(sample_chunks) -> None:

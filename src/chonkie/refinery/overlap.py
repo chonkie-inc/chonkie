@@ -15,6 +15,7 @@ logger = get_logger(__name__)
 # Currently, it just estimates the context size to token count
 # but it should ideally handle it on a chunk by chunk basis.
 
+
 @refinery("overlap")
 class OverlapRefinery(BaseRefinery):
     """Refinery for adding overlap to chunks.
@@ -469,8 +470,7 @@ class OverlapRefinery(BaseRefinery):
             if self.merge and context:
                 chunk.text = prefix_context + chunk.text + suffix_context
                 if self.tokenizer:
-                    context_tokens = self._count_tokens_cached(context)
-                    chunk.token_count += context_tokens
+                    chunk.token_count = self._count_tokens_cached(chunk.text)
 
         return chunks
 
