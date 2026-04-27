@@ -20,6 +20,8 @@ logger = get_logger(__name__)
 class TurbopufferHandshake(BaseHandshake):
     """Turbopuffer Handshake to export Chonkie's Chunks into a Turbopuffer database."""
 
+    preserves_document_boundaries = True
+
     def __init__(
         self,
         namespace: Optional[Any] = None,  # Will be tpuf.Namespace at runtime
