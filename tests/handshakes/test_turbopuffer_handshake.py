@@ -11,7 +11,7 @@ from unittest.mock import MagicMock, patch
 import numpy as np
 import pytest
 
-from chonkie.types import Chunk
+from chonkie.types import Chunk, Document
 
 
 class _FakeNamespace:
@@ -140,3 +140,46 @@ def test_turbopuffer_repr(
     ns = _FakeNamespace("my-id")
     hs = TurbopufferHandshake(namespace=ns, api_key="k")
     assert "my-id" in repr(hs)
+
+
+def test_turbopuffer_write_documents_uses_document_embeddings(
+    fake_turbopuffer_module,
+    mock_embeddings_tpuf,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Document-aware writes preserve chunk groups for contextual embedders."""
+    monkeypatch.setenv("TURBOPUFFER_API_KEY", "k")
+    from chonkie.handshakes.turbopuffer import TurbopufferHandshake
+
+    mock_embeddings_tpuf.embed_documents.return_value = np.array(
+        [[0.1, 0.2], [0.3, 0.4], [0.5, 0.6]],
+        dtype=np.float32,
+    )
+    ns = _FakeNamespace("fixed-ns")
+    hs = TurbopufferHandshake(namespace=ns, api_key="k")
+    documents = [
+        Document(
+            content="doc one",
+            chunks=[
+                Chunk(text="a", start_index=0, end_index=1, token_count=1),
+                Chunk(text="b", start_index=1, end_index=2, token_count=1),
+            ],
+        ),
+        Document(
+            content="doc two",
+            chunks=[Chunk(text="c", start_index=0, end_index=1, token_count=1)],
+        ),
+    ]
+
+    hs.write_documents(documents)
+
+    mock_embeddings_tpuf.embed_documents.assert_called_once_with([["a", "b"], ["c"]])
+    assert ns.last_write["upsert_columns"]["text"] == ["a", "b", "c"]
+    np.testing.assert_allclose(
+        ns.last_write["upsert_columns"]["vector"],
+        [
+            [0.1, 0.2],
+            [0.3, 0.4],
+            [0.5, 0.6],
+        ],
+    )

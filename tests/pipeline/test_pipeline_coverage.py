@@ -723,6 +723,24 @@ class TestPipelineAsync:
         doc2.chunks = [MagicMock()]
         component.awrite = AsyncMock(return_value="written")
         result = await pipeline._acall_component(component, "write", [doc1, doc2], {})
+        component.awrite.assert_called_once()
+        assert result == "written"
+
+    @pytest.mark.asyncio
+    async def test_acall_component_write_list_document_writer(self):
+        """_acall_component uses document-aware writer when opted in."""
+        pipeline = Pipeline()
+        component = MagicMock()
+        component.preserves_document_boundaries = True
+        component.write_documents.return_value = "written"
+        doc1 = MagicMock()
+        doc1.chunks = [MagicMock()]
+        doc2 = MagicMock()
+        doc2.chunks = [MagicMock()]
+
+        result = await pipeline._acall_component(component, "write", [doc1, doc2], {})
+
+        component.write_documents.assert_called_once_with([doc1, doc2])
         assert result == "written"
 
 
@@ -748,6 +766,22 @@ class TestPipelineCallComponentWriteExport:
         doc2.chunks = [MagicMock()]
         component.write.return_value = "result"
         result = pipeline._call_component(component, "write", [doc1, doc2], {})
+        component.write.assert_called_once()
+        assert result == "result"
+
+    def test_write_step_list_uses_document_writer_when_opted_in(self):
+        pipeline = Pipeline()
+        component = MagicMock()
+        component.preserves_document_boundaries = True
+        component.write_documents.return_value = "result"
+        doc1 = MagicMock()
+        doc1.chunks = [MagicMock()]
+        doc2 = MagicMock()
+        doc2.chunks = [MagicMock()]
+
+        result = pipeline._call_component(component, "write", [doc1, doc2], {})
+
+        component.write_documents.assert_called_once_with([doc1, doc2])
         assert result == "result"
 
     def test_export_step_list_of_docs(self):
