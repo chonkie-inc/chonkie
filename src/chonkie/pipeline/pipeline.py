@@ -810,8 +810,9 @@ class Pipeline:
                 isinstance(input_data, list)
                 and getattr(component, "preserves_document_boundaries", False) is True
             ):
-                if hasattr(component, "awrite_documents"):
-                    return await component.awrite_documents(input_data, **kwargs)
+                awrite_documents = getattr(component, "awrite_documents", None)
+                if inspect.iscoroutinefunction(awrite_documents):
+                    return await awrite_documents(input_data, **kwargs)
                 return await asyncio.to_thread(
                     component.write_documents,
                     input_data,

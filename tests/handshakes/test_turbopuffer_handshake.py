@@ -175,8 +175,11 @@ def test_turbopuffer_write_documents_uses_document_embeddings(
 
     mock_embeddings_tpuf.embed_documents.assert_called_once_with([["a", "b"], ["c"]])
     assert ns.last_write["upsert_columns"]["text"] == ["a", "b", "c"]
-    assert ns.last_write["upsert_columns"]["vector"] == [
-        [0.1, 0.2],
-        [0.3, 0.4],
-        [0.5, 0.6],
-    ]
+    np.testing.assert_allclose(
+        ns.last_write["upsert_columns"]["vector"],
+        [
+            [0.1, 0.2],
+            [0.3, 0.4],
+            [0.5, 0.6],
+        ],
+    )
