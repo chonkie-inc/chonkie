@@ -740,6 +740,9 @@ class Pipeline:
             return input_data  # Return Documents for chaining
 
         if step_type == "write":
+            if isinstance(input_data, list) and hasattr(component, "write_documents"):
+                return component.write_documents(input_data, **kwargs)
+
             # Extract chunks and write to vector DB
             chunks = (
                 [c for doc in input_data for c in doc.chunks]
@@ -800,6 +803,16 @@ class Pipeline:
             return input_data
 
         if step_type == "write":
+            if isinstance(input_data, list):
+                if hasattr(component, "awrite_documents"):
+                    return await component.awrite_documents(input_data, **kwargs)
+                if hasattr(component, "write_documents"):
+                    return await asyncio.to_thread(
+                        component.write_documents,
+                        input_data,
+                        **kwargs,
+                    )
+
             chunks = (
                 [c for doc in input_data for c in doc.chunks]
                 if isinstance(input_data, list)
