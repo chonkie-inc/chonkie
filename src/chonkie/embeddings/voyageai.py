@@ -77,14 +77,13 @@ class VoyageAIEmbeddings(BaseEmbeddings):
         self._is_contextualized = model in self.CONTEXTUALIZED_MODELS
         api_key = api_key or os.getenv("VOYAGE_API_KEY") or os.getenv("VOYAGEAI_API_KEY")
 
-        if self._is_contextualized:
-            if importutil.find_spec("voyageai") is None:
-                raise ImportError(
-                    "The voyageai package is not available. "
-                    'Please install it via `pip install "chonkie[voyageai]"`',
-                )
-            import voyageai
+        if not self._is_available():
+            raise ImportError(
+                "One (or more) of the following packages is not available: catsu. "
+                'Please install it via `pip install "chonkie[catsu]"`',
+            )
 
+        if self._is_contextualized:
             allowed_dims, _ = self.AVAILABLE_MODELS[model]
             if output_dimension is None:
                 output_dimension = allowed_dims[0]
@@ -104,20 +103,7 @@ class VoyageAIEmbeddings(BaseEmbeddings):
             self.output_dimension = output_dimension
             self._dimension = output_dimension
             self._tokenizer: Any = None
-            self._client = voyageai.Client(
-                api_key=api_key,
-                max_retries=max_retries,
-                timeout=timeout,
-            )
-            return
-
-        if not self._is_available():
-            raise ImportError(
-                "One (or more) of the following packages is not available: catsu. "
-                'Please install it via `pip install "chonkie[catsu]"`',
-            )
-
-        if output_dimension is not None:
+        elif output_dimension is not None:
             warnings.warn(
                 "The `output_dimension` parameter is not supported in this version and will be ignored.",
                 DeprecationWarning,
@@ -138,6 +124,7 @@ class VoyageAIEmbeddings(BaseEmbeddings):
             max_retries=max_retries,
             timeout=round(timeout),
             batch_size=min(batch_size, 128),
+            dimensions=output_dimension if self._is_contextualized else None,
         )
 
     def _contextualized_embed(
@@ -149,18 +136,9 @@ class VoyageAIEmbeddings(BaseEmbeddings):
         groups = [list(group) for group in inputs if group]
         if not groups:
             return []
-
-        response = self._client.contextualized_embed(
-            inputs=groups,
-            model=self.model,
-            input_type=input_type,
-            output_dimension=self.output_dimension,
-        )
-        return [
-            np.array(embedding, dtype=np.float32)
-            for result in response.results
-            for embedding in result.embeddings
-        ]
+        if input_type == "query":
+            return [self._catsu.embed(text) for group in groups for text in group]
+        return self._catsu.embed_documents(groups)
 
     def embed(self, text: str) -> np.ndarray:
         """Embed a single text string."""

@@ -113,18 +113,13 @@ def test_embed_batch_empty(embedding_model: VoyageAIEmbeddings) -> None:
 
 def _mock_contextual_response(embeddings_by_input: list[list[list[float]]]):
     response = MagicMock()
-    response.results = []
-    for embeddings in embeddings_by_input:
-        result = MagicMock()
-        result.embeddings = embeddings
-        response.results.append(result)
+    response.embeddings = embeddings_by_input
     return response
 
 
 def test_contextual_embed_batch_uses_contextual_endpoint() -> None:
     """Contextual models embed chunks together as one document."""
-    pytest.importorskip("voyageai")
-    with patch("voyageai.Client") as mock_client_class:
+    with patch("catsu.Client") as mock_client_class:
         mock_client = mock_client_class.return_value
         mock_client.contextualized_embed.return_value = _mock_contextual_response(
             [[[0.1] * 1024, [0.2] * 1024]],
@@ -134,10 +129,11 @@ def test_contextual_embed_batch_uses_contextual_endpoint() -> None:
         results = embeddings.embed_batch(["chunk 1", "chunk 2"])
 
     mock_client.contextualized_embed.assert_called_once_with(
-        inputs=[["chunk 1", "chunk 2"]],
         model="voyage-context-3",
+        inputs=[["chunk 1", "chunk 2"]],
+        provider="voyageai",
         input_type="document",
-        output_dimension=1024,
+        dimensions=1024,
     )
     assert len(results) == 2
     assert np.allclose(results[0], [0.1] * 1024)
@@ -145,8 +141,7 @@ def test_contextual_embed_batch_uses_contextual_endpoint() -> None:
 
 def test_contextual_embed_documents_preserves_document_groups() -> None:
     """Contextual models can embed multiple document chunk groups together."""
-    pytest.importorskip("voyageai")
-    with patch("voyageai.Client") as mock_client_class:
+    with patch("catsu.Client") as mock_client_class:
         mock_client = mock_client_class.return_value
         mock_client.contextualized_embed.return_value = _mock_contextual_response(
             [[[0.1] * 512, [0.2] * 512], [[0.3] * 512]],
@@ -162,10 +157,11 @@ def test_contextual_embed_documents_preserves_document_groups() -> None:
         )
 
     mock_client.contextualized_embed.assert_called_once_with(
-        inputs=[["doc 1 chunk 1", "doc 1 chunk 2"], ["doc 2 chunk 1"]],
         model="voyage-context-3",
+        inputs=[["doc 1 chunk 1", "doc 1 chunk 2"], ["doc 2 chunk 1"]],
+        provider="voyageai",
         input_type="document",
-        output_dimension=512,
+        dimensions=512,
     )
     assert embeddings.dimension == 512
     assert len(results) == 3
@@ -173,8 +169,7 @@ def test_contextual_embed_documents_preserves_document_groups() -> None:
 
 def test_contextual_embed_single_text_uses_query_input_type() -> None:
     """Single contextual embeds are treated as query embeddings."""
-    pytest.importorskip("voyageai")
-    with patch("voyageai.Client") as mock_client_class:
+    with patch("catsu.Client") as mock_client_class:
         mock_client = mock_client_class.return_value
         mock_client.contextualized_embed.return_value = _mock_contextual_response(
             [[[0.1] * 1024]],
@@ -184,17 +179,17 @@ def test_contextual_embed_single_text_uses_query_input_type() -> None:
         result = embeddings.embed("find this")
 
     mock_client.contextualized_embed.assert_called_once_with(
-        inputs=[["find this"]],
         model="voyage-context-3",
+        inputs=[["find this"]],
+        provider="voyageai",
         input_type="query",
-        output_dimension=1024,
+        dimensions=1024,
     )
     assert result.shape == (1024,)
 
 
 def test_contextual_invalid_output_dimension_raises() -> None:
     """Contextual models validate their supported output dimensions."""
-    pytest.importorskip("voyageai")
     with pytest.raises(ValueError, match="Invalid output_dimension"):
         VoyageAIEmbeddings(
             model="voyage-context-3",
