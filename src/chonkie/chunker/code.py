@@ -12,6 +12,7 @@ from chonkie.logger import get_logger
 from chonkie.pipeline import chunker
 from chonkie.tokenizer import TokenizerProtocol
 from chonkie.types import Chunk, Document
+from chonkie.types.markdown import MarkdownDocument
 
 logger = get_logger(__name__)
 
@@ -103,45 +104,17 @@ class CodeChunker(BaseChunker):
         response = self.magika.identify_bytes(bytes_text)
         return response.output.label
 
-    def _merge_node_groups(self, node_groups: list[list["Node"]]) -> list["Node"]:
-        """Merge node groups by joining sibling nodes."""
-        merged = []
-        for group in node_groups:
-            merged_nodes = []
-            for node in group:
-                # Find all siblings
-                siblings = [node]
-                sibling = node.next_named_sibling
-                while sibling:
-                    siblings.append(sibling)
-                    sibling = sibling.next_named_sibling
-                # Join the merged text
-                merged_text = "\n".join([
-                    (s.text.decode("utf-8") if s.text else "") for s in siblings
-                ])
-                merged_nodes.append(node)
-                merged.append(merged_text)
-        return merged_nodes
-
-    def _create_chunks(self, code_text: str, nodes: list["Node"]) -> list[Chunk]:
-        """Create chunks from code text and nodes."""
-        chunks = []
+    def _flatten_nodes(self, nodes: list["Node"]) -> list["Node"]:
+        """Recursively flatten nodes that exceed chunk_size into their children."""
+        result: list["Node"] = []
         for node in nodes:
-            # Get the text of the node
-            node_text = node.text.decode("utf-8") if node.text else str(node)
-            # Get start and end indices
-            start_index = node.start_byte
-            end_index = node.end_byte
-            # Create the chunk
-            chunks.append(
-                Chunk(
-                    text=node_text,
-                    start_index=start_index,
-                    end_index=end_index,
-                    token_count=self.tokenizer.count_tokens(node_text),
-                )
-            )
-        return chunks
+            node_text = node.text.decode("utf-8") if node.text else ""
+            node_tokens = self.tokenizer.count_tokens(node_text)
+            if node_tokens > self.chunk_size and node.child_count > 0:
+                result.extend(self._flatten_nodes(list(node.children)))
+            else:
+                result.append(node)
+        return result
 
     def chunk(self, text: str) -> list[Chunk]:
         """Split code text into chunks based on code structure.
@@ -156,6 +129,9 @@ class CodeChunker(BaseChunker):
             ImportError: If tree-sitter and tree-sitter-language-pack are not installed.
 
         """
+        if not text or not text.strip():
+            return []
+
         logger.debug(f"Chunking code of length {len(text)}")
 
         # Detect language if auto
@@ -171,14 +147,60 @@ class CodeChunker(BaseChunker):
 
         # Parse the code
         assert self.parser is not None
-        tree = self.parser.parse(bytes(text.encode("utf-8")))
+        tree = self.parser.parse(text.encode("utf-8"))
         root_node = tree.root_node
-        # Get all nodes to chunk
         nodes = list(root_node.children)
-        # Merge nodes if needed
-        merged_nodes = self._merge_node_groups(nodes)
-        # Create chunks
-        chunks = self._create_chunks(text, merged_nodes)
+
+        if not nodes:
+            return []
+
+        # Flatten oversized nodes into their children recursively
+        nodes = self._flatten_nodes(nodes)
+
+        # Build chunks by grouping consecutive nodes to fit within chunk_size
+        text_bytes = text.encode("utf-8")
+        chunks: list[Chunk] = []
+        current_start = 0
+        group_start_byte = 0
+        group_token_count = 0
+
+        for i, node in enumerate(nodes):
+            node_end_byte = node.end_byte
+            candidate_text = text_bytes[group_start_byte:node_end_byte].decode("utf-8")
+            candidate_tokens = self.tokenizer.count_tokens(candidate_text)
+
+            if group_token_count > 0 and candidate_tokens > self.chunk_size:
+                # Flush current group up to start of this node
+                flush_end_byte = node.start_byte
+                chunk_text = text_bytes[group_start_byte:flush_end_byte].decode("utf-8")
+                chunks.append(
+                    Chunk(
+                        text=chunk_text,
+                        start_index=current_start,
+                        end_index=current_start + len(chunk_text),
+                        token_count=self.tokenizer.count_tokens(chunk_text),
+                    )
+                )
+                current_start += len(chunk_text)
+                group_start_byte = node.start_byte
+                group_token_count = 0
+
+            # Recalculate after potential flush
+            candidate_text = text_bytes[group_start_byte:node_end_byte].decode("utf-8")
+            group_token_count = self.tokenizer.count_tokens(candidate_text)
+
+        # Flush remaining (include any trailing text after last node)
+        remaining_text = text[current_start:]
+        if remaining_text:
+            chunks.append(
+                Chunk(
+                    text=remaining_text,
+                    start_index=current_start,
+                    end_index=current_start + len(remaining_text),
+                    token_count=self.tokenizer.count_tokens(remaining_text),
+                )
+            )
+
         logger.info(f"Created {len(chunks)} chunks from code")
         return chunks
 
@@ -255,6 +277,9 @@ class CodeChunker(BaseChunker):
     def chunk_document(self, document: Document) -> Document:
         """Chunk a document.
 
+        For MarkdownDocument, chunks code blocks and merges with existing chunks.
+        For plain Document, chunks the content or re-chunks existing chunks.
+
         Args:
             document: The document to chunk.
 
@@ -262,8 +287,34 @@ class CodeChunker(BaseChunker):
             The document with chunks populated.
 
         """
-        # If the document has chunks already, then we need to re-chunk the content
-        if document.chunks:
+        if isinstance(document, MarkdownDocument) and document.code:
+            existing_chunks = list(document.chunks) if document.chunks else []
+            code_chunks: list[Chunk] = []
+            for code_block in document.code:
+                if not code_block.content or not code_block.content.strip():
+                    continue
+                # Set language for this code block
+                orig_language = self.language
+                if code_block.language:
+                    self.language = code_block.language
+                    from tree_sitter_language_pack import SupportedLanguage, get_parser
+
+                    self.parser = get_parser(cast(SupportedLanguage, code_block.language))
+
+                block_chunks = self.chunk(code_block.content)
+                # Offset indices by the code block's position in the document
+                for c in block_chunks:
+                    code_chunks.append(
+                        Chunk(
+                            text=c.text,
+                            start_index=c.start_index + code_block.start_index,
+                            end_index=c.end_index + code_block.start_index,
+                            token_count=c.token_count,
+                        )
+                    )
+                self.language = orig_language
+            document.chunks = sorted(existing_chunks + code_chunks, key=lambda c: c.start_index)
+        elif document.chunks:
             chunk_results = [self.chunk(c.text) for c in document.chunks]
             document.chunks = self._merge_new_chunks(document.chunks, chunk_results)
         else:

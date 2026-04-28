@@ -542,3 +542,7 @@ class _OverlapRefineryRefinery(OverlapRefinery):
         refined = self._apply_overlap_to_chunks(document.chunks)
         document.chunks = refined
         return document
+
+    async def arefine_document(self, document: "Document") -> "Document":
+        """Async version of refine_document."""
+        return self.refine_document(document)
