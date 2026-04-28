@@ -111,18 +111,15 @@ class CodeChunker(BaseChunker):
             for node in group:
                 # Find all siblings
                 siblings = [node]
-                sibling = node.next_sibling()
+                sibling = node.next_named_sibling
                 while sibling:
                     siblings.append(sibling)
-                    sibling = sibling.next_sibling()
+                    sibling = sibling.next_named_sibling
                 # Join the merged text
-                merged_text = "\n".join(
-                    [s.text.decode("utf-8") for s in siblings]
-                )
-                # Create a new node with the merged text
-                from tree_sitter import Node
-
-                merged_nodes.append(Node(node.tree, node.node))
+                merged_text = "\n".join([
+                    (s.text.decode("utf-8") if s.text else "") for s in siblings
+                ])
+                merged_nodes.append(node)
                 merged.append(merged_text)
         return merged_nodes
 
@@ -131,10 +128,10 @@ class CodeChunker(BaseChunker):
         chunks = []
         for node in nodes:
             # Get the text of the node
-            node_text = node.text.decode("utf-8") if hasattr(node, "text") else str(node)
+            node_text = node.text.decode("utf-8") if node.text else str(node)
             # Get start and end indices
-            start_index = node.symbols["start_point"]
-            end_index = node.symbols["end_point"]
+            start_index = node.start_byte
+            end_index = node.end_byte
             # Create the chunk
             chunks.append(
                 Chunk(
@@ -173,6 +170,7 @@ class CodeChunker(BaseChunker):
             self.language = lang
 
         # Parse the code
+        assert self.parser is not None
         tree = self.parser.parse(bytes(text.encode("utf-8")))
         root_node = tree.root_node
         # Get all nodes to chunk
@@ -184,7 +182,7 @@ class CodeChunker(BaseChunker):
         logger.info(f"Created {len(chunks)} chunks from code")
         return chunks
 
-    def chunk_batch(
+    def chunk_batch(  # type: ignore[override]
         self, texts: list[str], batch_size: int = 1, show_progress_bar: bool = True
     ) -> list[list[Chunk]]:
         """Split a batch of code texts into their respective chunks.
@@ -220,7 +218,7 @@ class CodeChunker(BaseChunker):
                 chunks.append(self.chunk(text))
         return chunks
 
-    def __call__(
+    def __call__(  # type: ignore[override]
         self,
         text: str | list[str],
         batch_size: int = 1,
@@ -242,9 +240,7 @@ class CodeChunker(BaseChunker):
         elif isinstance(text, list) and isinstance(text[0], str):
             return self.chunk_batch(text, batch_size, show_progress_bar)
         else:
-            raise ValueError(
-                "Invalid input type. Expected a string or a list of strings."
-            )
+            raise ValueError("Invalid input type. Expected a string or a list of strings.")
 
     def __repr__(self) -> str:
         """Return a string representation of the CodeChunker."""

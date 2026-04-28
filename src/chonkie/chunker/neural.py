@@ -124,7 +124,9 @@ class NeuralChunker(BaseChunker):
                 ) from e
 
         # Initialize the Parent class with the tokenizer
-        super().__init__(tokenizer=cast(TokenizerProtocol, tokenizer), chunk_overlap=chunk_overlap, **kwargs)
+        super().__init__(
+            tokenizer=cast(TokenizerProtocol, tokenizer), chunk_overlap=chunk_overlap, **kwargs
+        )
 
         if model_id is not None:
             try:

@@ -48,13 +48,16 @@ def test_overlap_refinery_initialization_with_invalid_context_size() -> None:
     refinery = OverlapRefinery(chunk_overlap=1, overlap_context_size=0)
     assert refinery.chunk_overlap == 1
 
+
 def test_overlap_refinery_initialization_with_invalid_mode() -> None:
     """Test that invalid mode is accepted at init (raises at refine time)."""
     refinery = OverlapRefinery(chunk_overlap=1, overlap_mode="invalid")
     # Should accept at init; refine() will raise ValueError
     with pytest.raises(ValueError):
-        chunks = [Chunk(text="a", start_index=0, end_index=1, token_count=1),
-                  Chunk(text="b", start_index=1, end_index=2, token_count=1)]
+        chunks = [
+            Chunk(text="a", start_index=0, end_index=1, token_count=1),
+            Chunk(text="b", start_index=1, end_index=2, token_count=1),
+        ]
         refinery.refine(chunks)
 
 
@@ -62,8 +65,10 @@ def test_overlap_refinery_initialization_with_invalid_method() -> None:
     """Test that invalid method is accepted at init (raises at refine time)."""
     refinery = OverlapRefinery(chunk_overlap=1, overlap_method="invalid")
     with pytest.raises(ValueError):
-        chunks = [Chunk(text="a", start_index=0, end_index=1, token_count=1),
-                  Chunk(text="b", start_index=1, end_index=2, token_count=1)]
+        chunks = [
+            Chunk(text="a", start_index=0, end_index=1, token_count=1),
+            Chunk(text="b", start_index=1, end_index=2, token_count=1),
+        ]
         refinery.refine(chunks)
 
 
@@ -129,7 +134,9 @@ def test_overlap_refinery_refine_inplace_false(sample_chunks) -> None:
 
 def test_overlap_refinery_token_suffix_overlap(sample_chunks) -> None:
     """Test the OverlapRefinery with token-based suffix overlap."""
-    refinery = OverlapRefinery(overlap_context_size=2, overlap_mode="token", overlap_method="suffix")
+    refinery = OverlapRefinery(
+        overlap_context_size=2, overlap_mode="token", overlap_method="suffix"
+    )
     refined_chunks = refinery.refine(sample_chunks)
 
     # Check that the first chunk has the context from the second chunk
@@ -153,7 +160,9 @@ def test_overlap_refinery_token_suffix_overlap(sample_chunks) -> None:
 
 def test_overlap_refinery_token_prefix_overlap(sample_chunks) -> None:
     """Test the OverlapRefinery with token-based prefix overlap."""
-    refinery = OverlapRefinery(overlap_context_size=2, overlap_mode="token", overlap_method="prefix")
+    refinery = OverlapRefinery(
+        overlap_context_size=2, overlap_mode="token", overlap_method="prefix"
+    )
     refined_chunks = refinery.refine(sample_chunks)
 
     # Check that the second chunk has the context from the first chunk
@@ -176,7 +185,9 @@ def test_overlap_refinery_token_prefix_overlap(sample_chunks) -> None:
 
 def test_overlap_refinery_token_suffix_overlap_no_merge(sample_chunks) -> None:
     """Test the OverlapRefinery with token-based suffix overlap and no merge."""
-    refinery = OverlapRefinery(overlap_context_size=2, overlap_mode="token", overlap_method="suffix", overlap_merge=False)
+    refinery = OverlapRefinery(
+        overlap_context_size=2, overlap_mode="token", overlap_method="suffix", overlap_merge=False
+    )
     refined_chunks = refinery.refine(sample_chunks)
 
     # Check that the first chunk has the context from the second chunk
@@ -198,7 +209,9 @@ def test_overlap_refinery_token_suffix_overlap_no_merge(sample_chunks) -> None:
 
 def test_overlap_refinery_token_prefix_overlap_no_merge(sample_chunks) -> None:
     """Test the OverlapRefinery with token-based prefix overlap and no merge."""
-    refinery = OverlapRefinery(overlap_context_size=2, overlap_mode="token", overlap_method="prefix", overlap_merge=False)
+    refinery = OverlapRefinery(
+        overlap_context_size=2, overlap_mode="token", overlap_method="prefix", overlap_merge=False
+    )
     refined_chunks = refinery.refine(sample_chunks)
 
     # Check that the second chunk has the context from the first chunk
@@ -221,7 +234,9 @@ def test_overlap_refinery_token_prefix_overlap_no_merge(sample_chunks) -> None:
 
 def test_overlap_refinery_token_suffix_overlap_float_context(sample_chunks) -> None:
     """Test the OverlapRefinery with token-based suffix overlap and float context size."""
-    refinery = OverlapRefinery(chunk_overlap=1, overlap_context_size=0.3, overlap_mode="token", overlap_method="suffix")
+    refinery = OverlapRefinery(
+        chunk_overlap=1, overlap_context_size=0.3, overlap_mode="token", overlap_method="suffix"
+    )
     refined_chunks = refinery.refine(sample_chunks)
 
     # The context size should remain as the original float
@@ -238,7 +253,9 @@ def test_overlap_refinery_token_suffix_overlap_float_context(sample_chunks) -> N
 
 def test_overlap_refinery_token_overlap_large_context(sample_chunks) -> None:
     """Test the OverlapRefinery with token-based overlap and large context size."""
-    refinery = OverlapRefinery(overlap_context_size=10, overlap_mode="token", overlap_method="suffix")
+    refinery = OverlapRefinery(
+        overlap_context_size=10, overlap_mode="token", overlap_method="suffix"
+    )
 
     # Even with a large context size, the refinery should still work
     refined_chunks = refinery.refine(sample_chunks)
@@ -252,7 +269,9 @@ def test_overlap_refinery_token_overlap_large_context(sample_chunks) -> None:
 
 def test_overlap_refinery_recursive_suffix_overlap(sample_chunks) -> None:
     """Test the OverlapRefinery with recursive-based suffix overlap."""
-    refinery = OverlapRefinery(overlap_context_size=3, overlap_mode="recursive", overlap_method="suffix")
+    refinery = OverlapRefinery(
+        overlap_context_size=3, overlap_mode="recursive", overlap_method="suffix"
+    )
     refined_chunks = refinery.refine(sample_chunks)
 
     # Check that the first chunk has context from the second chunk
@@ -273,7 +292,9 @@ def test_overlap_refinery_recursive_suffix_overlap(sample_chunks) -> None:
 
 def test_overlap_refinery_recursive_prefix_overlap(sample_chunks) -> None:
     """Test the OverlapRefinery with recursive-based prefix overlap."""
-    refinery = OverlapRefinery(overlap_context_size=3, overlap_mode="recursive", overlap_method="prefix")
+    refinery = OverlapRefinery(
+        overlap_context_size=3, overlap_mode="recursive", overlap_method="prefix"
+    )
     refined_chunks = refinery.refine(sample_chunks)
 
     # Check that the second chunk has context from the first chunk
@@ -294,7 +315,12 @@ def test_overlap_refinery_recursive_prefix_overlap(sample_chunks) -> None:
 
 def test_overlap_refinery_recursive_no_merge(sample_chunks) -> None:
     """Test the OverlapRefinery with recursive mode and no merge."""
-    refinery = OverlapRefinery(overlap_context_size=3, overlap_mode="recursive", overlap_method="suffix", overlap_merge=False)
+    refinery = OverlapRefinery(
+        overlap_context_size=3,
+        overlap_mode="recursive",
+        overlap_method="suffix",
+        overlap_merge=False,
+    )
     refined_chunks = refinery.refine(sample_chunks)
 
     # Check that context is added but text is not merged
@@ -309,7 +335,9 @@ def test_overlap_refinery_recursive_no_merge(sample_chunks) -> None:
 
 def test_overlap_refinery_recursive_large_context(sample_chunks) -> None:
     """Test the OverlapRefinery with recursive mode and large context size."""
-    refinery = OverlapRefinery(overlap_context_size=100, overlap_mode="recursive", overlap_method="suffix")
+    refinery = OverlapRefinery(
+        overlap_context_size=100, overlap_mode="recursive", overlap_method="suffix"
+    )
 
     # Even with a large context size, the refinery should still work
     refined_chunks = refinery.refine(sample_chunks)
@@ -400,7 +428,9 @@ def test_overlap_refinery_recursive_empty_text() -> None:
         Chunk(text="Some text here", start_index=1, end_index=14, token_count=3),
     ]
 
-    refinery = OverlapRefinery(overlap_context_size=2, overlap_mode="recursive", overlap_method="suffix")
+    refinery = OverlapRefinery(
+        overlap_context_size=2, overlap_mode="recursive", overlap_method="suffix"
+    )
     refined_chunks = refinery.refine(chunks)
 
     # Should handle empty chunks gracefully
@@ -413,7 +443,9 @@ def test_overlap_refinery_recursive_single_chunk() -> None:
         Chunk(text="Single chunk of text.", start_index=0, end_index=20, token_count=4),
     ]
 
-    refinery = OverlapRefinery(overlap_context_size=2, overlap_mode="recursive", overlap_method="suffix")
+    refinery = OverlapRefinery(
+        overlap_context_size=2, overlap_mode="recursive", overlap_method="suffix"
+    )
     refined_chunks = refinery.refine(chunks)
 
     # Single chunk should not have context added
@@ -435,7 +467,9 @@ def test_overlap_refinery_float_context_calculation() -> None:
     ]
 
     # 0.5 * max(10) = 5 tokens
-    refinery = OverlapRefinery(chunk_overlap=1, overlap_context_size=0.5, overlap_mode="token", overlap_method="suffix")
+    refinery = OverlapRefinery(
+        chunk_overlap=1, overlap_context_size=0.5, overlap_mode="token", overlap_method="suffix"
+    )
     refined_chunks = refinery.refine(chunks)
 
     # Should preserve the original float context_size
@@ -451,7 +485,9 @@ def test_overlap_refinery_very_small_chunks() -> None:
         Chunk(text="C", start_index=2, end_index=2, token_count=1),
     ]
 
-    refinery = OverlapRefinery(overlap_context_size=1, overlap_mode="token", overlap_method="suffix")
+    refinery = OverlapRefinery(
+        overlap_context_size=1, overlap_mode="token", overlap_method="suffix"
+    )
     refined_chunks = refinery.refine(chunks)
 
     assert len(refined_chunks) == 3
@@ -468,7 +504,9 @@ def test_overlap_refinery_context_larger_than_chunk() -> None:
     ]
 
     # Context size larger than any chunk
-    refinery = OverlapRefinery(overlap_context_size=10, overlap_mode="token", overlap_method="suffix")
+    refinery = OverlapRefinery(
+        overlap_context_size=10, overlap_mode="token", overlap_method="suffix"
+    )
 
     # Should handle gracefully (with warnings)
     refined_chunks = refinery.refine(chunks)
@@ -482,7 +520,9 @@ def test_overlap_refinery_recursive_with_only_whitespace() -> None:
         Chunk(text="word4 word5 word6", start_index=17, end_index=33, token_count=3),
     ]
 
-    refinery = OverlapRefinery(overlap_context_size=2, overlap_mode="recursive", overlap_method="suffix")
+    refinery = OverlapRefinery(
+        overlap_context_size=2, overlap_mode="recursive", overlap_method="suffix"
+    )
     refined_chunks = refinery.refine(chunks)
 
     assert len(refined_chunks) == 2
@@ -491,7 +531,9 @@ def test_overlap_refinery_recursive_with_only_whitespace() -> None:
 
 def test_overlap_refinery_invalid_refine_method() -> None:
     """Test that invalid method parameter is caught."""
-    refinery = OverlapRefinery(overlap_context_size=2, overlap_mode="token", overlap_method="suffix")
+    refinery = OverlapRefinery(
+        overlap_context_size=2, overlap_mode="token", overlap_method="suffix"
+    )
     # Manually set an invalid method to test the validation
     refinery._overlap_method = "invalid_method"
 
@@ -506,7 +548,9 @@ def test_overlap_refinery_invalid_refine_method() -> None:
 
 def test_overlap_refinery_invalid_mode_in_overlap() -> None:
     """Test that invalid mode parameter is caught in overlap methods."""
-    refinery = OverlapRefinery(overlap_context_size=2, overlap_mode="token", overlap_method="suffix")
+    refinery = OverlapRefinery(
+        overlap_context_size=2, overlap_mode="token", overlap_method="suffix"
+    )
     # Manually set an invalid mode to test the validation
     refinery._overlap_mode = "invalid_mode"
 
@@ -532,7 +576,9 @@ def test_overlap_refinery_stress_test_many_chunks() -> None:
         for i in range(100)
     ]
 
-    refinery = OverlapRefinery(overlap_context_size=2, overlap_mode="token", overlap_method="suffix")
+    refinery = OverlapRefinery(
+        overlap_context_size=2, overlap_mode="token", overlap_method="suffix"
+    )
     refined_chunks = refinery.refine(chunks)
 
     assert len(refined_chunks) == 100
@@ -559,7 +605,12 @@ def test_overlap_refinery_recursive_stress_deep_nesting() -> None:
         Chunk(text="AnotherChunkWithoutDelimiters", start_index=28, end_index=56, token_count=5),
     ]
 
-    refinery = OverlapRefinery(overlap_context_size=3, overlap_mode="recursive", overlap_method="suffix", overlap_rules=deep_rules)
+    refinery = OverlapRefinery(
+        overlap_context_size=3,
+        overlap_mode="recursive",
+        overlap_method="suffix",
+        overlap_rules=deep_rules,
+    )
 
     # Should not crash and should return the text as-is when levels are exhausted
     refined_chunks = refinery.refine(chunks)
@@ -575,7 +626,9 @@ def test_overlap_refinery_index_preservation() -> None:
     ]
 
     # Test suffix overlap - indices should remain unchanged
-    refinery_suffix = OverlapRefinery(overlap_context_size=1, overlap_mode="token", overlap_method="suffix")
+    refinery_suffix = OverlapRefinery(
+        overlap_context_size=1, overlap_mode="token", overlap_method="suffix"
+    )
     suffix_chunks = refinery_suffix.refine([chunk.copy() for chunk in chunks])
 
     # Original indices should be preserved
@@ -587,7 +640,9 @@ def test_overlap_refinery_index_preservation() -> None:
     assert suffix_chunks[2].end_index == 30
 
     # Test prefix overlap - indices should remain unchanged
-    refinery_prefix = OverlapRefinery(overlap_context_size=1, overlap_mode="token", overlap_method="prefix")
+    refinery_prefix = OverlapRefinery(
+        overlap_context_size=1, overlap_mode="token", overlap_method="prefix"
+    )
     prefix_chunks = refinery_prefix.refine([chunk.copy() for chunk in chunks])
 
     # Original indices should be preserved
@@ -606,7 +661,9 @@ def test_overlap_refinery_recursive_index_preservation() -> None:
         Chunk(text="Third sentence here.", start_index=29, end_index=48, token_count=3),
     ]
 
-    refinery = OverlapRefinery(overlap_context_size=2, overlap_mode="recursive", overlap_method="suffix")
+    refinery = OverlapRefinery(
+        overlap_context_size=2, overlap_mode="recursive", overlap_method="suffix"
+    )
     refined_chunks = refinery.refine(chunks)
 
     # Original indices should be preserved
@@ -682,7 +739,12 @@ def test_overlap_refinery_empty_text_recursive() -> None:
     ]
 
     rules = RecursiveRules(levels=[RecursiveLevel(delimiters=[". "])])
-    refinery = OverlapRefinery(overlap_context_size=1, overlap_mode="recursive", overlap_method="suffix", overlap_rules=rules)
+    refinery = OverlapRefinery(
+        overlap_context_size=1,
+        overlap_mode="recursive",
+        overlap_method="suffix",
+        overlap_rules=rules,
+    )
     refined_chunks = refinery.refine(chunks)
 
     # Should handle empty text gracefully
@@ -711,7 +773,9 @@ def test_overlap_refinery_context_size_larger_than_chunk() -> None:
     ]
 
     # Test suffix overlap with very large context size
-    refinery_suffix = OverlapRefinery(overlap_context_size=100, overlap_mode="token", overlap_method="suffix")
+    refinery_suffix = OverlapRefinery(
+        overlap_context_size=100, overlap_mode="token", overlap_method="suffix"
+    )
     refined_chunks = refinery_suffix.refine(chunks)
 
     # The suffix method appends context from the next chunk to the current chunk
@@ -725,7 +789,9 @@ def test_overlap_refinery_context_size_larger_than_chunk() -> None:
         Chunk(text="A", start_index=0, end_index=0, token_count=1),
         Chunk(text="B", start_index=1, end_index=1, token_count=1),
     ]
-    refinery_prefix = OverlapRefinery(overlap_context_size=100, overlap_mode="token", overlap_method="prefix")
+    refinery_prefix = OverlapRefinery(
+        overlap_context_size=100, overlap_mode="token", overlap_method="prefix"
+    )
     refined_chunks = refinery_prefix.refine(fresh_chunks)
 
     # The prefix method prepends context from previous chunk to the next chunk
@@ -743,7 +809,9 @@ def test_overlap_refinery_invalid_modes() -> None:
     ]
 
     # Test invalid mode in get_prefix_overlap_context
-    refinery = OverlapRefinery(overlap_context_size=1, overlap_mode="token", overlap_method="prefix")
+    refinery = OverlapRefinery(
+        overlap_context_size=1, overlap_mode="token", overlap_method="prefix"
+    )
     refinery._overlap_mode = "invalid_mode"
 
     with pytest.raises(ValueError, match="Mode must be one of: token, recursive"):
@@ -753,7 +821,9 @@ def test_overlap_refinery_invalid_modes() -> None:
 def test_overlap_refinery_context_size_reuse_correctness() -> None:
     """Test that reusing OverlapRefinery with float context_size works correctly with different chunk sets."""
     # This tests the fix for a bug where _calculated_context_size was incorrectly cached
-    refinery = OverlapRefinery(chunk_overlap=1, overlap_context_size=0.3, overlap_mode="token", overlap_method="suffix")
+    refinery = OverlapRefinery(
+        chunk_overlap=1, overlap_context_size=0.3, overlap_mode="token", overlap_method="suffix"
+    )
 
     # First set: small token counts -> context_size should be 0.3 * 5 = 1.5 -> 1
     small_chunks = [
@@ -800,7 +870,9 @@ def test_overlap_refinery_context_size_reuse_correctness() -> None:
 
 def test_overlap_refinery_repr() -> None:
     """Test the OverlapRefinery.__repr__ method."""
-    refinery = OverlapRefinery(overlap_context_size=2, overlap_mode="token", overlap_method="suffix")
+    refinery = OverlapRefinery(
+        overlap_context_size=2, overlap_mode="token", overlap_method="suffix"
+    )
     repr_str = repr(refinery)
     assert "OverlapRefinery" in repr_str
     assert "overlap_context_size=2" in repr_str
@@ -812,7 +884,9 @@ def test_overlap_refinery_repr() -> None:
 
 def test_overlap_refinery_float_context_size_preservation() -> None:
     """Test that float context size is preserved and recalculated for each chunk set."""
-    refinery = OverlapRefinery(overlap_context_size=0.4, overlap_mode="token", overlap_method="suffix")
+    refinery = OverlapRefinery(
+        overlap_context_size=0.4, overlap_mode="token", overlap_method="suffix"
+    )
 
     # Original context_size should remain as float
     assert refinery._overlap_context_size == 0.4
@@ -1162,12 +1236,18 @@ def test_overlap_refinery_old_api_full_workflow() -> None:
 
     sample_chunks = [
         Chunk(text="This is the first chunk of text.", start_index=0, end_index=31, token_count=7),
-        Chunk(text="This is the second chunk of text.", start_index=32, end_index=64, token_count=7),
-        Chunk(text="This is the third chunk of text.", start_index=65, end_index=96, token_count=7),
+        Chunk(
+            text="This is the second chunk of text.", start_index=32, end_index=64, token_count=7
+        ),
+        Chunk(
+            text="This is the third chunk of text.", start_index=65, end_index=96, token_count=7
+        ),
     ]
 
     # Old API: context_size, mode, method, merge, inplace
-    refinery = OverlapRefinery(context_size=2, mode="token", method="suffix", merge=True, inplace=False)
+    refinery = OverlapRefinery(
+        context_size=2, mode="token", method="suffix", merge=True, inplace=False
+    )
     refined = refinery.refine(sample_chunks)
 
     # Old-style attribute access
@@ -1187,8 +1267,12 @@ def test_overlap_refinery_old_api_full_workflow() -> None:
     assert refined[2].text == "This is the third chunk of text."
 
     # Old API with recursive mode and rules
-    rules = RecursiveRules(levels=[RecursiveLevel(delimiters=[". "]), RecursiveLevel(whitespace=True)])
-    refinery2 = OverlapRefinery(context_size=3, mode="recursive", method="prefix", merge=False, rules=rules)
+    rules = RecursiveRules(
+        levels=[RecursiveLevel(delimiters=[". "]), RecursiveLevel(whitespace=True)]
+    )
+    refinery2 = OverlapRefinery(
+        context_size=3, mode="recursive", method="prefix", merge=False, rules=rules
+    )
     refined2 = refinery2.refine([c.copy() for c in sample_chunks])
 
     assert refined2[1].context != ""

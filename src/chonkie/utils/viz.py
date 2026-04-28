@@ -467,7 +467,7 @@ class Visualizer:
                     tooltip = self._overlap_span_title(sorted_ids, validated_spans)
                     title_attr = f' title="{html.escape(tooltip)}"'
                     class_attr = f' class="{css_class}"' if css_class else ""
-                    html_parts.append(f"<span{class_attr} style=\"{style}\"{title_attr}>")
+                    html_parts.append(f'<span{class_attr} style="{style}"{title_attr}>')
                     html_parts.append(escaped_segment)
                     html_parts.append("</span>")
                 else:
@@ -491,7 +491,7 @@ class Visualizer:
                 title = self._overlap_span_title(sorted_ids, validated_spans)
                 title_attr = f' title="{html.escape(title)}"'
                 class_attr = f' class="{css_class}"' if css_class else ""
-                html_parts.append(f"<span{class_attr} style=\"{style}\"{title_attr}>")
+                html_parts.append(f'<span{class_attr} style="{style}"{title_attr}>')
                 html_parts.append(escaped_segment)
                 html_parts.append("</span>")
             else:

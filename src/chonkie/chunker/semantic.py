@@ -46,7 +46,7 @@ class SemanticChunker(BaseChunker):
         filter_window: int = 5,
         filter_polyorder: int = 3,
         filter_tolerance: float = 0.2,
-        **kwargs: dict[str, Any],
+        **kwargs: Any,
     ) -> None:
         """Initialize the SemanticChunker.
 
@@ -133,7 +133,7 @@ class SemanticChunker(BaseChunker):
         filter_window: int = 5,
         filter_polyorder: int = 3,
         filter_tolerance: float = 0.2,
-        **kwargs: dict[str, Any],
+        **kwargs: Any,
     ) -> "SemanticChunker":
         """Create a SemanticChunker from a recipe.
 

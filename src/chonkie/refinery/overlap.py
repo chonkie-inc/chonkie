@@ -85,16 +85,28 @@ class OverlapRefinery:
 
         # Backward compat: context_size=int > 0 also enables chunk_overlap
         # If the old API is used (context_size=N where N > 0), set chunk_overlap to enable overlap
-        if chunk_overlap == 0 and isinstance(overlap_context_size, int) and overlap_context_size > 0:
+        if (
+            chunk_overlap == 0
+            and isinstance(overlap_context_size, int)
+            and overlap_context_size > 0
+        ):
             chunk_overlap = overlap_context_size
         # Also handle float context_size with old API (mode/method specified)
-        if chunk_overlap == 0 and isinstance(overlap_context_size, (int, float)) and overlap_context_size > 0:
+        if (
+            chunk_overlap == 0
+            and isinstance(overlap_context_size, (int, float))
+            and overlap_context_size > 0
+        ):
             # If mode/method are specified via old API (not None defaults), enable overlap
             if mode is not None or method is not None:
                 chunk_overlap = 1
         # Enable overlap when any overlap-specific param is explicitly passed
         # (inplace=False, merge=False, etc.) with old API style
-        if chunk_overlap == 0 and isinstance(overlap_context_size, (int, float)) and overlap_context_size > 0:
+        if (
+            chunk_overlap == 0
+            and isinstance(overlap_context_size, (int, float))
+            and overlap_context_size > 0
+        ):
             if inplace is not None or merge is not None:
                 chunk_overlap = 1
 
@@ -116,7 +128,11 @@ class OverlapRefinery:
         self.rules = overlap_rules
 
         # If chunk_overlap is provided, use it as context_size when overlap is enabled
-        if chunk_overlap > 0 and isinstance(overlap_context_size, (int, float)) and not isinstance(overlap_context_size, str):
+        if (
+            chunk_overlap > 0
+            and isinstance(overlap_context_size, (int, float))
+            and not isinstance(overlap_context_size, str)
+        ):
             # chunk_overlap takes precedence for integer values
             if isinstance(chunk_overlap, int) and chunk_overlap > 0:
                 self._effective_context_size = chunk_overlap
@@ -141,8 +157,12 @@ class OverlapRefinery:
         self._overlap_cache_size = 8192
 
         # Create LRU cached methods
-        self._get_overlap_tokens_cached = lru_cache(maxsize=self._overlap_cache_size)(self._get_overlap_tokens_impl)
-        self._count_overlap_tokens_cached = lru_cache(maxsize=self._overlap_cache_size)(self._count_overlap_tokens_impl)
+        self._get_overlap_tokens_cached = lru_cache(maxsize=self._overlap_cache_size)(
+            self._get_overlap_tokens_impl
+        )
+        self._count_overlap_tokens_cached = lru_cache(maxsize=self._overlap_cache_size)(
+            self._count_overlap_tokens_impl
+        )
 
     # ---- Internal overlap methods ----
 
@@ -340,7 +360,9 @@ class OverlapRefinery:
             if tokenizer is None:
                 return [text]
             encoded = tokenizer.encode(text)
-            token_splits = [encoded[i:i + context_size] for i in range(0, len(encoded), context_size)]
+            token_splits = [
+                encoded[i : i + context_size] for i in range(0, len(encoded), context_size)
+            ]
             return list(tokenizer.decode_batch(token_splits))
 
     def _group_overlap_splits(
@@ -512,7 +534,6 @@ class _OverlapRefineryRefinery(OverlapRefinery):
     # Keep refine() working for pipeline usage
     def refine(self, chunks: list) -> list:
         return self._apply_overlap_to_chunks(chunks)
-
 
     def refine_document(self, document: "Document") -> "Document":
         """Refine all chunks in a Document with overlap context."""

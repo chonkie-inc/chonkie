@@ -49,7 +49,13 @@ class TokenChunker(BaseChunker):
             ValueError: If chunk_size <= 0 or chunk_overlap >= chunk_size
 
         """
-        super().__init__(tokenizer, chunk_overlap=chunk_overlap, **kwargs)
+        super().__init__(
+            tokenizer,
+            chunk_overlap=int(chunk_overlap)
+            if isinstance(chunk_overlap, float)
+            else chunk_overlap,
+            **kwargs,
+        )
         if chunk_size <= 0:
             raise ValueError("chunk_size must be positive")
         if isinstance(chunk_overlap, int) and chunk_overlap >= chunk_size:

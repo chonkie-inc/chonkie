@@ -127,7 +127,7 @@ class SlumberChunker(BaseChunker):
         # Set the parameters for the SlumberChunker
         self.chunk_size = chunk_size
         self.candidate_size = candidate_size
-        self.rules = rules if rules is not None else RecursiveRules()
+        self.rules: RecursiveRules = rules if rules is not None else RecursiveRules()
         self.min_characters_per_chunk = min_characters_per_chunk
         self.verbose = verbose
 

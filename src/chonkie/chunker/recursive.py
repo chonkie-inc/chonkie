@@ -72,7 +72,7 @@ class RecursiveChunker(BaseChunker):
         # Initialize the internal values
         self.chunk_size = chunk_size
         self.min_characters_per_chunk = min_characters_per_chunk
-        self.rules = rules
+        self.rules: RecursiveRules = rules
         self.sep = "✄"
         self._CHARS_PER_TOKEN = 3  # Approximate chars per token
 

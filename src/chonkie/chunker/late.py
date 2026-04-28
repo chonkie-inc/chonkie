@@ -56,8 +56,13 @@ class LateChunker(RecursiveChunker):
         """
         # Separate overlap kwargs from embedding model kwargs
         overlap_keys = {
-            "overlap_context_size", "overlap_mode", "overlap_method",
-            "overlap_merge", "overlap_inplace", "overlap_rules", "overlap_tokenizer",
+            "overlap_context_size",
+            "overlap_mode",
+            "overlap_method",
+            "overlap_merge",
+            "overlap_inplace",
+            "overlap_rules",
+            "overlap_tokenizer",
         }
         overlap_kwargs = {k: v for k, v in kwargs.items() if k in overlap_keys}
         embedding_kwargs = {k: v for k, v in kwargs.items() if k not in overlap_keys}
@@ -66,7 +71,9 @@ class LateChunker(RecursiveChunker):
         if isinstance(embedding_model, SentenceTransformerEmbeddings):
             self.embedding_model = embedding_model
         elif isinstance(embedding_model, str):
-            self.embedding_model = SentenceTransformerEmbeddings(model=embedding_model, **embedding_kwargs)
+            self.embedding_model = SentenceTransformerEmbeddings(
+                model=embedding_model, **embedding_kwargs
+            )
         else:
             raise ValueError(f"{embedding_model} is not a valid embedding model")
 

@@ -161,7 +161,9 @@ async def overlap_refine(
 
         timer.start("refinery")
         refinery = OverlapRefinery(
-            chunk_overlap=int(request.context_size) if isinstance(request.context_size, int) else 0,
+            chunk_overlap=int(request.context_size)
+            if isinstance(request.context_size, int)
+            else 0,
             overlap_context_size=request.context_size,
             overlap_mode=request.mode,
             overlap_method=request.method,
