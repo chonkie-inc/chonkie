@@ -83,31 +83,22 @@ class OverlapRefinery:
         overlap_rules = rules if rules is not None else overlap_rules
         overlap_tokenizer = tokenizer if tokenizer is not None else overlap_tokenizer
 
-        # Backward compat: context_size=int > 0 also enables chunk_overlap
+        # Backward compat: context_size > 0 (int or float) also enables chunk_overlap
         # If the old API is used (context_size=N where N > 0), set chunk_overlap to enable overlap
         if (
             chunk_overlap == 0
-            and isinstance(overlap_context_size, int)
-            and overlap_context_size > 0
-        ):
-            chunk_overlap = overlap_context_size
-        # Also handle float context_size with old API (mode/method specified)
-        if (
-            chunk_overlap == 0
             and isinstance(overlap_context_size, (int, float))
             and overlap_context_size > 0
         ):
-            # If mode/method are specified via old API (not None defaults), enable overlap
-            if mode is not None or method is not None:
+            # For integer context_size, use it directly; for float or when other params set, use 1
+            if isinstance(overlap_context_size, int):
+                chunk_overlap = overlap_context_size
+            elif (
+                mode is not None or method is not None or inplace is not None or merge is not None
+            ):
                 chunk_overlap = 1
-        # Enable overlap when any overlap-specific param is explicitly passed
-        # (inplace=False, merge=False, etc.) with old API style
-        if (
-            chunk_overlap == 0
-            and isinstance(overlap_context_size, (int, float))
-            and overlap_context_size > 0
-        ):
-            if inplace is not None or merge is not None:
+            else:
+                # Enable overlap for any positive numeric context_size
                 chunk_overlap = 1
 
         self.chunk_overlap = chunk_overlap
@@ -400,8 +391,7 @@ class OverlapRefinery:
 
             if self._overlap_merge:
                 chunk.text = context + chunk.text
-                if self._overlap_tokenizer_obj or getattr(self, "tokenizer", None):
-                    chunk.token_count += self._count_overlap_tokens_cached(context)
+                chunk.token_count += self._count_overlap_tokens_cached(context)
 
         return chunks
 
@@ -420,8 +410,7 @@ class OverlapRefinery:
 
             if self._overlap_merge:
                 chunk.text = chunk.text + context
-                if self._overlap_tokenizer_obj or getattr(self, "tokenizer", None):
-                    chunk.token_count += self._count_overlap_tokens_cached(context)
+                chunk.token_count += self._count_overlap_tokens_cached(context)
 
         return chunks
 
@@ -517,7 +506,7 @@ class _OverlapRefineryRefinery(OverlapRefinery):
         merge = kwargs.pop("merge", kwargs.pop("overlap_merge", True))
         inplace = kwargs.pop("inplace", kwargs.pop("overlap_inplace", True))
         rules = kwargs.pop("rules", kwargs.pop("overlap_rules", RecursiveRules()))
-        tokenizer = kwargs.pop("tokenizer", None)
+        tokenizer = kwargs.pop("overlap_tokenizer", kwargs.pop("tokenizer", None))
 
         OverlapRefinery.__init__(
             self,

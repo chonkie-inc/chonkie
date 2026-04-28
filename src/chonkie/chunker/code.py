@@ -295,24 +295,28 @@ class CodeChunker(BaseChunker):
                     continue
                 # Set language for this code block
                 orig_language = self.language
-                if code_block.language:
-                    self.language = code_block.language
-                    from tree_sitter_language_pack import SupportedLanguage, get_parser
+                orig_parser = self.parser
+                try:
+                    if code_block.language:
+                        self.language = code_block.language
+                        from tree_sitter_language_pack import SupportedLanguage, get_parser
 
-                    self.parser = get_parser(cast(SupportedLanguage, code_block.language))
+                        self.parser = get_parser(cast(SupportedLanguage, code_block.language))
 
-                block_chunks = self.chunk(code_block.content)
-                # Offset indices by the code block's position in the document
-                for c in block_chunks:
-                    code_chunks.append(
-                        Chunk(
-                            text=c.text,
-                            start_index=c.start_index + code_block.start_index,
-                            end_index=c.end_index + code_block.start_index,
-                            token_count=c.token_count,
+                    block_chunks = self.chunk(code_block.content)
+                    # Offset indices by the code block's position in the document
+                    for c in block_chunks:
+                        code_chunks.append(
+                            Chunk(
+                                text=c.text,
+                                start_index=c.start_index + code_block.start_index,
+                                end_index=c.end_index + code_block.start_index,
+                                token_count=c.token_count,
+                            )
                         )
-                    )
-                self.language = orig_language
+                finally:
+                    self.language = orig_language
+                    self.parser = orig_parser
             document.chunks = sorted(existing_chunks + code_chunks, key=lambda c: c.start_index)
         elif document.chunks:
             chunk_results = [self.chunk(c.text) for c in document.chunks]
@@ -332,8 +336,38 @@ class CodeChunker(BaseChunker):
             The document with chunks populated.
 
         """
-        # If the document has chunks already, then we need to re-chunk the content
-        if document.chunks:
+        if isinstance(document, MarkdownDocument) and document.code:
+            existing_chunks = list(document.chunks) if document.chunks else []
+            code_chunks: list[Chunk] = []
+            for code_block in document.code:
+                if not code_block.content or not code_block.content.strip():
+                    continue
+                # Set language for this code block
+                orig_language = self.language
+                orig_parser = self.parser
+                try:
+                    if code_block.language:
+                        self.language = code_block.language
+                        from tree_sitter_language_pack import SupportedLanguage, get_parser
+
+                        self.parser = get_parser(cast(SupportedLanguage, code_block.language))
+
+                    block_chunks = await self.achunk(code_block.content)
+                    # Offset indices by the code block's position in the document
+                    for c in block_chunks:
+                        code_chunks.append(
+                            Chunk(
+                                text=c.text,
+                                start_index=c.start_index + code_block.start_index,
+                                end_index=c.end_index + code_block.start_index,
+                                token_count=c.token_count,
+                            )
+                        )
+                finally:
+                    self.language = orig_language
+                    self.parser = orig_parser
+            document.chunks = sorted(existing_chunks + code_chunks, key=lambda c: c.start_index)
+        elif document.chunks:
             tasks = [self.achunk(c.text) for c in document.chunks]
             chunk_results = await asyncio.gather(*tasks)
             document.chunks = self._merge_new_chunks(document.chunks, chunk_results)
