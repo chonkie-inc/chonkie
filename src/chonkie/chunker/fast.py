@@ -6,6 +6,7 @@ import chonkie_core
 
 from chonkie.chunker.base import BaseChunker
 from chonkie.pipeline import chunker
+from chonkie.refinery.overlap import OverlapRefinery
 from chonkie.types import Chunk
 
 
@@ -20,7 +21,8 @@ class FastChunker(BaseChunker):
 
     Args:
         chunk_size: Target chunk size in bytes (default: 4096)
-        delimiters: Delimiter characters for splitting (default: "\n.?")
+        chunk_overlap: Number of tokens to overlap between chunks (default: 0)
+        delimiters: Delimiter characters for splitting (default: "\\n.?")
         pattern: Multi-byte pattern to split on (overrides delimiters)
         prefix: Put delimiter at start of next chunk (default: False)
         consecutive: Split at START of consecutive runs (default: False)
@@ -37,19 +39,28 @@ class FastChunker(BaseChunker):
     def __init__(
         self,
         chunk_size: int = 4096,
+        chunk_overlap: int = 0,
         delimiters: str = "\n.?",
         pattern: Optional[str] = None,
         prefix: bool = False,
         consecutive: bool = False,
         forward_fallback: bool = False,
+        **kwargs,
     ):
         """Initialize the FastChunker."""
-        # Don't call super().__init__() - we don't need a tokenizer
-        # But set required attributes for BaseChunker compatibility
+        # Initialize the overlap mixin
+        OverlapRefinery.__init__(
+            self,
+            chunk_overlap=chunk_overlap,
+            **kwargs,
+        )
+
+        # Set required attributes for BaseChunker compatibility
         self._tokenizer = None
         self._use_multiprocessing = False
 
         self.chunk_size = chunk_size
+        self.chunk_overlap = chunk_overlap
         self.delimiters = delimiters
         self.pattern = pattern
         self.prefix = prefix
@@ -59,9 +70,10 @@ class FastChunker(BaseChunker):
     def __repr__(self) -> str:
         """Return a string representation of the chunker."""
         return (
-            f"FastChunker(chunk_size={self.chunk_size}, delimiters={self.delimiters!r}, "
-            f"pattern={self.pattern!r}, prefix={self.prefix}, "
-            f"consecutive={self.consecutive}, forward_fallback={self.forward_fallback})"
+            f"FastChunker(chunk_size={self.chunk_size}, chunk_overlap={self.chunk_overlap}, "
+            f"delimiters={self.delimiters!r}, pattern={self.pattern!r}, "
+            f"prefix={self.prefix}, consecutive={self.consecutive}, "
+            f"forward_fallback={self.forward_fallback})"
         )
 
     def chunk(self, text: str) -> List[Chunk]:

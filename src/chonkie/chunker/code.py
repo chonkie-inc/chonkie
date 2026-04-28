@@ -4,20 +4,19 @@ This module provides a CodeChunker class for splitting code into chunks of a spe
 
 """
 
-from bisect import bisect_left
-from itertools import accumulate
+import asyncio
 from typing import TYPE_CHECKING, Any, Literal, cast, get_args
 
 from chonkie.chunker.base import BaseChunker
 from chonkie.logger import get_logger
 from chonkie.pipeline import chunker
 from chonkie.tokenizer import TokenizerProtocol
-from chonkie.types import Chunk, Document, MarkdownDocument
+from chonkie.types import Chunk, Document
 
 logger = get_logger(__name__)
 
 if TYPE_CHECKING:
-    from tree_sitter import Node, Tree
+    from tree_sitter import Node
 
 
 @chunker("code")
@@ -27,7 +26,9 @@ class CodeChunker(BaseChunker):
     Args:
         tokenizer: The tokenizer to use.
         chunk_size: The size of the chunks to create.
-        language: The language of the code to parse. Accepts any of the languages supported by tree-sitter-language-pack.
+        chunk_overlap: Number of tokens to overlap between chunks.
+        language: The language of the code to parse. Accepts any of the languages
+            supported by tree-sitter-language-pack.
         include_nodes: Whether to include the nodes in the returned chunks.
 
     """
@@ -36,16 +37,21 @@ class CodeChunker(BaseChunker):
         self,
         tokenizer: str | TokenizerProtocol = "character",
         chunk_size: int = 2048,
+        chunk_overlap: int = 0,
         language: Literal["auto"] | str = "auto",
         include_nodes: bool = False,
+        **kwargs,
     ) -> None:
         """Initialize a CodeChunker object.
 
         Args:
             tokenizer: The tokenizer to use.
             chunk_size: The size of the chunks to create.
-            language: The language of the code to parse. Accepts any of the languages supported by tree-sitter-language-pack.
+            chunk_overlap: Number of tokens to overlap between chunks.
+            language: The language of the code to parse. Accepts any of the languages
+                supported by tree-sitter-language-pack.
             include_nodes: Whether to include the nodes in the returned chunks.
+            **kwargs: Additional overlap parameters passed to BaseChunker
 
         Raises:
             ImportError: If tree-sitter and tree-sitter-language-pack are not installed.
@@ -53,23 +59,24 @@ class CodeChunker(BaseChunker):
 
         """
         # Initialize the base chunker
-        super().__init__(tokenizer=tokenizer)
+        super().__init__(tokenizer=tokenizer, chunk_overlap=chunk_overlap, **kwargs)
 
         # Initialize chunker-specific values
         self.chunk_size = chunk_size
+        self.chunk_overlap = chunk_overlap
         self.include_nodes = include_nodes
+        self.language = language
 
         # NOTE: Magika is a language detection library made by Google, that uses a
         #       deep-learning model to detect the language of the code.
 
         # Initialize the Magika instance if the language is auto
-        self.language = language
         if language == "auto":
-            # Set a warning to the user that the language is auto and this might
-            # effect the performance of the chunker.
             logger.warning(
-                "The language is set to `auto`. This would adversely affect the performance of the chunker. "
-                "Consider setting the `language` parameter to a specific language to improve performance.",
+                "The language is set to `auto`. This would adversely affect the "
+                "performance of the chunker. "
+                "Consider setting the `language` parameter to a specific language "
+                "to improve performance.",
             )
             from magika import Magika
 
@@ -97,342 +104,232 @@ class CodeChunker(BaseChunker):
         return response.output.label
 
     def _merge_node_groups(self, node_groups: list[list["Node"]]) -> list["Node"]:
-        """Merge the node groups together."""
-        merged_node_group = []
+        """Merge node groups by joining sibling nodes."""
+        merged = []
         for group in node_groups:
-            merged_node_group.extend(group)
-        return merged_node_group
-
-    def _group_child_nodes(self, node: "Node") -> tuple[list[list["Node"]], list[int]]:
-        """Group the nodes together based on their token_counts.
-
-        For leaf nodes (no children), returns the node itself as a single group.
-        """
-        # Base case: leaf nodes return themselves as a single group
-        if len(node.children) == 0:
-            node_text = node.text.decode("utf-8", errors="ignore") if node.text else ""
-            node_token_count = self.tokenizer.count_tokens(node_text)
-            return ([[node]], [node_token_count])
-
-        # Initialize the node groups and group token counts
-        node_groups = []
-        group_token_counts = []
-
-        # Have a current group and a current token count to keep track
-        current_token_count = 0
-        current_node_group: list["Node"] = []
-        for child in node.children:
-            child_text = child.text.decode("utf-8", errors="ignore") if child.text else ""
-            token_count: int = self.tokenizer.count_tokens(child_text)
-            # If the child itself is larger than chunk size then we need to split and group it
-            if token_count > self.chunk_size:
-                # Add whatever was there already
-                if current_node_group:
-                    node_groups.append(current_node_group)
-                    group_token_counts.append(current_token_count)
-
-                    current_node_group = []
-                    current_token_count = 0
-
-                # Recursively, add the child groups
-                child_groups, child_token_counts = self._group_child_nodes(child)
-                node_groups.extend(child_groups)
-                group_token_counts.extend(child_token_counts)
-
-                # Reinit current stuff
-                current_node_group = []
-                current_token_count = 0
-
-            elif current_token_count + token_count > self.chunk_size:
-                # Add the current_node_group and token_count to the total
-                node_groups.append(current_node_group)
-                group_token_counts.append(current_token_count)
-
-                # Re-init the current_node_group and token_count
-                current_node_group = [child]
-                current_token_count = token_count
-            else:
-                # Just add the child to the current_node_group
-                current_node_group.append(child)
-                current_token_count += token_count
-
-        # Finally, if there's something still in the current_node_group,
-        # Add it as the last group
-        if current_node_group:
-            node_groups.append(current_node_group)
-            group_token_counts.append(current_token_count)
-
-        cumulative_group_token_counts = list(accumulate([0] + group_token_counts))
-
-        merged_node_groups: list[list["Node"]] = []  # Explicit type hint
-        merged_token_counts: list[int] = []  # Explicit type hint
-        pos = 0
-        while pos < len(node_groups):
-            # Calculate the target cumulative count based on the start of the current position
-            start_cumulative_count = cumulative_group_token_counts[pos]
-            # We want to find the end point 'index' such that the sum from pos to index-1 is <= chunk_size
-            # Or, cumulative[index] - cumulative[pos] should be <= chunk_size ideally,
-            # but bisect helps find the boundary where it *exceeds* it.
-            required_cumulative_target = start_cumulative_count + self.chunk_size
-
-            # Find the first index where the cumulative sum meets or exceeds the target
-            # Search only in the relevant part of the list: from pos + 1 onwards
-            # lo=pos ensures we handle the case where the group at 'pos' itself exceeds chunk_size
-            index = (
-                bisect_left(cumulative_group_token_counts, required_cumulative_target, lo=pos) - 1
-            )
-
-            # If the group at pos itself meets/exceeds the target, bisect_left returns pos.
-            # If bisect_left returns pos, it means the single group node_groups[pos]
-            # should form its own merged group. We need index to be at least pos + 1
-            # to form a valid slice node_groups[pos:index].
-            if index == pos:
-                # Handle the case where the single group at pos is >= chunk_size
-                # or if it's the very last group.
-                index = pos + 1  # Take at least this one group
-
-            # Clamp index to be within the bounds of node_groups slicing
-            index = min(index, len(node_groups))
-
-            # Ensure we always make progress
-            if index <= pos:
-                # This might happen if cumulative_group_token_counts has issues or
-                # if bisect_left returns something unexpected. Force progress.
-                index = pos + 1
-
-            # Slice the original node_groups and merge them
-            groups_to_merge = node_groups[pos:index]
-            if not groups_to_merge:
-                # Should not happen if index is always > pos, but safety check
-                break
-            merged_node_groups.append(self._merge_node_groups(groups_to_merge))
-
-            # Calculate the token count for this merged group
-            actual_merged_count = (
-                cumulative_group_token_counts[index] - cumulative_group_token_counts[pos]
-            )
-            merged_token_counts.append(actual_merged_count)
-
-            # Move the position marker to the start of the next potential merged group
-            pos = index
-
-        return (merged_node_groups, merged_token_counts)
-
-    def _get_texts_from_node_groups(
-        self,
-        node_groups: list[list["Node"]],
-        original_text_bytes: bytes,
-    ) -> list[str]:
-        """Reconstructs the text for each node group using original byte offsets.
-
-        This method ensures that whitespace and formatting between nodes
-        within a group are preserved correctly.
-
-        Args:
-            node_groups: A list where each element is a list of Nodes
-                         representing a chunk.
-            original_text_bytes: The original source code encoded as bytes.
-
-        Returns:
-            A list of strings, where each string is the reconstructed text
-            of the corresponding node group.
-
-        """
-        chunk_texts: list[str] = []
-        if not original_text_bytes:
-            return []  # Return empty list if original text was empty
-
-        for i, group in enumerate(node_groups):
-            if not group:
-                # Skip if an empty group was somehow generated
-                continue
-
-            # Determine the start byte of the first node in the group
-            start_node = group[0]
-            start_byte = start_node.start_byte
-
-            # Determine the end byte of the last node in the group
-            end_node = group[-1]
-            end_byte = end_node.end_byte
-
-            # Basic validation for byte offsets
-            if start_byte > end_byte:
-                logger.warning(
-                    f"Skipping group due to invalid byte order. Start: {start_byte}, End: {end_byte}",
+            merged_nodes = []
+            for node in group:
+                # Find all siblings
+                siblings = [node]
+                sibling = node.next_sibling()
+                while sibling:
+                    siblings.append(sibling)
+                    sibling = sibling.next_sibling()
+                # Join the merged text
+                merged_text = "\n".join(
+                    [s.text.decode("utf-8") for s in siblings]
                 )
-                continue
-            if start_byte < 0 or end_byte > len(original_text_bytes):
-                logger.warning(
-                    f"Skipping group due to out-of-bounds byte offsets. Start: {start_byte}, End: {end_byte}, Text Length: {len(original_text_bytes)}",
-                )
-                continue
+                # Create a new node with the merged text
+                from tree_sitter import Node
 
-            # Add the gap bytes if this is not the last node_group
-            if i < len(node_groups) - 1:
-                end_byte = node_groups[i + 1][0].start_byte
+                merged_nodes.append(Node(node.tree, node.node))
+                merged.append(merged_text)
+        return merged_nodes
 
-            # Extract the slice from the original bytes
-            chunk_bytes = original_text_bytes[start_byte:end_byte]
-
-            # Decode the bytes into a string
-            try:
-                text = chunk_bytes.decode("utf-8", errors="ignore")  # Or 'replace'
-                chunk_texts.append(text)
-            except Exception as e:
-                logger.warning(
-                    f"Error decoding bytes for chunk ({start_byte}-{end_byte}): {e}",
-                    exc_info=True,
-                )
-                # Append an empty string or placeholder if decoding fails
-                chunk_texts.append("")
-
-        # Post-processing to add any missing bytes between the node_groups and the original_text_bytes
-        # If the starting point of the first node group doesn't start with 0, add the initial bytes
-        if node_groups[0][0].start_byte != 0:
-            chunk_texts[0] = (
-                original_text_bytes[: node_groups[0][0].start_byte].decode(
-                    "utf-8",
-                    errors="ignore",
-                )
-                + chunk_texts[0]
-            )
-        # If the ending point of the last node group doesn't match with last point of the original_text_bytes, add the remaining bytes
-        if node_groups[-1][-1].end_byte != len(original_text_bytes):
-            chunk_texts[-1] = chunk_texts[-1] + original_text_bytes[
-                node_groups[-1][-1].end_byte :
-            ].decode("utf-8", errors="ignore")
-
-        return chunk_texts
-
-    def _create_chunks(
-        self,
-        texts: list[str],
-        token_counts: list[int],
-        node_groups: list[list["Node"]],
-    ) -> list[Chunk]:
-        """Create Code Chunks."""
+    def _create_chunks(self, code_text: str, nodes: list["Node"]) -> list[Chunk]:
+        """Create chunks from code text and nodes."""
         chunks = []
-        current_index = 0
-        for i in range(len(texts)):
-            text = texts[i]
-            token_count = token_counts[i]
-
+        for node in nodes:
+            # Get the text of the node
+            node_text = node.text.decode("utf-8") if hasattr(node, "text") else str(node)
+            # Get start and end indices
+            start_index = node.symbols["start_point"]
+            end_index = node.symbols["end_point"]
+            # Create the chunk
             chunks.append(
                 Chunk(
-                    text=text,
-                    start_index=current_index,
-                    end_index=current_index + len(text),
-                    token_count=token_count,
-                ),
+                    text=node_text,
+                    start_index=start_index,
+                    end_index=end_index,
+                    token_count=self.tokenizer.count_tokens(node_text),
+                )
             )
-            current_index += len(text)
         return chunks
 
     def chunk(self, text: str) -> list[Chunk]:
-        """Recursively chunks the code based on context from tree-sitter."""
-        if not text.strip():  # Handle empty or whitespace-only input
-            logger.debug("Empty or whitespace-only code provided")
-            return []
+        """Split code text into chunks based on code structure.
 
-        logger.debug(f"Starting code chunking for text of length {len(text)}")
+        Args:
+            text: Code text to be chunked.
 
-        original_text_bytes = text.encode("utf-8")  # Store bytes
+        Returns:
+            List of Chunk objects containing the chunked code and metadata.
 
-        # At this point, if the language is auto, we need to detect the language
-        # and initialize the parser
+        Raises:
+            ImportError: If tree-sitter and tree-sitter-language-pack are not installed.
+
+        """
+        logger.debug(f"Chunking code of length {len(text)}")
+
+        # Detect language if auto
         if self.language == "auto":
-            language = self._detect_language(original_text_bytes)
-            logger.info(f"Auto-detected code language: {language}")
-            from tree_sitter_language_pack import get_parser
+            from magika import Magika
 
-            self.parser = get_parser(language)
-        else:
-            logger.debug(f"Using configured language: {self.language}")
-
-        try:
-            assert self.parser is not None, "Parser is not initialized."
-            # Create the parsing tree for the current code
-            tree: Tree = self.parser.parse(original_text_bytes)
-            root_node: Node = tree.root_node
-
-            # Get the node_groups
-            node_groups, token_counts = self._group_child_nodes(root_node)
-            texts: list[str] = self._get_texts_from_node_groups(node_groups, original_text_bytes)
-        finally:
-            # Clean up the tree and root_node if they are not needed
-            if not self.include_nodes:
-                del tree, root_node
-                node_groups = []
-
-        chunks = self._create_chunks(texts, token_counts, node_groups)
-        logger.info(f"Created {len(chunks)} code chunks from parsed syntax tree")
-        return chunks
-
-    def _chunk_code_block(self, content: str, language: str | None) -> list[Chunk]:
-        """Chunk a single code block, using the block's language hint when available."""
-        if language and self.language == "auto":
+            self.magika = Magika()
+            lang = self._detect_language(text.encode("utf-8"))
             from tree_sitter_language_pack import SupportedLanguage, get_parser
 
-            try:
-                parser = get_parser(cast(SupportedLanguage, language))
-                original_parser = self.parser
-                original_language = self.language
-                self.parser = parser
-                self.language = language
-                try:
-                    return self.chunk(content)
-                finally:
-                    self.parser = original_parser
-                    self.language = original_language
-            except Exception as e:
-                logger.debug(f"Language hint '{language}' failed, falling back to auto: {e}")
-        return self.chunk(content)
+            self.parser = get_parser(cast(SupportedLanguage, lang))
+            self.language = lang
 
-    def chunk_document(self, document: Document) -> Document:
-        """Chunk a document, with special handling for MarkdownDocument code blocks."""
-        if isinstance(document, MarkdownDocument):
-            if document.code:
-                logger.debug(f"Processing MarkdownDocument with {len(document.code)} code blocks")
-                for code_block in document.code:
-                    if not code_block.content.strip():
-                        continue
+        # Parse the code
+        tree = self.parser.parse(bytes(text.encode("utf-8")))
+        root_node = tree.root_node
+        # Get all nodes to chunk
+        nodes = list(root_node.children)
+        # Merge nodes if needed
+        merged_nodes = self._merge_node_groups(nodes)
+        # Create chunks
+        chunks = self._create_chunks(text, merged_nodes)
+        logger.info(f"Created {len(chunks)} chunks from code")
+        return chunks
 
-                    # Fenced block indices include the ``` delimiters; content starts after first newline.
-                    fenced_block = document.content[code_block.start_index : code_block.end_index]
-                    first_newline = fenced_block.find("\n")
-                    content_start = (
-                        code_block.start_index + first_newline + 1
-                        if first_newline != -1
-                        else code_block.start_index
-                    )
+    def chunk_batch(
+        self, texts: list[str], batch_size: int = 1, show_progress_bar: bool = True
+    ) -> list[list[Chunk]]:
+        """Split a batch of code texts into their respective chunks.
 
-                    try:
-                        chunks = self._chunk_code_block(code_block.content, code_block.language)
-                    except Exception as e:
-                        logger.warning(
-                            f"CodeChunker failed for code block at index {code_block.start_index}: {e}"
-                        )
-                        chunks = [
-                            Chunk(
-                                text=code_block.content,
-                                start_index=0,
-                                end_index=len(code_block.content),
-                                token_count=self.tokenizer.count_tokens(code_block.content),
-                            )
-                        ]
-                    for chunk in chunks:
-                        chunk.start_index = content_start + chunk.start_index
-                        chunk.end_index = content_start + chunk.end_index
-                    document.chunks.extend(chunks)
-                document.chunks.sort(key=lambda x: x.start_index)
-            BaseChunker._propagate_document_metadata(document)
-            return document
-        return super().chunk_document(document)
+        Args:
+            texts: List of code texts to be chunked.
+            batch_size: Number of texts to process in a single batch.
+            show_progress_bar: Whether to show a progress bar.
+
+        Returns:
+            List of lists of Chunk objects containing the chunked code and metadata.
+
+        """
+        from tqdm import trange
+
+        chunks: list[list[Chunk]] = []
+        for i in trange(
+            0,
+            len(texts),
+            batch_size,
+            desc="🦛",
+            disable=not show_progress_bar,
+            unit="batch",
+            bar_format=(
+                "{desc} ch{bar:20}nk "
+                "{percentage:3.0f}% • {n_fmt}/{total_fmt} batches chunked "
+                "[{elapsed}<{remaining}, {rate_fmt}] 🌱"
+            ),
+            ascii=" o",
+        ):
+            batch_texts = texts[i : min(i + batch_size, len(texts))]
+            for text in batch_texts:
+                chunks.append(self.chunk(text))
+        return chunks
+
+    def __call__(
+        self,
+        text: str | list[str],
+        batch_size: int = 1,
+        show_progress_bar: bool = True,
+    ) -> list[Chunk] | list[list[Chunk]]:
+        """Make the CodeChunker callable directly.
+
+        Args:
+            text: Code text or list of code texts to be chunked.
+            batch_size: Number of texts to process in a single batch.
+            show_progress_bar: Whether to show a progress bar (for batch chunking).
+
+        Returns:
+            List of Chunk objects or list of lists of Chunk.
+
+        """
+        if isinstance(text, str):
+            return self.chunk(text)
+        elif isinstance(text, list) and isinstance(text[0], str):
+            return self.chunk_batch(text, batch_size, show_progress_bar)
+        else:
+            raise ValueError(
+                "Invalid input type. Expected a string or a list of strings."
+            )
 
     def __repr__(self) -> str:
-        """Return the string representation of the CodeChunker."""
+        """Return a string representation of the CodeChunker."""
         return (
-            f"CodeChunker(tokenizer={self.tokenizer},"
-            f"chunk_size={self.chunk_size},"
-            f"language={self.language})"
+            f"CodeChunker(tokenizer={self.tokenizer}, "
+            f"chunk_size={self.chunk_size}, "
+            f"chunk_overlap={self.chunk_overlap}, "
+            f"language={self.language}, "
+            f"include_nodes={self.include_nodes})"
         )
+
+    def chunk_document(self, document: Document) -> Document:
+        """Chunk a document.
+
+        Args:
+            document: The document to chunk.
+
+        Returns:
+            The document with chunks populated.
+
+        """
+        # If the document has chunks already, then we need to re-chunk the content
+        if document.chunks:
+            chunk_results = [self.chunk(c.text) for c in document.chunks]
+            document.chunks = self._merge_new_chunks(document.chunks, chunk_results)
+        else:
+            document.chunks = self.chunk(document.content)
+        self._propagate_document_metadata(document)
+        return document
+
+    async def achunk_document(self, document: Document) -> Document:
+        """Chunk a document asynchronously.
+
+        Args:
+            document: The document to chunk.
+
+        Returns:
+            The document with chunks populated.
+
+        """
+        # If the document has chunks already, then we need to re-chunk the content
+        if document.chunks:
+            tasks = [self.achunk(c.text) for c in document.chunks]
+            chunk_results = await asyncio.gather(*tasks)
+            document.chunks = self._merge_new_chunks(document.chunks, chunk_results)
+        else:
+            document.chunks = await self.achunk(document.content)
+        self._propagate_document_metadata(document)
+        return document
+
+    @staticmethod
+    def _merge_new_chunks(
+        original_chunks: list[Chunk], new_chunk_batches: list[list[Chunk]]
+    ) -> list[Chunk]:
+        """Merge new chunks batches into a single list, shifting indices.
+
+        Args:
+            original_chunks: The original chunks from the document.
+            new_chunk_batches: The new batches of chunks corresponding to each
+                original chunk.
+
+        Returns:
+            list[Chunk]: The merged and shifted chunks.
+
+        """
+        from dataclasses import replace
+
+        return [
+            replace(
+                c,
+                start_index=c.start_index + old_chunk.start_index,
+                end_index=c.end_index + old_chunk.start_index,
+            )
+            for old_chunk, new_chunks in zip(original_chunks, new_chunk_batches)
+            for c in new_chunks
+        ]
+
+    async def achunk(self, text: str) -> list[Chunk]:
+        """Chunk the given text asynchronously.
+
+        Args:
+            text (str): The text to chunk.
+
+        Returns:
+            list[Chunk]: A list of Chunks.
+
+        """
+        return await asyncio.to_thread(self.chunk, text)

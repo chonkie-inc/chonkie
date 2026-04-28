@@ -20,6 +20,8 @@ class TableChunker(BaseChunker):
         self,
         tokenizer: Union[str, TokenizerProtocol] = "row",
         chunk_size: int = 3,
+        chunk_overlap: int = 0,
+        **kwargs,
     ) -> None:
         """Initialize the TableChunker with configuration parameters.
 
@@ -30,9 +32,11 @@ class TableChunker(BaseChunker):
             chunk_size: The maximum size of each chunk. When using "row" tokenizer,
                 this is the maximum number of data rows per chunk. For other
                 tokenizers, this is the maximum number of tokens.
+            chunk_overlap: Number of tokens to overlap between chunks.
+            **kwargs: Additional overlap parameters passed to BaseChunker
 
         """
-        super().__init__(tokenizer)
+        super().__init__(tokenizer=tokenizer, chunk_overlap=chunk_overlap, **kwargs)
 
         if chunk_size <= 0:
             raise ValueError("Chunk size must be greater than 0.")

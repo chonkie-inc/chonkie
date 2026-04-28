@@ -53,7 +53,9 @@ class NeuralChunker(BaseChunker):
         tokenizer: Optional[Union[str, Any]] = None,
         device_map: str = "auto",
         min_characters_per_chunk: int = 10,
+        chunk_overlap: int = 0,
         stride: Optional[int] = None,
+        **kwargs,
     ) -> None:
         """Initialize the NeuralChunker object.
 
@@ -62,7 +64,9 @@ class NeuralChunker(BaseChunker):
           tokenizer: The tokenizer to use for the chunker.
           device_map: The device to use for the chunker.
           min_characters_per_chunk: The minimum number of characters per chunk.
+          chunk_overlap: Number of tokens to overlap between chunks.
           stride: The stride to use for the chunker.
+          **kwargs: Additional overlap parameters passed to BaseChunker
 
         """
         try:
@@ -120,7 +124,7 @@ class NeuralChunker(BaseChunker):
                 ) from e
 
         # Initialize the Parent class with the tokenizer
-        super().__init__(cast(TokenizerProtocol, tokenizer))
+        super().__init__(tokenizer=cast(TokenizerProtocol, tokenizer), chunk_overlap=chunk_overlap, **kwargs)
 
         if model_id is not None:
             try:

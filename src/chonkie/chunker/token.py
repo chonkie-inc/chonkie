@@ -33,6 +33,7 @@ class TokenChunker(BaseChunker):
         tokenizer: Union[str, TokenizerProtocol] = "character",
         chunk_size: int = 2048,
         chunk_overlap: Union[int, float] = 0,
+        **kwargs,
     ) -> None:
         """Initialize the TokenChunker with configuration parameters.
 
@@ -40,12 +41,15 @@ class TokenChunker(BaseChunker):
             tokenizer: The tokenizer instance to use for encoding/decoding
             chunk_size: Maximum number of tokens per chunk
             chunk_overlap: Number of tokens to overlap between chunks
+            **kwargs: Additional overlap parameters passed to BaseChunker
+                (overlap_context_size, overlap_mode, overlap_method,
+                overlap_merge, overlap_inplace, overlap_rules, overlap_tokenizer)
 
         Raises:
             ValueError: If chunk_size <= 0 or chunk_overlap >= chunk_size
 
         """
-        super().__init__(tokenizer)
+        super().__init__(tokenizer, chunk_overlap=chunk_overlap, **kwargs)
         if chunk_size <= 0:
             raise ValueError("chunk_size must be positive")
         if isinstance(chunk_overlap, int) and chunk_overlap >= chunk_size:

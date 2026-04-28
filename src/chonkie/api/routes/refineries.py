@@ -161,12 +161,13 @@ async def overlap_refine(
 
         timer.start("refinery")
         refinery = OverlapRefinery(
-            tokenizer=request.tokenizer,
-            context_size=request.context_size,
-            mode=request.mode,
-            method=request.method,
-            merge=request.merge,
-            inplace=False,  # never mutate the input objects
+            chunk_overlap=int(request.context_size) if isinstance(request.context_size, int) else 0,
+            overlap_context_size=request.context_size,
+            overlap_mode=request.mode,
+            overlap_method=request.method,
+            overlap_merge=request.merge,
+            overlap_inplace=False,  # never mutate the input objects
+            overlap_tokenizer=request.tokenizer,
         )
         refined = refinery.refine(chunk_objects)
         log.info(

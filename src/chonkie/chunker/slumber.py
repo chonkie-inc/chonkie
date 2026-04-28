@@ -67,12 +67,14 @@ class SlumberChunker(BaseChunker):
         genie: Optional[BaseGenie] = None,
         tokenizer: Union[str, TokenizerProtocol] = "character",
         chunk_size: int = 2048,
+        chunk_overlap: int = 0,
         rules: Optional[RecursiveRules] = None,
         candidate_size: int = 128,
         min_characters_per_chunk: int = 24,
         extract_mode: Literal["text", "json", "auto"] = "auto",
         max_retries: int = 3,
         verbose: bool = True,
+        **kwargs,
     ):
         """Initialize the SlumberChunker.
 
@@ -80,6 +82,7 @@ class SlumberChunker(BaseChunker):
             genie (Optional[BaseGenie]): The genie to use.
             tokenizer: The tokenizer to use.
             chunk_size (int): The size of the chunks to create.
+            chunk_overlap (int): Number of tokens to overlap between chunks.
             rules (Optional[RecursiveRules]): The rules to use to split the candidate chunks.
             candidate_size (int): The size of the candidate splits that the chunker will consider.
             min_characters_per_chunk (int): The minimum number of characters per chunk.
@@ -89,10 +92,11 @@ class SlumberChunker(BaseChunker):
                 - "auto": Auto-detect based on genie capabilities (default)
             max_retries (int): Maximum retries for text mode parsing failures.
             verbose (bool): Whether to print verbose output.
+            **kwargs: Additional overlap parameters passed to BaseChunker
 
         """
         # Since the BaseChunker sets and defines the tokenizer for us, we don't have to worry.
-        super().__init__(tokenizer)
+        super().__init__(tokenizer, chunk_overlap=chunk_overlap, **kwargs)
 
         # If the genie is not provided, use the default GeminiGenie
         if genie is None:

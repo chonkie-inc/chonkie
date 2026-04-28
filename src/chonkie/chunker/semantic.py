@@ -36,6 +36,7 @@ class SemanticChunker(BaseChunker):
         embedding_model: Union[str, BaseEmbeddings] = "minishlab/potion-base-32M",
         threshold: float = 0.8,
         chunk_size: int = 2048,
+        chunk_overlap: int = 0,
         similarity_window: int = 3,
         min_sentences_per_chunk: int = 1,
         min_characters_per_sentence: int = 24,
@@ -53,7 +54,9 @@ class SemanticChunker(BaseChunker):
             embedding_model: Name of the sentence-transformers model to load
             threshold: Threshold for semantic similarity (0-1)
             chunk_size: Maximum tokens allowed per chunk
-            similarity_window: Number of sentences to consider for similarity threshold calculation
+            chunk_overlap: Number of tokens to overlap between chunks
+            similarity_window: Number of sentences to consider for similarity
+                threshold calculation
             min_sentences_per_chunk: Minimum number of sentences per chunk
             min_characters_per_sentence: Minimum number of characters per sentence
             delim: Delimiter to use for sentence splitting
@@ -93,7 +96,7 @@ class SemanticChunker(BaseChunker):
 
         # Initialize the tokenizer and chunker
         tokenizer = self.embedding_model.get_tokenizer()
-        super().__init__(tokenizer)
+        super().__init__(tokenizer=tokenizer, chunk_overlap=chunk_overlap, **kwargs)
 
         # Initialize the chunker parameters
         self.threshold = threshold

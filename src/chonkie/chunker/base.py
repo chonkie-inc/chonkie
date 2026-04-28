@@ -1,16 +1,22 @@
 """Base Class for All Chunkers."""
 
+from __future__ import annotations
+
 import asyncio
 from abc import ABC, abstractmethod
 from dataclasses import replace
-from typing import Optional, Sequence, Union
+from typing import TYPE_CHECKING, Literal, Optional, Sequence, Union
 
 import chonkie_core
 from tqdm import tqdm
 
 from chonkie.logger import get_logger
+from chonkie.refinery.overlap import OverlapRefinery
 from chonkie.tokenizer import AutoTokenizer, TokenizerProtocol
 from chonkie.types import Chunk, Document
+
+if TYPE_CHECKING:
+    from chonkie.types import RecursiveRules
 
 logger = get_logger(__name__)
 
@@ -64,18 +70,59 @@ def split_text_by_delimiters(
     return [s for s in splits if s]
 
 
-class BaseChunker(ABC):
-    """Base class for all chunkers."""
+class BaseChunker(OverlapRefinery, ABC):
+    """Base class for all chunkers.
 
-    def __init__(self, tokenizer: Union[str, TokenizerProtocol] = "gpt2"):
+    Inherits OverlapRefinery to provide chunk overlap capabilities.
+    Override chunk_overlap in chunker constructors to enable overlap.
+    """
+
+    def __init__(
+        self,
+        tokenizer: Union[str, TokenizerProtocol] = "gpt2",
+        chunk_overlap: int = 0,
+        overlap_context_size: Union[int, float] = 0.25,
+        overlap_mode: Literal["token", "recursive"] = "token",
+        overlap_method: Literal["suffix", "prefix"] = "suffix",
+        overlap_merge: bool = True,
+        overlap_inplace: bool = True,
+        overlap_rules: Optional[RecursiveRules] = None,
+        overlap_tokenizer: Union[str, TokenizerProtocol, None] = None,
+    ):
         """Initialize the chunker with any necessary parameters.
 
         Args:
             tokenizer: The tokenizer to use. Can be:
                 - A string identifier (e.g., "gpt2", "character", "word")
                 - An object implementing TokenizerProtocol (encode, decode, tokenize methods)
+            chunk_overlap: Number of tokens to overlap between adjacent chunks.
+                Set to 0 to disable overlap (default).
+            overlap_context_size: Size of context for overlap. Float (0-1) is a
+                fraction of chunk size; int is absolute token count.
+            overlap_mode: Mode for overlap calculation: 'token' or 'recursive'.
+            overlap_method: Method for overlap: 'suffix' (append from next) or
+                'prefix' (prepend from previous).
+            overlap_merge: Whether to merge context into chunk text.
+            overlap_inplace: Whether to modify chunks in place or copy.
+            overlap_rules: Rules for recursive overlap mode.
+            overlap_tokenizer: Separate tokenizer for overlap calculations.
+                Falls back to the chunker's tokenizer if not provided.
 
         """
+        # Initialize the mixin first (before ABC)
+        OverlapRefinery.__init__(
+            self,
+            chunk_overlap=chunk_overlap,
+            overlap_context_size=overlap_context_size,
+            overlap_mode=overlap_mode,
+            overlap_method=overlap_method,
+            overlap_merge=overlap_merge,
+            overlap_inplace=overlap_inplace,
+            overlap_rules=overlap_rules,
+            overlap_tokenizer=overlap_tokenizer,
+        )
+
+        # Initialize the tokenizer
         self._tokenizer = AutoTokenizer(tokenizer)
         self._use_multiprocessing = False
         logger.debug(
