@@ -483,10 +483,6 @@ class OverlapRefinery:
         )
 
 
-# Keep the old name as an alias for backward compatibility
-OverlapRefineryMixin = OverlapRefinery
-
-
 # Register the refinery alias for backward-compatible pipeline usage
 @refinery("overlap")
 class _OverlapRefineryRefinery(OverlapRefinery):
