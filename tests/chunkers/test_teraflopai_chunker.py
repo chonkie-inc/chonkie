@@ -46,7 +46,7 @@ def sample_segments() -> list[str]:
 def chunker_with_mock(mock_client) -> TeraflopAIChunker:
     """Create a TeraflopAIChunker with a mock client."""
     with patch.dict(sys.modules, {"teraflopai": _fake_teraflopai}):
-        chunker = TeraflopAIChunker(client=mock_client)
+        chunker = TeraflopAIChunker(client=mock_client, overlap_context_size=0)
     return chunker
 
 
