@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+import asyncio
 from functools import lru_cache
-from typing import TYPE_CHECKING, Literal, Optional, Union
+from typing import TYPE_CHECKING, Any, Literal, Optional, Union
 
 if TYPE_CHECKING:
     from chonkie.types import Document
@@ -22,6 +23,14 @@ class OverlapRefinery:
     When inherited, provides chunk overlap logic for maintaining contextual
     continuity between adjacent chunks.
 
+    Can also be used standalone (backward-compatible with the old API)::
+
+        # New style
+        refinery = OverlapRefinery(chunk_overlap=5, overlap_tokenizer="character")
+
+        # Old style (still works)
+        refinery = OverlapRefinery(tokenizer="character", context_size=5)
+
     Usage in chunkers::
 
         class TokenChunker(OverlapRefinery, BaseChunker):
@@ -37,6 +46,14 @@ class OverlapRefinery:
         overlap_method: Literal["suffix", "prefix"] = "suffix",
         overlap_rules: Optional[RecursiveRules] = None,
         overlap_tokenizer: Union[str, TokenizerProtocol, None] = None,
+        # Backward-compatible aliases (old API)
+        tokenizer: Union[str, TokenizerProtocol, None] = None,
+        context_size: Union[int, float, None] = None,
+        mode: Optional[Literal["token", "recursive"]] = None,
+        method: Optional[Literal["suffix", "prefix"]] = None,
+        rules: Optional[RecursiveRules] = None,
+        merge: bool = True,
+        inplace: bool = True,
     ) -> None:
         """Initialize the overlap mixin.
 
@@ -50,8 +67,27 @@ class OverlapRefinery:
             overlap_rules: Rules for recursive overlap mode.
             overlap_tokenizer: Tokenizer for overlap calculations.
                 Falls back to self.tokenizer if not provided.
+            tokenizer: (Deprecated) Alias for overlap_tokenizer.
+            context_size: (Deprecated) Alias for chunk_overlap.
+            mode: (Deprecated) Alias for overlap_mode.
+            method: (Deprecated) Alias for overlap_method.
+            rules: (Deprecated) Alias for overlap_rules.
+            merge: (Deprecated) Kept for backward compat, ignored.
+            inplace: (Deprecated) Kept for backward compat, ignored.
 
         """
+        # Resolve backward-compatible aliases
+        if context_size is not None:
+            chunk_overlap = context_size
+        if mode is not None:
+            overlap_mode = mode
+        if method is not None:
+            overlap_method = method
+        if rules is not None:
+            overlap_rules = rules
+        if tokenizer is not None and overlap_tokenizer is None:
+            overlap_tokenizer = tokenizer
+
         self.chunk_overlap = chunk_overlap
         self._overlap_mode = overlap_mode
         self._overlap_method = overlap_method
@@ -65,6 +101,10 @@ class OverlapRefinery:
             self._overlap_tokenizer_obj = AutoTokenizer(overlap_tokenizer)
         else:
             self._overlap_tokenizer_obj = None
+
+        # Backward-compat attributes
+        self._merge = merge
+        self._inplace = inplace
 
         self._overlap_sep = "✄"
         self._overlap_cache_size = 8192
@@ -98,6 +138,79 @@ class OverlapRefinery:
             self._get_overlap_tokens_cached.cache_clear()
         if hasattr(self, "_count_overlap_tokens_cached"):
             self._count_overlap_tokens_cached.cache_clear()
+
+    # ---- Backward-compatible properties and methods ----
+
+    @property
+    def context_size(self) -> Union[int, float]:
+        """(Deprecated) Alias for chunk_overlap."""
+        return self.chunk_overlap
+
+    @context_size.setter
+    def context_size(self, value: Union[int, float]) -> None:
+        self.chunk_overlap = value
+
+    @property
+    def mode(self) -> str:
+        """(Deprecated) Alias for _overlap_mode."""
+        return self._overlap_mode
+
+    @mode.setter
+    def mode(self, value: str) -> None:
+        self._overlap_mode = value
+
+    @property
+    def method(self) -> str:
+        """(Deprecated) Alias for _overlap_method."""
+        return self._overlap_method
+
+    @method.setter
+    def method(self, value: str) -> None:
+        self._overlap_method = value
+
+    @property
+    def merge(self) -> bool:
+        """(Deprecated) Always True in new implementation."""
+        return self._merge
+
+    @merge.setter
+    def merge(self, value: bool) -> None:
+        self._merge = value
+
+    @property
+    def inplace(self) -> bool:
+        """(Deprecated) Always True in new implementation."""
+        return self._inplace
+
+    @inplace.setter
+    def inplace(self, value: bool) -> None:
+        self._inplace = value
+
+    def __getattr__(self, name: str):
+        """Provide backward-compatible attribute access.
+
+        Only called when normal attribute lookup fails, so it won't interfere
+        with subclasses (like RecursiveChunker) that set self.rules directly,
+        or BaseChunker that defines a tokenizer property.
+        """
+        if name == "rules":
+            return self._overlap_rules
+        if name == "tokenizer":
+            return self._overlap_tokenizer_obj
+        raise AttributeError(f"'{type(self).__name__}' object has no attribute '{name}'")
+
+    def clear_cache(self) -> None:
+        """(Deprecated) Alias for clear_overlap_cache."""
+        self.clear_overlap_cache()
+
+    def cache_info(self) -> dict:
+        """Get cache information for monitoring."""
+        info = {}
+        if hasattr(self, "_get_overlap_tokens_cached"):
+            info["tokens_cache"] = self._get_overlap_tokens_cached.cache_info()._asdict()
+        if hasattr(self, "_count_overlap_tokens_cached"):
+            info["count_cache"] = self._count_overlap_tokens_cached.cache_info()._asdict()
+        return info
 
     def _get_effective_context_size(self, chunks: list) -> int:
         """Get the effective context size for a set of chunks."""
@@ -320,6 +433,27 @@ class OverlapRefinery:
 
         return self._apply_overlap_to_chunks(chunks)
 
+    async def arefine(self, chunks: list) -> list:
+        """Refine chunks asynchronously."""
+        return await asyncio.to_thread(self.refine, chunks)
+
+    def refine_document(self, document: "Document") -> "Document":
+        """Refine all chunks in a Document with overlap context."""
+        if not document.chunks:
+            return document
+        document.chunks = self.refine(document.chunks)
+        return document
+
+    async def arefine_document(self, document: "Document") -> "Document":
+        """Async version of refine_document."""
+        return self.refine_document(document)
+
+    def __call__(self, *args: Any, **kwargs: Any) -> Any:
+        """Call the refinery."""
+        chunks = args[0] if args else kwargs["chunks"]
+        logger.info(f"Refining {len(chunks)} chunks with {self.__class__.__name__}")
+        return self.refine(chunks)
+
     def __repr__(self) -> str:
         """Return string representation."""
         return (
@@ -328,37 +462,13 @@ class OverlapRefinery:
         )
 
 
-# Register the refinery alias for backward-compatible pipeline usage
+# Register the refinery alias for pipeline usage via .refine_with("overlap", ...)
 @refinery("overlap")
 class _OverlapRefineryRefinery(OverlapRefinery):
-    """Wrapper class for pipeline usage via .refine_with("overlap", ...)."""
+    """Wrapper class for pipeline registry.
+
+    Accepts all kwargs and routes them to OverlapRefinery's backward-compatible init.
+    """
 
     def __init__(self, **kwargs):
-        chunk_overlap = kwargs.pop("chunk_overlap", kwargs.pop("context_size", 0))
-        mode = kwargs.pop("mode", kwargs.pop("overlap_mode", "token"))
-        method = kwargs.pop("method", kwargs.pop("overlap_method", "suffix"))
-        rules = kwargs.pop("rules", kwargs.pop("overlap_rules", RecursiveRules()))
-        tokenizer = kwargs.pop("overlap_tokenizer", kwargs.pop("tokenizer", None))
-
-        OverlapRefinery.__init__(
-            self,
-            chunk_overlap=chunk_overlap,
-            overlap_mode=mode,
-            overlap_method=method,
-            overlap_rules=rules,
-            overlap_tokenizer=tokenizer,
-        )
-
-    def refine(self, chunks: list) -> list:
-        return self._apply_overlap_to_chunks(chunks)
-
-    def refine_document(self, document: "Document") -> "Document":
-        """Refine all chunks in a Document with overlap context."""
-        if not document.chunks:
-            return document
-        document.chunks = self._apply_overlap_to_chunks(document.chunks)
-        return document
-
-    async def arefine_document(self, document: "Document") -> "Document":
-        """Async version of refine_document."""
-        return self.refine_document(document)
+        OverlapRefinery.__init__(self, **kwargs)
