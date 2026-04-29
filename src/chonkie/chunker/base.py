@@ -80,14 +80,10 @@ class BaseChunker(OverlapRefinery, ABC):
     def __init__(
         self,
         tokenizer: Union[str, TokenizerProtocol] = "gpt2",
-        chunk_overlap: int = 0,
-        overlap_context_size: Union[int, float] = 0.25,
+        chunk_overlap: Union[int, float] = 0,
         overlap_mode: Literal["token", "recursive"] = "token",
         overlap_method: Literal["suffix", "prefix"] = "suffix",
-        overlap_merge: bool = True,
-        overlap_inplace: bool = True,
         overlap_rules: Optional[RecursiveRules] = None,
-        overlap_tokenizer: Union[str, TokenizerProtocol, None] = None,
     ):
         """Initialize the chunker with any necessary parameters.
 
@@ -95,31 +91,21 @@ class BaseChunker(OverlapRefinery, ABC):
             tokenizer: The tokenizer to use. Can be:
                 - A string identifier (e.g., "gpt2", "character", "word")
                 - An object implementing TokenizerProtocol (encode, decode, tokenize methods)
-            chunk_overlap: Number of tokens to overlap between adjacent chunks.
+            chunk_overlap: Overlap between adjacent chunks. An int is an absolute
+                token count; a float (0-1) is a fraction of chunk size.
                 Set to 0 to disable overlap (default).
-            overlap_context_size: Size of context for overlap. Float (0-1) is a
-                fraction of chunk size; int is absolute token count.
             overlap_mode: Mode for overlap calculation: 'token' or 'recursive'.
             overlap_method: Method for overlap: 'suffix' (append from next) or
                 'prefix' (prepend from previous).
-            overlap_merge: Whether to merge context into chunk text.
-            overlap_inplace: Whether to modify chunks in place or copy.
             overlap_rules: Rules for recursive overlap mode.
-            overlap_tokenizer: Separate tokenizer for overlap calculations.
-                Falls back to the chunker's tokenizer if not provided.
 
         """
-        # Initialize the mixin first (before ABC)
         OverlapRefinery.__init__(
             self,
             chunk_overlap=chunk_overlap,
-            overlap_context_size=overlap_context_size,
             overlap_mode=overlap_mode,
             overlap_method=overlap_method,
-            overlap_merge=overlap_merge,
-            overlap_inplace=overlap_inplace,
             overlap_rules=overlap_rules,
-            overlap_tokenizer=overlap_tokenizer,
         )
 
         # Initialize the tokenizer

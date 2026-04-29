@@ -42,8 +42,7 @@ class TokenChunker(BaseChunker):
             chunk_size: Maximum number of tokens per chunk
             chunk_overlap: Number of tokens to overlap between chunks
             **kwargs: Additional overlap parameters passed to BaseChunker
-                (overlap_context_size, overlap_mode, overlap_method,
-                overlap_merge, overlap_inplace, overlap_rules, overlap_tokenizer)
+                (overlap_mode, overlap_method, overlap_rules)
 
         Raises:
             ValueError: If chunk_size <= 0 or chunk_overlap >= chunk_size
