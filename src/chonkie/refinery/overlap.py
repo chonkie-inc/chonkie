@@ -200,7 +200,7 @@ class OverlapRefinery:
         raise AttributeError(f"'{type(self).__name__}' object has no attribute '{name}'")
 
     def clear_cache(self) -> None:
-        """(Deprecated) Alias for clear_overlap_cache."""
+        """Clear the overlap cache (deprecated alias)."""
         self.clear_overlap_cache()
 
     def cache_info(self) -> dict:
