@@ -74,7 +74,6 @@ class RecursiveChunker(BaseChunker):
         self.min_characters_per_chunk = min_characters_per_chunk
         self.rules: RecursiveRules = rules
         self.sep = "✄"
-        self._CHARS_PER_TOKEN = 3  # Approximate chars per token
 
     @classmethod
     def from_recipe(
