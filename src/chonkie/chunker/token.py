@@ -113,7 +113,7 @@ class TokenChunker(BaseChunker):
 
     def _token_group_generator(self, tokens: Sequence[int]) -> Generator[list[int], None, None]:
         """Generate chunks from a list of tokens."""
-        for start in range(0, len(tokens), self.chunk_size - self.chunk_overlap):
+        for start in range(0, len(tokens), self.chunk_size - int(self.chunk_overlap)):
             end = min(start + self.chunk_size, len(tokens))
             yield list(tokens[start:end])
             if end == len(tokens):
