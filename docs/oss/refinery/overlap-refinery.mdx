@@ -7,69 +7,30 @@ iconType: "solid"
 
 The `OverlapRefinery` enhances chunks by incorporating context from neighboring chunks. This is useful for tasks where maintaining contextual continuity between chunks is important, such as question answering or summarization over long documents. It can add context as a prefix (from the preceding chunk) or a suffix (from the next chunk).
 
-<Info>
-  **Built into all chunkers:** Since `OverlapRefinery` is integrated into `BaseChunker`, all chunkers support overlap natively via the `chunk_overlap` parameter. You only need to use `OverlapRefinery` directly if you want to apply overlap as a separate post-processing step.
-</Info>
-
-## Overlap via Chunkers (Recommended)
-
-The simplest way to add overlap is to pass `chunk_overlap` directly to any chunker:
-
-```python
-from chonkie import TokenChunker, SentenceChunker, RecursiveChunker
-
-# Fixed token overlap
-chunker = TokenChunker(chunk_size=512, chunk_overlap=50)
-
-# Percentage-based overlap (10% of chunk size)
-chunker = TokenChunker(chunk_size=1000, chunk_overlap=0.1)
-
-# Works with any chunker
-chunker = SentenceChunker(chunk_size=1024, chunk_overlap=128)
-chunker = RecursiveChunker(chunk_size=2048, chunk_overlap=64)
-```
-
-All chunkers accept these additional overlap parameters via `**kwargs`:
-
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `chunk_overlap` | `int \| float` | `0` | Overlap size. Int = absolute tokens; float (0-1) = fraction of chunk size. |
-| `overlap_mode` | `"token" \| "recursive"` | `"token"` | How to calculate overlap boundaries. |
-| `overlap_method` | `"suffix" \| "prefix"` | `"suffix"` | Where to add context: suffix appends from next chunk, prefix prepends from previous. |
-| `overlap_rules` | `RecursiveRules` | `RecursiveRules()` | Rules for recursive overlap mode. |
-
 ## API Reference
 
 To use the `OverlapRefinery` via the API, check out the [API reference documentation](../../api/refineries/overlap).
 
-## Standalone Usage
+## Initialization
 
-You can also use `OverlapRefinery` as a standalone post-processing step:
+To use the `OverlapRefinery`, initialize it with the desired parameters. You can specify a tokenizer, context size, overlap mode, method, and other options.
 
 ```python
-from chonkie import TokenChunker, OverlapRefinery
+from chonkie import OverlapRefinery
 
-text = "This is the first sentence. This is the second sentence, providing context. This is the third sentence, which needs context from the second."
-chunker = TokenChunker(chunk_size=512)
-chunks = chunker(text)
+# Initialize with default character-level overlap (25% context size)
+overlap_refinery = OverlapRefinery()
 
-# Apply overlap as a separate refinement step
-overlap_refinery = OverlapRefinery(
-    chunk_overlap=50,
-    overlap_method="suffix",
-    overlap_mode="token",
+# Initialize with a specific tokenizer and context size
+overlap_refinery_token = OverlapRefinery(
+    tokenizer="character",             # Default tokenizer (or use "gpt2", etc.)
+    context_size=0.25,                 # The size of the context to add to the chunks.
+    method="prefix",                   # Add context from the previous chunk
+    merge=True                         # Merge context directly into chunk text
 )
 
-refined_chunks = overlap_refinery(chunks)
-```
-
-### Recursive Mode
-
-For more natural overlap boundaries, use recursive mode with custom rules:
-
-```python
-from chonkie import OverlapRefinery, RecursiveRules, RecursiveLevel
-
+# Initialize for recursive overlap based on rules
+from chonkie import RecursiveRules, RecursiveLevel
 rules = RecursiveRules(
     levels=[
         RecursiveLevel(delimiters=["\n\n"], include_delim="prev"),
@@ -77,12 +38,32 @@ rules = RecursiveRules(
         RecursiveLevel(whitespace=True)
     ]
 )
+overlap_refinery_recursive = OverlapRefinery(
+    tokenizer="character",
+    context_size=0.25,
+    mode="recursive",
+    rules=rules,
+    method="suffix"
+)
+```
 
+## Usage
+
+Use the `OverlapRefinery` object as a callable or use the `refine` method to add overlapping context to your chunks.
+
+```python
+from chonkie import TokenChunker, OverlapRefinery
+
+test_string = "This is the first sentence. This is the second sentence, providing context. This is the third sentence, which needs context from the second."
+chunker = TokenChunker()
+chunks = chunker(test_string)
+
+# Initialize refinery to add suffix overlap
 overlap_refinery = OverlapRefinery(
-    chunk_overlap=0.25,
-    overlap_mode="recursive",
-    overlap_rules=rules,
-    overlap_method="suffix",
+    tokenizer="character",
+    context_size=0.5,
+    method="suffix",
+    merge=True
 )
 
 refined_chunks = overlap_refinery(chunks)
@@ -90,50 +71,46 @@ refined_chunks = overlap_refinery(chunks)
 
 ## Parameters
 
-<ParamField path="chunk_overlap" type="Union[int, float]" default="0">
+<ParamField
+  path="tokenizer"
+  type="Union[str, Callable, Any]"
+  default='"character"'
+>
+  The tokenizer to use for calculating overlap size. Can be a
+  string identifier (e.g., "character", "word", "gpt2"), a callable, or a
+  `chonkie.Tokenizer` instance. Defaults to "character".
+</ParamField>
+
+<ParamField path="context_size" type="Union[int, float]" default="0.25">
   The size of the overlap context. If an `int`, it's the absolute number of
   tokens. If a `float` (between 0 and 1), it's the fraction of the maximum chunk
   token count.
 </ParamField>
 
-<ParamField path="overlap_mode" type='Literal["token", "recursive"]' default='"token"'>
+<ParamField path="mode" type='Literal["token", "recursive"]' default='"token"'>
   The mode for calculating overlap. `"token"` uses the tokenizer directly.
-  `"recursive"` uses hierarchical splitting based on `overlap_rules`.
+  `"recursive"` uses hierarchical splitting based on `rules`.
 </ParamField>
 
-<ParamField path="overlap_method" type='Literal["suffix", "prefix"]' default='"suffix"'>
+<ParamField path="method" type='Literal["suffix", "prefix"]' default='"suffix"'>
   The method for adding context. `"suffix"` adds context from the *next* chunk
   to the end of the current chunk. `"prefix"` adds context from the *previous*
   chunk to the beginning of the current chunk.
 </ParamField>
 
-<ParamField path="overlap_rules" type="RecursiveRules" default="RecursiveRules()">
-  The rules used for splitting text when `overlap_mode` is `"recursive"`. Defines
+<ParamField path="rules" type="RecursiveRules" default="RecursiveRules()">
+  The rules used for splitting text when `mode` is `"recursive"`. Defines
   delimiters and behavior at different hierarchical levels. See
   `chonkie.types.RecursiveRules`.
 </ParamField>
 
-<ParamField
-  path="overlap_tokenizer"
-  type="Union[str, TokenizerProtocol, None]"
-  default="None"
->
-  The tokenizer to use for calculating overlap size. Can be a
-  string identifier (e.g., "character", "word", "gpt2") or a tokenizer instance.
-  If `None`, falls back to the chunker's tokenizer (when used as a mixin) or
-  character-level counting (when used standalone).
+<ParamField path="merge" type="bool" default="True">
+  If `True`, the calculated context is directly prepended (for `prefix`) or
+  appended (for `suffix`) to the `chunk.text`. If `False`, the context is stored
+  in `chunk.context` attribute without modifying `chunk.text`.
 </ParamField>
 
-## Deprecated Parameters
-
-The following parameters still work for backward compatibility but are deprecated in favor of the new names:
-
-| Deprecated | Replacement |
-|------------|-------------|
-| `context_size` | `chunk_overlap` |
-| `mode` | `overlap_mode` |
-| `method` | `overlap_method` |
-| `rules` | `overlap_rules` |
-| `tokenizer` | `overlap_tokenizer` |
-| `merge` | Always merges context into `chunk.text` |
-| `inplace` | Always modifies in place |
+<ParamField path="inplace" type="bool" default="True">
+  If `True`, modifies the input list of chunks directly. If `False`, returns a
+  new list of modified chunks.
+</ParamField>

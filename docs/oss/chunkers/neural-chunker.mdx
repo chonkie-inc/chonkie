@@ -59,10 +59,6 @@ chunker = NeuralChunker(
   try to auto-detect the best available device if not specified.
 </ParamField>
 
-<ParamField path="chunk_overlap" type="int" default="0">
-  Number of overlapping tokens between chunks. See [Overlap Refinery](/oss/refinery/overlap-refinery) for advanced overlap options (`overlap_mode`, `overlap_method`, `overlap_rules`).
-</ParamField>
-
 <ParamField path="min_characters_per_chunk" type="int" default="10">
   The minimum number of characters required for a text segment to be considered
   a valid chunk.

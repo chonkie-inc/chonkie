@@ -201,7 +201,7 @@ def test_fast_chunker_repr() -> None:
     )
 
     expected = (
-        "FastChunker(chunk_size=1024, chunk_overlap=0, delimiters='.!?', "
+        "FastChunker(chunk_size=1024, delimiters='.!?', "
         "pattern=None, prefix=True, "
         "consecutive=False, forward_fallback=True)"
     )

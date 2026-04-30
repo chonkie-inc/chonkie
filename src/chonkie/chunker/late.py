@@ -38,7 +38,6 @@ class LateChunker(RecursiveChunker):
             Any,
         ] = "nomic-ai/modernbert-embed-base",
         chunk_size: int = 2048,
-        chunk_overlap: int = 0,
         rules: RecursiveRules = RecursiveRules(),
         min_characters_per_chunk: int = 24,
         **kwargs: Any,
@@ -48,28 +47,16 @@ class LateChunker(RecursiveChunker):
         Args:
             embedding_model: The embedding model to use for chunking.
             chunk_size: The maximum size of each chunk.
-            chunk_overlap: Number of tokens to overlap between chunks.
             rules: The rules to use for chunking.
             min_characters_per_chunk: The minimum number of characters per chunk.
-            **kwargs: Additional keyword arguments (overlap params and embedding model params).
+            **kwargs: Additional keyword arguments.
 
         """
-        # Separate overlap kwargs from embedding model kwargs
-        overlap_keys = {
-            "overlap_mode",
-            "overlap_method",
-            "overlap_rules",
-        }
-        overlap_kwargs = {k: v for k, v in kwargs.items() if k in overlap_keys}
-        embedding_kwargs = {k: v for k, v in kwargs.items() if k not in overlap_keys}
-
         # set all the additional attributes
         if isinstance(embedding_model, SentenceTransformerEmbeddings):
             self.embedding_model = embedding_model
         elif isinstance(embedding_model, str):
-            self.embedding_model = SentenceTransformerEmbeddings(
-                model=embedding_model, **embedding_kwargs
-            )
+            self.embedding_model = SentenceTransformerEmbeddings(model=embedding_model, **kwargs)
         else:
             raise ValueError(f"{embedding_model} is not a valid embedding model")
 
@@ -82,11 +69,9 @@ class LateChunker(RecursiveChunker):
         # Initialize the RecursiveChunker with the embedding_model's tokenizer
         super().__init__(
             tokenizer=cast(TokenizerProtocol, self.embedding_model.get_tokenizer()),
-            chunk_overlap=chunk_overlap,
             chunk_size=chunk_size,
             rules=rules,
             min_characters_per_chunk=min_characters_per_chunk,
-            **overlap_kwargs,
         )
 
         # Disable multiprocessing for this chunker

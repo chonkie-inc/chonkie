@@ -652,9 +652,6 @@ class Pipeline:
         # Get __init__ signature
         init_sig = inspect.signature(component_class.__init__)
         init_param_names = set(init_sig.parameters.keys()) - {"self"}
-        init_has_var_keyword = any(
-            p.kind == inspect.Parameter.VAR_KEYWORD for p in init_sig.parameters.values()
-        )
 
         # Get method signature
         method_param_names: set[str] = set()
@@ -665,26 +662,21 @@ class Pipeline:
             method_param_names = set(method_sig.parameters.keys()) - exclude_params
 
         # Split parameters
-        if init_has_var_keyword:
-            # If __init__ accepts **kwargs, pass all non-method params to init
-            call_kwargs = {k: v for k, v in kwargs.items() if k in method_param_names}
-            init_kwargs = {k: v for k, v in kwargs.items() if k not in method_param_names}
-        else:
-            init_kwargs = {k: v for k, v in kwargs.items() if k in init_param_names}
-            call_kwargs = {k: v for k, v in kwargs.items() if k in method_param_names}
-            unknown = {
-                k: v
-                for k, v in kwargs.items()
-                if k not in init_param_names and k not in method_param_names
-            }
+        init_kwargs = {k: v for k, v in kwargs.items() if k in init_param_names}
+        call_kwargs = {k: v for k, v in kwargs.items() if k in method_param_names}
+        unknown = {
+            k: v
+            for k, v in kwargs.items()
+            if k not in init_param_names and k not in method_param_names
+        }
 
-            # Validate - no unknown parameters
-            if unknown:
-                raise ValueError(
-                    f"Unknown parameters for {component_class.__name__}: {list(unknown.keys())}.\n"
-                    f"  Available __init__ parameters: {sorted(init_param_names)}\n"
-                    f"  Available {step_type}() parameters: {sorted(method_param_names) or 'none'}",
-                )
+        # Validate - no unknown parameters
+        if unknown:
+            raise ValueError(
+                f"Unknown parameters for {component_class.__name__}: {list(unknown.keys())}.\n"
+                f"  Available __init__ parameters: {sorted(init_param_names)}\n"
+                f"  Available {step_type}() parameters: {sorted(method_param_names) or 'none'}",
+            )
 
         return init_kwargs, call_kwargs
 

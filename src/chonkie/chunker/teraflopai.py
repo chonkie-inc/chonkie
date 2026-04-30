@@ -42,8 +42,6 @@ class TeraflopAIChunker(BaseChunker):
         url: str = SEGMENTATION_URL,
         api_key: Optional[str] = None,
         tokenizer: Union[str, TokenizerProtocol] = "character",
-        chunk_overlap: int = 0,
-        **kwargs,
     ) -> None:
         """Initialize the TeraflopAIChunker.
 
@@ -52,8 +50,6 @@ class TeraflopAIChunker(BaseChunker):
             url: The URL for the TeraflopAI segmentation API.
             api_key: The API key for authentication.
             tokenizer: Tokenizer to use for counting tokens.
-            chunk_overlap: Number of tokens to overlap between chunks.
-            **kwargs: Additional overlap parameters passed to BaseChunker
 
         Raises:
             ImportError: If the teraflopai package is not installed.
@@ -69,7 +65,7 @@ class TeraflopAIChunker(BaseChunker):
             ) from e
 
         # used only for calculating number of tokens in chunks, not for segmentation
-        super().__init__(tokenizer=tokenizer, chunk_overlap=chunk_overlap, **kwargs)
+        super().__init__(tokenizer=tokenizer)
 
         if client is not None:
             self.client = client
@@ -84,6 +80,7 @@ class TeraflopAIChunker(BaseChunker):
                 raise ValueError("URL is required for TeraflopAI client.")
             self.client = TeraflopAI(api_key=api_key, url=url)
 
+        self._use_multiprocessing = False
         logger.debug("Initialized TeraflopAIChunker", url=self.client.url)
 
     def chunk(self, text: str) -> list[Chunk]:
@@ -148,7 +145,7 @@ class TeraflopAIChunker(BaseChunker):
             )
 
         logger.info(f"Created {len(chunks)} chunks using TeraflopAI segmentation")
-        return self._apply_overlap_to_chunks(chunks)
+        return chunks
 
     def __repr__(self) -> str:
         """Get a string representation of the TeraflopAI chunker."""

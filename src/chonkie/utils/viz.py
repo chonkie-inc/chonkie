@@ -89,6 +89,8 @@ CONTENT_BACKGROUND_COLOR_DARK = "#1E1E1E"
 TEXT_COLOR_DARK = "#FFFFFF"
 
 # Add all the HTML template content here
+# TODO: Make this prettier in the future — I'm not a fan of the current design
+# But to keep it simple and minimal, I'm keeping it like this for now
 HTML_TEMPLATE = """
 <!DOCTYPE html>
 <html lang="en">
@@ -101,11 +103,8 @@ HTML_TEMPLATE = """
         body {{ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"; line-height: 1.6; padding: 0; margin: 0; background-color: {body_bg_color}; color: {text_color}; display: flex; flex-direction: column; min-height: 100vh; }}
         .content-box {{ max-width: 900px; width: 100%; margin: 30px auto; padding: 30px 20px 20px 20px; background-color: {content_bg_color}; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); box-sizing: border-box; }}
         .text-display {{ white-space: pre-wrap; word-wrap: break-word; font-family: "Consolas", "Monaco", "Courier New", monospace; font-size: 0.95em; padding: 0; }}
-        .text-display span {{ border-radius: 3px; padding: 0.1em 0; cursor: help; transition: outline 0.1s ease, box-shadow 0.1s ease; }}
-        .text-display span:hover {{ outline: 2px solid rgba(0,0,0,0.4); box-shadow: 0 2px 8px rgba(0,0,0,0.15); position: relative; z-index: 1; }}
+        .text-display span[style*="background-color"] {{ border-radius: 3px; padding: 0.1em 0; cursor: help; }}
         .text-display br {{ display: block; content: ""; margin-top: 0.6em; }}
-        .overlap {{ border-top: 2px solid rgba(0,0,0,0.2); border-bottom: 2px solid rgba(0,0,0,0.2); padding: 0.15em 0; }}
-        .overlap:hover {{ outline: 2px dashed rgba(0,0,0,0.6); box-shadow: 0 2px 12px rgba(0,0,0,0.25); }}
         footer {{ text-align: center; margin-top: auto; padding: 15px 0; font-size: 0.8em; color: #888; border-top: 1px solid #eee; background-color: #f0f2f5; width: 100%; }}
         footer a {{ color: #666; text-decoration: none; }}
         footer a:hover {{ text-decoration: underline; }}
@@ -291,42 +290,6 @@ class Visualizer:
             logger.warning(f"Could not darken color {hex_color}: {e}", exc_info=True)
             return "#808080"
 
-    def _overlap_span_style(self, chunk_ids: list[int], spans: list[dict]) -> tuple[str, str]:
-        """Generate inline style for a text segment owned by one or more chunks.
-
-        Returns (style_string, css_class) where css_class is "overlap" for
-        multi-chunk regions.
-        """
-        if len(chunk_ids) == 1:
-            color = self._get_color(chunk_ids[0])
-            return f"background-color: {color};", ""
-
-        # Overlap: use a repeating diagonal stripe gradient with both colors
-        colors = [self._get_color(cid) for cid in chunk_ids]
-        stripe_size = 6  # px per stripe
-        stops = []
-        for i, color in enumerate(colors):
-            start_pct = i * stripe_size
-            end_pct = (i + 1) * stripe_size
-            stops.append(f"{color} {start_pct}px")
-            stops.append(f"{color} {end_pct}px")
-        gradient = f"repeating-linear-gradient(135deg, {', '.join(stops)})"
-        return f"background: {gradient};", "overlap"
-
-    def _overlap_span_title(self, chunk_ids: list[int], spans: list[dict]) -> str:
-        """Generate hover tooltip text for a segment owned by given chunk IDs."""
-        parts = []
-        for cid in chunk_ids:
-            span_data = next((s for s in spans if s["id"] == cid), None)
-            if span_data:
-                parts.append(
-                    f"Chunk {cid} (tokens: {span_data['tokens']}, "
-                    f"{span_data['start']}:{span_data['end']})"
-                )
-        if len(chunk_ids) > 1:
-            return "Overlap: " + " + ".join(parts)
-        return parts[0] if parts else ""
-
     def print(self, chunks: Sequence[Union[Chunk, str]], full_text: Optional[str] = None) -> None:
         """Print the chunks to the terminal, with rich highlights."""
         # Check if there are any chunks to visualize
@@ -440,58 +403,84 @@ class Visualizer:
                 logger.warning(f"Skipping chunk with invalid start/end index: {chunk}")
                 continue
 
-        # --- 2. Generate HTML Parts (sweep-line with proper overlap rendering) ---
+        # --- 2. Generate HTML Parts (Event-based with Overlap Detection) ---
         html_parts = []
+        last_processed_idx = 0
+        events = []
 
-        # Build sorted boundary events: (position, +1=open/-1=close, chunk_id)
-        events: list[tuple[int, int, int]] = []
+        # Create events for each span
         for span_data in validated_spans:
             events.append((span_data["start"], 1, span_data["id"]))
             events.append((span_data["end"], -1, span_data["id"]))
-        # Sort: by position, then closes before opens at same position
-        events.sort(key=lambda e: (e[0], e[1]))
+        events.sort()
 
-        # Sweep through events, emitting HTML for each segment between boundaries
+        # Initialize the active chunk IDs set
         active_chunk_ids: set[int] = set()
-        last_pos = 0
 
-        for event_idx, event_type, chunk_id in events:
-            # Emit the segment [last_pos, event_idx)
-            if event_idx > last_pos:
-                text_segment = full_text[last_pos:event_idx]
+        # Iterate through the events
+        for i in range(len(events)):
+            event_idx, event_type, chunk_id = events[i]
+            num_active = len(active_chunk_ids)
+            current_bg_color = "transparent"
+            # If there are active chunks, determine the primary chunk and its color
+            hover_title = ""
+            if num_active > 0:
+                min_active_chunk_id = min(active_chunk_ids)
+                primary_chunk_data = next(
+                    (s for s in validated_spans if s["id"] == min_active_chunk_id),
+                    None,
+                )
+                if primary_chunk_data:
+                    base_color = self._get_color(primary_chunk_data["id"])
+                    current_bg_color = (
+                        base_color if num_active == 1 else self._darken_color(base_color, 0.65)
+                    )
+                    hover_title = f"Chunk {primary_chunk_data['id']} | Start: {primary_chunk_data['start']} | End: {primary_chunk_data['end']} | Tokens: {primary_chunk_data['tokens']}{' (Overlap)' if num_active > 1 else ''}"
+            # Get the text segment to process
+            text_segment = full_text[last_processed_idx:event_idx]
+
+            # If there is text to process, escape it and add it to the HTML parts
+            if text_segment:
                 escaped_segment = html.escape(text_segment).replace("\n", "<br>")
-
-                if active_chunk_ids:
-                    sorted_ids = sorted(active_chunk_ids)
-                    style, css_class = self._overlap_span_style(sorted_ids, validated_spans)
-                    tooltip = self._overlap_span_title(sorted_ids, validated_spans)
-                    title_attr = f' title="{html.escape(tooltip)}"'
-                    class_attr = f' class="{css_class}"' if css_class else ""
-                    html_parts.append(f'<span{class_attr} style="{style}"{title_attr}>')
+                # If there is a background color, add the title attribute and the span tags
+                if current_bg_color != "transparent":
+                    title_attr = f' title="{html.escape(hover_title)}"' if hover_title else ""
+                    html_parts.append(
+                        f'<span style="background-color: {current_bg_color};"{title_attr}>',
+                    )
                     html_parts.append(escaped_segment)
                     html_parts.append("</span>")
                 else:
                     html_parts.append(escaped_segment)
-
-            last_pos = event_idx
-
-            # Update active set
+            last_processed_idx = event_idx
             if event_type == 1:
                 active_chunk_ids.add(chunk_id)
-            else:
+            elif event_type == -1:
                 active_chunk_ids.discard(chunk_id)
-
-        # Emit any trailing text
-        if last_pos < text_length:
-            text_segment = full_text[last_pos:]
+        # Process final segment
+        if last_processed_idx < text_length:
+            text_segment = full_text[last_processed_idx:]
             escaped_segment = html.escape(text_segment).replace("\n", "<br>")
-            if active_chunk_ids:
-                sorted_ids = sorted(active_chunk_ids)
-                style, css_class = self._overlap_span_style(sorted_ids, validated_spans)
-                title = self._overlap_span_title(sorted_ids, validated_spans)
-                title_attr = f' title="{html.escape(title)}"'
-                class_attr = f' class="{css_class}"' if css_class else ""
-                html_parts.append(f'<span{class_attr} style="{style}"{title_attr}>')
+            num_active = len(active_chunk_ids)
+            current_bg_color = "transparent"
+            hover_title = ""
+            if num_active > 0:
+                min_active_chunk_id = min(active_chunk_ids)
+                primary_chunk_data = next(
+                    (s for s in validated_spans if s["id"] == min_active_chunk_id),
+                    None,
+                )
+                if primary_chunk_data:
+                    base_color = self._get_color(primary_chunk_data["id"])
+                    current_bg_color = (
+                        base_color if num_active == 1 else self._darken_color(base_color, 0.65)
+                    )
+                    hover_title = f"Chunk {primary_chunk_data['id']} | Start: {primary_chunk_data['start']} | End: {primary_chunk_data['end']} | Tokens: {primary_chunk_data['tokens']}{' (Overlap)' if num_active > 1 else ''}"
+            if current_bg_color != "transparent":
+                title_attr = f' title="{html.escape(hover_title)}"' if hover_title else ""
+                html_parts.append(
+                    f'<span style="background-color: {current_bg_color};"{title_attr}>',
+                )
                 html_parts.append(escaped_segment)
                 html_parts.append("</span>")
             else:

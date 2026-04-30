@@ -52,7 +52,6 @@ class SentenceChunker(BaseChunker):
         approximate: bool = False,
         delim: Union[str, list[str]] = [". ", "! ", "? ", "\n"],
         include_delim: Optional[Literal["prev", "next"]] = "prev",
-        **kwargs,
     ):
         """Initialize the SentenceChunker with configuration parameters.
 
@@ -67,13 +66,12 @@ class SentenceChunker(BaseChunker):
             approximate: Whether to use approximate token counting (defaults to False)
             delim: Delimiters to split sentences on (defaults to [". ", "! ", "? ", "newline"])
             include_delim: Whether to include delimiters in current chunk, next chunk or not at all (defaults to "prev")
-            **kwargs: Additional overlap parameters passed to BaseChunker
 
         Raises:
             ValueError: If parameters are invalid
 
         """
-        super().__init__(tokenizer=tokenizer, chunk_overlap=chunk_overlap, **kwargs)
+        super().__init__(tokenizer=tokenizer)
 
         if chunk_size <= 0:
             raise ValueError("chunk_size must be positive")

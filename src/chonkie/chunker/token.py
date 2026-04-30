@@ -33,7 +33,6 @@ class TokenChunker(BaseChunker):
         tokenizer: Union[str, TokenizerProtocol] = "character",
         chunk_size: int = 2048,
         chunk_overlap: Union[int, float] = 0,
-        **kwargs,
     ) -> None:
         """Initialize the TokenChunker with configuration parameters.
 
@@ -41,20 +40,12 @@ class TokenChunker(BaseChunker):
             tokenizer: The tokenizer instance to use for encoding/decoding
             chunk_size: Maximum number of tokens per chunk
             chunk_overlap: Number of tokens to overlap between chunks
-            **kwargs: Additional overlap parameters passed to BaseChunker
-                (overlap_mode, overlap_method, overlap_rules)
 
         Raises:
             ValueError: If chunk_size <= 0 or chunk_overlap >= chunk_size
 
         """
-        super().__init__(
-            tokenizer,
-            chunk_overlap=int(chunk_overlap)
-            if isinstance(chunk_overlap, float)
-            else chunk_overlap,
-            **kwargs,
-        )
+        super().__init__(tokenizer)
         if chunk_size <= 0:
             raise ValueError("chunk_size must be positive")
         if isinstance(chunk_overlap, int) and chunk_overlap >= chunk_size:
@@ -113,7 +104,7 @@ class TokenChunker(BaseChunker):
 
     def _token_group_generator(self, tokens: Sequence[int]) -> Generator[list[int], None, None]:
         """Generate chunks from a list of tokens."""
-        for start in range(0, len(tokens), self.chunk_size - int(self.chunk_overlap)):
+        for start in range(0, len(tokens), self.chunk_size - self.chunk_overlap):
             end = min(start + self.chunk_size, len(tokens))
             yield list(tokens[start:end])
             if end == len(tokens):

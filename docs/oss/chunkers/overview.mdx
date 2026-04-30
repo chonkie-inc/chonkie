@@ -119,24 +119,6 @@ const chunks = await chunker.chunk(text);
 
 </CodeGroup>
 
-## Overlap Support
-
-All chunkers support chunk overlap natively via the `chunk_overlap` parameter. This adds overlapping context between adjacent chunks, which improves retrieval quality in RAG pipelines.
-
-```python
-from chonkie import TokenChunker, SentenceChunker, RecursiveChunker
-
-# Any chunker accepts chunk_overlap
-chunker = TokenChunker(chunk_size=512, chunk_overlap=50)
-chunker = SentenceChunker(chunk_size=1024, chunk_overlap=128)
-chunker = RecursiveChunker(chunk_size=2048, chunk_overlap=64)
-
-# Percentage-based overlap (10% of chunk size)
-chunker = TokenChunker(chunk_size=1000, chunk_overlap=0.1)
-```
-
-For advanced overlap configuration (recursive mode, custom rules), see the [Overlap Refinery](/oss/refinery/overlap-refinery) documentation.
-
 ## Async Support
 
 Every chunker supports async out of the box — no extra setup required.

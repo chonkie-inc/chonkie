@@ -341,7 +341,7 @@ class TestVisualizerSaveMethod:
         Visualizer().save(filepath, overlapping_chunks, full_text)
         with open(filepath, "r", encoding="utf-8") as f:
             content = f.read()
-        assert "Overlap:" in content
+        assert "(Overlap)" in content
         assert "title=" in content
 
     def test_save_hippo_favicon_embedding(
@@ -549,7 +549,7 @@ class TestVisualizerIntegration:
         Visualizer().save(filepath, complex_chunks, complex_text)
         with open(filepath, "r", encoding="utf-8") as f:
             content = f.read()
-        assert "Overlap:" in content
+        assert "(Overlap)" in content
         assert "The" in content
         assert "quick" in content
         assert "brown" in content

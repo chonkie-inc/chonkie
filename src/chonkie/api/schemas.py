@@ -225,7 +225,7 @@ class OverlapRefineryRequest(BaseRefineryRequest):
         default=0.25,
         description=(
             "Size of the overlap context.  A float between 0 and 1 is "
-            "treated as a fraction of chunk size; an integer is an "
+            "treated as a fraction of ``chunk_size``; an integer is an "
             "absolute token count."
         ),
     )
@@ -238,4 +238,8 @@ class OverlapRefineryRequest(BaseRefineryRequest):
             "'suffix' appends context from the *previous* chunk; "
             "'prefix' prepends context from the *next* chunk."
         ),
+    )
+    merge: bool = Field(
+        default=True,
+        description="Merge the overlap context into the chunk text",
     )

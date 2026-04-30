@@ -29,7 +29,6 @@ class RecursiveChunker(BaseChunker):
     Args:
         tokenizer: Tokenizer to use
         chunk_size (int): Maximum size of each chunk.
-        chunk_overlap (int): Number of tokens to overlap between chunks.
         rules: Recursive rules to use for chunking.
         min_characters_per_chunk (int): Minimum number of characters per chunk.
 
@@ -39,20 +38,16 @@ class RecursiveChunker(BaseChunker):
         self,
         tokenizer: Union[str, TokenizerProtocol] = "character",
         chunk_size: int = 2048,
-        chunk_overlap: int = 0,
         rules: RecursiveRules = RecursiveRules(),
         min_characters_per_chunk: int = 24,
-        **kwargs,
     ) -> None:
         """Create a RecursiveChunker object.
 
         Args:
             tokenizer: Tokenizer to use
             chunk_size (int): Maximum size of each chunk.
-            chunk_overlap (int): Number of tokens to overlap between chunks.
             rules: Recursive rules to use for chunking.
             min_characters_per_chunk (int): Minimum number of characters per chunk.
-            **kwargs: Additional overlap parameters passed to BaseChunker
 
         Raises:
             ValueError: If chunk_size <=0
@@ -60,7 +55,7 @@ class RecursiveChunker(BaseChunker):
             ValueError: If rules is not a RecursiveRules object.
 
         """
-        super().__init__(tokenizer=tokenizer, chunk_overlap=chunk_overlap, **kwargs)
+        super().__init__(tokenizer=tokenizer)
 
         if chunk_size <= 0:
             raise ValueError("chunk_size must be greater than 0")
@@ -72,8 +67,9 @@ class RecursiveChunker(BaseChunker):
         # Initialize the internal values
         self.chunk_size = chunk_size
         self.min_characters_per_chunk = min_characters_per_chunk
-        self.rules: RecursiveRules = rules
+        self.rules = rules
         self.sep = "✄"
+        self._CHARS_PER_TOKEN = 6.5
 
     @classmethod
     def from_recipe(
@@ -83,7 +79,6 @@ class RecursiveChunker(BaseChunker):
         path: str | os.PathLike | None = None,
         tokenizer: Union[str, TokenizerProtocol] = "character",
         chunk_size: int = 2048,
-        chunk_overlap: int = 0,
         min_characters_per_chunk: int = 24,
     ) -> "RecursiveChunker":
         """Create a RecursiveChunker object from a recipe.
@@ -96,7 +91,6 @@ class RecursiveChunker(BaseChunker):
             path (Optional[str]): The path to the recipe.
             tokenizer: The tokenizer to use.
             chunk_size (int): The chunk size.
-            chunk_overlap (int): The chunk overlap.
             min_characters_per_chunk (int): The minimum number of characters per chunk.
 
         Returns:
@@ -114,7 +108,6 @@ class RecursiveChunker(BaseChunker):
             tokenizer=tokenizer,
             rules=rules,
             chunk_size=chunk_size,
-            chunk_overlap=chunk_overlap,
             min_characters_per_chunk=min_characters_per_chunk,
         )
 
@@ -250,6 +243,5 @@ class RecursiveChunker(BaseChunker):
         return (
             f"RecursiveChunker(tokenizer={self.tokenizer},"
             f" rules={self.rules}, chunk_size={self.chunk_size}, "
-            f"chunk_overlap={self.chunk_overlap}, "
             f"min_characters_per_chunk={self.min_characters_per_chunk})"
         )
