@@ -170,6 +170,10 @@ Automatic language detection using Magika can impact performance. For best resul
   Maximum number of tokens per chunk.
 </ParamField>
 
+<ParamField path="chunk_overlap" type="int" default="0">
+  Number of overlapping tokens between chunks. See [Overlap Refinery](/oss/refinery/overlap-refinery) for advanced overlap options (`overlap_mode`, `overlap_method`, `overlap_rules`).
+</ParamField>
+
 <ParamField path="include_nodes" type="bool" default="False">
   Whether to include AST node information (Note: with the base Chunk type, node
   information is not stored).

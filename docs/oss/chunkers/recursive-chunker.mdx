@@ -34,6 +34,7 @@ from chonkie import RecursiveChunker, RecursiveRules
 chunker = RecursiveChunker(
 tokenizer: Union[str, Callable, Any] = "character",
 chunk_size: int = 2048,
+chunk_overlap: int = 0,
 rules: RecursiveRules = RecursiveRules(),
 min_characters_per_chunk: int = 24,
 )
@@ -83,6 +84,10 @@ chunker = RecursiveChunker.from_recipe(lang="hi")
 
 <ParamField path="rules" type="RecursiveRules" default="RecursiveRules()">
   Rules to use for chunking.
+</ParamField>
+
+<ParamField path="chunk_overlap / chunkOverlap" type="int" default="0">
+  Number of overlapping tokens between chunks. See [Overlap Refinery](/oss/refinery/overlap-refinery) for advanced overlap options (`overlap_mode`, `overlap_method`, `overlap_rules`).
 </ParamField>
 
 <ParamField

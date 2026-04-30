@@ -91,6 +91,10 @@ const chunker = await TableChunker.create({
   Maximum number of rows (if tokenizer="row") or tokens/characters per chunk.
 </ParamField>
 
+<ParamField path="chunk_overlap" type="int" default="0">
+  Number of overlapping rows or tokens between chunks. See [Overlap Refinery](/oss/refinery/overlap-refinery) for advanced overlap options (`overlap_mode`, `overlap_method`, `overlap_rules`).
+</ParamField>
+
 ## Usage
 
 <Tabs>

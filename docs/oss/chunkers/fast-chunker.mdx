@@ -74,6 +74,10 @@ chunker = await FastChunker.create({
   Target chunk size in **bytes** (not tokens)
 </ParamField>
 
+<ParamField path="chunk_overlap" type="int" default="0">
+  Number of overlapping bytes between chunks. See [Overlap Refinery](/oss/refinery/overlap-refinery) for advanced overlap options.
+</ParamField>
+
 <ParamField path="delimiters" type="str" default="\n.?">
   Single-byte delimiter characters to split on
 </ParamField>

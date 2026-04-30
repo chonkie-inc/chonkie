@@ -90,6 +90,10 @@ chunker = SlumberChunker(
   this.
 </ParamField>
 
+<ParamField path="chunk_overlap" type="int" default="0">
+  Number of overlapping tokens between chunks. See [Overlap Refinery](/oss/refinery/overlap-refinery) for advanced overlap options (`overlap_mode`, `overlap_method`, `overlap_rules`).
+</ParamField>
+
 <ParamField path="rules" type="RecursiveRules" default="RecursiveRules()">
   Initial recursive rules used to generate candidate split points before Genie
   refines them. See

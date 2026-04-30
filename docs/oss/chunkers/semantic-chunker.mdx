@@ -99,6 +99,14 @@ const chunker = await SemanticChunker.create({
 </ParamField>
 
 <ParamField
+    path="chunk_overlap"
+    type="int"
+    default="0"
+>
+    Number of overlapping tokens between chunks. See [Overlap Refinery](/oss/refinery/overlap-refinery) for advanced overlap options (`overlap_mode`, `overlap_method`, `overlap_rules`).
+</ParamField>
+
+<ParamField
     path="similarity_window"
     type="int"
     default="3"
@@ -460,7 +468,7 @@ chunker = SemanticChunker(
 )
 
 # Add refineries for RAG optimization
-overlap_refinery = OverlapRefinery(overlap_size=50)
+overlap_refinery = OverlapRefinery(chunk_overlap=50)
 embeddings_refinery = EmbeddingsRefinery(
     embedding_model="minishlab/potion-base-32M"
 )

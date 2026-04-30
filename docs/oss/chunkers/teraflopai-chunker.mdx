@@ -65,6 +65,10 @@ chunker = TeraflopAIChunker(client=client)
   The tokenizer used to compute token counts for returned chunks.
 </ParamField>
 
+<ParamField path="chunk_overlap" type="int" default="0">
+  Number of overlapping tokens between chunks. See [Overlap Refinery](/oss/refinery/overlap-refinery) for advanced overlap options (`overlap_mode`, `overlap_method`, `overlap_rules`).
+</ParamField>
+
 ## Usage
 
 ### Single Text Chunking
