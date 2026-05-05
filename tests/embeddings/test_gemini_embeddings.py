@@ -130,7 +130,7 @@ def test_embed_omits_dimensions_when_unconfigured(mock_catsu_client) -> None:
     assert "dimensions" not in call_kwargs
 
 
-@pytest.mark.parametrize("dimensions", [0, -1, "768"])
+@pytest.mark.parametrize("dimensions", [0, -1, "768", True])
 def test_initialization_rejects_invalid_dimensions(mock_catsu_client, dimensions) -> None:
     """Test that invalid custom dimensions fail fast."""
     with patch("catsu.Client", return_value=mock_catsu_client):

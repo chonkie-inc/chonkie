@@ -86,7 +86,7 @@ class GeminiEmbeddings(BaseEmbeddings):
             )
 
         self.model = model if model else self.DEFAULT_MODEL
-        if dimensions is not None and (not isinstance(dimensions, int) or dimensions <= 0):
+        if dimensions is not None and (type(dimensions) is not int or dimensions <= 0):
             raise ValueError("`dimensions` must be a positive integer")
         self.dimensions = dimensions
         self.task_type = task_type
