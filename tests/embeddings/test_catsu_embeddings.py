@@ -163,6 +163,21 @@ def test_dimension_property_prefers_configured_dimensions(mock_catsu_client) -> 
     not CATSU_AVAILABLE,
     reason="Skipping test because Catsu is not installed",
 )
+def test_initialization_rejects_reserved_input_kwarg(mock_catsu_client) -> None:
+    """Test that reserved embed input kwargs are rejected during initialization."""
+    with patch("catsu.Client", return_value=mock_catsu_client):
+        with pytest.raises(ValueError, match="input"):
+            CatsuEmbeddings(
+                model="gemini-embedding-001",
+                provider="gemini",
+                input="conflict",
+            )
+
+
+@pytest.mark.skipif(
+    not CATSU_AVAILABLE,
+    reason="Skipping test because Catsu is not installed",
+)
 @pytest.mark.asyncio
 async def test_aembed_batch_forwards_dimensions(mock_catsu_client, sample_text: str) -> None:
     """Test that custom dimensions are forwarded to async Catsu batch embed calls."""

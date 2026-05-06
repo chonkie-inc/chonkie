@@ -95,6 +95,13 @@ class CatsuEmbeddings(BaseEmbeddings):
         self.provider = provider
         self._batch_size = batch_size
         self._verbose = verbose
+        reserved_embed_kwargs = {"input"}
+        conflicting_kwargs = reserved_embed_kwargs.intersection(kwargs)
+        if conflicting_kwargs:
+            conflict_list = ", ".join(sorted(conflicting_kwargs))
+            raise ValueError(
+                f"Reserved embedding kwargs are not allowed: {conflict_list}",
+            )
         self._embed_kwargs: Dict[str, Any] = {
             key: value for key, value in kwargs.items() if value is not None
         }
