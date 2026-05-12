@@ -77,16 +77,32 @@ class CodeChunker(BaseChunker):
             self.magika = Magika()
             self.parser = None
         else:
-            from tree_sitter_language_pack import SupportedLanguage, get_parser
+            from tree_sitter_language_pack import get_parser
 
             try:
-                self.parser = get_parser(cast(SupportedLanguage, language))
-            except LookupError as e:
-                raise ValueError(
-                    f"Unsupported language '{language}'. "
-                    f"Supported languages are: {list(get_args(SupportedLanguage))}. "
-                    "Or set language='auto'."
-                ) from e
+                from tree_sitter_language_pack import SupportedLanguage
+                supported = list(get_args(SupportedLanguage))
+            except ImportError:
+                # tree-sitter-language-pack >= 1.8.0 removed the
+                # SupportedLanguage Literal alias.
+                supported = []
+
+            try:
+                self.parser = get_parser(cast(str, language))
+            except (LookupError, RuntimeError) as e:
+                if supported:
+                    msg = (
+                        f"Unsupported language '{language}'. "
+                        f"Supported languages are: {supported}. "
+                        "Or set language='auto'."
+                    )
+                else:
+                    msg = (
+                        f"Unsupported language '{language}'. "
+                        "See tree_sitter_language_pack for the supported "
+                        "languages, or set language='auto'."
+                    )
+                raise ValueError(msg) from e
 
         # Set the use_multiprocessing flag
         self._use_multiprocessing = False
@@ -371,10 +387,10 @@ class CodeChunker(BaseChunker):
     def _chunk_code_block(self, content: str, language: str | None) -> list[Chunk]:
         """Chunk a single code block, using the block's language hint when available."""
         if language and self.language == "auto":
-            from tree_sitter_language_pack import SupportedLanguage, get_parser
+            from tree_sitter_language_pack import get_parser
 
             try:
-                parser = get_parser(cast(SupportedLanguage, language))
+                parser = get_parser(cast(str, language))
                 original_parser = self.parser
                 original_language = self.language
                 self.parser = parser

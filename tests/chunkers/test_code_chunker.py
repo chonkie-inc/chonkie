@@ -59,6 +59,18 @@ def test_code_chunker_initialization() -> None:
     assert chunker.parser is not None
 
 
+def test_code_chunker_unsupported_language_raises_value_error() -> None:
+    """Unsupported languages raise ValueError, not a tree-sitter error.
+
+    Regression test for #583: tree-sitter-language-pack >= 1.8.0 removed
+    the `SupportedLanguage` Literal and raises `RuntimeError` (instead of
+    `LookupError`) for unknown languages. CodeChunker must still surface
+    a `ValueError` to callers.
+    """
+    with pytest.raises(ValueError, match="Unsupported language"):
+        CodeChunker(language="definitely_not_a_real_language")
+
+
 def test_code_chunker_chunking_python(python_code: str) -> None:
     """Test basic chunking of Python code."""
     chunker = CodeChunker(language="python", chunk_size=50, include_nodes=True)
