@@ -33,7 +33,7 @@ class OverlapRefinery(BaseRefinery):
         tokenizer: Union[str, TokenizerProtocol] = "character",
         context_size: Union[int, float] = 0.25,
         mode: Literal["token", "recursive"] = "token",
-        method: Literal["suffix", "prefix"] = "suffix",
+        method: Literal["suffix", "prefix", "justified"] = "suffix",
         rules: RecursiveRules = RecursiveRules(),
         merge: bool = True,
         inplace: bool = True,
@@ -436,14 +436,16 @@ class OverlapRefinery(BaseRefinery):
         """
         num_chunks = len(chunks)
 
-        for i, chunk in enumerate(chunks):
+        # compute all contexts first before modifying any chunks
+        contexts = []
+        for i in range(num_chunks):
             prefix_context = ""
             suffix_context = ""
 
             if i > 0:
                 prev_chunk = chunks[i - 1]
                 if isinstance(self.context_size, float):
-                    context_size = int(self.context_size * chunk.token_count)
+                    context_size = int(self.context_size * prev_chunk.token_count)
                 else:
                     context_size = effective_context_size
                 prefix_context = self._get_prefix_overlap_context(prev_chunk, context_size)
@@ -451,10 +453,16 @@ class OverlapRefinery(BaseRefinery):
             if i < num_chunks - 1:
                 next_chunk = chunks[i + 1]
                 if isinstance(self.context_size, float):
-                    context_size = int(self.context_size * chunk.token_count)
+                    context_size = int(self.context_size * next_chunk.token_count)
                 else:
                     context_size = effective_context_size
                 suffix_context = self._get_suffix_overlap_context(next_chunk, context_size)
+
+            contexts.append((prefix_context, suffix_context))
+
+        # apply contexts to chunks
+        for i, chunk in enumerate(chunks):
+            prefix_context, suffix_context = contexts[i]
 
             if prefix_context and suffix_context:
                 context = prefix_context + " " + suffix_context

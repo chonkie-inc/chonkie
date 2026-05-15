@@ -973,3 +973,29 @@ def test_overlap_refinery_justified_float_context() -> None:
     assert hasattr(refined_chunks[1], "context")
     # Context should be from both sides
     assert refined_chunks[1].context != ""
+
+
+def test_overlap_refinery_justified_inplace_false() -> None:
+    """Test justified method with inplace=False does not mutate original chunks."""
+    chunks = [
+        Chunk(text="Hello world", start_index=0, end_index=11, token_count=2),
+        Chunk(text="foo bar test", start_index=12, end_index=24, token_count=3),
+        Chunk(text="baz qux", start_index=25, end_index=33, token_count=2),
+    ]
+
+    original_texts = [c.text for c in chunks]
+    original_token_counts = [c.token_count for c in chunks]
+
+    refinery = OverlapRefinery(context_size=2, method="justified", inplace=False)
+    refined_chunks = refinery.refine(chunks)
+
+    # Original chunks should not be mutated
+    for i, chunk in enumerate(chunks):
+        assert chunk.text == original_texts[i]
+        assert chunk.token_count == original_token_counts[i]
+
+    # Refined chunks should be different objects with context applied
+    assert len(refined_chunks) == 3
+    assert refined_chunks[0].context != ""
+    assert refined_chunks[1].context != ""
+    assert refined_chunks[2].context != ""
