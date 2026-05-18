@@ -172,6 +172,7 @@ all = [
     "chonkie[genie]",
     "chonkie[teraflopai]",
 ]
+# Dependency group for development
 dev = [
     "chonkie[all]",
     "datasets>=1.14.0",
@@ -188,6 +189,18 @@ dev = [
     "openpyxl",
     "uv>=0.9.18",
     "requests-cache>=1.2.1",
+]
+
+# dev group for Jupyter notebooks
+# only accessible via `pip install chonkie[jupyter]` or `uv sync --all-extras` or `uv sync --group jupyter`
+# not part of the `all` group since not everyone needs Jupyter dependencies and they can be quite heavy
+jupyter = [
+    "jupyterlab>=4.5.7",
+    "ipython>=8.0.0",
+    "notebook>=6.0.0",
+    "nbformat>=5.0.0",
+    "nbconvert>=6.0.0",
+    "ipywidgets>=7.0.0",
 ]
 
 [dependency-groups]
