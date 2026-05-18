@@ -701,6 +701,8 @@ def test_overlap_refinery_empty_text_recursive() -> None:
 
 def test_overlap_refinery_context_size_warnings(caplog) -> None:
     """Test warnings when context size is larger than chunk."""
+    import logging
+
     chunks = [
         Chunk(text="A", start_index=0, end_index=0, token_count=1),
         Chunk(text="B", start_index=1, end_index=1, token_count=1),
@@ -709,7 +711,8 @@ def test_overlap_refinery_context_size_warnings(caplog) -> None:
     # Test suffix overlap with very large context size to trigger warnings
     refinery_suffix = OverlapRefinery(context_size=100, mode="token", method="suffix")
 
-    refined_chunks = refinery_suffix.refine(chunks)
+    with caplog.at_level(logging.DEBUG):
+        refined_chunks = refinery_suffix.refine(chunks)
 
     # Should have warnings about context size being too large
     assert "Context size is greater than the chunk size" in caplog.text
@@ -726,7 +729,8 @@ def test_overlap_refinery_context_size_warnings(caplog) -> None:
     ]
     refinery_prefix = OverlapRefinery(context_size=100, mode="token", method="prefix")
 
-    refined_chunks = refinery_prefix.refine(fresh_chunks)
+    with caplog.at_level(logging.DEBUG):
+        refined_chunks = refinery_prefix.refine(fresh_chunks)
 
     # Should have warnings about context size being too large
     assert "Context size is greater than the chunk size" in caplog.text
