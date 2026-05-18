@@ -61,6 +61,12 @@
             ]
           },
           {
+            "group": "Vision",
+            "pages": [
+              "oss/vision/overview"
+            ]
+          },
+          {
             "group": "Fetchers",
             "pages": [
               "oss/fetchers/overview",

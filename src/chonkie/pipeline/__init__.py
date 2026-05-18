@@ -6,11 +6,12 @@ that follow the CHOMP (CHOnkie's Multi-step Pipeline) architecture.
 
 The CHOMP pipeline stages are:
 1. Fetcher - Retrieve raw data
-2. Chef - Preprocess and transform
-3. Chunker - Split into chunks
-4. Refinery - Post-process chunks
-5. Porter - Export to storage formats
-6. Handshake - Ingest into vector databases
+2. Vision - Extract text from visual documents (OCR)
+3. Chef - Preprocess and transform
+4. Chunker - Split into chunks
+5. Refinery - Post-process chunks
+6. Porter - Export to storage formats
+7. Handshake - Ingest into vector databases
 """
 
 from .component import Component, ComponentType
@@ -24,6 +25,7 @@ from .registry import (
     pipeline_component,
     porter,
     refinery,
+    vision,
 )
 
 __all__ = [
@@ -35,6 +37,7 @@ __all__ = [
     # Decorators
     "pipeline_component",
     "fetcher",
+    "vision",
     "chef",
     "chunker",
     "refinery",

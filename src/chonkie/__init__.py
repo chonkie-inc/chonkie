@@ -72,7 +72,7 @@ from .types import (
 )
 from .utils import Hubbie, Visualizer
 from .utils.table_converter import html_table_to_json, markdown_table_to_json
-from .vision import MistralOCR
+from .vision import BaseVision, MistralOCR
 
 __all__ = (
     # chef
@@ -167,6 +167,7 @@ __all__ = (
     "html_table_to_json",
     "markdown_table_to_json",
     # vision
+    "BaseVision",
     "MistralOCR",
 )
 

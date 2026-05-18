@@ -170,6 +170,21 @@ class _ComponentRegistry:
         """
         return self.get_component(alias, ComponentType.FETCHER)
 
+    def get_vision(self, alias: str) -> Component:
+        """Get a vision component by alias.
+
+        Args:
+            alias: Vision component alias
+
+        Returns:
+            Component info for the vision component
+
+        Raises:
+            ValueError: If vision component not found
+
+        """
+        return self.get_component(alias, ComponentType.VISION)
+
     def get_chef(self, alias: str) -> Component:
         """Get a chef component by alias.
 
@@ -329,6 +344,7 @@ def pipeline_component(
         # Validate that the class has ALL required methods
         required_methods = {
             ComponentType.FETCHER: ["fetch"],
+            ComponentType.VISION: ["process"],
             ComponentType.CHEF: ["process", "parse"],  # Both required!
             ComponentType.CHUNKER: ["chunk", "chunk_document"],
             ComponentType.REFINERY: ["refine", "refine_document"],
@@ -382,6 +398,24 @@ def fetcher(alias: str) -> Callable[[ComponentT], ComponentT]:
 
     """
     return pipeline_component(alias=alias, component_type=ComponentType.FETCHER)
+
+
+def vision(alias: str) -> Callable[[ComponentT], ComponentT]:
+    """Register a vision component.
+
+    Args:
+        alias: Short name for the component
+
+    Returns:
+        Decorator function
+
+    Example:
+        @vision("mistral")
+        class MistralOCRVision(BaseVision):
+            pass
+
+    """
+    return pipeline_component(alias=alias, component_type=ComponentType.VISION)
 
 
 def chef(alias: str) -> Callable[[ComponentT], ComponentT]:

@@ -6,8 +6,13 @@ import os
 from pathlib import Path
 from typing import Optional, Union
 
+from chonkie.pipeline import vision
 
-class MistralOCR:
+from .base import BaseVision
+
+
+@vision("mistral")
+class MistralOCR(BaseVision):
     """Processes images and PDFs using Mistral's OCR capabilities.
 
     This class uses the Mistral AI OCR API to extract text from images and PDF files,
@@ -61,7 +66,7 @@ class MistralOCR:
         self.client = Mistral(api_key=api_key)
         self.model = model
 
-    def process(self, file_path: Union[str, Path]) -> str:
+    def process(self, file_path: Union[str, os.PathLike]) -> str:
         """Extract text from an image or PDF file.
 
         Args:
@@ -102,7 +107,7 @@ class MistralOCR:
             pages_text.append(page.markdown)
         return "\n\n".join(pages_text)
 
-    def process_batch(self, file_paths: list[Union[str, Path]]) -> list[str]:
+    def process_batch(self, file_paths: list[Union[str, os.PathLike]]) -> list[str]:
         """Extract text from multiple image or PDF files.
 
         Args:
@@ -114,7 +119,7 @@ class MistralOCR:
         """
         return [self.process(fp) for fp in file_paths]
 
-    async def aprocess(self, file_path: Union[str, Path]) -> str:
+    async def aprocess(self, file_path: Union[str, os.PathLike]) -> str:
         """Extract text from an image or PDF file asynchronously.
 
         Args:
@@ -129,7 +134,7 @@ class MistralOCR:
         return await asyncio.to_thread(self.process, file_path)
 
     async def aprocess_batch(
-        self, file_paths: list[Union[str, Path]], max_concurrency: int = 5
+        self, file_paths: list[Union[str, os.PathLike]], max_concurrency: int = 5
     ) -> list[str]:
         """Extract text from multiple files asynchronously.
 
@@ -145,7 +150,7 @@ class MistralOCR:
 
         semaphore = asyncio.Semaphore(max_concurrency)
 
-        async def _bounded_process(fp: Union[str, Path]) -> str:
+        async def _bounded_process(fp: Union[str, os.PathLike]) -> str:
             async with semaphore:
                 return await self.aprocess(fp)
 
@@ -156,7 +161,7 @@ class MistralOCR:
         """Check if all required dependencies are available."""
         return importutil.find_spec("mistralai") is not None
 
-    def __call__(self, file_path: Union[str, Path]) -> str:
+    def __call__(self, file_path: Union[str, os.PathLike]) -> str:
         """Extract text from an image or PDF file."""
         return self.process(file_path)
 
