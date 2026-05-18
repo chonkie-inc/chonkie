@@ -908,6 +908,14 @@ cerebras = [
     { name = "cerebras-cloud-sdk" },
     { name = "pydantic" },
 ]
+chefs = [
+    { name = "lxml" },
+    { name = "mistralai" },
+    { name = "openpyxl" },
+    { name = "pandas", version = "2.3.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
+    { name = "pandas", version = "3.0.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
+    { name = "tabulate" },
+]
 chroma = [
     { name = "chromadb" },
 ]
@@ -1122,9 +1130,6 @@ tokenizers = [
 tpuf = [
     { name = "turbopuffer" },
 ]
-vision = [
-    { name = "mistralai" },
-]
 viz = [
     { name = "rich" },
 ]
@@ -1165,6 +1170,7 @@ requires-dist = [
     { name = "chonkie", extras = ["azure-openai"], marker = "extra == 'genies'" },
     { name = "chonkie", extras = ["catsu"], marker = "extra == 'embeddings'" },
     { name = "chonkie", extras = ["cerebras"], marker = "extra == 'genies'" },
+    { name = "chonkie", extras = ["chefs"], marker = "extra == 'all'" },
     { name = "chonkie", extras = ["chroma"], marker = "extra == 'handshakes'" },
     { name = "chonkie", extras = ["chunkers"], marker = "extra == 'all'" },
     { name = "chonkie", extras = ["cli"], marker = "extra == 'all'" },
@@ -1183,7 +1189,7 @@ requires-dist = [
     { name = "chonkie", extras = ["lancedb"], marker = "extra == 'handshakes'" },
     { name = "chonkie", extras = ["litellm"], marker = "extra == 'embeddings'" },
     { name = "chonkie", extras = ["milvus"], marker = "extra == 'handshakes'" },
-    { name = "chonkie", extras = ["mistral"], marker = "extra == 'vision'" },
+    { name = "chonkie", extras = ["mistral"], marker = "extra == 'chefs'" },
     { name = "chonkie", extras = ["model2vec"], marker = "extra == 'embeddings'" },
     { name = "chonkie", extras = ["mongodb"], marker = "extra == 'handshakes'" },
     { name = "chonkie", extras = ["neural"], marker = "extra == 'chunkers'" },
@@ -1194,12 +1200,11 @@ requires-dist = [
     { name = "chonkie", extras = ["qdrant"], marker = "extra == 'handshakes'" },
     { name = "chonkie", extras = ["semantic"], marker = "extra == 'chunkers'" },
     { name = "chonkie", extras = ["st"], marker = "extra == 'embeddings'" },
-    { name = "chonkie", extras = ["table"], marker = "extra == 'all'" },
+    { name = "chonkie", extras = ["table"], marker = "extra == 'chefs'" },
     { name = "chonkie", extras = ["teraflopai"], marker = "extra == 'chunkers'" },
     { name = "chonkie", extras = ["tiktoken"], marker = "extra == 'all'" },
     { name = "chonkie", extras = ["tokenizers"], marker = "extra == 'all'" },
     { name = "chonkie", extras = ["tpuf"], marker = "extra == 'handshakes'" },
-    { name = "chonkie", extras = ["vision"], marker = "extra == 'all'" },
     { name = "chonkie", extras = ["viz"], marker = "extra == 'all'" },
     { name = "chonkie", extras = ["voyageai"], marker = "extra == 'embeddings'" },
     { name = "chonkie", extras = ["weaviate"], marker = "extra == 'handshakes'" },
@@ -1283,7 +1288,7 @@ requires-dist = [
     { name = "voyageai", marker = "extra == 'voyageai'", specifier = ">=0.3.2" },
     { name = "weaviate-client", marker = "extra == 'weaviate'", specifier = ">=4.16.7" },
 ]
-provides-extras = ["hub", "viz", "cli", "api", "table", "tokenizers", "tiktoken", "code", "neural", "model2vec", "st", "openai", "semantic", "teraflopai", "gemini", "azure-openai", "groq", "cerebras", "voyageai", "cohere", "jina", "catsu", "litellm", "chroma", "qdrant", "tpuf", "pgvector", "weaviate", "datasets", "pinecone", "mongodb", "elastic", "milvus", "lancedb", "mistral", "genie", "chunkers", "embeddings", "handshakes", "genies", "vision", "all", "dev"]
+provides-extras = ["hub", "viz", "cli", "api", "table", "tokenizers", "tiktoken", "code", "neural", "model2vec", "st", "openai", "semantic", "teraflopai", "gemini", "azure-openai", "groq", "cerebras", "voyageai", "cohere", "jina", "catsu", "litellm", "chroma", "qdrant", "tpuf", "pgvector", "weaviate", "datasets", "pinecone", "mongodb", "elastic", "milvus", "lancedb", "mistral", "genie", "chunkers", "embeddings", "handshakes", "genies", "chefs", "all", "dev"]
 
 [package.metadata.requires-dev]
 dev = [{ name = "ruff", specifier = ">=0.13.3" }]

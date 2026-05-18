@@ -114,7 +114,9 @@ class MistralOCR(BaseChef):
 
         logger.debug(f"Processing file with MistralOCR: {path}")
         content = self._ocr(p)
-        logger.info(f"MistralOCR processing complete: extracted {len(content)} characters from {path}")
+        logger.info(
+            f"MistralOCR processing complete: extracted {len(content)} characters from {path}"
+        )
 
         doc = MarkdownDocument(content=content)
         self._set_source_filename(doc, path)
