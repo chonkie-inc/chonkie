@@ -191,7 +191,7 @@ class OverlapRefinery(BaseRefinery):
         tokens = self._get_tokens_cached(chunk.text)
 
         if effective_context_size > len(tokens):
-            logger.warning(
+            logger.debug(
                 "Context size is greater than the chunk size. The entire chunk will be returned as the context.",
             )
             return chunk.text
@@ -340,7 +340,7 @@ class OverlapRefinery(BaseRefinery):
         tokens = self._get_tokens_cached(chunk.text)
 
         if effective_context_size > len(tokens):
-            logger.warning(
+            logger.debug(
                 "Context size is greater than the chunk size. The entire chunk will be returned as the context.",
             )
             return chunk.text
@@ -435,6 +435,7 @@ class OverlapRefinery(BaseRefinery):
 
         """
         num_chunks = len(chunks)
+        is_float = isinstance(self.context_size, float)
 
         # compute all contexts first before modifying any chunks
         contexts = []
@@ -444,18 +445,20 @@ class OverlapRefinery(BaseRefinery):
 
             if i > 0:
                 prev_chunk = chunks[i - 1]
-                if isinstance(self.context_size, float):
-                    context_size = int(self.context_size * prev_chunk.token_count)
-                else:
-                    context_size = effective_context_size
+                context_size = (
+                    int(self.context_size * prev_chunk.token_count)
+                    if is_float
+                    else effective_context_size
+                )
                 prefix_context = self._get_prefix_overlap_context(prev_chunk, context_size)
 
             if i < num_chunks - 1:
                 next_chunk = chunks[i + 1]
-                if isinstance(self.context_size, float):
-                    context_size = int(self.context_size * next_chunk.token_count)
-                else:
-                    context_size = effective_context_size
+                context_size = (
+                    int(self.context_size * next_chunk.token_count)
+                    if is_float
+                    else effective_context_size
+                )
                 suffix_context = self._get_suffix_overlap_context(next_chunk, context_size)
 
             contexts.append((prefix_context, suffix_context))
@@ -464,27 +467,11 @@ class OverlapRefinery(BaseRefinery):
         for i, chunk in enumerate(chunks):
             prefix_context, suffix_context = contexts[i]
 
-            if prefix_context and suffix_context:
-                context = prefix_context + " " + suffix_context
-            elif prefix_context:
-                context = prefix_context
-            elif suffix_context:
-                context = suffix_context
-            else:
-                context = ""
-
-            setattr(chunk, "context", context)
+            context = prefix_context + suffix_context
+            chunk.context = context
 
             if self.merge and context:
-                if prefix_context and suffix_context:
-                    # Middle chunk: prefix at start, suffix at end
-                    chunk.text = prefix_context + " " + chunk.text + " " + suffix_context
-                elif prefix_context:
-                    # Last chunk: prefix at start
-                    chunk.text = prefix_context + " " + chunk.text
-                elif suffix_context:
-                    # First chunk: suffix at end
-                    chunk.text = chunk.text + " " + suffix_context
+                chunk.text = prefix_context + chunk.text + suffix_context
 
                 if self.tokenizer:
                     context_tokens = self._count_tokens_cached(context)
