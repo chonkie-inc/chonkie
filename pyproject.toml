@@ -129,33 +129,32 @@ elastic = ["elasticsearch>=8.0.0"]
 milvus = ["pymilvus>=2.1.0"]
 lancedb = ["lancedb>=0.4.0"]
 
+# Optional dependencies for the vision module
+mistral = ["mistralai>=1.0.0"]
+
 # Optional dependencies for the genie
 genie = ["pydantic>=2.0.0", "google-genai>=1.0.0"]
 
-# All dependencies
-all = [
-    "chonkie[hub]",
-    "chonkie[viz]",
-    "chonkie[cli]",
-    "chonkie[api]",
-    "chonkie[table]",
-    "chonkie[tokenizers]",
-    "chonkie[tiktoken]",
+# Group extras
+chunkers = [
     "chonkie[code]",
     "chonkie[neural]",
+    "chonkie[semantic]",
+    "chonkie[teraflopai]",
+]
+embeddings = [
     "chonkie[model2vec]",
     "chonkie[st]",
     "chonkie[openai]",
-    "chonkie[semantic]",
     "chonkie[gemini]",
     "chonkie[azure-openai]",
-    "chonkie[groq]",
-    "chonkie[cerebras]",
     "chonkie[voyageai]",
     "chonkie[cohere]",
     "chonkie[jina]",
     "chonkie[catsu]",
     "chonkie[litellm]",
+]
+handshakes = [
     "chonkie[chroma]",
     "chonkie[qdrant]",
     "chonkie[tpuf]",
@@ -167,8 +166,30 @@ all = [
     "chonkie[elastic]",
     "chonkie[milvus]",
     "chonkie[lancedb]",
+]
+genies = [
     "chonkie[genie]",
-    "chonkie[teraflopai]",
+    "chonkie[openai]",
+    "chonkie[azure-openai]",
+    "chonkie[groq]",
+    "chonkie[cerebras]",
+]
+vision = ["chonkie[mistral]"]
+
+# All dependencies
+all = [
+    "chonkie[hub]",
+    "chonkie[viz]",
+    "chonkie[cli]",
+    "chonkie[api]",
+    "chonkie[table]",
+    "chonkie[tokenizers]",
+    "chonkie[tiktoken]",
+    "chonkie[chunkers]",
+    "chonkie[embeddings]",
+    "chonkie[handshakes]",
+    "chonkie[genies]",
+    "chonkie[vision]",
 ]
 # Dependency group for development
 dev = [
@@ -195,6 +216,7 @@ dev = ["ruff>=0.13.3"]
 # Jupyter notebooks group, accessible via `uv sync --group jupyter`
 # not part of `all` since these dependencies can be quite heavy
 jupyter = [
+    "chonkie[all]",
     "jupyterlab>=4.5.7",
     "ipython>=8.0.0",
     "notebook>=6.0.0",
@@ -229,6 +251,7 @@ packages = [
     "chonkie.chef",
     "chonkie.pipeline",
     "chonkie.cli",
+    "chonkie.vision",
     "chonkie.api",
     "chonkie.api.routes",
     "chonkie.api.models",
