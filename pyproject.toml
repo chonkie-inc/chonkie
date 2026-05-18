@@ -174,7 +174,10 @@ genies = [
     "chonkie[groq]",
     "chonkie[cerebras]",
 ]
-vision = ["chonkie[mistral]"]
+chefs = [
+    "chonkie[table]",
+    "chonkie[mistral]",
+]
 
 # All dependencies
 all = [
@@ -182,14 +185,13 @@ all = [
     "chonkie[viz]",
     "chonkie[cli]",
     "chonkie[api]",
-    "chonkie[table]",
     "chonkie[tokenizers]",
     "chonkie[tiktoken]",
     "chonkie[chunkers]",
     "chonkie[embeddings]",
     "chonkie[handshakes]",
     "chonkie[genies]",
-    "chonkie[vision]",
+    "chonkie[chefs]",
 ]
 # Dependency group for development
 dev = [
@@ -251,7 +253,6 @@ packages = [
     "chonkie.chef",
     "chonkie.pipeline",
     "chonkie.cli",
-    "chonkie.vision",
     "chonkie.api",
     "chonkie.api.routes",
     "chonkie.api.models",
