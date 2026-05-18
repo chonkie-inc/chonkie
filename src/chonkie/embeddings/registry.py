@@ -12,6 +12,7 @@ from .deepinfra import DeepInfraEmbeddings
 from .gemini import GeminiEmbeddings
 from .jina import JinaEmbeddings
 from .litellm import LiteLLMEmbeddings
+from .minimax import MiniMaxEmbeddings
 from .mistral import MistralEmbeddings
 from .mixedbread import MixedbreadEmbeddings
 from .model2vec import Model2VecEmbeddings
@@ -306,6 +307,11 @@ EmbeddingsRegistry.register_provider("deepinfra", DeepInfraEmbeddings)
 
 # Register Cloudflare embeddings
 EmbeddingsRegistry.register_provider("cloudflare", CloudflareEmbeddings)
+
+# Register MiniMax embeddings
+EmbeddingsRegistry.register_provider("minimax", MiniMaxEmbeddings)
+EmbeddingsRegistry.register_pattern(r"^embo-", MiniMaxEmbeddings)
+EmbeddingsRegistry.register_model("embo-01", MiniMaxEmbeddings)
 
 # Register LiteLLM embeddings
 EmbeddingsRegistry.register_provider("litellm", LiteLLMEmbeddings)

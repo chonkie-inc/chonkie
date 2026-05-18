@@ -10,6 +10,7 @@ from .deepinfra import DeepInfraEmbeddings
 from .gemini import GeminiEmbeddings
 from .jina import JinaEmbeddings
 from .litellm import LiteLLMEmbeddings
+from .minimax import MiniMaxEmbeddings
 from .mistral import MistralEmbeddings
 from .mixedbread import MixedbreadEmbeddings
 from .model2vec import Model2VecEmbeddings
@@ -41,4 +42,5 @@ __all__ = [
     "NomicEmbeddings",
     "DeepInfraEmbeddings",
     "CloudflareEmbeddings",
+    "MiniMaxEmbeddings",
 ]
