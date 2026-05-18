@@ -1,22 +1,25 @@
-"""Implementation of the MistralOCR class for processing images and PDFs."""
+"""Implementation of the MistralOCR chef for processing images and PDFs."""
 
 import base64
-import importlib.util as importutil
 import os
 from pathlib import Path
-from typing import Optional, Union
+from typing import Optional
 
-from chonkie.pipeline import vision
+from chonkie.logger import get_logger
+from chonkie.pipeline import chef
+from chonkie.types import Document, MarkdownDocument
 
-from .base import BaseVision
+from .base import BaseChef
+
+logger = get_logger(__name__)
 
 
-@vision("mistral")
-class MistralOCR(BaseVision):
+@chef("mistral")
+class MistralOCR(BaseChef):
     """Processes images and PDFs using Mistral's OCR capabilities.
 
-    This class uses the Mistral AI OCR API to extract text from images and PDF files,
-    returning the content as markdown.
+    This chef uses the Mistral AI OCR API to extract text from images and PDF files,
+    returning the content as a MarkdownDocument.
 
     """
 
@@ -41,7 +44,7 @@ class MistralOCR(BaseVision):
         model: str = "mistral-ocr-latest",
         api_key: Optional[str] = None,
     ):
-        """Initialize the MistralOCR class.
+        """Initialize the MistralOCR chef.
 
         Args:
             model: The Mistral OCR model to use.
@@ -66,24 +69,8 @@ class MistralOCR(BaseVision):
         self.client = Mistral(api_key=api_key)
         self.model = model
 
-    def process(self, file_path: Union[str, os.PathLike]) -> str:
-        """Extract text from an image or PDF file.
-
-        Args:
-            file_path: Path to the image or PDF file.
-
-        Returns:
-            Extracted text content as markdown.
-
-        Raises:
-            FileNotFoundError: If the file does not exist.
-            ValueError: If the file type is not supported.
-
-        """
-        path = Path(file_path)
-        if not path.exists():
-            raise FileNotFoundError(f"File not found: {file_path}")
-
+    def _ocr(self, path: Path) -> str:
+        """Run OCR on a file and return extracted markdown text."""
         suffix = path.suffix.lower()
         if suffix not in self.SUPPORTED_TYPES:
             raise ValueError(
@@ -107,63 +94,45 @@ class MistralOCR(BaseVision):
             pages_text.append(page.markdown)
         return "\n\n".join(pages_text)
 
-    def process_batch(self, file_paths: list[Union[str, os.PathLike]]) -> list[str]:
-        """Extract text from multiple image or PDF files.
+    def process(self, path: str | os.PathLike) -> MarkdownDocument:
+        """Extract text from an image or PDF file.
 
         Args:
-            file_paths: List of paths to image or PDF files.
+            path: Path to the image or PDF file.
 
         Returns:
-            List of extracted text content, one per file.
+            MarkdownDocument with extracted text content.
+
+        Raises:
+            FileNotFoundError: If the file does not exist.
+            ValueError: If the file type is not supported.
 
         """
-        return [self.process(fp) for fp in file_paths]
+        p = Path(path)
+        if not p.exists():
+            raise FileNotFoundError(f"File not found: {path}")
 
-    async def aprocess(self, file_path: Union[str, os.PathLike]) -> str:
-        """Extract text from an image or PDF file asynchronously.
+        logger.debug(f"Processing file with MistralOCR: {path}")
+        content = self._ocr(p)
+        logger.info(f"MistralOCR processing complete: extracted {len(content)} characters from {path}")
+
+        doc = MarkdownDocument(content=content)
+        self._set_source_filename(doc, path)
+        return doc
+
+    def parse(self, text: str) -> Document:
+        """Parse raw text into a Document.
+
+        Since MistralOCR operates on files, this wraps the text as-is.
 
         Args:
-            file_path: Path to the image or PDF file.
+            text: Raw text to parse.
 
         Returns:
-            Extracted text content as markdown.
+            Document created from the text.
 
         """
-        import asyncio
-
-        return await asyncio.to_thread(self.process, file_path)
-
-    async def aprocess_batch(
-        self, file_paths: list[Union[str, os.PathLike]], max_concurrency: int = 5
-    ) -> list[str]:
-        """Extract text from multiple files asynchronously.
-
-        Args:
-            file_paths: List of paths to image or PDF files.
-            max_concurrency: Maximum number of concurrent requests.
-
-        Returns:
-            List of extracted text content.
-
-        """
-        import asyncio
-
-        semaphore = asyncio.Semaphore(max_concurrency)
-
-        async def _bounded_process(fp: Union[str, os.PathLike]) -> str:
-            async with semaphore:
-                return await self.aprocess(fp)
-
-        return await asyncio.gather(*[_bounded_process(fp) for fp in file_paths])
-
-    @classmethod
-    def _is_available(cls) -> bool:
-        """Check if all required dependencies are available."""
-        return importutil.find_spec("mistralai") is not None
-
-    def __call__(self, file_path: Union[str, os.PathLike]) -> str:
-        """Extract text from an image or PDF file."""
-        return self.process(file_path)
+        return Document(content=text)
 
     def __repr__(self) -> str:
         """Return a string representation of the MistralOCR instance."""

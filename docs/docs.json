@@ -57,13 +57,8 @@
               "oss/chefs/overview",
               "oss/chefs/tablechef",
               "oss/chefs/textchef",
-              "oss/chefs/markdownchef"
-            ]
-          },
-          {
-            "group": "Vision",
-            "pages": [
-              "oss/vision/overview"
+              "oss/chefs/markdownchef",
+              "oss/chefs/mistral-ocr"
             ]
           },
           {

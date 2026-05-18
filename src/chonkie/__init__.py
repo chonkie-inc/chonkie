@@ -1,6 +1,6 @@
 """Main package for Chonkie."""
 
-from .chef import BaseChef, MarkdownChef, TableChef, TextChef
+from .chef import BaseChef, MarkdownChef, MistralOCR, TableChef, TextChef
 from .chunker import (
     BaseChunker,
     CodeChunker,
@@ -72,12 +72,13 @@ from .types import (
 )
 from .utils import Hubbie, Visualizer
 from .utils.table_converter import html_table_to_json, markdown_table_to_json
-from .vision import BaseVision, MistralOCR
+from .vision import BaseVision
 
 __all__ = (
     # chef
     "BaseChef",
     "MarkdownChef",
+    "MistralOCR",
     "TableChef",
     "TextChef",
     # chunker
@@ -168,7 +169,6 @@ __all__ = (
     "markdown_table_to_json",
     # vision
     "BaseVision",
-    "MistralOCR",
 )
 
 # This hippo grows with every release 🦛✨~

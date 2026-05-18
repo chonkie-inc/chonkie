@@ -13,15 +13,12 @@ Chonkie's Pipeline API provides a fluent, chainable interface for building text 
 CHOMP (CHOnkie's Multi-step Pipeline) is our standardized architecture for document processing:
 
 ```
-Fetcher → Vision (Optional) → Chef → Chunker → Refinery → Porter/Handshake
+Fetcher → Chef → Chunker → Refinery → Porter/Handshake
 ```
 
 <Steps>
   <Step title="Fetcher">
     Retrieve raw data from files, APIs, or databases
-  </Step>
-  <Step title="Vision (Optional)">
-    Extract text from images and PDFs using OCR
   </Step>
   <Step title="Chef">
     Preprocess and transform raw data into Documents
@@ -128,18 +125,6 @@ Fetch data from a source:
 .fetch_from("file", dir="./docs", ext=[".txt", ".md"])
 ```
 
-### see_with()
-
-Extract text from images and PDFs using OCR:
-
-```python
-# Mistral OCR
-.see_with("mistral")
-
-# With custom model
-.see_with("mistral", model="mistral-ocr-latest")
-```
-
 ### process_with()
 
 Process data with a chef:
@@ -161,7 +146,7 @@ Chunk documents (required):
 
 ```python
 # Recursive chunking
-.chunk_with("recursive", chunk_size=512, chunk_overlap=50)
+.chunk_with("recursive", chunk_size=512)
 
 # Semantic chunking
 .chunk_with("semantic", threshold=0.8, chunk_size=1024)
@@ -263,21 +248,6 @@ docs = (Pipeline()
     .run())
 
 print(f"Processed {len(docs)} Python files")
-```
-
-### PDF/Image OCR Pipeline
-
-Extract text from scanned documents and process them:
-
-```python
-# OCR pipeline for scanned PDFs
-doc = (Pipeline()
-    .fetch_from("file", path="scanned_report.pdf")
-    .see_with("mistral")
-    .chunk_with("recursive", chunk_size=1024)
-    .run())
-
-print(f"Extracted {len(doc.chunks)} chunks from PDF")
 ```
 
 ### Markdown Processing
@@ -459,9 +429,6 @@ Explore each component type:
 <CardGroup cols={2}>
   <Card title="Fetchers" icon="download" href="/oss/fetchers/overview">
     Connect to data sources (files, APIs, databases)
-  </Card>
-  <Card title="Vision" icon="eye" href="/oss/vision/overview">
-    Extract text from images and PDFs using OCR
   </Card>
   <Card title="Chefs" icon="hat-chef" href="/oss/chefs/overview">
     Preprocess text, markdown, tables, etc.

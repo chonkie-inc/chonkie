@@ -1,4 +1,4 @@
-"""Tests for MistralOCR class."""
+"""Tests for MistralOCR chef class."""
 
 import os
 import sys
@@ -8,6 +8,7 @@ from unittest.mock import Mock, patch
 import pytest
 
 from chonkie import MistralOCR
+from chonkie.types import MarkdownDocument
 
 
 class TestMistralOCRImportAndConstruction:
@@ -23,7 +24,6 @@ class TestMistralOCRImportAndConstruction:
         assert hasattr(MistralOCR, "process_batch")
         assert hasattr(MistralOCR, "aprocess")
         assert hasattr(MistralOCR, "aprocess_batch")
-        assert hasattr(MistralOCR, "_is_available")
 
     def test_mistral_ocr_supported_types(self) -> None:
         """Test that supported types are defined."""
@@ -108,7 +108,9 @@ class TestMistralOCRBasicFunctionality:
             ocr = MistralOCR()
             result = ocr.process(img_file)
 
-            assert result == "Hello World"
+            assert isinstance(result, MarkdownDocument)
+            assert result.content == "Hello World"
+            assert result.metadata["filename"] == "test.png"
             mock_client.ocr.process.assert_called_once()
             call_kwargs = mock_client.ocr.process.call_args[1]
             assert call_kwargs["model"] == "mistral-ocr-latest"
@@ -141,7 +143,8 @@ class TestMistralOCRBasicFunctionality:
             ocr = MistralOCR()
             result = ocr.process(pdf_file)
 
-            assert result == "Page 1 content\n\nPage 2 content"
+            assert isinstance(result, MarkdownDocument)
+            assert result.content == "Page 1 content\n\nPage 2 content"
             call_kwargs = mock_client.ocr.process.call_args[1]
             assert call_kwargs["document"]["type"] == "document_url"
 
@@ -198,7 +201,8 @@ class TestMistralOCRBasicFunctionality:
             ocr = MistralOCR()
             result = ocr.process(img_file)
 
-            assert result == ""
+            assert isinstance(result, MarkdownDocument)
+            assert result.content == ""
 
 
 class TestMistralOCRBatchProcessing:
@@ -235,23 +239,13 @@ class TestMistralOCRBatchProcessing:
             results = ocr.process_batch(files)
 
             assert len(results) == 3
-            assert results == ["Text from image 0", "Text from image 1", "Text from image 2"]
+            for i, result in enumerate(results):
+                assert isinstance(result, MarkdownDocument)
+                assert result.content == f"Text from image {i}"
 
 
 class TestMistralOCRUtilities:
     """Test MistralOCR utility methods."""
-
-    def test_mistral_ocr_is_available_true(self) -> None:
-        """Test _is_available returns True when dependencies are installed."""
-        with patch("chonkie.vision.mistral_ocr.importutil.find_spec") as mock_find_spec:
-            mock_find_spec.return_value = Mock()
-            assert MistralOCR._is_available() is True
-
-    def test_mistral_ocr_is_available_false(self) -> None:
-        """Test _is_available returns False when dependencies are missing."""
-        with patch("chonkie.vision.mistral_ocr.importutil.find_spec") as mock_find_spec:
-            mock_find_spec.return_value = None
-            assert MistralOCR._is_available() is False
 
     @patch.dict(os.environ, {"MISTRAL_API_KEY": "test_key"})
     def test_mistral_ocr_call(self, tmp_path: Path) -> None:
@@ -278,7 +272,8 @@ class TestMistralOCRUtilities:
             ocr = MistralOCR()
             result = ocr(img_file)
 
-            assert result == "Called text"
+            assert isinstance(result, MarkdownDocument)
+            assert result.content == "Called text"
 
     @patch.dict(os.environ, {"MISTRAL_API_KEY": "test_key"})
     def test_mistral_ocr_repr(self) -> None:
