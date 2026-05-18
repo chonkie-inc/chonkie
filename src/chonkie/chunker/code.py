@@ -9,12 +9,12 @@ from itertools import accumulate
 from typing import TYPE_CHECKING, Any, Literal, cast, get_args
 
 from chonkie.chunker.base import BaseChunker
-from chonkie.logger import get_logger
+from chonkie.logger import LoggerAdapter, get_logger
 from chonkie.pipeline import chunker
 from chonkie.tokenizer import TokenizerProtocol
 from chonkie.types import Chunk
 
-logger = get_logger(__name__)
+logger: LoggerAdapter = get_logger(__name__)
 
 if TYPE_CHECKING:
     from tree_sitter import Node, Tree
@@ -65,9 +65,9 @@ class CodeChunker(BaseChunker):
         # Initialize the Magika instance if the language is auto
         self.language = language
         if language == "auto":
-            # Set a warning to the user that the language is auto and this might
-            # effect the performance of the chunker.
-            logger.warning(
+            # Set a debug message to the user that the language is auto and this might
+            # affect the performance of the chunker.
+            logger.debug(
                 "The language is set to `auto`. This would adversely affect the performance of the chunker. "
                 "Consider setting the `language` parameter to a specific language to improve performance.",
             )
