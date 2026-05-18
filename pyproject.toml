@@ -88,9 +88,7 @@ tokenizers = ["tokenizers>=0.16.0"]
 tiktoken = ["tiktoken>=0.5.0"]
 
 # Optional dependencies for the chunkers
-code = [
-    "tree-sitter-language-pack>=1.8.0",
-]
+code = ["tree-sitter-language-pack>=1.8.0"]
 neural = ["transformers>=4.0.0", "torch>=2.0.0, <3.0"]
 
 # Optional dependencies for the embeddings
@@ -191,9 +189,11 @@ dev = [
     "requests-cache>=1.2.1",
 ]
 
-# dev group for Jupyter notebooks
-# only accessible via `pip install chonkie[jupyter]` or `uv sync --all-extras` or `uv sync --group jupyter`
-# not part of the `all` group since not everyone needs Jupyter dependencies and they can be quite heavy
+[dependency-groups]
+dev = ["ruff>=0.13.3"]
+
+# Jupyter notebooks group, accessible via `uv sync --group jupyter`
+# not part of `all` since these dependencies can be quite heavy
 jupyter = [
     "jupyterlab>=4.5.7",
     "ipython>=8.0.0",
@@ -202,9 +202,6 @@ jupyter = [
     "nbconvert>=6.0.0",
     "ipywidgets>=7.0.0",
 ]
-
-[dependency-groups]
-dev = ["ruff>=0.13.3"]
 
 [tool.pytest.ini_options]
 pythonpath = "src"
@@ -252,14 +249,10 @@ preview = true
 indent-style = "space"
 
 [tool.coverage.run]
-omit = [
-    "*/chonkie/api/migrations/*",
-]
+omit = ["*/chonkie/api/migrations/*"]
 
 [tool.coverage.report]
-omit = [
-    "*/chonkie/api/migrations/*",
-]
+omit = ["*/chonkie/api/migrations/*"]
 
 [tool.mypy]
 disallow_untyped_defs = true
