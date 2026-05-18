@@ -1,6 +1,5 @@
 """Module for abstracting tokeinization logic."""
 
-import importlib.util as importutil
 import inspect
 from abc import ABC, abstractmethod
 from collections import defaultdict
@@ -12,10 +11,18 @@ from chonkie.logger import get_logger
 if TYPE_CHECKING:
     import tiktoken
     import tokenizers
+    import tokie
     import transformers
 
 
 logger = get_logger(__name__)
+
+_TIKTOKEN_TO_TOKIE_MAPPING = {
+    "cl100k_base": "Xenova/gpt-4",
+    "o200k_base": "Xenova/gpt-4o",
+    "p50k_base": "Xenova/text-davinci-003",
+    "gpt2": "openai-community/gpt2",
+}
 
 
 class TokenizerProtocol(Protocol):
@@ -465,37 +472,21 @@ def _create_auto_tokenizer_from_string(tokenizer: str) -> "AutoTokenizer":
     if tokenizer_cls := _chonkie_tokenizer_classes.get(tokenizer):
         return ChonkieAutoTokenizer(tokenizer_cls())
 
+    from tokie import Tokenizer as TokieTokenizer
+
     backend_errors = {}
 
-    if importutil.find_spec("tokenizers") is not None:
+    tokie_name = _TIKTOKEN_TO_TOKIE_MAPPING.get(tokenizer)
+    if tokie_name is not None:
         try:
-            from tokenizers import Tokenizer as HFTokenizer
-
-            return TokenizersAutoTokenizer(HFTokenizer.from_pretrained(tokenizer))
+            return TokieAutoTokenizer(TokieTokenizer.from_pretrained(tokie_name))
         except Exception as e:
-            backend_errors["tokenizers"] = str(e)
-    else:
-        backend_errors["tokenizers"] = "'tokenizers' library not found."
+            backend_errors["tokie (mapped)"] = str(e)
 
-    if importutil.find_spec("tiktoken") is not None:
-        try:
-            from tiktoken import get_encoding
-
-            return TiktokenAutoTokenizer(get_encoding(tokenizer))
-        except Exception as e:
-            backend_errors["tiktoken"] = str(e)
-    else:
-        backend_errors["tiktoken"] = "'tiktoken' library not found."
-
-    if importutil.find_spec("transformers") is not None:
-        try:
-            from transformers import AutoTokenizer as HFAutoTokenizer
-
-            return TransformersAutoTokenizer(HFAutoTokenizer.from_pretrained(tokenizer))
-        except Exception as e:
-            backend_errors["transformers"] = str(e)
-    else:
-        backend_errors["transformers"] = "'transformers' library not found."
+    try:
+        return TokieAutoTokenizer(TokieTokenizer.from_pretrained(tokenizer))
+    except Exception as e:
+        backend_errors["tokie"] = str(e)
 
     raise InvalidTokenizerError(
         f"Tokenizer {tokenizer!r} could not be loaded: {backend_errors}",
@@ -537,6 +528,11 @@ class AutoTokenizer:
         # Load tokenizer from string if needed
         if isinstance(tokenizer, str):
             return _create_auto_tokenizer_from_string(tokenizer)
+
+        from tokie import Tokenizer as TokieTokenizer
+
+        if isinstance(tokenizer, TokieTokenizer):
+            return TokieAutoTokenizer(tokenizer)
 
         supported_backends = [
             ("transformers", TransformersAutoTokenizer),
@@ -647,6 +643,42 @@ class TokenizersAutoTokenizer(AutoTokenizer):
             encoding.ids
             for encoding in self.tokenizer.encode_batch(texts, add_special_tokens=False)
         ]
+
+
+class TokieAutoTokenizer(AutoTokenizer):
+    """Adapter for tokie tokenizers."""
+
+    _backend = "tokie"
+
+    if TYPE_CHECKING:
+        tokenizer: tokie.Tokenizer
+
+    def encode(self, text: str) -> list[int]:
+        """Encode text and extract token IDs."""
+        return self.tokenizer.encode(text, add_special_tokens=False).ids
+
+    def decode(self, tokens: Sequence[int]) -> str:
+        """Decode token IDs back to text."""
+        result = self.tokenizer.decode(list(tokens))
+        return result if result is not None else ""
+
+    def count_tokens(self, text: str) -> int:
+        """Count tokens using tokie's native method."""
+        return self.tokenizer.count_tokens(text)
+
+    def encode_batch(self, texts: Sequence[str]) -> list[list[int]]:
+        """Batch encode texts and extract token IDs."""
+        encodings = self.tokenizer.encode_batch(list(texts), add_special_tokens=False)
+        return [enc.ids for enc in encodings]
+
+    def decode_batch(self, token_sequences: Sequence[Sequence[int]]) -> list[str]:
+        """Batch decode token IDs back to text."""
+        results = self.tokenizer.decode_batch([list(seq) for seq in token_sequences])
+        return [r if r is not None else "" for r in results]
+
+    def count_tokens_batch(self, texts: Sequence[str]) -> list[int]:
+        """Batch count tokens using tokie's native method."""
+        return self.tokenizer.count_tokens_batch(list(texts))
 
 
 class CallableAutoTokenizer(AutoTokenizer):

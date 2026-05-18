@@ -3,10 +3,7 @@
 from typing import Any, Callable
 
 import pytest
-import tiktoken
-from tokenizers import Tokenizer as HFTokenizer
-from transformers import AutoTokenizer as HFAutoTokenizer
-from transformers import PreTrainedTokenizerFast
+from tokie import Tokenizer as TokieTokenizer
 
 from chonkie.tokenizer import (
     AutoTokenizer,
@@ -14,6 +11,12 @@ from chonkie.tokenizer import (
     CharacterTokenizer,
     WordTokenizer,
 )
+
+tiktoken = pytest.importorskip("tiktoken", reason="tiktoken not installed")
+HFTokenizer = pytest.importorskip("tokenizers", reason="tokenizers not installed").Tokenizer
+_transformers = pytest.importorskip("transformers", reason="transformers not installed")
+HFAutoTokenizer = _transformers.AutoTokenizer
+PreTrainedTokenizerFast = _transformers.PreTrainedTokenizerFast
 
 
 @pytest.fixture
@@ -129,11 +132,7 @@ def test_string_init(model_name: str) -> None:
     try:
         tokenizer = AutoTokenizer(model_name)
         assert tokenizer is not None
-        assert tokenizer._backend in [
-            "transformers",
-            "tokenizers",
-            "tiktoken",
-        ]
+        assert tokenizer._backend == "tokie"
     except ImportError as e:
         pytest.skip(f"Could not import tokenizer for {model_name}: {e}")
     except Exception as e:
@@ -173,11 +172,7 @@ def test_string_init_encode_decode(model_name: str) -> None:
     try:
         tokenizer = AutoTokenizer(model_name)
         assert tokenizer is not None
-        assert tokenizer._backend in [
-            "transformers",
-            "tokenizers",
-            "tiktoken",
-        ]
+        assert tokenizer._backend == "tokie"
         test_string = "Testing tokenizer_string_init_basic for Chonkie Tokenizers."
         tokens = tokenizer.encode(test_string)
         assert len(tokens) > 0
@@ -877,6 +872,59 @@ def test_tokenizer_batch_operations_consistency() -> None:
     assert batch_counts == single_counts
 
 
+### Tokie Backend Tests ###
+
+
+@pytest.mark.parametrize("model_name", ["gpt2", "cl100k_base", "o200k_base", "p50k_base"])
+def test_tokie_backend_string_init(model_name: str) -> None:
+    """Test that string-loaded tokenizers use tokie backend."""
+    tokenizer = AutoTokenizer(model_name)
+    assert tokenizer._backend == "tokie"
+
+    text = "Hello, world! Testing tokie backend."
+    tokens = tokenizer.encode(text)
+    assert len(tokens) > 0
+    assert all(isinstance(t, int) for t in tokens)
+
+    decoded = tokenizer.decode(tokens)
+    assert isinstance(decoded, str)
+    assert "Hello" in decoded
+
+
+def test_tokie_backend_batch_operations() -> None:
+    """Test batch operations with tokie backend."""
+    tokenizer = AutoTokenizer("gpt2")
+    assert tokenizer._backend == "tokie"
+
+    texts = ["hello world", "testing batch", "tokie is fast"]
+
+    encoded = tokenizer.encode_batch(texts)
+    assert len(encoded) == len(texts)
+    assert all(len(e) > 0 for e in encoded)
+
+    decoded = tokenizer.decode_batch(encoded)
+    assert len(decoded) == len(texts)
+    assert all(isinstance(d, str) for d in decoded)
+
+    counts = tokenizer.count_tokens_batch(texts)
+    assert len(counts) == len(texts)
+    assert all(c > 0 for c in counts)
+    assert counts == [len(e) for e in encoded]
+
+
+def test_tokie_backend_instance_passthrough() -> None:
+    """Test that passing a tokie instance directly works."""
+    tokie_tok = TokieTokenizer.from_pretrained("openai-community/gpt2")
+    tokenizer = AutoTokenizer(tokie_tok)
+    assert tokenizer._backend == "tokie"
+
+    text = "Instance passthrough test"
+    tokens = tokenizer.encode(text)
+    assert len(tokens) > 0
+    decoded = tokenizer.decode(tokens)
+    assert "Instance" in decoded
+
+
 def test_tokenizer_error_propagation() -> None:
     """Test that errors are properly propagated from underlying tokenizers."""
     char_tokenizer = AutoTokenizer(CharacterTokenizer())
@@ -1010,18 +1058,16 @@ def test_word_tokenizer_tokenize_method() -> None:
 def test_tokenizer_transformers_batch_decode_path() -> None:
     """Test the transformers-specific batch decode path."""
     try:
-        # Try to create a transformers tokenizer
-        tokenizer = AutoTokenizer("gpt2")
-        if tokenizer._backend == "transformers":
-            # Test batch decode specifically for transformers
-            texts = ["hello", "world"]
-            encoded = tokenizer.encode_batch(texts)
-            decoded = tokenizer.decode_batch(encoded)
-            assert decoded == texts
-        else:
-            pytest.skip("Transformers backend not available or not used")
+        # Create a transformers tokenizer by passing an instance directly
+        hf_tokenizer = HFAutoTokenizer.from_pretrained("gpt2")
+        tokenizer = AutoTokenizer(hf_tokenizer)
+        assert tokenizer._backend == "transformers"
+        texts = ["hello", "world"]
+        encoded = tokenizer.encode_batch(texts)
+        decoded = tokenizer.decode_batch(encoded)
+        assert decoded == texts
     except Exception:
-        pytest.skip("GPT-2 tokenizer not available")
+        pytest.skip("Transformers tokenizer not available")
 
 
 def test_tokenizer_tiktoken_batch_operations() -> None:

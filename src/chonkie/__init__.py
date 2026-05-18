@@ -168,6 +168,6 @@ __all__ = (
 )
 
 # This hippo grows with every release 🦛✨~
-__version__ = "1.6.2"
+__version__ = "1.6.6"
 __name__ = "chonkie"
 __author__ = "🦛 Chonkie Inc"

@@ -334,6 +334,24 @@ Additional utilities to enhance your chunking workflow.
 
 With Chonkie's wide range of integrations, you can easily plug it into your existing infrastructure and start CHONKING!
 
+## 🤖 AI Agent Skills & Plugins
+
+Chonkie provides an official skill and plugin for AI coding agents, giving them deep knowledge of Chonkie's API, chunking strategies, and pipeline patterns — so they can help you build RAG pipelines faster.
+
+**Supported agents:** Claude Code, Cursor, Gemini CLI, and more.
+
+```bash
+# Via skills.sh (works with Claude Code, Cursor, Copilot, and 20+ agents)
+npx skills add chonkie-inc/skills
+
+# Claude Code only
+/plugin marketplace add chonkie-inc/skills
+```
+
+Once installed, your agent gains knowledge of all chunkers, the Pipeline API, tokenizer selection, embeddings refineries, vector DB handshakes, the REST API server, recipes, and async/batch processing patterns.
+
+Learn more at [github.com/chonkie-inc/skills](https://github.com/chonkie-inc/skills).
+
 ## 📊 Benchmarks
 
 > "I may be smol hippo, but I pack a big punch!" 🦛
