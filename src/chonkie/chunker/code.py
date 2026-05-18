@@ -7,12 +7,12 @@ This module provides a CodeChunker class for splitting code into chunks of a spe
 from typing import TYPE_CHECKING, Literal
 
 from chonkie.chunker.base import BaseChunker
-from chonkie.logger import get_logger
+from chonkie.logger import LoggerAdapter, get_logger
 from chonkie.pipeline import chunker
 from chonkie.tokenizer import TokenizerProtocol
 from chonkie.types import Chunk, Document, MarkdownDocument
 
-logger = get_logger(__name__)
+logger: LoggerAdapter = get_logger(__name__)
 
 if TYPE_CHECKING:
     from tree_sitter_language_pack import CodeChunk
@@ -109,7 +109,9 @@ class CodeChunker(BaseChunker):
 
         # load the language
         if language == "auto":
-            logger.warning(
+            # Set a debug message to the user that the language is auto and this might
+            # affect the performance of the chunker.
+            logger.debug(
                 "The language is set to `auto`. This would adversely affect the performance of the chunker. "
                 "Consider setting the `language` parameter to a specific language to improve performance.",
             )

@@ -29,6 +29,14 @@ overlap_refinery_token = OverlapRefinery(
     merge=True                         # Merge context directly into chunk text
 )
 
+# Initialize with justified method (context from both sides)
+overlap_refinery_justified = OverlapRefinery(
+    tokenizer="character",
+    context_size=0.25,
+    method="justified",               # Add context from both previous and next chunks
+    merge=True
+)
+
 # Initialize for recursive overlap based on rules
 from chonkie import RecursiveRules, RecursiveLevel
 rules = RecursiveRules(
@@ -92,10 +100,13 @@ refined_chunks = overlap_refinery(chunks)
   `"recursive"` uses hierarchical splitting based on `rules`.
 </ParamField>
 
-<ParamField path="method" type='Literal["suffix", "prefix"]' default='"suffix"'>
+<ParamField path="method" type='Literal["suffix", "prefix", "justified"]' default='"suffix"'>
   The method for adding context. `"suffix"` adds context from the *next* chunk
   to the end of the current chunk. `"prefix"` adds context from the *previous*
-  chunk to the beginning of the current chunk.
+  chunk to the beginning of the current chunk. `"justified"` adds context
+  from both the previous and next chunks - for middle chunks it includes
+  context from both sides, while first and last chunks get context
+  from the single adjacent chunk.
 </ParamField>
 
 <ParamField path="rules" type="RecursiveRules" default="RecursiveRules()">

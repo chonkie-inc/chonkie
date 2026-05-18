@@ -701,6 +701,8 @@ def test_overlap_refinery_empty_text_recursive() -> None:
 
 def test_overlap_refinery_context_size_warnings(caplog) -> None:
     """Test warnings when context size is larger than chunk."""
+    import logging
+
     chunks = [
         Chunk(text="A", start_index=0, end_index=0, token_count=1),
         Chunk(text="B", start_index=1, end_index=1, token_count=1),
@@ -709,7 +711,8 @@ def test_overlap_refinery_context_size_warnings(caplog) -> None:
     # Test suffix overlap with very large context size to trigger warnings
     refinery_suffix = OverlapRefinery(context_size=100, mode="token", method="suffix")
 
-    refined_chunks = refinery_suffix.refine(chunks)
+    with caplog.at_level(logging.DEBUG):
+        refined_chunks = refinery_suffix.refine(chunks)
 
     # Should have warnings about context size being too large
     assert "Context size is greater than the chunk size" in caplog.text
@@ -726,7 +729,8 @@ def test_overlap_refinery_context_size_warnings(caplog) -> None:
     ]
     refinery_prefix = OverlapRefinery(context_size=100, mode="token", method="prefix")
 
-    refined_chunks = refinery_prefix.refine(fresh_chunks)
+    with caplog.at_level(logging.DEBUG):
+        refined_chunks = refinery_prefix.refine(fresh_chunks)
 
     # Should have warnings about context size being too large
     assert "Context size is greater than the chunk size" in caplog.text
@@ -839,3 +843,163 @@ def test_overlap_refinery_float_context_size_preservation() -> None:
     # context_size should still be the original float
     assert refinery.context_size == 0.4
     assert isinstance(refinery.context_size, float)
+
+
+def test_overlap_refinery_justified_initialization() -> None:
+    """Test the OverlapRefinery initialization with justified method."""
+    refinery = OverlapRefinery(method="justified")
+    assert refinery is not None
+    assert refinery.method == "justified"
+    assert refinery.context_size == 0.25
+    assert refinery.mode == "token"
+    assert refinery.merge is True
+    assert refinery.inplace is True
+
+
+def test_overlap_refinery_justified_basic() -> None:
+    """Test the OverlapRefinery with justified method."""
+    chunks = [
+        Chunk(text="Hello world", start_index=0, end_index=11, token_count=2),
+        Chunk(text="foo bar test", start_index=12, end_index=24, token_count=3),
+        Chunk(text="baz qux", start_index=25, end_index=33, token_count=2),
+    ]
+
+    refinery = OverlapRefinery(context_size=2, method="justified")
+    refined_chunks = refinery.refine(chunks)
+
+    assert len(refined_chunks) == 3
+
+    # First chunk gets suffix from next chunk
+    assert hasattr(refined_chunks[0], "context")
+    # Middle chunk gets both prefix and suffix
+    assert hasattr(refined_chunks[1], "context")
+    # Last chunk gets prefix from previous chunk
+    assert hasattr(refined_chunks[2], "context")
+
+
+def test_overlap_refinery_justified_with_merge() -> None:
+    """Test justified method with merge=True."""
+    chunks = [
+        Chunk(text="Hello", start_index=0, end_index=5, token_count=1),
+        Chunk(text="world test", start_index=6, end_index=16, token_count=2),
+    ]
+
+    refinery = OverlapRefinery(context_size=2, method="justified", merge=True)
+    refined_chunks = refinery.refine([c.copy() for c in chunks])
+
+    # chunk[0] gets suffix context from chunk[1], context added at start
+    # Should contain context + original text, so starts with context
+    assert hasattr(refined_chunks[0], "context")
+    assert refined_chunks[0].context != ""
+    # Token count should be updated
+    assert refined_chunks[0].token_count >= chunks[0].token_count
+
+
+def test_overlap_refinery_justified_without_merge() -> None:
+    """Test justified method with merge=False."""
+    chunks = [
+        Chunk(text="Hello", start_index=0, end_index=5, token_count=1),
+        Chunk(text="world test", start_index=6, end_index=16, token_count=2),
+    ]
+
+    refinery = OverlapRefinery(context_size=2, method="justified", merge=False)
+    refined_chunks = refinery.refine([c.copy() for c in chunks])
+
+    # Context attribute should be set
+    assert hasattr(refined_chunks[0], "context")
+    # But text should not change
+    assert refined_chunks[0].text == "Hello"
+
+
+def test_overlap_refinery_justified_single_chunk() -> None:
+    """Test justified method with only one chunk."""
+    chunks = [
+        Chunk(text="Only one chunk", start_index=0, end_index=16, token_count=3),
+    ]
+
+    refinery = OverlapRefinery(context_size=2, method="justified")
+    refined_chunks = refinery.refine(chunks)
+
+    # Single chunk should have no context (nothing to get from)
+    assert len(refined_chunks) == 1
+    # No context attribute or empty context
+    context = getattr(refined_chunks[0], "context", "")
+    assert context == ""
+
+
+def test_overlap_refinery_justified_two_chunks() -> None:
+    """Test justified method with two chunks."""
+    chunks = [
+        Chunk(text="Hello world", start_index=0, end_index=11, token_count=2),
+        Chunk(text="foo bar", start_index=12, end_index=19, token_count=2),
+    ]
+
+    refinery = OverlapRefinery(context_size=2, method="justified")
+    refined_chunks = refinery.refine(chunks)
+
+    # First chunk gets suffix from chunk[1]
+    assert hasattr(refined_chunks[0], "context")
+    assert refined_chunks[0].context != ""
+    # Last chunk gets prefix from chunk[0]
+    assert hasattr(refined_chunks[1], "context")
+    assert refined_chunks[1].context != ""
+
+
+def test_overlap_refinery_justified_recursive_mode() -> None:
+    """Test justified method with recursive mode."""
+    chunks = [
+        Chunk(text="First sentence.", start_index=0, end_index=15, token_count=2),
+        Chunk(text="Second sentence.", start_index=16, end_index=32, token_count=2),
+        Chunk(text="Third sentence.", start_index=33, end_index=49, token_count=2),
+    ]
+
+    refinery = OverlapRefinery(context_size=2, mode="recursive", method="justified")
+    refined_chunks = refinery.refine(chunks)
+
+    assert len(refined_chunks) == 3
+    # All chunks should have context
+    for chunk in refined_chunks:
+        assert hasattr(chunk, "context")
+
+
+def test_overlap_refinery_justified_float_context() -> None:
+    """Test justified method with float context_size."""
+    chunks = [
+        Chunk(text="Hello world", start_index=0, end_index=11, token_count=5),
+        Chunk(text="foo bar test", start_index=12, end_index=24, token_count=5),
+        Chunk(text="baz qux", start_index=25, end_index=33, token_count=5),
+    ]
+
+    refinery = OverlapRefinery(context_size=0.5, method="justified")
+    refined_chunks = refinery.refine(chunks)
+
+    # Middle chunk should get both prefix and suffix
+    assert hasattr(refined_chunks[1], "context")
+    # Context should be from both sides
+    assert refined_chunks[1].context != ""
+
+
+def test_overlap_refinery_justified_inplace_false() -> None:
+    """Test justified method with inplace=False does not mutate original chunks."""
+    chunks = [
+        Chunk(text="Hello world", start_index=0, end_index=11, token_count=2),
+        Chunk(text="foo bar test", start_index=12, end_index=24, token_count=3),
+        Chunk(text="baz qux", start_index=25, end_index=33, token_count=2),
+    ]
+
+    original_texts = [c.text for c in chunks]
+    original_token_counts = [c.token_count for c in chunks]
+
+    refinery = OverlapRefinery(context_size=2, method="justified", inplace=False)
+    refined_chunks = refinery.refine(chunks)
+
+    # Original chunks should not be mutated
+    for i, chunk in enumerate(chunks):
+        assert chunk.text == original_texts[i]
+        assert chunk.token_count == original_token_counts[i]
+
+    # Refined chunks should be different objects with context applied
+    assert len(refined_chunks) == 3
+    assert refined_chunks[0].context != ""
+    assert refined_chunks[1].context != ""
+    assert refined_chunks[2].context != ""
