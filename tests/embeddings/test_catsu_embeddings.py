@@ -1,5 +1,6 @@
 """Test suite for CatsuEmbeddings."""
 
+import inspect
 import os
 from typing import List
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -93,6 +94,30 @@ def test_initialization_with_config_params(mock_catsu_client) -> None:
         assert embeddings._batch_size == 64
 
 
+def test_initialization_exposes_dimensions_parameter() -> None:
+    """Test that CatsuEmbeddings exposes dimensions as a first-class parameter."""
+    signature = inspect.signature(CatsuEmbeddings)
+    dimensions = signature.parameters["dimensions"]
+
+    assert dimensions.default is None
+
+
+@pytest.mark.skipif(
+    not CATSU_AVAILABLE,
+    reason="Skipping test because Catsu is not installed",
+)
+@pytest.mark.parametrize("dimensions", [0, -1, "768", True])
+def test_initialization_rejects_invalid_dimensions(mock_catsu_client, dimensions) -> None:
+    """Test that invalid custom dimensions fail fast."""
+    with patch("catsu.Client", return_value=mock_catsu_client):
+        with pytest.raises(ValueError, match="positive integer"):
+            CatsuEmbeddings(
+                model="gemini-embedding-001",
+                provider="gemini",
+                dimensions=dimensions,
+            )
+
+
 def test_embed_single_text(embedding_model: CatsuEmbeddings, sample_text: str) -> None:
     """Test that CatsuEmbeddings correctly embeds a single text."""
     embedding = embedding_model.embed(sample_text)
@@ -157,6 +182,25 @@ def test_dimension_property_prefers_configured_dimensions(mock_catsu_client) -> 
         )
 
     assert embeddings.dimension == 768
+
+
+@pytest.mark.skipif(
+    not CATSU_AVAILABLE,
+    reason="Skipping test because Catsu is not installed",
+)
+def test_embed_batch_forwards_dimensions(mock_catsu_client, sample_text: str) -> None:
+    """Test that custom dimensions are forwarded to Catsu batch embed calls."""
+    with patch("catsu.Client", return_value=mock_catsu_client):
+        embedding_model = CatsuEmbeddings(
+            model="gemini-embedding-001",
+            provider="gemini",
+            dimensions=768,
+        )
+
+    embedding_model.embed_batch([sample_text])
+
+    call_kwargs = embedding_model.client.embed.call_args[1]
+    assert call_kwargs["dimensions"] == 768
 
 
 @pytest.mark.skipif(

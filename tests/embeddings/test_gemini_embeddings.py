@@ -119,15 +119,15 @@ def test_embed_forwards_dimensions(mock_catsu_client) -> None:
     assert call_kwargs["dimensions"] == 768
 
 
-def test_embed_omits_dimensions_when_unconfigured(mock_catsu_client) -> None:
-    """Test that default Gemini embed calls omit dimensions."""
+def test_embed_uses_default_dimensions_when_unconfigured(mock_catsu_client) -> None:
+    """Test that default Gemini embed calls use the model dimensions."""
     with patch("catsu.Client", return_value=mock_catsu_client):
         embeddings = GeminiEmbeddings(api_key="test-key")
 
     embeddings.embed("hello world")
 
     call_kwargs = embeddings._catsu.client.embed.call_args[1]
-    assert "dimensions" not in call_kwargs
+    assert call_kwargs["dimensions"] == 3072
 
 
 @pytest.mark.parametrize("dimensions", [0, -1, "768", True])

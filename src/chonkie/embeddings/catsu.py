@@ -8,7 +8,7 @@ Nomic, Cloudflare, MixedBread, DeepInfra, TogetherAI.
 """
 
 import importlib.util as importutil
-from typing import Any, Dict, List, Optional, cast
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 
@@ -41,6 +41,7 @@ class CatsuEmbeddings(BaseEmbeddings):
         timeout: Request timeout in seconds (default: 30)
         verbose: Enable verbose logging (default: False)
         batch_size: Maximum number of texts to embed in one API call (default: 128)
+        dimensions: Optional output dimensionality to request from the provider
         **kwargs: Additional keyword arguments to pass to the Catsu client
 
     Examples:
@@ -69,6 +70,7 @@ class CatsuEmbeddings(BaseEmbeddings):
         timeout: int = 30,
         verbose: bool = False,
         batch_size: int = 128,
+        dimensions: Optional[int] = None,
         **kwargs: Any,
     ):
         """Initialize Catsu embeddings adapter.
@@ -81,6 +83,7 @@ class CatsuEmbeddings(BaseEmbeddings):
             timeout: Request timeout in seconds
             verbose: Enable verbose logging
             batch_size: Maximum number of texts to embed in one API call
+            dimensions: Optional output dimensionality to request from the provider
             **kwargs: Additional keyword arguments
 
         Raises:
@@ -95,17 +98,16 @@ class CatsuEmbeddings(BaseEmbeddings):
         self.provider = provider
         self._batch_size = batch_size
         self._verbose = verbose
-        reserved_embed_kwargs = {"input"}
-        conflicting_kwargs = reserved_embed_kwargs.intersection(kwargs)
-        if conflicting_kwargs:
-            conflict_list = ", ".join(sorted(conflicting_kwargs))
+        if dimensions is not None and (type(dimensions) is not int or dimensions <= 0):
+            raise ValueError("`dimensions` must be a positive integer")
+        self._dimension: Optional[int] = dimensions
+        if "input" in kwargs:
             raise ValueError(
-                f"Reserved embedding kwargs are not allowed: {conflict_list}",
+                "Reserved embedding kwargs are not allowed: input",
             )
         self._embed_kwargs: Dict[str, Any] = {
             key: value for key, value in kwargs.items() if value is not None
         }
-        self._configured_dimension = cast(Optional[int], self._embed_kwargs.get("dimensions"))
 
         # Initialize Catsu client
         try:
@@ -123,7 +125,6 @@ class CatsuEmbeddings(BaseEmbeddings):
         )
 
         # Cache for model metadata
-        self._dimension: Optional[int] = self._configured_dimension
         self._model_info: Optional[Any] = None
 
         # Validate model exists and is supported
@@ -142,7 +143,7 @@ class CatsuEmbeddings(BaseEmbeddings):
             for model_info in models:
                 if getattr(model_info, "name", None) == self.model:
                     self._model_info = model_info
-                    if self._configured_dimension is None:
+                    if self._dimension is None:
                         self._dimension = getattr(model_info, "dimensions", None)
                     break
 
@@ -172,6 +173,7 @@ class CatsuEmbeddings(BaseEmbeddings):
             model=self.model,
             input=text,
             provider=self.provider,
+            dimensions=self._dimension,
             **self._embed_kwargs,
         )
 
@@ -209,6 +211,7 @@ class CatsuEmbeddings(BaseEmbeddings):
                     model=self.model,
                     input=batch,
                     provider=self.provider,
+                    dimensions=self._dimension,
                     **self._embed_kwargs,
                 )
 
@@ -249,6 +252,7 @@ class CatsuEmbeddings(BaseEmbeddings):
             model=self.model,
             input=text,
             provider=self.provider,
+            dimensions=self._dimension,
             **self._embed_kwargs,
         )
         return response.to_numpy()[0]
@@ -276,6 +280,7 @@ class CatsuEmbeddings(BaseEmbeddings):
                 model=self.model,
                 input=batch,
                 provider=self.provider,
+                dimensions=self._dimension,
                 **self._embed_kwargs,
             )
             arr = response.to_numpy()
