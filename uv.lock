@@ -1227,7 +1227,7 @@ requires-dist = [
     { name = "lancedb", marker = "extra == 'lancedb'", specifier = ">=0.4.0" },
     { name = "litellm", marker = "extra == 'litellm'", specifier = ">=1.0.0" },
     { name = "lxml", marker = "extra == 'table'" },
-    { name = "mistralai", marker = "extra == 'mistral'", specifier = ">=1.0.0" },
+    { name = "mistralai", marker = "extra == 'mistral'", specifier = ">=2.4.0" },
     { name = "model2vec", marker = "extra == 'model2vec'", specifier = ">=0.7.0" },
     { name = "model2vec", marker = "extra == 'semantic'", specifier = ">=0.3.0" },
     { name = "numpy", specifier = ">=2.0.0" },
