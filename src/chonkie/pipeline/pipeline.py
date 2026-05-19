@@ -169,6 +169,8 @@ class Pipeline:
                 # Map to appropriate method
                 if step_type == "fetch":
                     pipeline.fetch_from(component_name, **kwargs)
+                elif step_type == "vision":
+                    pipeline.see_with(component_name, **kwargs)
                 elif step_type == "process":
                     pipeline.process_with(component_name, **kwargs)
                 elif step_type == "chunk":
@@ -212,6 +214,33 @@ class Pipeline:
         """
         component = ComponentRegistry.get_fetcher(source_type)
         self._steps.append({"type": "fetch", "component": component, "kwargs": kwargs})
+        return self
+
+    def see_with(self, vision_type: str, **kwargs: Any) -> "Pipeline":
+        """Extract text from visual documents (images, PDFs) using OCR.
+
+        The vision step sits between fetcher and chef: it takes file paths
+        and returns extracted text, which is then passed to the chef for
+        Document creation.
+
+        Args:
+            vision_type: Type of vision component to use (e.g., "mistral")
+            **kwargs: Arguments passed to the vision component
+
+        Returns:
+            Pipeline instance for method chaining
+
+        Raises:
+            ValueError: If vision_type is not a registered vision component
+
+        Example:
+            ```python
+            pipeline.see_with("mistral", model="mistral-ocr-latest")
+            ```
+
+        """
+        component = ComponentRegistry.get_vision(vision_type)
+        self._steps.append({"type": "vision", "component": component, "kwargs": kwargs})
         return self
 
     def process_with(self, chef_type: str, **kwargs: Any) -> "Pipeline":
@@ -475,12 +504,12 @@ class Pipeline:
             text_chef = ComponentRegistry.get_chef("text")
             steps_by_type["process"] = [{"type": "process", "component": text_chef, "kwargs": {}}]
 
-        # Build ordered list following CHOMP: Fetch -> Process -> Chunk -> Refine -> Export/Write
+        # Build ordered list following CHOMP: Fetch -> Vision -> Process -> Chunk -> Refine -> Export/Write
         ordered = []
-        for step_type in ["fetch", "process", "chunk", "refine", "export", "write"]:
+        for step_type in ["fetch", "vision", "process", "chunk", "refine", "export", "write"]:
             if step_type in steps_by_type:
-                if step_type == "process":
-                    # Only one chef allowed - use the last one if multiple
+                if step_type in ("process", "vision"):
+                    # Only one allowed - use the last one if multiple
                     ordered.append(steps_by_type[step_type][-1])
                 else:
                     # Multiple allowed - preserve order
@@ -621,6 +650,7 @@ class Pipeline:
         """
         positional_params = {
             "fetch": set(),  # Fetch has no input_data, all params are kwargs
+            "vision": {"path", "file_path"},  # vision takes file path(s) from fetcher
             "process": {"path", "text"},  # process(path) or parse(text)
             "chunk": {"text", "document"},  # chunk methods take document
             "refine": {"chunks", "document"},  # refine methods take document
@@ -702,6 +732,12 @@ class Pipeline:
         if step_type == "fetch":
             return component.fetch(**kwargs)
 
+        if step_type == "vision":
+            # Vision takes file path(s) and returns extracted text string(s)
+            if isinstance(input_data, list):
+                return component.process_batch(input_data)
+            return component.process(input_data)
+
         if step_type == "process":
             # Path objects → process(path), strings → parse(text)
             if isinstance(input_data, list):
@@ -760,6 +796,11 @@ class Pipeline:
         """Call the appropriate method on a component asynchronously."""
         if step_type == "fetch":
             return await component.afetch(**kwargs)
+
+        if step_type == "vision":
+            if isinstance(input_data, list):
+                return await component.aprocess_batch(input_data)
+            return await component.aprocess(input_data)
 
         if step_type == "process":
             if isinstance(input_data, list):

@@ -10,6 +10,7 @@ class ComponentType(Enum):
 
     These represent the stages in the CHOMP pipeline:
     - FETCHER: Retrieves raw data from sources
+    - VISION: Extracts text from visual documents (images, PDFs) via OCR
     - CHEF: Preprocesses and transforms data
     - CHUNKER: Splits text into chunks
     - REFINERY: Post-processes chunks (e.g., add embeddings, merge)
@@ -18,6 +19,7 @@ class ComponentType(Enum):
     """
 
     FETCHER = "fetcher"
+    VISION = "vision"
     CHEF = "chef"
     CHUNKER = "chunker"
     REFINERY = "refinery"
