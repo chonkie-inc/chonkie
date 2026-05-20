@@ -19,6 +19,7 @@ from .nomic import NomicEmbeddings
 from .openai import OpenAIEmbeddings
 from .sentence_transformer import SentenceTransformerEmbeddings
 from .together import TogetherEmbeddings
+from .voyageai import VoyageAIEmbeddings
 
 
 class EmbeddingsRegistry:
@@ -263,6 +264,7 @@ EmbeddingsRegistry.register_model("voyage-3-large", CatsuEmbeddings)
 EmbeddingsRegistry.register_model("voyage-3", CatsuEmbeddings)
 EmbeddingsRegistry.register_model("voyage-3-lite", CatsuEmbeddings)
 EmbeddingsRegistry.register_model("voyage-code-3", CatsuEmbeddings)
+EmbeddingsRegistry.register_model("voyage-context-3", VoyageAIEmbeddings)
 EmbeddingsRegistry.register_model("voyage-finance-2", CatsuEmbeddings)
 EmbeddingsRegistry.register_model("voyage-law-2", CatsuEmbeddings)
 EmbeddingsRegistry.register_model("voyage-code-2", CatsuEmbeddings)

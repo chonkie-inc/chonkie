@@ -8,7 +8,7 @@ from typing import Any, Literal, Optional, Union
 from chonkie.embeddings import AutoEmbeddings, BaseEmbeddings
 from chonkie.logger import get_logger
 from chonkie.pipeline import handshake
-from chonkie.types import Chunk
+from chonkie.types import Chunk, Document
 
 from .base import BaseHandshake
 from .utils import generate_random_collection_name
@@ -19,6 +19,8 @@ logger = get_logger(__name__)
 @handshake("turbopuffer")
 class TurbopufferHandshake(BaseHandshake):
     """Turbopuffer Handshake to export Chonkie's Chunks into a Turbopuffer database."""
+
+    preserves_document_boundaries = True
 
     def __init__(
         self,
@@ -87,19 +89,18 @@ class TurbopufferHandshake(BaseHandshake):
         """Check if Turbopuffer is available."""
         return importutil.find_spec("turbopuffer") is not None
 
-    def write(self, chunks: Union[Chunk, list[Chunk]]) -> None:
-        """Write the chunks to the Turbopuffer database."""
-        if isinstance(chunks, Chunk):
-            chunks = [chunks]
+    @staticmethod
+    def _embedding_to_list(embedding: Any) -> list[float]:
+        """Convert an embedding vector to a list."""
+        return embedding.tolist() if hasattr(embedding, "tolist") else list(embedding)
 
-        logger.debug(f"Writing {len(chunks)} chunks to Turbopuffer namespace: {self.namespace.id}")
-        # Embed the chunks
+    def _write_embedded_chunks(self, chunks: list[Chunk], embeddings: list[list[float]]) -> None:
+        """Write chunks and precomputed embeddings to Turbopuffer."""
         ids = [
             self._generate_id(f"{self.namespace.id}::chunk-{index}:{chunk.text}")
             for (index, chunk) in enumerate(chunks)
         ]
         texts = [chunk.text for chunk in chunks]
-        embeddings = [embedding.tolist() for embedding in self.embedding_model.embed_batch(texts)]
         start_indices = [chunk.start_index for chunk in chunks]
         end_indices = [chunk.end_index for chunk in chunks]
         token_counts = [chunk.token_count for chunk in chunks]
@@ -108,7 +109,6 @@ class TurbopufferHandshake(BaseHandshake):
             for chunk in chunks
         ]
 
-        # Write the chunks to the database
         self.namespace.write(
             upsert_columns={
                 "id": ids,
@@ -125,6 +125,39 @@ class TurbopufferHandshake(BaseHandshake):
         logger.info(
             f"Chonkie has written {len(chunks)} chunks to the namespace: {self.namespace.id}",
         )
+
+    def write(self, chunks: Union[Chunk, list[Chunk]]) -> None:
+        """Write the chunks to the Turbopuffer database."""
+        if isinstance(chunks, Chunk):
+            chunks = [chunks]
+
+        logger.debug(f"Writing {len(chunks)} chunks to Turbopuffer namespace: {self.namespace.id}")
+        texts = [chunk.text for chunk in chunks]
+        embeddings = [
+            self._embedding_to_list(embedding)
+            for embedding in self.embedding_model.embed_batch(texts)
+        ]
+        self._write_embedded_chunks(chunks, embeddings)
+
+    def write_documents(self, documents: list[Document]) -> None:
+        """Write document chunks while preserving document boundaries for embedding models."""
+        chunks_by_document = [document.chunks for document in documents]
+        chunks = [chunk for document_chunks in chunks_by_document for chunk in document_chunks]
+        if not chunks:
+            return
+
+        logger.debug(f"Writing {len(chunks)} chunks to Turbopuffer namespace: {self.namespace.id}")
+        if hasattr(self.embedding_model, "embed_documents"):
+            document_texts = [
+                [chunk.text for chunk in chunk_group]
+                for chunk_group in chunks_by_document
+            ]
+            raw_embeddings = self.embedding_model.embed_documents(document_texts)
+        else:
+            raw_embeddings = self.embedding_model.embed_batch([chunk.text for chunk in chunks])
+
+        embeddings = [self._embedding_to_list(embedding) for embedding in raw_embeddings]
+        self._write_embedded_chunks(chunks, embeddings)
 
     def __repr__(self) -> str:
         """Return the representation of the Turbopuffer Handshake."""

@@ -7,8 +7,9 @@ Supported providers: VoyageAI, OpenAI, Cohere, Gemini, Jina AI, Mistral,
 Nomic, Cloudflare, MixedBread, DeepInfra, TogetherAI.
 """
 
+import asyncio
 import importlib.util as importutil
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Literal, Optional, Sequence
 
 import numpy as np
 
@@ -41,6 +42,7 @@ class CatsuEmbeddings(BaseEmbeddings):
         timeout: Request timeout in seconds (default: 30)
         verbose: Enable verbose logging (default: False)
         batch_size: Maximum number of texts to embed in one API call (default: 128)
+        dimensions: Optional output dimension for models that support it
         **kwargs: Additional keyword arguments to pass to the Catsu client
 
     Examples:
@@ -60,6 +62,8 @@ class CatsuEmbeddings(BaseEmbeddings):
 
     """
 
+    CONTEXTUALIZED_MODELS = {"voyage-context-3"}
+
     def __init__(
         self,
         model: str,
@@ -69,6 +73,7 @@ class CatsuEmbeddings(BaseEmbeddings):
         timeout: int = 30,
         verbose: bool = False,
         batch_size: int = 128,
+        dimensions: Optional[int] = None,
         **kwargs: Dict[str, Any],
     ):
         """Initialize Catsu embeddings adapter.
@@ -81,6 +86,7 @@ class CatsuEmbeddings(BaseEmbeddings):
             timeout: Request timeout in seconds
             verbose: Enable verbose logging
             batch_size: Maximum number of texts to embed in one API call
+            dimensions: Optional output dimension for models that support it
             **kwargs: Additional keyword arguments
 
         Raises:
@@ -95,6 +101,8 @@ class CatsuEmbeddings(BaseEmbeddings):
         self.provider = provider
         self._batch_size = batch_size
         self._verbose = verbose
+        self._is_contextualized = model in self.CONTEXTUALIZED_MODELS
+        self._dimensions = dimensions
 
         # Initialize Catsu client
         try:
@@ -123,6 +131,9 @@ class CatsuEmbeddings(BaseEmbeddings):
                 f"Could not load model info for {model}: {e}. Will attempt to use model anyway.",
                 exc_info=True,
             )
+
+        if self._dimensions is not None:
+            self._dimension = self._dimensions
 
     def _load_model_info(self) -> None:
         """Load model metadata from Catsu catalog."""
@@ -156,15 +167,48 @@ class CatsuEmbeddings(BaseEmbeddings):
             Various Catsu exceptions for API errors, auth failures, etc.
 
         """
+        if self._is_contextualized:
+            return self._contextualized_embed([[text]], input_type="query")[0]
+
         response = self.client.embed(
             model=self.model,
             input=text,
             provider=self.provider,
+            dimensions=self._dimensions,
         )
 
         # Catsu returns List[List[float]], we need first embedding as 1D array
         embeddings_array = response.to_numpy()
         return embeddings_array[0]
+
+    def _contextualized_embed(
+        self,
+        inputs: Sequence[Sequence[str]],
+        input_type: Literal["query", "document"],
+    ) -> List[np.ndarray]:
+        """Embed grouped inputs with a contextualized embedding endpoint."""
+        groups = [list(group) for group in inputs if group]
+        if not groups:
+            return []
+
+        if not hasattr(self.client, "contextualized_embed"):
+            raise RuntimeError(
+                "The installed catsu package does not support contextualized embeddings. "
+                "Install a catsu version with `contextualized_embed` support.",
+            )
+
+        response = self.client.contextualized_embed(
+            model=self.model,
+            inputs=groups,
+            provider=self.provider,
+            input_type=input_type,
+            dimensions=self._dimensions,
+        )
+        return [
+            np.asarray(embedding, dtype=np.float32)
+            for group in response.embeddings
+            for embedding in group
+        ]
 
     def embed_batch(self, texts: List[str]) -> List[np.ndarray]:
         """Embed multiple texts using batched API calls.
@@ -184,6 +228,8 @@ class CatsuEmbeddings(BaseEmbeddings):
         """
         if not texts:
             return []
+        if self._is_contextualized:
+            return self.embed_documents([texts])
 
         all_embeddings = []
 
@@ -196,6 +242,7 @@ class CatsuEmbeddings(BaseEmbeddings):
                     model=self.model,
                     input=batch,
                     provider=self.provider,
+                    dimensions=self._dimensions,
                 )
 
                 # Convert to list of 1D numpy arrays
@@ -218,6 +265,12 @@ class CatsuEmbeddings(BaseEmbeddings):
 
         return all_embeddings
 
+    def embed_documents(self, documents: Sequence[Sequence[str]]) -> List[np.ndarray]:
+        """Embed document chunk groups while preserving document boundaries."""
+        if self._is_contextualized:
+            return self._contextualized_embed(documents, input_type="document")
+        return self.embed_batch([text for document in documents for text in document])
+
     async def aembed(self, text: str) -> np.ndarray:
         """Embed a single text string asynchronously.
 
@@ -231,10 +284,14 @@ class CatsuEmbeddings(BaseEmbeddings):
             Various Catsu exceptions for API errors, auth failures, etc.
 
         """
+        if self._is_contextualized:
+            return await asyncio.to_thread(self.embed, text)
+
         response = await self.client.aembed(
             model=self.model,
             input=text,
             provider=self.provider,
+            dimensions=self._dimensions,
         )
         return response.to_numpy()[0]
 
@@ -253,6 +310,8 @@ class CatsuEmbeddings(BaseEmbeddings):
         """
         if not texts:
             return []
+        if self._is_contextualized:
+            return await asyncio.to_thread(self.embed_batch, texts)
 
         all_embeddings = []
         for i in range(0, len(texts), self._batch_size):
@@ -261,10 +320,15 @@ class CatsuEmbeddings(BaseEmbeddings):
                 model=self.model,
                 input=batch,
                 provider=self.provider,
+                dimensions=self._dimensions,
             )
             arr = response.to_numpy()
             all_embeddings.extend([arr[j] for j in range(len(batch))])
         return all_embeddings
+
+    async def aembed_documents(self, documents: Sequence[Sequence[str]]) -> List[np.ndarray]:
+        """Embed document chunk groups asynchronously."""
+        return await asyncio.to_thread(self.embed_documents, documents)
 
     @property
     def dimension(self) -> int:

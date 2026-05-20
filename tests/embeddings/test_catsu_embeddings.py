@@ -49,6 +49,12 @@ def sample_texts() -> List[str]:
     ]
 
 
+def _mock_contextual_response(embeddings_by_input: list[list[list[float]]]):
+    response = MagicMock()
+    response.embeddings = embeddings_by_input
+    return response
+
+
 def test_initialization_with_model_name(embedding_model: CatsuEmbeddings) -> None:
     """Test that CatsuEmbeddings initializes with a model name."""
     assert embedding_model.model == "voyage-3"
@@ -129,6 +135,72 @@ def test_embed_batch_empty_list(embedding_model: CatsuEmbeddings) -> None:
     embeddings = embedding_model.embed_batch([])
     assert isinstance(embeddings, list)
     assert len(embeddings) == 0
+
+
+def test_contextual_embed_uses_query_input_type(mock_catsu_client) -> None:
+    """Contextual Catsu embeds single text as a query."""
+    mock_catsu_client.contextualized_embed.return_value = _mock_contextual_response(
+        [[[0.1] * 512]],
+    )
+    with patch("catsu.Client", return_value=mock_catsu_client):
+        embeddings = CatsuEmbeddings(
+            model="voyage-context-3",
+            provider="voyageai",
+            dimensions=512,
+        )
+
+        result = embeddings.embed("find this")
+
+    mock_catsu_client.contextualized_embed.assert_called_once_with(
+        model="voyage-context-3",
+        inputs=[["find this"]],
+        provider="voyageai",
+        input_type="query",
+        dimensions=512,
+    )
+    assert result.shape == (512,)
+
+
+def test_contextual_embed_batch_preserves_single_document(mock_catsu_client) -> None:
+    """Contextual Catsu embeds a batch as chunks from one document."""
+    mock_catsu_client.contextualized_embed.return_value = _mock_contextual_response(
+        [[[0.1] * 1024, [0.2] * 1024]],
+    )
+    with patch("catsu.Client", return_value=mock_catsu_client):
+        embeddings = CatsuEmbeddings(model="voyage-context-3", provider="voyageai")
+
+        results = embeddings.embed_batch(["chunk 1", "chunk 2"])
+
+    mock_catsu_client.contextualized_embed.assert_called_once_with(
+        model="voyage-context-3",
+        inputs=[["chunk 1", "chunk 2"]],
+        provider="voyageai",
+        input_type="document",
+        dimensions=None,
+    )
+    assert len(results) == 2
+
+
+def test_contextual_embed_documents_preserves_document_groups(mock_catsu_client) -> None:
+    """Contextual Catsu embeds multiple document groups together."""
+    mock_catsu_client.contextualized_embed.return_value = _mock_contextual_response(
+        [[[0.1] * 1024, [0.2] * 1024], [[0.3] * 1024]],
+    )
+    with patch("catsu.Client", return_value=mock_catsu_client):
+        embeddings = CatsuEmbeddings(model="voyage-context-3", provider="voyageai")
+
+        results = embeddings.embed_documents(
+            [["doc 1 chunk 1", "doc 1 chunk 2"], ["doc 2 chunk 1"]],
+        )
+
+    mock_catsu_client.contextualized_embed.assert_called_once_with(
+        model="voyage-context-3",
+        inputs=[["doc 1 chunk 1", "doc 1 chunk 2"], ["doc 2 chunk 1"]],
+        provider="voyageai",
+        input_type="document",
+        dimensions=None,
+    )
+    assert len(results) == 3
 
 
 def test_embed_batch_with_batching(embedding_model: CatsuEmbeddings) -> None:
