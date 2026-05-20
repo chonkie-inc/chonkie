@@ -41,6 +41,7 @@ class CatsuEmbeddings(BaseEmbeddings):
         timeout: Request timeout in seconds (default: 30)
         verbose: Enable verbose logging (default: False)
         batch_size: Maximum number of texts to embed in one API call (default: 128)
+        dimensions: Optional output dimensionality to request from the provider
         **kwargs: Additional keyword arguments to pass to the Catsu client
 
     Examples:
@@ -69,7 +70,8 @@ class CatsuEmbeddings(BaseEmbeddings):
         timeout: int = 30,
         verbose: bool = False,
         batch_size: int = 128,
-        **kwargs: Dict[str, Any],
+        dimensions: Optional[int] = None,
+        **kwargs: Any,
     ):
         """Initialize Catsu embeddings adapter.
 
@@ -81,6 +83,7 @@ class CatsuEmbeddings(BaseEmbeddings):
             timeout: Request timeout in seconds
             verbose: Enable verbose logging
             batch_size: Maximum number of texts to embed in one API call
+            dimensions: Optional output dimensionality to request from the provider
             **kwargs: Additional keyword arguments
 
         Raises:
@@ -95,6 +98,16 @@ class CatsuEmbeddings(BaseEmbeddings):
         self.provider = provider
         self._batch_size = batch_size
         self._verbose = verbose
+        if dimensions is not None and (type(dimensions) is not int or dimensions <= 0):
+            raise ValueError("`dimensions` must be a positive integer")
+        self._dimension: Optional[int] = dimensions
+        if "input" in kwargs:
+            raise ValueError(
+                "Reserved embedding kwargs are not allowed: input",
+            )
+        self._embed_kwargs: Dict[str, Any] = {
+            key: value for key, value in kwargs.items() if value is not None
+        }
 
         # Initialize Catsu client
         try:
@@ -112,7 +125,6 @@ class CatsuEmbeddings(BaseEmbeddings):
         )
 
         # Cache for model metadata
-        self._dimension: Optional[int] = None
         self._model_info: Optional[Any] = None
 
         # Validate model exists and is supported
@@ -131,7 +143,8 @@ class CatsuEmbeddings(BaseEmbeddings):
             for model_info in models:
                 if getattr(model_info, "name", None) == self.model:
                     self._model_info = model_info
-                    self._dimension = getattr(model_info, "dimensions", None)
+                    if self._dimension is None:
+                        self._dimension = getattr(model_info, "dimensions", None)
                     break
 
             if self._model_info is None and self._verbose:
@@ -160,6 +173,8 @@ class CatsuEmbeddings(BaseEmbeddings):
             model=self.model,
             input=text,
             provider=self.provider,
+            dimensions=self._dimension,
+            **self._embed_kwargs,
         )
 
         # Catsu returns List[List[float]], we need first embedding as 1D array
@@ -196,6 +211,8 @@ class CatsuEmbeddings(BaseEmbeddings):
                     model=self.model,
                     input=batch,
                     provider=self.provider,
+                    dimensions=self._dimension,
+                    **self._embed_kwargs,
                 )
 
                 # Convert to list of 1D numpy arrays
@@ -235,6 +252,8 @@ class CatsuEmbeddings(BaseEmbeddings):
             model=self.model,
             input=text,
             provider=self.provider,
+            dimensions=self._dimension,
+            **self._embed_kwargs,
         )
         return response.to_numpy()[0]
 
@@ -261,6 +280,8 @@ class CatsuEmbeddings(BaseEmbeddings):
                 model=self.model,
                 input=batch,
                 provider=self.provider,
+                dimensions=self._dimension,
+                **self._embed_kwargs,
             )
             arr = response.to_numpy()
             all_embeddings.extend([arr[j] for j in range(len(batch))])
