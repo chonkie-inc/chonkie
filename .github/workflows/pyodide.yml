@@ -66,7 +66,7 @@ jobs:
           pyodide venv .venv-pyodide
           source .venv-pyodide/bin/activate
           pip install --upgrade pip
-          pip install chonkie --no-index --no-deps --find-links dist
+          pip install chonkie --no-index --find-links dist
           python -c "
           import chonkie
 
