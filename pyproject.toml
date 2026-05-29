@@ -49,10 +49,10 @@ classifiers = [
 dependencies = [
     "tqdm>=4.64.0",
     "numpy>=2.0.0",
-    "chonkie-core>=0.8.0",
+    "chonkie-core>=0.10.2",
     "tenacity>=8.0.0",
     "httpx>=0.28.1",
-    "tokie>=0.0.9",
+    "tokie>=0.0.10",
 ]
 
 [project.urls]
