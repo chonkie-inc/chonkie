@@ -71,7 +71,7 @@ jobs:
           import chonkie
 
           # Verify core module imports
-          from chonkie.chunker import TokenChunker, WordChunker, SentenceChunker
+          from chonkie.chunker import TokenChunker, SentenceChunker, RecursiveChunker
           from chonkie.types import Chunk, Document
 
           # Verify basic chunker instantiation
