@@ -39,7 +39,9 @@ class JSONPorter(BasePorter):
         """Export the Chunks into a JSON string."""
         logger.debug(f"Exporting {len(chunks)} chunks to JSON file: {file}")
         with open(file, "w", encoding="utf-8") as f:
-            json.dump([chunk.to_dict() for chunk in chunks], f, indent=self.indent, ensure_ascii=False)
+            json.dump(
+                [chunk.to_dict() for chunk in chunks], f, indent=self.indent, ensure_ascii=False
+            )
         logger.info(f"Successfully exported {len(chunks)} chunks to JSON: {file}")
 
     def export(self, chunks: list[Chunk], file: str | os.PathLike = "chunks.jsonl") -> None:  # type: ignore[override]
