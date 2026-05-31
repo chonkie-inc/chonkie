@@ -295,6 +295,48 @@ def test_json_porter_unicode_content(tmp_path: Path) -> None:
     assert data[1]["text"] == "Café, naïve, résumé, 北京"
 
 
+def test_json_porter_non_ascii_written_as_is_json(tmp_path: Path) -> None:
+    r"""Test that non-ASCII characters are written as-is, not as \uXXXX escapes, in JSON format."""
+    chunk = Chunk(
+        text="Hello 世界! The quick brown fox 跳过了那只懒惰的狗。",
+        start_index=0,
+        end_index=80,
+        token_count=12,
+    )
+
+    porter = JSONPorter(lines=False)
+    output_file = tmp_path / "non_ascii.json"
+    porter.export([chunk], str(output_file))
+
+    raw_content = output_file.read_text(encoding="utf-8")
+
+    # Verify the raw file contains the original characters, not escapes
+    assert "世界" in raw_content
+    assert "跳过了那只懒惰的狗" in raw_content
+    assert "\\u" not in raw_content
+
+
+def test_json_porter_non_ascii_written_as_is_jsonl(tmp_path: Path) -> None:
+    r"""Test that non-ASCII characters are written as-is, not as \uXXXX escapes, in JSONL format."""
+    chunk = Chunk(
+        text="Hello 世界! The quick brown fox 跳过了那只懒惰的狗。",
+        start_index=0,
+        end_index=80,
+        token_count=12,
+    )
+
+    porter = JSONPorter(lines=True)
+    output_file = tmp_path / "non_ascii.jsonl"
+    porter.export([chunk], str(output_file))
+
+    raw_content = output_file.read_text(encoding="utf-8")
+
+    # Verify the raw file contains the original characters, not escapes
+    assert "世界" in raw_content
+    assert "跳过了那只懒惰的狗" in raw_content
+    assert "\\u" not in raw_content
+
+
 def test_json_porter_chunk_serialization_completeness(
     sample_chunks: list[Chunk],
     tmp_path: Path,
