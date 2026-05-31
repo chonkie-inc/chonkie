@@ -296,7 +296,7 @@ def test_json_porter_unicode_content(tmp_path: Path) -> None:
 
 
 def test_json_porter_non_ascii_written_as_is_json(tmp_path: Path) -> None:
-    """Test that non-ASCII characters are written as-is, not as \\uXXXX escapes, in JSON format."""
+    r"""Test that non-ASCII characters are written as-is, not as \uXXXX escapes, in JSON format."""
     chunk = Chunk(
         text="Hello 世界! The quick brown fox 跳过了那只懒惰的狗。",
         start_index=0,
@@ -317,7 +317,7 @@ def test_json_porter_non_ascii_written_as_is_json(tmp_path: Path) -> None:
 
 
 def test_json_porter_non_ascii_written_as_is_jsonl(tmp_path: Path) -> None:
-    """Test that non-ASCII characters are written as-is, not as \\uXXXX escapes, in JSONL format."""
+    r"""Test that non-ASCII characters are written as-is, not as \uXXXX escapes, in JSONL format."""
     chunk = Chunk(
         text="Hello 世界! The quick brown fox 跳过了那只懒惰的狗。",
         start_index=0,
