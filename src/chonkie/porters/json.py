@@ -30,16 +30,18 @@ class JSONPorter(BasePorter):
     def _export_lines(self, chunks: list[Chunk], file: str | os.PathLike = "chunks.jsonl") -> None:
         """Export the Chunks as a JSONL file."""
         logger.debug(f"Exporting {len(chunks)} chunks to JSONL file: {file}")
-        with open(file, "w") as f:
+        with open(file, "w", encoding="utf-8") as f:
             for chunk in chunks:
-                f.write(json.dumps(chunk.to_dict()) + "\n")
+                f.write(json.dumps(chunk.to_dict(), ensure_ascii=False) + "\n")
         logger.info(f"Successfully exported {len(chunks)} chunks to JSONL: {file}")
 
     def _export_json(self, chunks: list[Chunk], file: str | os.PathLike = "chunks.json") -> None:
         """Export the Chunks into a JSON string."""
         logger.debug(f"Exporting {len(chunks)} chunks to JSON file: {file}")
-        with open(file, "w") as f:
-            json.dump([chunk.to_dict() for chunk in chunks], f, indent=self.indent)
+        with open(file, "w", encoding="utf-8") as f:
+            json.dump(
+                [chunk.to_dict() for chunk in chunks], f, indent=self.indent, ensure_ascii=False
+            )
         logger.info(f"Successfully exported {len(chunks)} chunks to JSON: {file}")
 
     def export(self, chunks: list[Chunk], file: str | os.PathLike = "chunks.jsonl") -> None:  # type: ignore[override]
