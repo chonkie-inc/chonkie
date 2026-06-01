@@ -822,7 +822,7 @@ wheels = [
 
 [[package]]
 name = "chonkie"
-version = "1.6.8a1"
+version = "1.6.8"
 source = { editable = "." }
 dependencies = [
     { name = "chonkie-core" },
