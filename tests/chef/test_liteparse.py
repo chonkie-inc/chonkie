@@ -72,32 +72,51 @@ class TestLiteParseInit:
         mock_module, _ = mock_liteparse
         chef = LiteParse()
 
-        assert chef.ocr_enabled is True
-        assert chef.ocr_language == "en"
+        assert chef.ocr_enabled is None
+        assert chef.ocr_language is None
         mock_module.LiteParse.assert_called_once_with(
-            cli_path=None,
-            install_if_not_available=True,
+            ocr_enabled=None,
+            ocr_server_url=None,
+            ocr_language=None,
+            tessdata_path=None,
+            max_pages=None,
+            target_pages=None,
+            dpi=None,
+            output_format=None,
+            preserve_very_small_text=None,
+            password=None,
+            quiet=None,
+            num_workers=None,
         )
 
     def test_custom_options(self, mock_liteparse) -> None:
         mock_module, _ = mock_liteparse
         chef = LiteParse(
             ocr_enabled=False,
-            ocr_language="fr",
+            ocr_language="fra",
             ocr_server_url="http://ocr:8080",
             dpi=300,
             max_pages=50,
             target_pages="1-5,10",
             num_workers=8,
             password="secret",
-            cli_path="/usr/bin/liteparse",
         )
 
         assert chef.ocr_enabled is False
-        assert chef.ocr_language == "fr"
+        assert chef.ocr_language == "fra"
         mock_module.LiteParse.assert_called_once_with(
-            cli_path="/usr/bin/liteparse",
-            install_if_not_available=True,
+            ocr_enabled=False,
+            ocr_language="fra",
+            ocr_server_url="http://ocr:8080",
+            tessdata_path=None,
+            max_pages=50,
+            target_pages="1-5,10",
+            dpi=300,
+            output_format=None,
+            preserve_very_small_text=None,
+            password="secret",
+            quiet=None,
+            num_workers=8,
         )
 
 
@@ -117,20 +136,7 @@ class TestLiteParseProcess:
         assert isinstance(result, Document)
         assert result.content == "Extracted PDF content"
         assert result.metadata["filename"] == "test.pdf"
-        mock_parser.parse.assert_called_once_with(
-            str(pdf_file),
-            ocr_enabled=True,
-            ocr_language="en",
-            ocr_server_url=None,
-            max_pages=10000,
-            target_pages=None,
-            dpi=150,
-            num_workers=None,
-            password=None,
-            precise_bounding_box=True,
-            preserve_very_small_text=False,
-            timeout=None,
-        )
+        mock_parser.parse.assert_called_once_with(str(pdf_file))
 
     def test_process_image(self, tmp_path: Path, mock_liteparse) -> None:
         _, mock_parser = mock_liteparse
@@ -160,7 +166,7 @@ class TestLiteParseProcess:
         assert result.content == "Word document content"
         assert result.metadata["filename"] == "report.docx"
 
-    def test_process_passes_options_to_parse(self, tmp_path: Path, mock_liteparse) -> None:
+    def test_process_passes_options_to_init(self, tmp_path: Path, mock_liteparse) -> None:
         mock_module, mock_parser = mock_liteparse
         mock_parser.parse.return_value = Mock(text="content")
 
@@ -169,7 +175,7 @@ class TestLiteParseProcess:
 
         chef = LiteParse(
             ocr_enabled=False,
-            ocr_language="de",
+            ocr_language="deu",
             dpi=300,
             max_pages=5,
             target_pages="1-3",
@@ -178,26 +184,23 @@ class TestLiteParseProcess:
         )
         chef.process(pdf_file)
 
-        # Constructor only receives cli_path and install_if_not_available
+        # Options go to LiteParse constructor
         mock_module.LiteParse.assert_called_once_with(
-            cli_path=None,
-            install_if_not_available=True,
-        )
-        # Options go to parse()
-        mock_parser.parse.assert_called_once_with(
-            str(pdf_file),
             ocr_enabled=False,
-            ocr_language="de",
+            ocr_language="deu",
             ocr_server_url=None,
+            tessdata_path=None,
             max_pages=5,
             target_pages="1-3",
             dpi=300,
-            num_workers=4,
+            output_format=None,
+            preserve_very_small_text=None,
             password="pw",
-            precise_bounding_box=True,
-            preserve_very_small_text=False,
-            timeout=None,
+            quiet=None,
+            num_workers=4,
         )
+        # parse() only receives the file path
+        mock_parser.parse.assert_called_once_with(str(pdf_file))
 
     def test_process_file_not_found(self, mock_liteparse) -> None:  # noqa: ARG002
         chef = LiteParse()
@@ -229,9 +232,7 @@ class TestLiteParseBatch:
 
     def test_process_batch(self, tmp_path: Path, mock_liteparse) -> None:
         _, mock_parser = mock_liteparse
-        mock_parser.parse.side_effect = [
-            Mock(text=f"Content from doc {i}") for i in range(3)
-        ]
+        mock_parser.parse.side_effect = [Mock(text=f"Content from doc {i}") for i in range(3)]
 
         files: list[str | os.PathLike] = []
         for i in range(3):
@@ -266,8 +267,8 @@ class TestLiteParseUtilities:
         assert result.content == "Called text"
 
     def test_repr(self, mock_liteparse) -> None:  # noqa: ARG002
-        chef = LiteParse(ocr_enabled=False, ocr_language="de")
+        chef = LiteParse(ocr_enabled=False, ocr_language="deu")
         r = repr(chef)
         assert "LiteParse" in r
         assert "ocr_enabled=False" in r
-        assert "de" in r
+        assert "deu" in r

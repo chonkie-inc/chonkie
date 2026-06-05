@@ -55,36 +55,34 @@ class LiteParse(BaseChef):
 
     def __init__(
         self,
-        ocr_enabled: bool = True,
-        ocr_language: str = "en",
+        ocr_enabled: Optional[bool] = None,
         ocr_server_url: Optional[str] = None,
-        max_pages: int = 10000,
+        ocr_language: Optional[str] = None,
+        tessdata_path: Optional[str] = None,
+        max_pages: Optional[int] = None,
         target_pages: Optional[str] = None,
-        dpi: int = 150,
-        num_workers: Optional[int] = None,
+        dpi: Optional[float] = None,
+        output_format: Optional[str] = None,
+        preserve_very_small_text: Optional[bool] = None,
         password: Optional[str] = None,
-        precise_bounding_box: bool = True,
-        preserve_very_small_text: bool = False,
-        cli_path: Optional[str] = None,
-        install_if_not_available: bool = True,
-        timeout: Optional[float] = None,
+        quiet: Optional[bool] = None,
+        num_workers: Optional[int] = None,
     ):
         """Initialize the LiteParse chef.
 
         Args:
-            ocr_enabled: Whether to enable OCR for scanned/image text.
-            ocr_language: Language code for OCR (e.g., "en", "fr", "de").
-            ocr_server_url: Optional HTTP OCR server URL.
-            max_pages: Maximum number of pages to parse.
-            target_pages: Specific pages to parse (e.g., "1-5,10").
-            dpi: Rendering resolution for PDF pages.
-            num_workers: Number of pages to OCR in parallel.
-            password: Password for protected PDFs.
-            precise_bounding_box: Whether to compute precise bounding boxes.
-            preserve_very_small_text: Whether to preserve very small text.
-            cli_path: Custom path to the liteparse CLI.
-            install_if_not_available: Install the CLI from NPM if not found.
-            timeout: Timeout in seconds for parsing.
+            ocr_enabled: Whether to enable OCR for scanned documents (default: True)
+            ocr_server_url: URL of HTTP OCR server (uses Tesseract if not provided)
+            ocr_language: Language code for OCR (e.g., "eng", "fra")
+            tessdata_path: Path to tessdata directory for Tesseract
+            max_pages: Maximum number of pages to parse
+            target_pages: Specific pages to parse (e.g., "1-5,10,15-20")
+            dpi: DPI for rendering (affects OCR quality)
+            output_format: Output format: "json" or "text" (default: "json")
+            preserve_very_small_text: Whether to preserve very small text
+            password: Password for encrypted/protected documents
+            quiet: Suppress progress output
+            num_workers: Number of concurrent OCR workers (default: CPU cores - 1)
 
         """
         try:
@@ -95,24 +93,35 @@ class LiteParse(BaseChef):
                 "Please install the dependency via `pip install chonkie[liteparse]`"
             ) from ie
 
-        if ocr_enabled and not os.environ.get("TESSDATA_PREFIX"):
+        if (ocr_enabled is None or ocr_enabled) and not os.environ.get("TESSDATA_PREFIX"):
             self._auto_detect_tessdata()
 
         self.parser = _LiteParse(
-            cli_path=cli_path,
-            install_if_not_available=install_if_not_available,
+            ocr_enabled=ocr_enabled,
+            ocr_server_url=ocr_server_url,
+            ocr_language=ocr_language,
+            tessdata_path=tessdata_path,
+            max_pages=max_pages,
+            target_pages=target_pages,
+            dpi=dpi,
+            output_format=output_format,
+            preserve_very_small_text=preserve_very_small_text,
+            password=password,
+            quiet=quiet,
+            num_workers=num_workers,
         )
         self.ocr_enabled = ocr_enabled
-        self.ocr_language = ocr_language
         self.ocr_server_url = ocr_server_url
+        self.ocr_language = ocr_language
+        self.tessdata_path = tessdata_path
         self.max_pages = max_pages
         self.target_pages = target_pages
         self.dpi = dpi
-        self.num_workers = num_workers
-        self.password = password
-        self.precise_bounding_box = precise_bounding_box
+        self.output_format = output_format
         self.preserve_very_small_text = preserve_very_small_text
-        self.timeout = timeout
+        self.password = password
+        self.quiet = quiet
+        self.num_workers = num_workers
 
     @staticmethod
     def _auto_detect_tessdata() -> None:
@@ -153,20 +162,7 @@ class LiteParse(BaseChef):
             )
 
         logger.debug(f"Processing file with LiteParse: {path}")
-        result = self.parser.parse(
-            str(p),
-            ocr_enabled=self.ocr_enabled,
-            ocr_language=self.ocr_language,
-            ocr_server_url=self.ocr_server_url,
-            max_pages=self.max_pages,
-            target_pages=self.target_pages,
-            dpi=self.dpi,
-            num_workers=self.num_workers,
-            password=self.password,
-            precise_bounding_box=self.precise_bounding_box,
-            preserve_very_small_text=self.preserve_very_small_text,
-            timeout=self.timeout,
-        )
+        result = self.parser.parse(str(p))
         content = result.text
 
         logger.info(
@@ -193,4 +189,4 @@ class LiteParse(BaseChef):
 
     def __repr__(self) -> str:
         """Return a string representation of the LiteParse instance."""
-        return f"LiteParse(ocr_enabled={self.ocr_enabled}, ocr_language={self.ocr_language!r})"
+        return f"LiteParse(ocr_enabled={self.ocr_enabled}, ocr_language={self.ocr_language!r}, dpi={self.dpi})"
