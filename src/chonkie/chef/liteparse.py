@@ -63,6 +63,11 @@ class LiteParse(BaseChef):
         dpi: int = 150,
         num_workers: Optional[int] = None,
         password: Optional[str] = None,
+        precise_bounding_box: bool = True,
+        preserve_very_small_text: bool = False,
+        cli_path: Optional[str] = None,
+        install_if_not_available: bool = True,
+        timeout: Optional[float] = None,
     ):
         """Initialize the LiteParse chef.
 
@@ -75,6 +80,11 @@ class LiteParse(BaseChef):
             dpi: Rendering resolution for PDF pages.
             num_workers: Number of pages to OCR in parallel.
             password: Password for protected PDFs.
+            precise_bounding_box: Whether to compute precise bounding boxes.
+            preserve_very_small_text: Whether to preserve very small text.
+            cli_path: Custom path to the liteparse CLI.
+            install_if_not_available: Install the CLI from NPM if not found.
+            timeout: Timeout in seconds for parsing.
 
         """
         try:
@@ -88,18 +98,21 @@ class LiteParse(BaseChef):
         if ocr_enabled and not os.environ.get("TESSDATA_PREFIX"):
             self._auto_detect_tessdata()
 
-        self.parser = _LiteParse(  # type: ignore[call-arg]
-            ocr_enabled=ocr_enabled,
-            ocr_language=ocr_language,
-            ocr_server_url=ocr_server_url,
-            max_pages=max_pages,
-            target_pages=target_pages,
-            dpi=dpi,
-            num_workers=num_workers,
-            password=password,
+        self.parser = _LiteParse(
+            cli_path=cli_path,
+            install_if_not_available=install_if_not_available,
         )
         self.ocr_enabled = ocr_enabled
         self.ocr_language = ocr_language
+        self.ocr_server_url = ocr_server_url
+        self.max_pages = max_pages
+        self.target_pages = target_pages
+        self.dpi = dpi
+        self.num_workers = num_workers
+        self.password = password
+        self.precise_bounding_box = precise_bounding_box
+        self.preserve_very_small_text = preserve_very_small_text
+        self.timeout = timeout
 
     @staticmethod
     def _auto_detect_tessdata() -> None:
@@ -140,7 +153,20 @@ class LiteParse(BaseChef):
             )
 
         logger.debug(f"Processing file with LiteParse: {path}")
-        result = self.parser.parse(str(p))
+        result = self.parser.parse(
+            str(p),
+            ocr_enabled=self.ocr_enabled,
+            ocr_language=self.ocr_language,
+            ocr_server_url=self.ocr_server_url,
+            max_pages=self.max_pages,
+            target_pages=self.target_pages,
+            dpi=self.dpi,
+            num_workers=self.num_workers,
+            password=self.password,
+            precise_bounding_box=self.precise_bounding_box,
+            preserve_very_small_text=self.preserve_very_small_text,
+            timeout=self.timeout,
+        )
         content = result.text
 
         logger.info(
