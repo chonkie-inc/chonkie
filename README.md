@@ -188,22 +188,27 @@ Chonkie provides several chunkers to help you split your text efficiently for RA
 | `CodeChunker`      | `code`      | Splits code into structurally meaningful chunks.                                                                           |
 | `NeuralChunker`    | `neural`    | Splits text using a neural model.                                                                                          |
 | `SlumberChunker`   | `slumber`   | Splits text using an LLM to find semantically meaningful chunks. Also known as _"AgenticChunker"_.                         |
+| `TableChunker`     | `table`     | Chunks markdown tables by rows or character count.                                                                          |
+| `TeraflopAIChunker`| `teraflopai`| Splits text using the TeraflopAI Segmentation API for domain-specific segmentation.                                        |
 
 More on these methods and the approaches taken inside the [docs](https://docs.chonkie.ai)
 
 ## 🔌 Integrations
 
-Chonkie boasts 32+ integrations across tokenizers, embedding providers, LLMs, refineries, porters, vector databases, and utilities, ensuring it fits seamlessly into your existing workflow.
+Chonkie boasts 45+ integrations across tokenizers, embedding providers, LLMs, refineries, porters, vector databases, and utilities, ensuring it fits seamlessly into your existing workflow.
 
 <details>
 <summary><strong>👨‍🍳 Chefs & 📁 Fetchers! Text preprocessing and data loading!</strong></summary>
 
 Chefs handle text preprocessing, while Fetchers load data from various sources.
 
-| Component | Class         | Description                           | Optional Install |
-| --------- | ------------- | ------------------------------------- | ---------------- |
-| `chef`    | `TextChef`    | Text preprocessing and cleaning.      | `default`        |
-| `fetcher` | `FileFetcher` | Load text from files and directories. | `default`        |
+| Component | Class          | Description                                        | Optional Install  |
+| --------- | -------------- | -------------------------------------------------- | ----------------- |
+| `chef`    | `TextChef`     | Text preprocessing and cleaning.                   | `default`         |
+| `chef`    | `MarkdownChef` | Parse markdown into structured MarkdownDocuments.   | `default`         |
+| `chef`    | `TableChef`    | Process CSV/Excel files into MarkdownDocuments.     | `chonkie[table]`  |
+| `chef`    | `MistralOCR`   | Extract text from images/PDFs via Mistral OCR API. | `chonkie[mistral]` |
+| `fetcher` | `FileFetcher`  | Load text from files and directories.              | `default`         |
 
 </details>
 <details>
@@ -231,7 +236,7 @@ Porters help you save your chunks easily.
 </details>
 
 <details>
-<summary><strong>🤝 Shake hands with your DB! Chonkie connects with 8+ vector stores!</strong></summary>
+<summary><strong>🤝 Shake hands with your DB! Chonkie connects with 10+ vector stores!</strong></summary>
 
 Handshakes provide a unified interface to ingest chunks directly into your favorite vector databases.
 
@@ -245,6 +250,8 @@ Handshakes provide a unified interface to ingest chunks directly into your favor
 | `qdrant`       | `QdrantHandshake`      | Ingest chunks into Qdrant.                   | `chonkie[qdrant]`   |
 | `turbopuffer`  | `TurbopufferHandshake` | Ingest chunks into Turbopuffer.              | `chonkie[tpuf]`     |
 | `weaviate`     | `WeaviateHandshake`    | Ingest chunks into Weaviate.                 | `chonkie[weaviate]` |
+| `lancedb`      | `LanceDBHandshake`     | Ingest chunks into LanceDB.                  | `chonkie[lancedb]`  |
+| `milvus`       | `MilvusHandshake`      | Ingest chunks into Milvus.                   | `chonkie[milvus]`   |
 
 </details>
 <details>
@@ -277,7 +284,7 @@ You can use this to extend Chonkie to support any tokenization scheme you want!
 </details>
 
 <details>
-<summary><strong>🧠 Embed like a boss! Chonkie links up with 9+ embedding pals!</strong></summary>
+<summary><strong>🧠 Embed like a boss! Chonkie links up with 16+ embedding pals!</strong></summary>
 
 Seamlessly works with various embedding model providers. Bring your favorite embeddings to the CHONK party! Use `AutoEmbeddings` to load models easily.
 
@@ -292,6 +299,13 @@ Seamlessly works with various embedding model providers. Bring your favorite emb
 | `jina`                  | `JinaEmbeddings`                | Use Jina AI's embedding API.           | `chonkie[jina]`         |
 | `voyageai`              | `VoyageAIEmbeddings`            | Use Voyage AI's embedding API.         | `chonkie[voyageai]`     |
 | `litellm`               | `LiteLLMEmbeddings`             | Use LiteLLM for 100+ embedding models. | `chonkie[litellm]`      |
+| `catsu`                 | `CatsuEmbeddings`               | Unified adapter for 11+ providers.     | `chonkie[catsu]`        |
+| `mistral`               | `MistralEmbeddings`             | Use Mistral's embedding API.           | `chonkie[catsu]`        |
+| `together`              | `TogetherEmbeddings`            | Use Together AI's embedding API.       | `chonkie[catsu]`        |
+| `mixedbread`            | `MixedbreadEmbeddings`          | Use Mixedbread's embedding API.        | `chonkie[catsu]`        |
+| `nomic`                 | `NomicEmbeddings`               | Use Nomic's embedding API.             | `chonkie[catsu]`        |
+| `deepinfra`             | `DeepInfraEmbeddings`           | Use DeepInfra's embedding API.         | `chonkie[catsu]`        |
+| `cloudflare`            | `CloudflareEmbeddings`          | Use Cloudflare Workers AI embeddings.  | `chonkie[catsu]`        |
 
 </details>
 
