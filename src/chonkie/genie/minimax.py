@@ -32,17 +32,17 @@ if TYPE_CHECKING:
 # MiniMax OpenAI-compatible API endpoint
 _MINIMAX_BASE_URL = "https://api.minimax.io/v1"
 
-# Regex to strip <think>…</think> blocks from M2.5/M2.7 reasoning models
+# Regex to strip <think>…</think> blocks from M3/M2.7 reasoning models
 _THINK_TAG_RE = re.compile(r"<think>[\s\S]*?</think>\s*", re.DOTALL)
 
 
 class MiniMaxGenie(BaseGenie):
-    """MiniMax's Genie — powered by MiniMax M2.7 / M2.5 models.
+    """MiniMax's Genie — powered by MiniMax M3 / M2.7 models.
 
     Uses the OpenAI-compatible chat-completions endpoint provided by MiniMax.
 
     Args:
-        model: MiniMax model name (default: "MiniMax-M2.7").
+        model: MiniMax model name (default: "MiniMax-M3").
         api_key: MiniMax API key. Falls back to the ``MINIMAX_API_KEY``
                  environment variable.
         base_url: Override the API base URL (default:
@@ -52,15 +52,14 @@ class MiniMaxGenie(BaseGenie):
     """
 
     AVAILABLE_MODELS = [
+        "MiniMax-M3",
         "MiniMax-M2.7",
         "MiniMax-M2.7-highspeed",
-        "MiniMax-M2.5",
-        "MiniMax-M2.5-highspeed",
     ]
 
     def __init__(
         self,
-        model: str = "MiniMax-M2.7",
+        model: str = "MiniMax-M3",
         api_key: Optional[str] = None,
         base_url: Optional[str] = None,
         temperature: float = 0.7,

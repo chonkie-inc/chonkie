@@ -28,10 +28,10 @@ class TestMiniMaxGenieImportAndConstruction:
 
     def test_minimax_genie_available_models(self) -> None:
         """Test that AVAILABLE_MODELS is defined."""
+        assert "MiniMax-M3" in MiniMaxGenie.AVAILABLE_MODELS
         assert "MiniMax-M2.7" in MiniMaxGenie.AVAILABLE_MODELS
         assert "MiniMax-M2.7-highspeed" in MiniMaxGenie.AVAILABLE_MODELS
-        assert "MiniMax-M2.5" in MiniMaxGenie.AVAILABLE_MODELS
-        assert "MiniMax-M2.5-highspeed" in MiniMaxGenie.AVAILABLE_MODELS
+        assert MiniMaxGenie.AVAILABLE_MODELS[0] == "MiniMax-M3"
 
 
 class TestMiniMaxGenieErrorHandling:
@@ -68,7 +68,7 @@ class TestMiniMaxGenieBasicFunctionality:
 
                     assert genie is not None
                     assert isinstance(genie, BaseGenie)
-                    assert genie.model == "MiniMax-M2.7"
+                    assert genie.model == "MiniMax-M3"
                     mock_openai_class.assert_called_once_with(
                         api_key="test_key",
                         base_url="https://api.minimax.io/v1",
@@ -80,9 +80,9 @@ class TestMiniMaxGenieBasicFunctionality:
             with patch("chonkie.genie.minimax.OpenAI", Mock()):
                 with patch("chonkie.genie.minimax.AsyncOpenAI", Mock()):
                     with patch.dict(os.environ, {"MINIMAX_API_KEY": "test_key"}):
-                        genie = MiniMaxGenie(model="MiniMax-M2.5-highspeed")
+                        genie = MiniMaxGenie(model="MiniMax-M2.7-highspeed")
 
-                    assert genie.model == "MiniMax-M2.5-highspeed"
+                    assert genie.model == "MiniMax-M2.7-highspeed"
 
     def test_minimax_genie_generate_text(self) -> None:
         """Test MiniMaxGenie text generation with mocked response."""
