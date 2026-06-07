@@ -10,12 +10,21 @@ from typing import Any, List, Optional
 
 import httpx
 import numpy as np
-from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
+from tenacity import retry, retry_if_exception, stop_after_attempt, wait_exponential
 
 from .base import BaseEmbeddings
 
 # MiniMax embedding API endpoint
 _MINIMAX_EMBEDDINGS_URL = "https://api.minimax.io/v1/embeddings"
+
+
+def _is_transient_http_error(exc: BaseException) -> bool:
+    """Return True only for retry-worthy errors (connection, timeout, 5xx)."""
+    if isinstance(exc, (httpx.ConnectError, httpx.TimeoutException)):
+        return True
+    if isinstance(exc, httpx.HTTPStatusError):
+        return exc.response.status_code >= 500
+    return False
 
 
 class MiniMaxEmbeddings(BaseEmbeddings):
@@ -99,11 +108,7 @@ class MiniMaxEmbeddings(BaseEmbeddings):
     @retry(
         stop=stop_after_attempt(3),
         wait=wait_exponential(multiplier=2, max=30),
-        retry=retry_if_exception_type((
-            httpx.HTTPStatusError,
-            httpx.ConnectError,
-            httpx.TimeoutException,
-        )),
+        retry=retry_if_exception(_is_transient_http_error),
     )
     def _call_api(self, texts: List[str]) -> List[List[float]]:
         """Call the MiniMax embedding API.
@@ -146,11 +151,7 @@ class MiniMaxEmbeddings(BaseEmbeddings):
     @retry(
         stop=stop_after_attempt(3),
         wait=wait_exponential(multiplier=2, max=30),
-        retry=retry_if_exception_type((
-            httpx.HTTPStatusError,
-            httpx.ConnectError,
-            httpx.TimeoutException,
-        )),
+        retry=retry_if_exception(_is_transient_http_error),
     )
     async def _acall_api(self, texts: List[str]) -> List[List[float]]:
         """Call the MiniMax embedding API asynchronously.
@@ -281,6 +282,27 @@ class MiniMaxEmbeddings(BaseEmbeddings):
     def _is_available(cls) -> bool:
         """Check if httpx is available."""
         return importutil.find_spec("httpx") is not None
+
+    def close(self) -> None:
+        """Release the underlying httpx.Client connection pool."""
+        client = getattr(self, "_client", None)
+        if client is not None:
+            client.close()
+
+    def __enter__(self) -> "MiniMaxEmbeddings":
+        """Enter context manager, returning self."""
+        return self
+
+    def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
+        """Exit context manager, closing the underlying httpx.Client."""
+        self.close()
+
+    def __del__(self) -> None:
+        """Attempt to close the client at GC time as a fallback."""
+        try:
+            self.close()
+        except Exception:
+            pass
 
     def __repr__(self) -> str:
         """Return a string representation."""

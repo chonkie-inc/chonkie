@@ -276,7 +276,7 @@ class TestMiniMaxEmbeddingsAPIError:
         error_response.raise_for_status = MagicMock()
         embedding_model._client.post.return_value = error_response
 
-        with pytest.raises(Exception):
+        with pytest.raises(ValueError, match="MiniMax API error"):
             embedding_model.embed("test")
 
     def test_missing_vectors_field(self, embedding_model) -> None:
@@ -289,7 +289,7 @@ class TestMiniMaxEmbeddingsAPIError:
         bad_response.raise_for_status = MagicMock()
         embedding_model._client.post.return_value = bad_response
 
-        with pytest.raises(Exception):
+        with pytest.raises(ValueError, match="missing 'vectors' field"):
             embedding_model.embed("test")
 
 
