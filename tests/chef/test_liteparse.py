@@ -72,10 +72,10 @@ class TestLiteParseInit:
         mock_module, _ = mock_liteparse
         chef = LiteParse()
 
-        assert chef.ocr_enabled is None
+        assert chef.ocr_enabled is True
         assert chef.ocr_language is None
         mock_module.LiteParse.assert_called_once_with(
-            ocr_enabled=None,
+            ocr_enabled=True,
             ocr_server_url=None,
             ocr_language=None,
             tessdata_path=None,

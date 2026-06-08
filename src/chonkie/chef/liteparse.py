@@ -55,7 +55,7 @@ class LiteParse(BaseChef):
 
     def __init__(
         self,
-        ocr_enabled: Optional[bool] = None,
+        ocr_enabled: bool = True,
         ocr_server_url: Optional[str] = None,
         ocr_language: Optional[str] = None,
         tessdata_path: Optional[str] = None,
@@ -93,9 +93,7 @@ class LiteParse(BaseChef):
                 "Please install the dependency via `pip install chonkie[liteparse]`"
             ) from ie
 
-        if (ocr_enabled is None or ocr_enabled) and not (
-            tessdata_path or os.environ.get("TESSDATA_PREFIX")
-        ):
+        if ocr_enabled and not (tessdata_path or os.environ.get("TESSDATA_PREFIX")):
             self._auto_detect_tessdata()
 
         self.parser = _LiteParse(
@@ -191,4 +189,17 @@ class LiteParse(BaseChef):
 
     def __repr__(self) -> str:
         """Return a string representation of the LiteParse instance."""
-        return f"LiteParse(ocr_enabled={self.ocr_enabled}, ocr_language={self.ocr_language!r}, dpi={self.dpi})"
+        return (
+            f"LiteParse("
+            f"ocr_enabled={self.ocr_enabled}, "
+            f"ocr_server_url={self.ocr_server_url!r}, "
+            f"ocr_language={self.ocr_language!r}, "
+            f"tessdata_path={self.tessdata_path!r}, "
+            f"max_pages={self.max_pages}, "
+            f"target_pages={self.target_pages!r}, "
+            f"dpi={self.dpi}, "
+            f"output_format={self.output_format!r}, "
+            f"preserve_very_small_text={self.preserve_very_small_text}, "
+            f"quiet={self.quiet}, "
+            f"num_workers={self.num_workers})"
+        )
