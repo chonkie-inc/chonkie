@@ -93,7 +93,7 @@ class LiteParse(BaseChef):
                 "Please install the dependency via `pip install chonkie[liteparse]`"
             ) from ie
 
-        if (ocr_enabled is None or ocr_enabled) and not os.environ.get("TESSDATA_PREFIX"):
+        if (ocr_enabled is None or ocr_enabled) and not (tessdata_path or os.environ.get("TESSDATA_PREFIX")):
             self._auto_detect_tessdata()
 
         self.parser = _LiteParse(
