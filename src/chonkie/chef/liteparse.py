@@ -163,7 +163,7 @@ class LiteParse(BaseChef):
 
         logger.debug(f"Processing file with LiteParse: {path}")
         result = self.parser.parse(str(p))
-        content = result.text
+        content = result.text if result and result.text is not None else ""
 
         logger.info(
             f"LiteParse processing complete: extracted {len(content)} characters from {path}"
