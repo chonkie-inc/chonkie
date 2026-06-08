@@ -39,12 +39,12 @@ chef = LiteParse(
 
 ### Parameters
 
-<ParamField path="ocr_enabled" type="bool" default="True">
-  Whether to enable OCR for scanned/image text.
+<ParamField path="ocr_enabled" type="Optional[bool]" default="None">
+  Whether to enable OCR for scanned/image text (defaults to LiteParse's behavior when `None`).
 </ParamField>
 
-<ParamField path="ocr_language" type="str" default="en">
-  Language code for OCR (e.g., `"en"`, `"fr"`, `"de"`).
+<ParamField path="ocr_language" type="Optional[str]" default="None">
+  Language code for OCR (e.g., `"eng"`, `"fra"`, `"deu"`).
 </ParamField>
 
 <ParamField path="ocr_server_url" type="Optional[str]" default="None">
