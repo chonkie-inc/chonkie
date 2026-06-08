@@ -3,7 +3,7 @@
 import os
 import sys
 from pathlib import Path
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, create_autospec, patch
 
 import pytest
 
@@ -24,7 +24,7 @@ def mock_liteparse():
     except ImportError:
         pytest.skip("liteparse not installed")
 
-    mock_parser = Mock(spec=RealLiteParse())
+    mock_parser = create_autospec(RealLiteParse, instance=True)
     mock_parser.parse.return_value = Mock(text="")
 
     mock_module = Mock()
