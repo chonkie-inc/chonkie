@@ -1,6 +1,6 @@
 """Main package for Chonkie."""
 
-from .chef import BaseChef, MarkdownChef, MistralOCR, TableChef, TextChef
+from .chef import BaseChef, LiteParse, MarkdownChef, MistralOCR, TableChef, TextChef
 from .chunker import (
     BaseChunker,
     CodeChunker,
@@ -76,6 +76,7 @@ from .utils.table_converter import html_table_to_json, markdown_table_to_json
 __all__ = (
     # chef
     "BaseChef",
+    "LiteParse",
     "MarkdownChef",
     "MistralOCR",
     "TableChef",

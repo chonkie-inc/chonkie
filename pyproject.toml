@@ -131,6 +131,7 @@ lancedb = ["lancedb>=0.4.0"]
 
 # Optional dependencies for the vision module
 mistral = ["mistralai>=2.4.0"]
+liteparse = ["liteparse>=0.2.0"]
 
 # Optional dependencies for the genie
 genie = ["pydantic>=2.0.0", "google-genai>=1.0.0"]
@@ -177,6 +178,7 @@ genies = [
 chefs = [
     "chonkie[table]",
     "chonkie[mistral]",
+    "chonkie[liteparse]",
 ]
 
 # All dependencies

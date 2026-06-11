@@ -58,7 +58,8 @@
               "oss/chefs/tablechef",
               "oss/chefs/textchef",
               "oss/chefs/markdownchef",
-              "oss/chefs/mistral-ocr"
+              "oss/chefs/mistral-ocr",
+              "oss/chefs/liteparse"
             ]
           },
           {
