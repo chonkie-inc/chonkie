@@ -215,7 +215,10 @@ dev = [
 ]
 
 [dependency-groups]
-dev = ["ruff>=0.13.3"]
+dev = [
+    "ruff>=0.15.19",
+    "ty>=0.0.53",
+]
 
 # Jupyter notebooks group, accessible via `uv sync --group jupyter`
 # not part of `all` since these dependencies can be quite heavy
@@ -227,6 +230,8 @@ jupyter = [
     "nbformat>=5.0.0",
     "nbconvert>=6.0.0",
     "ipywidgets>=7.0.0",
+    "ruff>=0.15.19",
+    "ty>=0.0.53",
 ]
 
 [tool.pytest.ini_options]
