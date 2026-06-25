@@ -285,6 +285,18 @@ omit = ["*/chonkie/api/migrations/*"]
 [tool.coverage.report]
 omit = ["*/chonkie/api/migrations/*"]
 
+[tool.uv]
+constraint-dependencies = [
+    "onnxruntime<1.24; python_version < '3.11'",
+]
+
+[tool.ty.rules]
+invalid-method-override = "ignore"
+invalid-argument-type = "ignore"
+unresolved-import = "ignore"
+no-matching-overload = "ignore"
+deprecated = "ignore"
+
 [tool.mypy]
 disallow_untyped_defs = true
 ignore_missing_imports = true

@@ -19,8 +19,8 @@ except ImportError:
     class RateLimitError(Exception):
         """Rate limit error."""
 
-    OpenAI = None  # type: ignore
-    AsyncOpenAI = None  # type: ignore
+    OpenAI: Any = None
+    AsyncOpenAI: Any = None
 
 
 from .base import BaseGenie

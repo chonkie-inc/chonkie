@@ -8,7 +8,7 @@ from chonkie.embeddings import SentenceTransformerEmbeddings
 from chonkie.types import Chunk, RecursiveLevel, RecursiveRules
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def embedding_model() -> SentenceTransformerEmbeddings:
     """Return an object of SentenceTransformerEmbeddings type."""
     return SentenceTransformerEmbeddings("nomic-ai/modernbert-embed-base")
@@ -50,7 +50,7 @@ def test_late_chunker_init_with_string() -> None:
 def test_late_chunker_init_invalid_model() -> None:
     """Test initialization failure with an invalid embedding model type."""
     with pytest.raises(ValueError, match="is not a valid embedding model"):
-        LateChunker(embedding_model=123)  # type: ignore
+        LateChunker(embedding_model=123)
 
 
 def test_late_chunker_chunk_basic(
