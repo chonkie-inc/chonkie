@@ -14,9 +14,8 @@ The CHOMP pipeline stages are:
 7. Handshake - Ingest into vector databases
 """
 
-from .component import Component, ComponentType
-from .pipeline import Pipeline
-from .registry import (
+from chonkie.utils.component import Component, ComponentType
+from chonkie.utils.registry import (
     ComponentRegistry,
     chef,
     chunker,
@@ -27,6 +26,8 @@ from .registry import (
     refinery,
     vision,
 )
+
+from .pipeline import Pipeline
 
 __all__ = [
     # Core types

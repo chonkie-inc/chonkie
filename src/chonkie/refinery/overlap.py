@@ -11,13 +11,6 @@ from chonkie.types import Chunk, RecursiveLevel, RecursiveRules
 
 logger = get_logger(__name__)
 
-# TODO: Fix the way that float context size is handled.
-# Currently, it just estimates the context size to token count
-# but it should ideally handle it on a chunk by chunk basis.
-
-# TODO: Add support for `justified` method which is the best of
-# both prefix and suffix overlap.
-
 
 @refinery("overlap")
 class OverlapRefinery(BaseRefinery):

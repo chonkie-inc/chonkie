@@ -8,14 +8,14 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from chonkie.pipeline.component import ComponentType
 from chonkie.pipeline.pipeline import Pipeline
-from chonkie.pipeline.registry import (
+from chonkie.types import Document
+from chonkie.utils.component import ComponentType
+from chonkie.utils.registry import (
     ComponentRegistry,
     _ComponentRegistry,
     pipeline_component,
 )
-from chonkie.types import Document
 
 # ---------------------------------------------------------------------------
 # Helpers: minimal stub classes for registry tests
