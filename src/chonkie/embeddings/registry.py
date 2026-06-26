@@ -157,12 +157,12 @@ class EmbeddingsRegistry:
             embeddings_cls = cls.match(object)
             if embeddings_cls is None:
                 raise ValueError(f"No matching embeddings implementation found for: {object}")
-            return embeddings_cls(object, **kwargs)  # ty: ignore[too-many-positional-arguments]
+            return embeddings_cls(object, **kwargs)  # type: ignore[call-arg]
         else:
             # Loop through all the registered embeddings and check if the object is an instance of any of them
             for type_alias, embeddings_cls in cls.type_registry.items():
                 if type_alias in str(type(object)):
-                    return embeddings_cls(object, **kwargs)  # ty: ignore[too-many-positional-arguments]
+                    return embeddings_cls(object, **kwargs)  # type: ignore[call-arg]
         raise ValueError(f"Unsupported object type for embeddings: {object}")
 
 

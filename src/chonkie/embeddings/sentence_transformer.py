@@ -59,7 +59,7 @@ class SentenceTransformerEmbeddings(BaseEmbeddings):
         else:
             raise ValueError("model must be a string or SentenceTransformer instance")
 
-        self._dimension: int = self.model.get_sentence_embedding_dimension()  # ty: ignore[invalid-assignment]
+        self._dimension = self.model.get_sentence_embedding_dimension()
 
     def embed(self, text: str) -> np.ndarray:
         """Embed a single text using the sentence-transformers model."""
@@ -114,7 +114,7 @@ class SentenceTransformerEmbeddings(BaseEmbeddings):
         if isinstance(token_embeddings_raw, list):
             for emb in token_embeddings_raw:
                 if hasattr(emb, "cpu"):
-                    token_embeddings.append(emb.cpu().numpy())
+                    token_embeddings.append(emb.cpu().numpy())  # ty:ignore[call-non-callable]
                 else:
                     token_embeddings.append(np.array(emb))
         else:
@@ -138,9 +138,9 @@ class SentenceTransformerEmbeddings(BaseEmbeddings):
         encodings = self.model.tokenizer(texts)
         return [len(enc) for enc in encodings["input_ids"]]
 
-    def similarity(self, u: np.ndarray, v: np.ndarray) -> float:
+    def similarity(self, u: np.ndarray, v: np.ndarray) -> np.float32:
         """Compute cosine similarity between two embeddings."""
-        return float(self.model.similarity(u, v).item())
+        return float(self.model.similarity(u, v).item())  # type: ignore[return-value]
 
     def get_tokenizer(self) -> "Tokenizer":
         """Return the tokenizer or token counter object."""
@@ -149,7 +149,7 @@ class SentenceTransformerEmbeddings(BaseEmbeddings):
     @property
     def dimension(self) -> int:
         """Return the embedding dimension."""
-        return self._dimension
+        return self._dimension  # type: ignore
 
     @property
     def max_seq_length(self) -> int:

@@ -191,7 +191,7 @@ class LanceDBHandshake(BaseHandshake):
             embedding = self.embedding_model.embed(query).tolist()
 
         query_builder: Any = self.table.search(embedding)
-        results = query_builder.metric("cosine").limit(limit).to_list()
+        results = query_builder.metric("cosine").limit(limit).to_list()  # ty: ignore[unresolved-attribute]
 
         matches: list[dict[str, Any]] = []
         for r in results:

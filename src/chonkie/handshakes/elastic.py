@@ -139,7 +139,7 @@ class ElasticHandshake(BaseHandshake):
         success, errors = bulk(self.client, actions, raise_on_error=False)
 
         if errors:
-            logger.warning(f"Encountered {len(errors)} errors during bulk indexing.")
+            logger.warning(f"Encountered {len(errors)} errors during bulk indexing.")  # type: ignore
             # Optionally log the first few errors for debugging
             for i, error in enumerate(errors[:5]):  # type: ignore
                 logger.error(f"Error {i + 1}: {error}")

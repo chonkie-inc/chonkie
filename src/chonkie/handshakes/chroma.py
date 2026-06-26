@@ -229,7 +229,7 @@ class ChromaHandshake(BaseHandshake):
 
         # Perform the query
         results = self.collection.query(
-            query_embeddings=query_embeddings,
+            query_embeddings=query_embeddings,  # ty:ignore[invalid-argument-type]
             n_results=limit,
             include=["metadatas", "documents", "distances"],
         )

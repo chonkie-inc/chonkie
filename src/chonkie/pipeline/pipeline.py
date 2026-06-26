@@ -444,7 +444,7 @@ class Pipeline:
             except Exception as e:
                 raise RuntimeError(f"Pipeline failed at step {i + 1} ({step['type']}): {e}") from e
 
-        return data  # ty: ignore[invalid-return-type]
+        return data  # type: ignore[return-value]
 
     async def arun(
         self,
@@ -479,7 +479,7 @@ class Pipeline:
             except Exception as e:
                 raise RuntimeError(f"Pipeline failed at step {i + 1} ({step['type']}): {e}") from e
 
-        return data  # ty: ignore[invalid-return-type]
+        return data  # type: ignore[return-value]
 
     def _reorder_steps(self) -> list[dict[str, Any]]:
         """Reorder pipeline steps according to CHOMP flow.
