@@ -106,7 +106,7 @@ class TableChef(BaseChef):
         logger.info(f"Completed batch processing of {len(paths)} files/strings")
         return results
 
-    def __call__(  # type: ignore[override]
+    def __call__(
         self,
         path: str | os.PathLike | list[str | os.PathLike],
     ) -> Union[Document, list[Document]]:

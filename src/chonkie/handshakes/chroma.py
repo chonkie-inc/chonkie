@@ -134,7 +134,7 @@ class ChromaHandshake(BaseHandshake):
             self.collection_name = collection_name
             self.collection = self.client.get_or_create_collection(
                 self.collection_name,
-                embedding_function=self.embedding_function,  # type: ignore[arg-type]
+                embedding_function=self.embedding_function,  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
             )
         else:
             # Keep generating random collection names until we find one that doesn't exist
@@ -143,7 +143,7 @@ class ChromaHandshake(BaseHandshake):
                 try:
                     self.collection = self.client.create_collection(
                         self.collection_name,
-                        embedding_function=self.embedding_function,  # type: ignore[arg-type]
+                        embedding_function=self.embedding_function,  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
                     )
                     break
                 except Exception:
@@ -188,7 +188,7 @@ class ChromaHandshake(BaseHandshake):
         self.collection.upsert(
             ids=ids,
             documents=texts,
-            metadatas=metadata,  # type: ignore[arg-type]
+            metadatas=metadata,  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
         )
 
         logger.info(

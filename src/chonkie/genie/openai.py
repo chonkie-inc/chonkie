@@ -119,7 +119,7 @@ class OpenAIGenie(BaseGenie):
         response = self.client.beta.chat.completions.parse(
             model=self.model,
             messages=[{"role": "user", "content": prompt}],
-            response_format=schema,  # type: ignore[arg-type]
+            response_format=schema,  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
         )
         content = response.choices[0].message.parsed
         if content is None:
@@ -138,7 +138,7 @@ class OpenAIGenie(BaseGenie):
         response = await self.async_client.beta.chat.completions.parse(
             model=self.model,
             messages=[{"role": "user", "content": prompt}],
-            response_format=schema,  # type: ignore[arg-type]
+            response_format=schema,  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
         )
         content = response.choices[0].message.parsed
         if content is None:

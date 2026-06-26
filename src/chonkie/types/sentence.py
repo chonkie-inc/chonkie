@@ -58,7 +58,7 @@ class Sentence:
         # Convert numpy array to list if present
         if self.embedding is not None:
             if isinstance(self.embedding, np.ndarray):
-                result["embedding"] = self.embedding.tolist()
+                result["embedding"] = self.embedding.tolist()  # ty: ignore[no-matching-overload]
             else:
                 result["embedding"] = self.embedding
         return result

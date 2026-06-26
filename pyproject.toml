@@ -288,9 +288,5 @@ omit = ["*/chonkie/api/migrations/*"]
 [tool.uv]
 constraint-dependencies = ["onnxruntime<1.24; python_version < '3.11'"]
 
-[tool.mypy]
-disallow_untyped_defs = true
-ignore_missing_imports = true
-no_implicit_optional = true
-check_untyped_defs = true
-show_error_codes = true
+[tool.ty.environment]
+root = ["src"]

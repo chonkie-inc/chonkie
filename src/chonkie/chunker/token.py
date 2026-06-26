@@ -167,7 +167,7 @@ class TokenChunker(BaseChunker):
 
         return result
 
-    def chunk_batch(  # type: ignore[override]
+    def chunk_batch(  # type: ignore[override]  # ty: ignore[invalid-method-override]
         self,
         texts: list[str],
         batch_size: int = 1,
@@ -199,7 +199,7 @@ class TokenChunker(BaseChunker):
             chunks.extend(self._process_batch(batch_texts))
         return chunks
 
-    def __call__(  # type: ignore[override]
+    def __call__(  # type: ignore[override]  # ty: ignore[invalid-method-override]
         self,
         text: Union[str, list[str]],
         batch_size: int = 1,

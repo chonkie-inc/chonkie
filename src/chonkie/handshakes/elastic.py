@@ -60,12 +60,12 @@ class ElasticHandshake(BaseHandshake):
         if client:
             self.client = client
         elif cloud_id and api_key:
-            self.client = Elasticsearch(cloud_id=cloud_id, api_key=api_key, **kwargs)  # type: ignore[arg-type]
+            self.client = Elasticsearch(cloud_id=cloud_id, api_key=api_key, **kwargs)  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
         elif hosts:
-            self.client = Elasticsearch(hosts=hosts, api_key=api_key, **kwargs)  # type: ignore[arg-type]
+            self.client = Elasticsearch(hosts=hosts, api_key=api_key, **kwargs)  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
         else:
             # Default to a standard local client if no other connection info is provided
-            self.client = Elasticsearch("http://localhost:9200", **kwargs)  # type: ignore[arg-type]
+            self.client = Elasticsearch("http://localhost:9200", **kwargs)  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
 
         # 2. Initialize the embedding model
         if isinstance(embedding_model, str):

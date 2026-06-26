@@ -58,7 +58,7 @@ class TextChef(BaseChef):
         """
         return [self.process(path) for path in paths]
 
-    def __call__(  # type: ignore[override]
+    def __call__(
         self,
         path: str | os.PathLike | list[str | os.PathLike],
     ) -> Union[Document, list[Document]]:

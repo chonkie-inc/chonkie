@@ -4,6 +4,7 @@ import asyncio
 import os
 from abc import ABC, abstractmethod
 from pathlib import Path
+from typing import Union
 
 from chonkie.logger import get_logger
 from chonkie.types import Document
@@ -96,16 +97,20 @@ class BaseChef(ABC):
         """Read the file content asynchronously."""
         return await asyncio.to_thread(self.read, path)
 
-    def __call__(self, path: str | os.PathLike) -> Document:
+    def __call__(
+        self, path: str | os.PathLike | list[str | os.PathLike],
+    ) -> Union[Document, list[Document]]:
         """Call the chef to process the data.
 
         Args:
-            path: Path to the file to process.
+            path: Path to the file to process, or a list of paths.
 
         Returns:
-            Document created from the file.
+            Document or list of Documents created from the file(s).
 
         """
+        if isinstance(path, list):
+            return self.process_batch(path)  # ty: ignore[invalid-argument-type]
         logger.debug(f"Processing file with {self.__class__.__name__}: {path}")
         return self.process(path)
 

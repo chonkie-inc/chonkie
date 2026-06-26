@@ -38,7 +38,7 @@ def _detect_language_by_parsing(text: str) -> str | None:
     for lang in languages:
         try:
             config = ProcessConfig(language=lang, structure=True, imports=True)
-            result = process(text, config)  # ty: ignore[invalid-argument-type]
+            result = process(text, config)
             structure_score = len(result.structure) + len(result.imports)
             results.append((
                 lang,
@@ -168,7 +168,7 @@ class CodeChunker(BaseChunker):
 
         chunk_max_bytes = self._estimate_chunk_max_bytes(text)
         config = ProcessConfig(language=language, chunk_max_size=chunk_max_bytes)
-        result = process(text, config)  # ty: ignore[invalid-argument-type]
+        result = process(text, config)
         return result.chunks  # ty: ignore[invalid-return-type]
 
     def _create_chunks_from_code_chunks(
