@@ -60,7 +60,7 @@ class Model2VecEmbeddings(BaseEmbeddings):
 
     def embed_batch(self, texts: list[str]) -> list[np.ndarray]:
         """Embed multiple texts using the model2vec model."""
-        return self.model.encode(texts, convert_to_numpy=True)  # type: ignore[return-value]
+        return self.model.encode(texts, convert_to_numpy=True)  # type: ignore[return-value]  # ty: ignore[invalid-return-type]
 
     def similarity(self, u: np.ndarray, v: np.ndarray) -> np.float32:
         """Compute cosine similarity of two embeddings."""

@@ -44,12 +44,13 @@ class JSONPorter(BasePorter):
             )
         logger.info(f"Successfully exported {len(chunks)} chunks to JSON: {file}")
 
-    def export(self, chunks: list[Chunk], file: str | os.PathLike = "chunks.jsonl") -> None:  # type: ignore[override]
+    def export(self, chunks: list[Chunk], file: str | os.PathLike = "chunks.jsonl", **kwargs) -> None:
         """Export the Chunks into a JSON string.
 
         Args:
             chunks: The chunks to export.
             file: The file to export the chunks to.
+            **kwargs: Additional keyword arguments.
 
         """
         if self.lines:
@@ -57,12 +58,13 @@ class JSONPorter(BasePorter):
         else:
             self._export_json(chunks, file)
 
-    def __call__(self, chunks: list[Chunk], file: str | os.PathLike = "chunks.jsonl") -> None:  # type: ignore[override]
+    def __call__(self, chunks: list[Chunk], file: str | os.PathLike = "chunks.jsonl", **kwargs) -> None:
         """Export the Chunks into a JSON string.
 
         Args:
             chunks: The chunks to export.
             file: The file to export the chunks to.
+            **kwargs: Additional keyword arguments.
 
         """
         self.export(chunks, file)

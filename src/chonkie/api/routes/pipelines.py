@@ -211,13 +211,13 @@ async def update_pipeline(
                 status_code=400,
                 detail=f"Pipeline name '{request.name}' already exists",
             )
-        pipeline.name = request.name
+        pipeline.name = request.name  # ty: ignore[invalid-assignment]
 
     if request.description is not None:
-        pipeline.description = request.description
+        pipeline.description = request.description  # ty: ignore[invalid-assignment]
 
     if request.steps is not None:
-        pipeline.config = {"steps": [step.model_dump() for step in request.steps]}
+        pipeline.config = {"steps": [step.model_dump() for step in request.steps]}  # ty: ignore[invalid-assignment]
 
     await db.commit()
     await db.refresh(pipeline)

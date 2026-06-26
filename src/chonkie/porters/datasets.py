@@ -31,8 +31,7 @@ class DatasetsPorter(BasePorter):
                 "Please install it with 'pip install chonkie[datasets]' or 'pip install datasets'.",
             )
 
-    def export(  # type: ignore[override]
-        self,
+    def export(          self,
         chunks: list[Chunk],
         save_to_disk: bool = True,
         path: str | PathLike = "chunks",
@@ -68,8 +67,7 @@ class DatasetsPorter(BasePorter):
             )
         return dataset
 
-    def __call__(  # type: ignore[override]
-        self,
+    def __call__(          self,
         chunks: list[Chunk],
         save_to_disk: bool = True,
         path: str | PathLike = "chunks",

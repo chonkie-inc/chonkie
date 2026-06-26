@@ -215,7 +215,10 @@ dev = [
 ]
 
 [dependency-groups]
-dev = ["ruff>=0.13.3"]
+dev = [
+    "ruff>=0.15.19",
+    "ty>=0.0.53",
+]
 
 # Jupyter notebooks group, accessible via `uv sync --group jupyter`
 # not part of `all` since these dependencies can be quite heavy
@@ -227,6 +230,8 @@ jupyter = [
     "nbformat>=5.0.0",
     "nbconvert>=6.0.0",
     "ipywidgets>=7.0.0",
+    "ruff>=0.15.19",
+    "ty>=0.0.53",
 ]
 
 [tool.pytest.ini_options]
@@ -280,9 +285,8 @@ omit = ["*/chonkie/api/migrations/*"]
 [tool.coverage.report]
 omit = ["*/chonkie/api/migrations/*"]
 
-[tool.mypy]
-disallow_untyped_defs = true
-ignore_missing_imports = true
-no_implicit_optional = true
-check_untyped_defs = true
-show_error_codes = true
+[tool.uv]
+constraint-dependencies = ["onnxruntime<1.24; python_version < '3.11'"]
+
+[tool.ty.environment]
+root = ["src"]

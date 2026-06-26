@@ -78,7 +78,7 @@ class LateChunker(RecursiveChunker):
         self._use_multiprocessing = False
 
     @classmethod
-    def from_recipe(  # type: ignore[override]
+    def from_recipe(  # type: ignore[override]  # ty: ignore[invalid-method-override]
         cls,
         name: Optional[str] = "default",
         lang: Optional[str] = "en",
