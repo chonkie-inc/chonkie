@@ -44,4 +44,4 @@ class BasePorter(ABC):
 
     def __call__(self, chunks: list[Chunk], **kwargs: Any) -> Any:
         """Export the chunks to the desired format."""
-        return self.export(chunks)
+        return self.export(chunks, **kwargs)

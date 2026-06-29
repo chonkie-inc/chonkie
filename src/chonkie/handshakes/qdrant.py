@@ -210,8 +210,8 @@ class QdrantHandshake(BaseHandshake):
             with_payload=True,
         )
         matches = [
-            {"id": result["id"], "score": result["score"], **result["payload"]}
-            for result in results.model_dump()["points"]
+            {"id": point.id, "score": point.score, **(point.payload or {})}
+            for point in results.points
         ]
         logger.info(f"Search complete: found {len(matches)} matching chunks")
         return matches
