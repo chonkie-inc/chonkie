@@ -98,7 +98,8 @@ class BaseChef(ABC):
         return await asyncio.to_thread(self.read, path)
 
     def __call__(
-        self, path: str | os.PathLike | list[str | os.PathLike],
+        self,
+        path: str | os.PathLike | list[str | os.PathLike],
     ) -> Union[Document, list[Document]]:
         """Call the chef to process the data.
 
