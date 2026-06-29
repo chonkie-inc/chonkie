@@ -78,15 +78,15 @@ class QdrantHandshake(BaseHandshake):
                 self.client = qdrant_client.QdrantClient(
                     url=url,
                     api_key=api_key,
-                    **kwargs,  # type: ignore[arg-type]
+                    **kwargs,  # ty: ignore[invalid-argument-type]
                 )
             elif url is not None:
-                self.client = qdrant_client.QdrantClient(url=url, **kwargs)  # type: ignore[arg-type]
+                self.client = qdrant_client.QdrantClient(url=url, **kwargs)  # ty: ignore[invalid-argument-type]
             elif path is not None:
-                self.client = qdrant_client.QdrantClient(path=str(path), **kwargs)  # type: ignore[arg-type]
+                self.client = qdrant_client.QdrantClient(path=str(path), **kwargs)  # ty: ignore[invalid-argument-type]
             else:
                 # If no client is provided, create an ephemeral collection
-                self.client = qdrant_client.QdrantClient(":memory:", **kwargs)  # type: ignore[arg-type]
+                self.client = qdrant_client.QdrantClient(":memory:", **kwargs)  # ty: ignore[invalid-argument-type]
         else:
             self.client = client
 
@@ -210,8 +210,8 @@ class QdrantHandshake(BaseHandshake):
             with_payload=True,
         )
         matches = [
-            {"id": result["id"], "score": result["score"], **result["payload"]}
-            for result in results.dict()["points"]
+            {"id": point.id, "score": point.score, **(point.payload or {})}
+            for point in results.points
         ]
         logger.info(f"Search complete: found {len(matches)} matching chunks")
         return matches

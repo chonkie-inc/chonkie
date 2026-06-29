@@ -214,7 +214,7 @@ class MongoDBHandshake(BaseHandshake):
         for doc in docs:
             emb = doc.get("embedding")
             if emb is not None:
-                score = cosine_similarity(embedding, emb)  # type: ignore[arg-type]
+                score = cosine_similarity(embedding, emb)  # ty: ignore[invalid-argument-type]
                 result: dict[str, Any] = {
                     "id": doc["_id"],
                     "score": score,

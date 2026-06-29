@@ -59,7 +59,7 @@ class SentenceTransformerEmbeddings(BaseEmbeddings):
         else:
             raise ValueError("model must be a string or SentenceTransformer instance")
 
-        self._dimension = self.model.get_sentence_embedding_dimension()
+        self._dimension = self.model.get_sentence_embedding_dimension()  # ty: ignore[deprecated]
 
     def embed(self, text: str) -> np.ndarray:
         """Embed a single text using the sentence-transformers model."""
@@ -67,7 +67,7 @@ class SentenceTransformerEmbeddings(BaseEmbeddings):
 
     def embed_batch(self, texts: list[str]) -> list[np.ndarray]:
         """Embed multiple texts using the sentence-transformers model."""
-        return self.model.encode(texts, convert_to_numpy=True)  # type: ignore[return-value]
+        return self.model.encode(texts, convert_to_numpy=True)
 
     def embed_as_tokens(self, text: str) -> np.ndarray:
         """Embed the text as tokens using the sentence-transformers model.
@@ -114,7 +114,7 @@ class SentenceTransformerEmbeddings(BaseEmbeddings):
         if isinstance(token_embeddings_raw, list):
             for emb in token_embeddings_raw:
                 if hasattr(emb, "cpu"):
-                    token_embeddings.append(emb.cpu().numpy())  # ty:ignore[call-non-callable]
+                    token_embeddings.append(emb.cpu().numpy())
                 else:
                     token_embeddings.append(np.array(emb))
         else:
@@ -140,7 +140,7 @@ class SentenceTransformerEmbeddings(BaseEmbeddings):
 
     def similarity(self, u: np.ndarray, v: np.ndarray) -> np.float32:
         """Compute cosine similarity between two embeddings."""
-        return float(self.model.similarity(u, v).item())  # type: ignore[return-value]
+        return float(self.model.similarity(u, v).item())  # ty: ignore[invalid-return-type]
 
     def get_tokenizer(self) -> "Tokenizer":
         """Return the tokenizer or token counter object."""
@@ -149,7 +149,7 @@ class SentenceTransformerEmbeddings(BaseEmbeddings):
     @property
     def dimension(self) -> int:
         """Return the embedding dimension."""
-        return self._dimension  # type: ignore
+        return self._dimension  # ty: ignore[invalid-return-type]
 
     @property
     def max_seq_length(self) -> int:

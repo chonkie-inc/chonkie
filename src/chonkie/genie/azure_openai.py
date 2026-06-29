@@ -103,7 +103,7 @@ class AzureOpenAIGenie(BaseGenie):
         response = self.client.beta.chat.completions.parse(
             model=self._deployment,
             messages=[{"role": "user", "content": prompt}],
-            response_format=schema,  # type: ignore[arg-type]
+            response_format=schema,  # ty: ignore[invalid-argument-type]
         )
         content = response.choices[0].message.parsed
         if content is None:
@@ -115,7 +115,7 @@ class AzureOpenAIGenie(BaseGenie):
         response = await self.async_client.beta.chat.completions.parse(
             model=self._deployment,
             messages=[{"role": "user", "content": prompt}],
-            response_format=schema,  # type: ignore[arg-type]
+            response_format=schema,  # ty: ignore[invalid-argument-type]
         )
         content = response.choices[0].message.parsed
         if content is None:

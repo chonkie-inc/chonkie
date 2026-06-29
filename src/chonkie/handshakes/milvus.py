@@ -222,7 +222,7 @@ class MilvusHandshake(BaseHandshake):
         else:
             # Ensure embedding is in the correct format (list of lists)
             if isinstance(embedding, np.ndarray):
-                embedding = embedding.tolist()
+                embedding = embedding.tolist()  # ty: ignore[no-matching-overload]
             # If it's a flat list, wrap it in another list
             if embedding and len(embedding) > 0 and isinstance(embedding[0], float):
                 assert isinstance(embedding, list), "Embedding must be a list of floats"

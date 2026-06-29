@@ -68,7 +68,7 @@ app = FastAPI(
     lifespan=lifespan,
     middleware=[
         Middleware(
-            CORSMiddleware,  # type: ignore[arg-type]
+            CORSMiddleware,
             allow_origins=_origins,
             allow_credentials=False,
             allow_methods=["*"],

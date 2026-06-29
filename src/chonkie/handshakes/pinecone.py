@@ -24,7 +24,7 @@ logger = get_logger(__name__)
 
 if TYPE_CHECKING:
     from pinecone import Pinecone, ServerlessSpec
-    from pinecone.db_data import Index
+    from pinecone.db_data import Index  # ty: ignore[unresolved-import]
 
 
 @handshake("pinecone")
@@ -237,7 +237,7 @@ class PineconeHandshake(BaseHandshake):
             )
         results: dict[str, Any] = self.index.query(
             vector=embedding, top_k=limit, include_metadata=True
-        )  # type: ignore[assignment]
+        )
         if not hasattr(results, "get"):
             raise ValueError(f"Unexpected response type from Pinecone query: {type(results)}")
 
