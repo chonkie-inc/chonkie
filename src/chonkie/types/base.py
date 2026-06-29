@@ -109,7 +109,7 @@ class Chunk:
         # Convert embedding to list if it has tolist method (numpy array)
         if self.embedding is not None:
             if isinstance(self.embedding, np.ndarray):
-                result["embedding"] = self.embedding.tolist()
+                result["embedding"] = self.embedding.tolist()  # ty: ignore[no-matching-overload]
             else:
                 result["embedding"] = self.embedding
         return result

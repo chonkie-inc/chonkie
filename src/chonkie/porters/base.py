@@ -19,7 +19,7 @@ class BasePorter(ABC):
     """
 
     @abstractmethod
-    def export(self, chunks: list[Chunk], **kwargs: dict[str, Any]) -> None:
+    def export(self, chunks: list[Chunk], **kwargs: Any) -> Any:
         """Export the chunks to the desired format.
 
         Args:
@@ -32,7 +32,7 @@ class BasePorter(ABC):
         """
         raise NotImplementedError("Subclasses must implement this method.")
 
-    async def aexport(self, chunks: list[Chunk], **kwargs: dict[str, Any]) -> None:
+    async def aexport(self, chunks: list[Chunk], **kwargs: Any) -> Any:
         """Export the chunks to the desired format asynchronously.
 
         Args:
@@ -42,6 +42,6 @@ class BasePorter(ABC):
         """
         return await asyncio.to_thread(self.export, chunks, **kwargs)
 
-    def __call__(self, chunks: list[Chunk], **kwargs: dict[str, Any]) -> None:
+    def __call__(self, chunks: list[Chunk], **kwargs: Any) -> Any:
         """Export the chunks to the desired format."""
-        return self.export(chunks)
+        return self.export(chunks, **kwargs)
