@@ -9,8 +9,7 @@ from typing import Any, Optional, Union
 
 from chonkie.types import Document
 from chonkie.utils import Hubbie
-
-from .registry import ComponentRegistry
+from chonkie.utils.registry import ComponentRegistry
 
 
 class Pipeline:
