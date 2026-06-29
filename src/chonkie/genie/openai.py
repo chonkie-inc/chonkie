@@ -19,8 +19,8 @@ except ImportError:
     class RateLimitError(Exception):
         """Rate limit error."""
 
-    OpenAI = None  # type: ignore
-    AsyncOpenAI = None  # type: ignore
+    OpenAI = None  # ty: ignore[invalid-assignment]
+    AsyncOpenAI = None  # ty: ignore[invalid-assignment]
 
 
 from .base import BaseGenie
@@ -119,7 +119,7 @@ class OpenAIGenie(BaseGenie):
         response = self.client.beta.chat.completions.parse(
             model=self.model,
             messages=[{"role": "user", "content": prompt}],
-            response_format=schema,  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
+            response_format=schema,  # ty: ignore[invalid-argument-type]
         )
         content = response.choices[0].message.parsed
         if content is None:
@@ -138,7 +138,7 @@ class OpenAIGenie(BaseGenie):
         response = await self.async_client.beta.chat.completions.parse(
             model=self.model,
             messages=[{"role": "user", "content": prompt}],
-            response_format=schema,  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
+            response_format=schema,  # ty: ignore[invalid-argument-type]
         )
         content = response.choices[0].message.parsed
         if content is None:

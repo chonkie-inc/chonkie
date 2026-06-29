@@ -60,12 +60,12 @@ class ElasticHandshake(BaseHandshake):
         if client:
             self.client = client
         elif cloud_id and api_key:
-            self.client = Elasticsearch(cloud_id=cloud_id, api_key=api_key, **kwargs)  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
+            self.client = Elasticsearch(cloud_id=cloud_id, api_key=api_key, **kwargs)  # ty: ignore[invalid-argument-type]
         elif hosts:
-            self.client = Elasticsearch(hosts=hosts, api_key=api_key, **kwargs)  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
+            self.client = Elasticsearch(hosts=hosts, api_key=api_key, **kwargs)  # ty: ignore[invalid-argument-type]
         else:
             # Default to a standard local client if no other connection info is provided
-            self.client = Elasticsearch("http://localhost:9200", **kwargs)  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
+            self.client = Elasticsearch("http://localhost:9200", **kwargs)  # ty: ignore[invalid-argument-type]
 
         # 2. Initialize the embedding model
         if isinstance(embedding_model, str):
@@ -138,10 +138,9 @@ class ElasticHandshake(BaseHandshake):
 
         success, errors = bulk(self.client, actions, raise_on_error=False)
 
-        if errors:
-            logger.warning(f"Encountered {len(errors)} errors during bulk indexing.")  # type: ignore
-            # Optionally log the first few errors for debugging
-            for i, error in enumerate(errors[:5]):  # type: ignore
+        if errors and isinstance(errors, list):
+            logger.warning(f"Encountered {len(errors)} errors during bulk indexing.")
+            for i, error in enumerate(errors[:5]):
                 logger.error(f"Error {i + 1}: {error}")
 
         logger.info(f"Chonkie wrote {success} chunks to Elasticsearch index: {self.index_name}")

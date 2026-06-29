@@ -78,15 +78,15 @@ class QdrantHandshake(BaseHandshake):
                 self.client = qdrant_client.QdrantClient(
                     url=url,
                     api_key=api_key,
-                    **kwargs,  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
+                    **kwargs,  # ty: ignore[invalid-argument-type]
                 )
             elif url is not None:
-                self.client = qdrant_client.QdrantClient(url=url, **kwargs)  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
+                self.client = qdrant_client.QdrantClient(url=url, **kwargs)  # ty: ignore[invalid-argument-type]
             elif path is not None:
-                self.client = qdrant_client.QdrantClient(path=str(path), **kwargs)  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
+                self.client = qdrant_client.QdrantClient(path=str(path), **kwargs)  # ty: ignore[invalid-argument-type]
             else:
                 # If no client is provided, create an ephemeral collection
-                self.client = qdrant_client.QdrantClient(":memory:", **kwargs)  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
+                self.client = qdrant_client.QdrantClient(":memory:", **kwargs)  # ty: ignore[invalid-argument-type]
         else:
             self.client = client
 

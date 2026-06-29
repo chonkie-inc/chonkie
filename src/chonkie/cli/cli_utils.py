@@ -389,7 +389,7 @@ def pipeline(
             typer.echo("No output generated.")
             return
 
-        docs: list[Document] = doc if isinstance(doc, list) else [doc]  # type: ignore
+        docs: list[Document] = doc if isinstance(doc, list) else [doc]  # ty: ignore[invalid-assignment]
 
         # Summary for multiple files
         if len(docs) > 1:
