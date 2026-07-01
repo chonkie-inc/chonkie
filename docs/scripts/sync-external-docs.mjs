@@ -8,8 +8,21 @@ if (existsSync(envPath)) {
   const envContent = await readFile(envPath, "utf-8");
   for (const line of envContent.split("\n")) {
     const match = line.match(/^([^#=]+)=(.*)$/);
-    if (match && !process.env[match[1].trim()]) {
-      process.env[match[1].trim()] = match[2].trim();
+    if (match) {
+      const key = match[1].trim();
+      let value = match[2].trim();
+      if (value.includes("#")) {
+        value = value.split("#")[0].trim();
+      }
+      if (
+        (value.startsWith('"') && value.endsWith('"')) ||
+        (value.startsWith("'") && value.endsWith("'"))
+      ) {
+        value = value.slice(1, -1).trim();
+      }
+      if (!process.env[key]) {
+        process.env[key] = value;
+      }
     }
   }
 }
@@ -69,4 +82,7 @@ async function syncAll() {
   }
 }
 
-syncAll();
+syncAll().catch((err) => {
+  console.error("[Sync] Error:", err.message);
+  process.exit(1);
+});

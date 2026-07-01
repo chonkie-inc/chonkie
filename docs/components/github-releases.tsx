@@ -30,7 +30,31 @@ export function GithubReleases({ src = "/data/releases.json" }: { src?: string }
       .catch(() => {
         setLoading(false);
       });
-  }, []);
+  }, [src]);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const handleCopy = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.classList.contains("release-copy-btn")) return;
+
+      const codeEl = target.parentElement?.querySelector("code");
+      if (codeEl && navigator.clipboard) {
+        navigator.clipboard.writeText(codeEl.textContent || "").then(() => {
+          const originalText = target.textContent;
+          target.textContent = "Copied!";
+          setTimeout(() => {
+            target.textContent = originalText;
+          }, 1500);
+        });
+      }
+    };
+
+    container.addEventListener("click", handleCopy);
+    return () => container.removeEventListener("click", handleCopy);
+  }, [releases]);
 
   useEffect(() => {
     if (!containerRef.current || releases.length === 0) return;
@@ -200,7 +224,7 @@ function formatBody(body: string): string {
       const idx = codeBlocks.length;
       const cleaned = code.trim().replace(/\n{3,}/g, "\n\n");
       const escaped = escapeHtml(cleaned);
-      codeBlocks.push(`<div class="release-code-wrapper"><pre class="release-code" data-lang="${lang}"><code>${escaped}</code></pre><button class="release-copy-btn" onclick="navigator.clipboard.writeText(this.parentElement.querySelector('code').textContent).then(()=>{this.textContent='Copied!';setTimeout(()=>{this.textContent='Copy'},1500)})">Copy</button></div>`);
+      codeBlocks.push(`<div class="release-code-wrapper"><pre class="release-code" data-lang="${lang}"><code>${escaped}</code></pre><button class="release-copy-btn">Copy</button></div>`);
       return `\n%%CODEBLOCK_${idx}%%\n`;
     }
   );

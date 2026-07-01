@@ -14,6 +14,7 @@ async function fetchReleases(repo, outFile) {
   const res = await fetch(`https://api.github.com/repos/${repo}/releases?per_page=50`, {
     headers: {
       'Accept': 'application/vnd.github.v3+json',
+      'User-Agent': 'chonkie-docs',
       ...(process.env.GITHUB_TOKEN && { 'Authorization': `token ${process.env.GITHUB_TOKEN}` }),
     },
   });
