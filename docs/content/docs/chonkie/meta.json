@@ -1,0 +1,25 @@
+{
+  "title": "chonkie",
+  "root": true,
+  "icon": "Book",
+  "pages": [
+    "index",
+    "concepts",
+    "open-source",
+    "quick-start",
+    "installation",
+    "pipelines",
+    "api",
+    "chefs",
+    "fetchers",
+    "chunkers",
+    "embeddings",
+    "refinery",
+    "handshakes",
+    "porters",
+    "utils",
+    "experimental",
+    "troubleshooting",
+    "changelog"
+  ]
+}

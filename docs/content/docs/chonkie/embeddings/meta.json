@@ -1,0 +1,18 @@
+{
+  "title": "Embeddings",
+  "icon": "Brain",
+  "pages": [
+    "overview",
+    "auto-embeddings",
+    "cohere-embeddings",
+    "sentence-transformer-embeddings",
+    "openai-embeddings",
+    "azure-embeddings",
+    "model2vec-embeddings",
+    "jina-embeddings",
+    "gemini-embeddings",
+    "voyageai-embeddings",
+    "custom-embeddings",
+    "litellm-embeddings"
+  ]
+}
