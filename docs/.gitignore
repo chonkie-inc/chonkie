@@ -147,3 +147,5 @@ vite.config.ts.timestamp-*
 .source
 .playwright-mcp
 chonkiejs/content/
+.vercel
+.env*

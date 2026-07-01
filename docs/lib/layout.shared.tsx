@@ -5,11 +5,11 @@ export const baseOptions: BaseLayoutProps = {
     title: (
       <>
         <img
-          src="https://www.chonkie.ai/chonkies/chonkie_icon.svg"
+          src="/assets/logo/chonkie_logo_br_transparent_bg.png"
           alt="Chonkie"
           width={28}
           height={28}
-          className="rounded-sm"
+          className="rounded-sm h-7 w-auto object-contain"
         />
         <span>Chonkie</span>
       </>

@@ -16,7 +16,7 @@ export const metadata: Metadata = {
   description:
     "The lightweight ingestion library for fast, efficient and robust RAG pipelines",
   icons: {
-    icon: "https://www.chonkie.ai/chonkies/chonkie_icon.svg",
+    icon: "/assets/logo/chonkie_logo_br_transparent_bg.png",
   },
   openGraph: {
     title: "Chonkie Documentation",

@@ -12,18 +12,18 @@ import {
   switchProductHref,
 } from "@/lib/product-routes";
 
-const CHONKIE_ICON = "https://www.chonkie.ai/chonkies/chonkie_icon.svg";
+const CHONKIE_ICON = "/assets/logo/chonkie_logo_br_transparent_bg.png";
 
 function ProductIcon({ badge }: { badge: string | null }) {
   if (!badge) {
     return (
-      <img src={CHONKIE_ICON} alt="" width={18} height={18} className="shrink-0" />
+      <img src={CHONKIE_ICON} alt="" width={18} height={18} className="shrink-0 object-contain" />
     );
   }
 
   return (
     <div className="relative shrink-0">
-      <img src={CHONKIE_ICON} alt="" width={18} height={18} />
+      <img src={CHONKIE_ICON} alt="" width={18} height={18} className="object-contain" />
       <span className="absolute -bottom-0.5 -right-1 text-[7px] font-bold leading-none bg-fd-primary text-fd-primary-foreground rounded px-0.5">
         {badge}
       </span>
