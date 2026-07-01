@@ -1,0 +1,11 @@
+{
+  "title": "API Server",
+  "icon": "Server",
+  "pages": [
+    "overview",
+    "quickstart",
+    "endpoints",
+    "pipelines",
+    "docker"
+  ]
+}
